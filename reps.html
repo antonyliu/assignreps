@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f0f10" />
+  <title>Reps</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a3d'/%3E%3Cpath d='M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18' stroke='%230f0f10' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --orange: #ff7a3d;
+      --orange-hover: #ff8a52;
+      --orange-soft: rgba(255, 122, 61, 0.12);
+      --orange-border: rgba(255, 122, 61, 0.35);
+      --bg: #0f0f10;
+      --bg-soft: #1a1a1c;
+      --bg-softer: #232325;
+      --border: #2a2a2c;
+      --border-strong: #3a3a3c;
+      --text: #e8e8ea;
+      --text-mute: #8a8a8e;
+      --text-faint: #5a5a5e;
+      --green: #4ade80;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #060607;
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg);
+      border-radius: 20px;
+      border: 0.5px solid var(--border);
+      min-height: 720px;
+      display: flex;
+      flex-direction: column;
+      padding: 1.75rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .app-shell { min-height: 100vh; min-height: 100dvh; max-width: 100%; border-radius: 0; border: none; padding-top: max(1.75rem, env(safe-area-inset-top)); padding-bottom: max(1.75rem, env(safe-area-inset-bottom)); }
+    }
+
+    .screen { display: none; flex-direction: column; flex: 1; animation: fadeIn 0.2s ease; }
+    .screen.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .center-screen { justify-content: center; align-items: center; text-align: center; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .brand-mini {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .brand-lg { font-size: 36px; font-weight: 600; letter-spacing: -1px; margin-bottom: 10px; }
+    .tagline { font-size: 14px; color: var(--text-mute); margin-bottom: 3rem; font-style: italic; }
+
+    .logo-lg {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background: var(--orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .step-label { font-size: 12px; color: var(--text-faint); }
+
+    .screen-title { font-size: 24px; font-weight: 500; letter-spacing: -0.3px; margin-bottom: 1.5rem; }
+    .screen-title-tight { font-size: 24px; font-weight: 500; letter-spacing: -0.3px; margin-bottom: 0.25rem; }
+
+    .help-text { font-size: 13px; color: var(--text-mute); margin-bottom: 0.75rem; }
+    .help-faint { font-size: 11px; color: var(--text-faint); margin-bottom: 1.5rem; }
+
+    .input {
+      background: var(--bg-soft);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 14px;
+      font-size: 16px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .input:focus { border-color: var(--orange); }
+
+    .btn-primary {
+      background: var(--orange);
+      color: var(--bg);
+      border: none;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.15s;
+      width: 100%;
+      font-family: inherit;
+    }
+    .btn-primary:hover { background: var(--orange-hover); }
+    .btn-primary:active { transform: scale(0.99); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 0.5px solid var(--border);
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-secondary:hover { border-color: var(--border-strong); background: var(--bg-soft); }
+
+    .btn-toggle {
+      flex: 1;
+      background: transparent;
+      color: var(--text);
+      border: 0.5px solid var(--border);
+      padding: 12px 12px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-toggle.active {
+      background: var(--orange-soft);
+      border-color: var(--orange-border);
+      color: var(--orange);
+    }
+
+    .btn-counter {
+      flex: 1;
+      background: var(--bg-soft);
+      color: var(--text);
+      border: 0.5px solid var(--border);
+      padding: 16px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-counter:hover { background: var(--bg-softer); border-color: var(--orange); color: var(--orange); }
+    .btn-counter:active { background: var(--orange-soft); transform: scale(0.97); }
+
+    .btn-back {
+      background: transparent;
+      color: var(--text-mute);
+      border: none;
+      padding: 4px 10px;
+      font-size: 18px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-back:hover { color: var(--text); }
+
+    .link {
+      color: var(--orange);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .link:hover { color: var(--orange-hover); }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--orange-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--orange);
+    }
+    .user-avatar.gray { background: rgba(255,255,255,0.06); color: var(--text-mute); }
+
+    .section-label {
+      font-size: 11px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 0.6rem;
+    }
+
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 1.5rem;
+    }
+
+    .player-row {
+      cursor: pointer;
+      padding: 12px 14px;
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: transparent;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .player-row:hover { background: var(--bg-soft); border-color: var(--border-strong); }
+    .player-row:active { transform: scale(0.99); }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--orange-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--orange);
+      flex-shrink: 0;
+    }
+    .avatar.quiet { background: var(--bg-soft); color: var(--text-mute); }
+
+    .player-avatar-lg {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--orange-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--orange);
+    }
+
+    .row-meta {
+      font-size: 11px;
+      color: var(--text-faint);
+      text-align: right;
+      line-height: 1.4;
+    }
+
+    .assignment-card {
+      background: var(--bg-soft);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: border-color 0.15s;
+    }
+    .assignment-card.tappable { cursor: pointer; }
+    .assignment-card.tappable:hover { border-color: var(--border-strong); }
+
+    .progress-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-track.thick { height: 6px; border-radius: 3px; }
+    .progress-fill {
+      height: 100%;
+      background: var(--orange);
+      transition: width 0.4s;
+    }
+    .progress-fill.done { background: var(--green); }
+
+    .toast {
+      background: rgba(74, 222, 128, 0.1);
+      border: 0.5px solid rgba(74, 222, 128, 0.3);
+      color: var(--green);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 1.5rem;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 0;
+      text-align: center;
+    }
+
+    .empty-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      border: 0.5px dashed var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .cat-row {
+      cursor: pointer;
+      padding: 14px 16px;
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .cat-row:hover { background: var(--bg-soft); border-color: var(--border-strong); }
+    .cat-name { font-size: 15px; font-weight: 500; }
+    .cat-count { font-size: 12px; color: var(--text-faint); }
+    .chev { font-size: 18px; color: var(--text-faint); }
+
+    .ex-row {
+      cursor: pointer;
+      padding: 12px 14px;
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .ex-row:hover { background: var(--bg-soft); border-color: var(--border-strong); }
+    .ex-default { font-size: 11px; color: var(--text-faint); }
+
+    .text-preview {
+      background: var(--bg-soft);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      border: 0.5px solid var(--border);
+    }
+
+    .big-counter {
+      font-size: 72px;
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -3px;
+      color: var(--orange);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .celebrate-emoji { font-size: 64px; margin-bottom: 1.5rem; }
+    .celebrate-msg { font-size: 26px; font-weight: 500; margin-bottom: 0.5rem; letter-spacing: -0.3px; }
+    .celebrate-sub { font-size: 14px; color: var(--text-mute); margin-bottom: 2.5rem; max-width: 260px; }
+
+    /* Nav */
+    .nav-bar {
+      width: 100%;
+      max-width: 420px;
+      margin-top: 1rem;
+      padding: 0 1rem 2rem;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 6px;
+      margin-top: 10px;
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .nav-btn {
+      font-size: 11px;
+      padding: 5px 10px;
+      background: transparent;
+      color: var(--text-mute);
+      border: 0.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .nav-btn:hover { color: var(--text); border-color: var(--border-strong); }
+
+    .footer-note {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-faint);
+      margin-top: 0.5rem;
+      padding: 0 1rem;
+    }
+
+    .gap-2 { display: flex; gap: 8px; }
+    .mt-auto { margin-top: auto; }
+    .stack { display: flex; flex-direction: column; gap: 8px; }
+    .stack-lg { display: flex; flex-direction: column; gap: 10px; }
+    .stack-tight { display: flex; flex-direction: column; gap: 4px; }
+
+    .hint-link {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      text-align: center;
+    }
+    .hint-link a { font-size: 13px; color: var(--text-faint); text-decoration: none; }
+    .hint-link a:hover { color: var(--text-mute); }
+
+    .label { font-size: 13px; color: var(--text-mute); display: block; margin-bottom: 6px; }
+    .label-mb { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+
+<div class="app-shell" id="app">
+
+  <!-- ===== RJ FLOW ===== -->
+
+  <!-- Landing -->
+  <div id="screen-landing" class="screen active center-screen">
+    <div class="logo-lg">
+      <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+        <path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#0f0f10" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="brand-lg">Reps</div>
+    <div class="tagline">For players who want to be great.</div>
+    <button onclick="show('signup-name')" class="btn-primary" style="max-width: 240px;">Get started</button>
+    <div style="margin-top: 1.25rem; font-size: 13px; color: var(--text-faint);">Already have an account? <a href="#" onclick="show('signup-phone'); return false;" class="link">Sign in</a></div>
+  </div>
+
+  <!-- Signup: name -->
+  <div id="screen-signup-name" class="screen">
+    <div class="header">
+      <div class="brand-mini"><svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#ff7a3d" stroke-width="3" stroke-linecap="round"/></svg><span>Reps</span></div>
+      <div class="step-label">Step 1 of 3</div>
+    </div>
+    <div class="screen-title">What's your name?</div>
+    <input type="text" placeholder="Coach Rick" value="RJ" class="input" />
+    <button onclick="show('signup-phone')" class="btn-primary">Continue</button>
+  </div>
+
+  <!-- Signup: phone -->
+  <div id="screen-signup-phone" class="screen">
+    <div class="header">
+      <div class="brand-mini"><svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#ff7a3d" stroke-width="3" stroke-linecap="round"/></svg><span>Reps</span></div>
+      <div class="step-label">Step 2 of 3</div>
+    </div>
+    <div class="screen-title">Your phone number</div>
+    <div class="help-text">We'll text you a code to sign in. No passwords ever.</div>
+    <div class="help-faint">Used only to sign in. Never shared.</div>
+    <input type="tel" placeholder="(555) 123-4567" class="input" />
+    <button onclick="show('signup-code')" class="btn-primary">Send code</button>
+  </div>
+
+  <!-- Signup: code -->
+  <div id="screen-signup-code" class="screen">
+    <div class="header">
+      <div class="brand-mini"><svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#ff7a3d" stroke-width="3" stroke-linecap="round"/></svg><span>Reps</span></div>
+      <div class="step-label">Step 3 of 3</div>
+    </div>
+    <div class="screen-title">Enter the code</div>
+    <div class="help-text" style="margin-bottom: 1.5rem;">Sent to your phone.</div>
+    <input type="text" placeholder="6-digit code" maxlength="6" class="input" style="letter-spacing: 6px; text-align: center; font-size: 18px;" />
+    <button onclick="show('roster-empty')" class="btn-primary">Verify</button>
+  </div>
+
+  <!-- Empty roster -->
+  <div id="screen-roster-empty" class="screen">
+    <div class="header">
+      <div class="brand-mini"><svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#ff7a3d" stroke-width="3" stroke-linecap="round"/></svg><span>Reps</span></div>
+      <div class="user-avatar">RJ</div>
+    </div>
+    <div class="screen-title-tight">Your players</div>
+    <div class="help-text">No players yet.</div>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="#5a5a5e" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div style="font-size: 14px; color: var(--text-mute); margin-bottom: 1.25rem;">Add your first player to start.</div>
+      <button onclick="show('add-player')" class="btn-primary" style="max-width: 200px;">+ Add player</button>
+    </div>
+  </div>
+
+  <!-- Add player -->
+  <div id="screen-add-player" class="screen">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 2rem;">
+      <button onclick="goRosterBack()" class="btn-back">←</button>
+      <div style="font-size: 14px; font-weight: 500;">Add player</div>
+    </div>
+    <label class="label">Name</label>
+    <input type="text" placeholder="First name" value="Neo" class="input" />
+    <label class="label label-mb">Send link to</label>
+    <div class="gap-2" style="margin-bottom: 1rem;">
+      <button id="opt-player" onclick="setRecipient('player')" class="btn-toggle active">Player's phone</button>
+      <button id="opt-parent" onclick="setRecipient('parent')" class="btn-toggle">Parent's phone</button>
+    </div>
+    <input type="tel" placeholder="(555) 123-4567" class="input" style="margin-bottom: 0.5rem;" />
+    <div class="help-faint" id="recipient-help">Neo will get a text with his homework link.</div>
+
+    <div style="border-top: 0.5px solid var(--border); padding-top: 1.25rem; margin-bottom: 1.5rem;">
+      <label class="label" style="margin-bottom: 6px;">Parent's phone <span style="color: var(--text-faint); font-weight: 400;">(optional)</span></label>
+      <input type="tel" placeholder="(555) 123-4567" class="input" style="margin-bottom: 0.5rem;" />
+      <div class="help-faint" style="margin-bottom: 0;">They'll get a short weekly digest. Skip if not needed.</div>
+    </div>
+
+    <button onclick="addNeo()" class="btn-primary">Add Neo</button>
+  </div>
+
+  <!-- Roster (single Neo) -->
+  <div id="screen-roster" class="screen">
+    <div class="header">
+      <div class="brand-mini"><svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#ff7a3d" stroke-width="3" stroke-linecap="round"/></svg><span>Reps</span></div>
+      <div class="user-avatar">RJ</div>
+    </div>
+    <div class="screen-title-tight">Your players</div>
+    <div class="help-text" style="margin-bottom: 1.5rem;">1 player</div>
+    <div id="link-toast" class="toast" style="display: none;">Link sent to Neo ✓</div>
+    <div onclick="show('neo-page')" class="player-row" style="margin-bottom: 1rem;">
+      <div class="avatar">N</div>
+      <div style="flex: 1;">
+        <div style="font-size: 15px; font-weight: 500;">Neo</div>
+        <div id="neo-status" style="font-size: 12px; color: var(--text-faint);">No reps assigned yet</div>
+      </div>
+      <div class="chev">›</div>
+    </div>
+    <button class="btn-secondary mt-auto" onclick="show('add-player')">+ Add player</button>
+  </div>
+
+  <!-- Neo page (RJ's view) -->
+  <div id="screen-neo-page" class="screen">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+      <button onclick="show('roster')" class="btn-back">←</button>
+      <div style="font-size: 14px; font-weight: 500; color: var(--text-mute);">Players</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 1.5rem;">
+      <div class="player-avatar-lg">N</div>
+      <div style="flex: 1;">
+        <div style="font-size: 24px; font-weight: 500; letter-spacing: -0.3px;">Neo</div>
+        <div id="neo-meta" style="font-size: 12px; color: var(--text-mute); margin-top: 2px;">Joined today</div>
+      </div>
+    </div>
+    <div class="section-label">This week</div>
+    <div id="neo-empty-block" class="empty-state">
+      <div style="font-size: 14px; color: var(--text-mute); margin-bottom: 1.25rem;">No reps assigned yet.</div>
+      <button onclick="show('categories')" class="btn-primary" style="max-width: 200px;">+ Assign reps</button>
+    </div>
+    <div id="neo-assignments-block" class="stack-lg" style="display: none; margin-bottom: 1rem;"></div>
+    <button id="neo-add-more" class="btn-secondary mt-auto" style="display: none;" onclick="show('categories')">+ Assign more</button>
+  </div>
+
+  <!-- Categories -->
+  <div id="screen-categories" class="screen">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+      <button onclick="show('neo-page')" class="btn-back">←</button>
+      <div style="font-size: 14px; font-weight: 500;">Assign to Neo</div>
+    </div>
+    <div class="screen-title-tight">Pick an exercise</div>
+    <div class="help-text" style="margin-bottom: 1.5rem;">Choose a category</div>
+    <div class="stack">
+      <div onclick="openCat('shooting')" class="cat-row"><div><div class="cat-name">Shooting</div><div class="cat-count">5 exercises</div></div><div class="chev">›</div></div>
+      <div onclick="openCat('handling')" class="cat-row"><div><div class="cat-name">Ball-handling</div><div class="cat-count">4 exercises</div></div><div class="chev">›</div></div>
+      <div onclick="openCat('finishing')" class="cat-row"><div><div class="cat-name">Finishing</div><div class="cat-count">3 exercises</div></div><div class="chev">›</div></div>
+      <div onclick="openCat('footwork')" class="cat-row"><div><div class="cat-name">Footwork</div><div class="cat-count">3 exercises</div></div><div class="chev">›</div></div>
+      <div onclick="openCat('conditioning')" class="cat-row"><div><div class="cat-name">Conditioning</div><div class="cat-count">3 exercises</div></div><div class="chev">›</div></div>
+    </div>
+    <div class="hint-link"><a href="#" onclick="show('create-custom'); return false;">+ Create your own</a></div>
+  </div>
+
+  <!-- Exercises in category -->
+  <div id="screen-exercises" class="screen">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+      <button onclick="show('categories')" class="btn-back">←</button>
+      <div id="cat-label" style="font-size: 14px; font-weight: 500;">Shooting</div>
+    </div>
+    <div id="cat-title" class="screen-title">Shooting</div>
+    <div id="exercise-list" class="stack"></div>
+    <div class="hint-link"><a href="#" onclick="show('create-custom'); return false;">+ Create your own</a></div>
+  </div>
+
+  <!-- Count screen -->
+  <div id="screen-count" class="screen">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+      <button onclick="show('exercises')" class="btn-back">←</button>
+      <div style="font-size: 14px; font-weight: 500;">Assign to Neo</div>
+    </div>
+    <div class="label">Exercise</div>
+    <div id="picked-name" style="font-size: 24px; font-weight: 500; margin-bottom: 2rem; letter-spacing: -0.3px;">Free throws</div>
+    <label class="label label-mb">How many?</label>
+    <div id="quick-counts" class="gap-2" style="margin-bottom: 1rem; flex-wrap: wrap;"></div>
+    <input type="number" id="count-input" value="50" class="input" style="text-align: center; font-size: 18px; margin-bottom: 0.5rem;" />
+    <div id="unit-label" style="text-align: center; font-size: 12px; color: var(--text-faint); margin-bottom: 2rem;">reps</div>
+    <button onclick="confirmAssign()" class="btn-primary">Send to Neo</button>
+  </div>
+
+  <!-- Create custom exercise -->
+  <div id="screen-create-custom" class="screen">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+      <button onclick="show('categories')" class="btn-back">←</button>
+      <div style="font-size: 14px; font-weight: 500;">Create your own</div>
+    </div>
+    <div class="screen-title-tight">New exercise</div>
+    <div class="help-text" style="margin-bottom: 1.5rem;">For Neo</div>
+
+    <label class="label">Name it</label>
+    <input type="text" id="custom-name" placeholder="e.g. Curry shooting drill" class="input" />
+
+    <label class="label label-mb">Track by</label>
+    <div class="gap-2" style="margin-bottom: 1rem;">
+      <button id="track-reps" onclick="setTrack('reps')" class="btn-toggle active">Reps</button>
+      <button id="track-time" onclick="setTrack('time')" class="btn-toggle">Time</button>
+      <button id="track-target" onclick="setTrack('target')" class="btn-toggle">Target</button>
+    </div>
+
+    <div id="track-help" class="help-faint" style="margin-bottom: 1.5rem;">A count of completed reps (e.g. 50 free throws).</div>
+
+    <label class="label" id="amount-label">How many reps?</label>
+    <input type="text" id="custom-amount" placeholder="50" class="input" />
+
+    <div style="border-top: 0.5px solid var(--border); padding-top: 1.25rem; margin-bottom: 1.5rem;">
+      <label class="label" style="margin-bottom: 6px;">Video link <span style="color: var(--text-faint); font-weight: 400;">(optional)</span></label>
+      <input type="url" id="custom-video" placeholder="Paste YouTube or Instagram link" class="input" style="margin-bottom: 0.5rem;" />
+      <div class="help-faint" style="margin-bottom: 0;">Neo will see this as a "Watch first" link with the assignment.</div>
+    </div>
+
+    <button onclick="sendCustom()" class="btn-primary">Send to Neo</button>
+  </div>
+
+  <!-- ===== NEO FLOW ===== -->
+
+  <!-- Text preview -->
+  <div id="screen-text" class="screen" style="justify-content: center;">
+    <div style="font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.75rem; text-align: center;">Text message preview</div>
+    <div class="text-preview">
+      <div style="font-size: 12px; color: var(--text-faint); margin-bottom: 6px;">From: Reps</div>
+      <div style="font-size: 14px; line-height: 1.5;">Hey Neo — Coach RJ assigned you reps this week. Tap to see what's up: <span style="color: var(--orange);">reps.app/n/3kx9</span></div>
+    </div>
+    <button onclick="show('neo-welcome')" class="btn-primary" style="margin-top: 2rem;">Tap the link →</button>
+  </div>
+
+  <!-- Neo welcome -->
+  <div id="screen-neo-welcome" class="screen center-screen">
+    <div class="logo-lg">
+      <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+        <path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#0f0f10" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="brand-lg">Reps</div>
+    <div class="tagline" style="margin-bottom: 2.5rem;">For players who want to be great.</div>
+    <div style="font-size: 18px; font-weight: 500; margin-bottom: 0.5rem;">Hey Neo 👋</div>
+    <div style="font-size: 14px; color: var(--text-mute); margin-bottom: 2.5rem; max-width: 260px;">Coach RJ assigned you work this week. Let's go.</div>
+    <button onclick="show('neo-home')" class="btn-primary" style="max-width: 240px;">See my reps</button>
+  </div>
+
+  <!-- Neo home -->
+  <div id="screen-neo-home" class="screen">
+    <div class="header">
+      <div class="brand-mini"><svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#ff7a3d" stroke-width="3" stroke-linecap="round"/></svg><span>Reps</span></div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="font-size: 12px; color: var(--text-mute);">Coach RJ</div>
+        <div class="user-avatar gray">RJ</div>
+      </div>
+    </div>
+    <div class="screen-title-tight">This week</div>
+    <div id="neo-summary" class="help-text" style="margin-bottom: 1.5rem;">3 assignments</div>
+    <div id="neo-cards" class="stack-lg"></div>
+  </div>
+
+  <!-- Log -->
+  <div id="screen-log" class="screen">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 2rem;">
+      <button onclick="show('neo-home')" class="btn-back">←</button>
+      <div style="font-size: 14px; font-weight: 500; color: var(--text-mute);">Log reps</div>
+    </div>
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div id="log-name" style="font-size: 13px; color: var(--text-mute); margin-bottom: 8px;">Free throws</div>
+      <div class="big-counter"><span id="log-current">0</span></div>
+      <div style="font-size: 13px; color: var(--text-faint); margin-top: 6px;">of <span id="log-target">200</span></div>
+    </div>
+    <div class="progress-track thick" style="margin-bottom: 2rem;">
+      <div id="log-bar" class="progress-fill" style="width: 0%;"></div>
+    </div>
+    <div class="gap-2" style="margin-bottom: 12px;">
+      <button onclick="addReps(1)" class="btn-counter">+1</button>
+      <button onclick="addReps(10)" class="btn-counter">+10</button>
+      <button onclick="addReps(25)" class="btn-counter">+25</button>
+      <button onclick="addReps(50)" class="btn-counter">+50</button>
+    </div>
+    <button onclick="saveLog()" class="btn-primary mt-auto">Save</button>
+  </div>
+
+  <!-- Celebrate -->
+  <div id="screen-celebrate" class="screen center-screen">
+    <div class="celebrate-emoji">🔥</div>
+    <div id="celebrate-msg" class="celebrate-msg">Done.</div>
+    <div id="celebrate-sub" class="celebrate-sub">RJ will see this.</div>
+    <button onclick="show('neo-home')" class="btn-primary" style="max-width: 240px;">Back to my reps</button>
+  </div>
+
+  <!-- ===== COACH MONDAY VIEW (with 8 kids) ===== -->
+
+  <div id="screen-monday" class="screen">
+    <div class="header">
+      <div class="brand-mini"><svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#ff7a3d" stroke-width="3" stroke-linecap="round"/></svg><span>Reps</span></div>
+      <div class="user-avatar">RJ</div>
+    </div>
+    <div class="screen-title-tight">This week</div>
+    <div id="monday-summary" class="help-text" style="margin-bottom: 2rem;">6 of 8 logged</div>
+    <div class="section-label">All in <span style="color: var(--orange);">🔥</span></div>
+    <div id="list-fire" class="player-list"></div>
+    <div class="section-label">Showing up</div>
+    <div id="list-active" class="player-list"></div>
+    <div class="section-label">Quiet</div>
+    <div id="list-quiet" class="player-list"></div>
+    <button class="btn-secondary mt-auto">+ Add player</button>
+  </div>
+
+  <!-- Detail view (Monday roster) -->
+  <div id="screen-detail" class="screen">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+      <button onclick="show('monday')" class="btn-back">←</button>
+      <div style="font-size: 14px; font-weight: 500; color: var(--text-mute);">Players</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 2rem;">
+      <div id="d-avatar" class="player-avatar-lg">N</div>
+      <div style="flex: 1;">
+        <div id="d-name" style="font-size: 24px; font-weight: 500; letter-spacing: -0.3px;">Neo</div>
+        <div id="d-meta" style="font-size: 12px; color: var(--text-mute); margin-top: 2px;">Logged 4 days · last 2h ago</div>
+      </div>
+    </div>
+    <div class="section-label">This week</div>
+    <div id="d-assignments" class="stack-lg" style="margin-bottom: 1.5rem;"></div>
+    <button class="btn-primary mt-auto">+ Assign reps</button>
+  </div>
+
+  <!-- ===== PARENT FLOW ===== -->
+
+  <!-- Parent text preview -->
+  <div id="screen-parent-text" class="screen" style="justify-content: center;">
+    <div style="font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.75rem; text-align: center;">Sunday night text — to parent</div>
+    <div class="text-preview">
+      <div style="font-size: 12px; color: var(--text-faint); margin-bottom: 6px;">From: Reps</div>
+      <div style="font-size: 14px; line-height: 1.5;">Hi — here's Neo's week with Coach RJ. He practiced 4 days and completed all his work. <span style="color: var(--orange);">reps.app/p/8mz4</span></div>
+    </div>
+    <button onclick="show('parent-digest')" class="btn-primary" style="margin-top: 2rem;">Tap the link →</button>
+  </div>
+
+  <!-- Parent digest view -->
+  <div id="screen-parent-digest" class="screen">
+    <div class="header">
+      <div class="brand-mini"><svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#ff7a3d" stroke-width="3" stroke-linecap="round"/></svg><span>Reps</span></div>
+      <div style="font-size: 12px; color: var(--text-mute);">Week of Apr 27</div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 2rem;">
+      <div class="player-avatar-lg">N</div>
+      <div style="flex: 1;">
+        <div style="font-size: 24px; font-weight: 500; letter-spacing: -0.3px;">Neo</div>
+        <div style="font-size: 12px; color: var(--text-mute); margin-top: 2px;">With Coach RJ</div>
+      </div>
+    </div>
+
+    <div style="background: var(--orange-soft); border: 0.5px solid var(--orange-border); border-radius: 14px; padding: 1.25rem 1.25rem; margin-bottom: 1.5rem;">
+      <div style="font-size: 11px; color: var(--orange); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.75rem; font-weight: 600;">This week</div>
+      <div style="font-size: 18px; font-weight: 500; line-height: 1.4; margin-bottom: 0.5rem;">Neo practiced 4 days.</div>
+      <div style="font-size: 14px; color: var(--text-mute); line-height: 1.5;">He completed all of his work for Coach RJ.</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem;">
+      <div style="background: var(--bg-soft); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 13px; color: var(--text-mute);">Practice days</div>
+        <div style="font-size: 14px; font-weight: 600;">4 of 7</div>
+      </div>
+      <div style="background: var(--bg-soft); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 13px; color: var(--text-mute);">Assigned work</div>
+        <div style="font-size: 14px; font-weight: 600; color: var(--green);">3 of 3 ✓</div>
+      </div>
+      <div style="background: var(--bg-soft); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 13px; color: var(--text-mute);">Last activity</div>
+        <div style="font-size: 14px; font-weight: 600;">2h ago</div>
+      </div>
+    </div>
+
+    <div style="font-size: 13px; color: var(--text-faint); text-align: center; line-height: 1.5; padding: 1rem; border-top: 0.5px solid var(--border);">
+      Coach RJ assigned new work for next week.
+      <br><span style="color: var(--text-mute);">You'll get the next digest Sunday.</span>
+    </div>
+  </div>
+
+  <!-- Parent digest — light week (1 assignment, partial follow-through) -->
+  <div id="screen-parent-digest-light" class="screen">
+    <div class="header">
+      <div class="brand-mini"><svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#ff7a3d" stroke-width="3" stroke-linecap="round"/></svg><span>Reps</span></div>
+      <div style="font-size: 12px; color: var(--text-mute);">Week of Apr 27</div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 2rem;">
+      <div class="player-avatar-lg" style="background: var(--bg-soft); color: var(--text-mute);">A</div>
+      <div style="flex: 1;">
+        <div style="font-size: 24px; font-weight: 500; letter-spacing: -0.3px;">Aiden</div>
+        <div style="font-size: 12px; color: var(--text-mute); margin-top: 2px;">With Coach RJ</div>
+      </div>
+    </div>
+
+    <div style="background: var(--bg-soft); border: 0.5px solid var(--border); border-radius: 14px; padding: 1.25rem 1.25rem; margin-bottom: 1.5rem;">
+      <div style="font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.75rem; font-weight: 600;">This week</div>
+      <div style="font-size: 18px; font-weight: 500; line-height: 1.4; margin-bottom: 0.5rem;">Aiden practiced 1 day.</div>
+      <div style="font-size: 14px; color: var(--text-mute); line-height: 1.5;">A quieter week. Coach RJ has new work assigned.</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem;">
+      <div style="background: var(--bg-soft); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 13px; color: var(--text-mute);">Practice days</div>
+        <div style="font-size: 14px; font-weight: 600;">1 of 7</div>
+      </div>
+      <div style="background: var(--bg-soft); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 13px; color: var(--text-mute);">Assigned work</div>
+        <div style="font-size: 14px; font-weight: 600;">1 of 2</div>
+      </div>
+      <div style="background: var(--bg-soft); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 13px; color: var(--text-mute);">Last activity</div>
+        <div style="font-size: 14px; font-weight: 600;">4d ago</div>
+      </div>
+    </div>
+
+    <div style="font-size: 13px; color: var(--text-faint); text-align: center; line-height: 1.5; padding: 1rem; border-top: 0.5px solid var(--border);">
+      Coach RJ assigned new work for next week.
+      <br><span style="color: var(--text-mute);">You'll get the next digest Sunday.</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Nav -->
+<div class="nav-bar">
+  <div class="nav-section-label">Coach (RJ) — single-player demo</div>
+  <div class="nav-buttons">
+    <button onclick="reset(); show('landing')" class="nav-btn">↻ Restart</button>
+    <button onclick="show('landing')" class="nav-btn">Landing</button>
+    <button onclick="show('signup-name')" class="nav-btn">Signup</button>
+    <button onclick="show('roster-empty')" class="nav-btn">Empty</button>
+    <button onclick="show('add-player')" class="nav-btn">Add player</button>
+    <button onclick="show('roster')" class="nav-btn">Roster</button>
+    <button onclick="show('neo-page')" class="nav-btn">Neo (RJ view)</button>
+    <button onclick="show('categories')" class="nav-btn">Assign</button>
+    <button onclick="show('create-custom')" class="nav-btn">Create custom</button>
+  </div>
+  <div class="nav-section-label">Player (Neo)</div>
+  <div class="nav-buttons">
+    <button onclick="resetNeo(); show('text')" class="nav-btn">Text</button>
+    <button onclick="show('neo-welcome')" class="nav-btn">Welcome</button>
+    <button onclick="resetNeo(); show('neo-home')" class="nav-btn">Home</button>
+    <button onclick="resetNeo(); openLog('ft')" class="nav-btn">Log</button>
+    <button onclick="show('celebrate')" class="nav-btn">Celebrate</button>
+  </div>
+  <div class="nav-section-label">Coach — Monday view (8 players)</div>
+  <div class="nav-buttons">
+    <button onclick="show('monday')" class="nav-btn">Monday roster</button>
+    <button onclick="openMondayPlayer(0)" class="nav-btn">BJ (5d)</button>
+    <button onclick="openMondayPlayer(1)" class="nav-btn">Neo (4d)</button>
+    <button onclick="openMondayPlayer(6)" class="nav-btn">Connor (quiet)</button>
+  </div>
+  <div class="nav-section-label">Parent — weekly digest</div>
+  <div class="nav-buttons">
+    <button onclick="show('parent-text')" class="nav-btn">Sunday text</button>
+    <button onclick="show('parent-digest')" class="nav-btn">Full week (Neo)</button>
+    <button onclick="show('parent-digest-light')" class="nav-btn">Quiet week (Aiden)</button>
+  </div>
+</div>
+
+<div class="footer-note">Reps · prototype · vibe-coded with Claude</div>
+
+<script>
+  // ===== Data =====
+  const exerciseData = {
+    shooting: { title: 'Shooting', unit: 'reps', quick: [25, 50, 100, 200], items: [
+      { name: 'Form shooting', default: 50 },
+      { name: 'Free throws', default: 50 },
+      { name: 'Mid-range jumpers', default: 50 },
+      { name: 'Corner 3s', default: 25 },
+      { name: 'Catch & shoot', default: 50 }
+    ]},
+    handling: { title: 'Ball-handling', unit: 'minutes', quick: [5, 10, 15, 20], items: [
+      { name: 'Stationary dribbling', default: 10 },
+      { name: 'Two-ball dribbling', default: 10 },
+      { name: 'Crossovers', default: 5 },
+      { name: 'Figure 8s', default: 5 }
+    ]},
+    finishing: { title: 'Finishing', unit: 'reps', quick: [20, 50, 100], items: [
+      { name: 'Layups (right hand)', default: 25 },
+      { name: 'Layups (left hand)', default: 25 },
+      { name: 'Floaters', default: 20 }
+    ]},
+    footwork: { title: 'Footwork', unit: 'reps', quick: [10, 20, 50], items: [
+      { name: 'Pivots', default: 20 },
+      { name: 'Jump stops', default: 20 },
+      { name: 'Defensive slides', default: 10 }
+    ]},
+    conditioning: { title: 'Conditioning', unit: 'reps', quick: [5, 10, 20], items: [
+      { name: 'Suicides', default: 10 },
+      { name: 'Sprints (baseline to baseline)', default: 10 },
+      { name: 'Jump rope', default: 5 }
+    ]}
+  };
+
+  // RJ single-Neo demo state
+  let neoExists = false;
+  let rjNeoAssignments = [];
+  let pickedExercise = null;
+  let pickedUnit = 'reps';
+
+  // Neo's own demo state (for the Neo flow)
+  const neoAssignments = {
+    ft: { name: 'Free throws', target: 200, done: 0 },
+    c3: { name: 'Corner 3s', target: 100, done: 0 },
+    lu: { name: 'Layups (right hand)', target: 50, done: 0 }
+  };
+  let currentLogKey = null;
+  let sessionStart = 0;
+
+  // Monday roster (8 kids)
+  const mondayPlayers = [
+    { name: 'BJ', initial: 'B', daysLogged: 5, lastActivity: '20m ago', assignments: [{ name: 'Free throws', done: 200, target: 200 }, { name: 'Corner 3s', done: 100, target: 100 }, { name: 'Layups (right)', done: 50, target: 50 }]},
+    { name: 'Neo', initial: 'N', daysLogged: 4, lastActivity: '2h ago', assignments: [{ name: 'Free throws', done: 180, target: 200 }, { name: 'Corner 3s', done: 75, target: 100 }, { name: 'Layups (right)', done: 50, target: 50 }]},
+    { name: 'JJ', initial: 'J', daysLogged: 3, lastActivity: '6h ago', assignments: [{ name: 'Free throws', done: 120, target: 200 }, { name: 'Mid-range', done: 50, target: 100 }]},
+    { name: 'Tyshana', initial: 'T', daysLogged: 3, lastActivity: '1d ago', assignments: [{ name: 'Form shooting', done: 100, target: 150 }, { name: 'Layups (left)', done: 30, target: 50 }]},
+    { name: 'Tyler', initial: 'T', daysLogged: 2, lastActivity: '2d ago', assignments: [{ name: 'Free throws', done: 80, target: 200 }, { name: 'Ball-handling', done: 10, target: 30 }]},
+    { name: 'Aiden', initial: 'A', daysLogged: 1, lastActivity: '4d ago', assignments: [{ name: 'Free throws', done: 50, target: 200 }, { name: 'Corner 3s', done: 0, target: 100 }]},
+    { name: 'Connor', initial: 'C', daysLogged: 0, lastActivity: '—', assignments: [{ name: 'Form shooting', done: 0, target: 100 }]},
+    { name: 'Mike', initial: 'M', daysLogged: 0, lastActivity: '—', assignments: [{ name: 'Free throws', done: 0, target: 200 }]}
+  ];
+
+  // ===== Helpers =====
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const t = document.getElementById('screen-' + id);
+    if (t) t.classList.add('active');
+    if (id === 'roster' || id === 'neo-page') renderRJNeo();
+    if (id === 'neo-home') renderNeoHome();
+    if (id === 'monday') renderMonday();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  function reset() {
+    neoExists = false;
+    rjNeoAssignments = [];
+    document.getElementById('link-toast').style.display = 'none';
+  }
+  function resetNeo() {
+    Object.keys(neoAssignments).forEach(k => neoAssignments[k].done = 0);
+  }
+  function setRecipient(who) {
+    const p = document.getElementById('opt-player');
+    const pa = document.getElementById('opt-parent');
+    const help = document.getElementById('recipient-help');
+    if (who === 'player') { p.classList.add('active'); pa.classList.remove('active'); help.textContent = 'Neo will get a text with his homework link.'; }
+    else { pa.classList.add('active'); p.classList.remove('active'); help.textContent = "Parent will get the link to share with Neo."; }
+  }
+  function goRosterBack() { show(neoExists ? 'roster' : 'roster-empty'); }
+  function addNeo() {
+    neoExists = true;
+    document.getElementById('link-toast').style.display = 'block';
+    show('roster');
+  }
+  function renderRJNeo() {
+    const status = document.getElementById('neo-status');
+    if (rjNeoAssignments.length === 0) {
+      status.textContent = 'No reps assigned yet';
+    } else {
+      const total = rjNeoAssignments.length;
+      status.textContent = `${total} assignment${total === 1 ? '' : 's'} · no activity yet`;
+    }
+    const empty = document.getElementById('neo-empty-block');
+    const list = document.getElementById('neo-assignments-block');
+    const addMore = document.getElementById('neo-add-more');
+    if (rjNeoAssignments.length === 0) {
+      empty.style.display = 'flex';
+      list.style.display = 'none';
+      addMore.style.display = 'none';
+    } else {
+      empty.style.display = 'none';
+      list.style.display = 'flex';
+      addMore.style.display = 'block';
+      list.innerHTML = rjNeoAssignments.map(a => {
+        const targetText = a.unit === 'target' ? a.target : `0 / ${a.target} ${a.unit}`;
+        const videoBadge = a.video ? `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--orange); background: var(--orange-soft); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase;">▶ Video</span>` : '';
+        return `
+        <div class="assignment-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="font-size: 14px; font-weight: 500;">${a.name}${videoBadge}</div>
+            <div style="font-size: 12px; color: var(--text-faint);">${targetText}</div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width: 0%;"></div></div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  function openCat(key) {
+    const cat = exerciseData[key];
+    document.getElementById('cat-label').textContent = cat.title;
+    document.getElementById('cat-title').textContent = cat.title;
+    const list = document.getElementById('exercise-list');
+    list.innerHTML = '';
+    cat.items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'ex-row';
+      div.innerHTML = `<div style="font-size: 14px;">${item.name}</div><div class="ex-default">${item.default} ${cat.unit}</div>`;
+      div.onclick = () => pickExercise(item.name, item.default, cat.unit, cat.quick);
+      list.appendChild(div);
+    });
+    show('exercises');
+  }
+
+  function pickExercise(name, defaultVal, unit, quickVals) {
+    pickedExercise = name;
+    pickedUnit = unit;
+    document.getElementById('picked-name').textContent = name;
+    document.getElementById('count-input').value = defaultVal;
+    document.getElementById('unit-label').textContent = unit;
+    const qc = document.getElementById('quick-counts');
+    qc.innerHTML = '';
+    quickVals.forEach(v => {
+      const b = document.createElement('button');
+      b.textContent = v;
+      b.className = 'btn-toggle';
+      b.style.minWidth = '60px';
+      if (v === defaultVal) b.classList.add('active');
+      b.onclick = () => {
+        document.getElementById('count-input').value = v;
+        Array.from(qc.children).forEach(c => c.classList.remove('active'));
+        b.classList.add('active');
+      };
+      qc.appendChild(b);
+    });
+    show('count');
+  }
+
+  function confirmAssign() {
+    const target = parseInt(document.getElementById('count-input').value) || 0;
+    rjNeoAssignments.push({ name: pickedExercise, target, unit: pickedUnit });
+    show('neo-page');
+  }
+
+  // ===== Custom exercise =====
+  let trackType = 'reps';
+  function setTrack(t) {
+    trackType = t;
+    ['track-reps', 'track-time', 'track-target'].forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById('track-' + t).classList.add('active');
+    const help = document.getElementById('track-help');
+    const label = document.getElementById('amount-label');
+    const input = document.getElementById('custom-amount');
+    if (t === 'reps') {
+      help.textContent = 'A count of completed reps (e.g. 50 free throws).';
+      label.textContent = 'How many reps?';
+      input.placeholder = '50';
+      input.type = 'text';
+    } else if (t === 'time') {
+      help.textContent = 'Minutes spent on the drill (e.g. 10 min ball-handling).';
+      label.textContent = 'How many minutes?';
+      input.placeholder = '10';
+      input.type = 'text';
+    } else {
+      help.textContent = 'A specific outcome to hit (e.g. 3 in a row from each corner).';
+      label.textContent = 'Target';
+      input.placeholder = '3 in a row from each corner';
+      input.type = 'text';
+    }
+  }
+
+  function sendCustom() {
+    const name = document.getElementById('custom-name').value || 'Custom drill';
+    const amount = document.getElementById('custom-amount').value;
+    const video = document.getElementById('custom-video').value;
+    let target, unit;
+    if (trackType === 'reps') { target = parseInt(amount) || 50; unit = 'reps'; }
+    else if (trackType === 'time') { target = parseInt(amount) || 10; unit = 'min'; }
+    else { target = amount || 'target'; unit = 'target'; }
+    rjNeoAssignments.push({ name, target, unit, video, custom: true });
+    // reset for next use
+    document.getElementById('custom-name').value = '';
+    document.getElementById('custom-amount').value = '';
+    document.getElementById('custom-video').value = '';
+    setTrack('reps');
+    show('neo-page');
+  }
+
+  // ===== Neo flow =====
+  function renderNeoHome() {
+    let totalDone = 0, totalTarget = 0;
+    Object.values(neoAssignments).forEach(a => { totalDone += a.done; totalTarget += a.target; });
+    document.getElementById('neo-summary').textContent = `3 assignments · ${totalDone} of ${totalTarget} done`;
+    const html = Object.entries(neoAssignments).map(([key, a]) => {
+      const pc = Math.min(100, Math.round((a.done / a.target) * 100));
+      const complete = a.done >= a.target;
+      return `<div onclick="openLog('${key}')" class="assignment-card tappable">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="font-size: 15px; font-weight: 500;">${a.name}</div>
+          <div style="font-size: 12px; color: ${complete ? 'var(--green)' : 'var(--text-mute)'};">${a.done} / ${a.target}${complete ? ' ✓' : ''}</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill ${complete ? 'done' : ''}" style="width: ${pc}%;"></div></div>
+      </div>`;
+    }).join('');
+    document.getElementById('neo-cards').innerHTML = html;
+  }
+
+  function openLog(key) {
+    currentLogKey = key;
+    sessionStart = neoAssignments[key].done;
+    document.getElementById('log-name').textContent = neoAssignments[key].name;
+    document.getElementById('log-current').textContent = neoAssignments[key].done;
+    document.getElementById('log-target').textContent = neoAssignments[key].target;
+    document.getElementById('log-bar').style.width = Math.min(100, (neoAssignments[key].done / neoAssignments[key].target) * 100) + '%';
+    show('log');
+  }
+
+  function addReps(n) {
+    const a = neoAssignments[currentLogKey];
+    a.done = Math.min(a.target, a.done + n);
+    document.getElementById('log-current').textContent = a.done;
+    document.getElementById('log-bar').style.width = Math.min(100, (a.done / a.target) * 100) + '%';
+  }
+
+  function saveLog() {
+    const a = neoAssignments[currentLogKey];
+    const sessionAdded = a.done - sessionStart;
+    if (a.done >= a.target) {
+      document.getElementById('celebrate-msg').textContent = `${a.target} ${a.name.toLowerCase()}. Done.`;
+      document.getElementById('celebrate-sub').textContent = 'RJ will see this.';
+    } else if (sessionAdded > 0) {
+      document.getElementById('celebrate-msg').textContent = `+${sessionAdded} logged.`;
+      document.getElementById('celebrate-sub').textContent = `${a.target - a.done} ${a.name.toLowerCase()} to go.`;
+    } else {
+      document.getElementById('celebrate-msg').textContent = 'Saved.';
+      document.getElementById('celebrate-sub').textContent = `${a.target - a.done} ${a.name.toLowerCase()} to go.`;
+    }
+    show('celebrate');
+  }
+
+  // ===== Monday roster =====
+  function playerRow(p, idx, quiet) {
+    const days = p.daysLogged > 0 ? `${p.daysLogged}d` : '—';
+    return `<div onclick="openMondayPlayer(${idx})" class="player-row">
+      <div class="avatar ${quiet ? 'quiet' : ''}">${p.initial}</div>
+      <div style="flex: 1; font-size: 14px; font-weight: 500;">${p.name}</div>
+      <div class="row-meta"><div>${days}</div><div>${p.lastActivity}</div></div>
+    </div>`;
+  }
+  function renderMonday() {
+    const fire = mondayPlayers.filter(p => p.daysLogged >= 4);
+    const active = mondayPlayers.filter(p => p.daysLogged >= 1 && p.daysLogged < 4);
+    const quiet = mondayPlayers.filter(p => p.daysLogged === 0);
+    const idxOf = (p) => mondayPlayers.indexOf(p);
+    const totalLogged = fire.length + active.length;
+    document.getElementById('monday-summary').textContent = `${totalLogged} of ${mondayPlayers.length} logged`;
+    document.getElementById('list-fire').innerHTML = fire.map(p => playerRow(p, idxOf(p), false)).join('');
+    document.getElementById('list-active').innerHTML = active.map(p => playerRow(p, idxOf(p), false)).join('');
+    document.getElementById('list-quiet').innerHTML = quiet.map(p => playerRow(p, idxOf(p), true)).join('');
+  }
+  function openMondayPlayer(idx) {
+    const p = mondayPlayers[idx];
+    document.getElementById('d-avatar').textContent = p.initial;
+    document.getElementById('d-name').textContent = p.name;
+    document.getElementById('d-meta').textContent = p.daysLogged === 0
+      ? 'No logs yet this week'
+      : `Logged ${p.daysLogged} day${p.daysLogged === 1 ? '' : 's'} · last ${p.lastActivity}`;
+    const html = p.assignments.map(a => {
+      const pc = Math.min(100, Math.round((a.done / a.target) * 100));
+      const complete = a.done >= a.target;
+      return `<div class="assignment-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="font-size: 14px; font-weight: 500;">${a.name}</div>
+          <div style="font-size: 12px; color: ${complete ? 'var(--green)' : 'var(--text-mute)'};">${a.done} / ${a.target}${complete ? ' ✓' : ''}</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill ${complete ? 'done' : ''}" style="width: ${pc}%;"></div></div>
+      </div>`;
+    }).join('');
+    document.getElementById('d-assignments').innerHTML = html;
+    show('detail');
+  }
+</script>
+
+</body>
+</html>
