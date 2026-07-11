@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
-import type { TablesInsert } from "@/types/database";
 import { LogoMini, LogoLarge } from "./Logo";
 
 type Step = "landing" | "name" | "phone" | "code";
@@ -74,15 +73,15 @@ export default function CoachSignup() {
       return;
     }
 
-    // Upsert coach row — id matches auth.uid()
-    const coachRow: TablesInsert<"coaches"> = {
+    // Insert coach row on first sign-up. On subsequent sign-ins the row already
+    // exists — ignore the unique-constraint violation (Postgres code 23505).
+    const { error: dbError } = await supabase.from("coaches").insert({
       id: userId,
       name: name.trim() || "Coach",
       phone: toE164(phone),
-    };
-    const { error: dbError } = await supabase.from("coaches").upsert(coachRow, { onConflict: "id" });
+    });
     setLoading(false);
-    if (dbError) {
+    if (dbError && dbError.code !== "23505") {
       setError(dbError.message);
       return;
     }
