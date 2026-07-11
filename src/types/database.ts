@@ -12,7 +12,7 @@ export type Database = {
           phone: string;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["coaches"]["Row"], "id" | "created_at">;
+        Insert: Omit<Database["public"]["Tables"]["coaches"]["Row"], "id" | "created_at"> & { id?: string };
         Update: Partial<Database["public"]["Tables"]["coaches"]["Insert"]>;
       };
       players: {
