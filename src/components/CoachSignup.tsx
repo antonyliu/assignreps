@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
+import type { TablesInsert } from "@/types/database";
 import { LogoMini, LogoLarge } from "./Logo";
 
 type Step = "landing" | "name" | "phone" | "code";
@@ -74,10 +75,12 @@ export default function CoachSignup() {
     }
 
     // Upsert coach row — id matches auth.uid()
-    const { error: dbError } = await supabase.from("coaches").upsert(
-      { id: userId, name: name.trim() || "Coach", phone: toE164(phone) } as { id: string; name: string; phone: string },
-      { onConflict: "id" }
-    );
+    const coachRow: TablesInsert<"coaches"> = {
+      id: userId,
+      name: name.trim() || "Coach",
+      phone: toE164(phone),
+    };
+    const { error: dbError } = await supabase.from("coaches").upsert(coachRow, { onConflict: "id" });
     setLoading(false);
     if (dbError) {
       setError(dbError.message);
