@@ -1,10 +1,7 @@
-// Coach dashboard — authenticated view
-// TODO: Protect with Supabase session check
+import CoachSignup from "@/components/CoachSignup";
+
+// /coach — shows signup/sign-in flow if unauthenticated.
+// After verifying OTP, CoachSignup redirects to /coach/roster.
 export default function CoachPage() {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-bold">Coach Dashboard</h1>
-      <p className="text-[#f5f0eb]/60 mt-1">Scaffold only — UI coming soon.</p>
-    </main>
-  );
+  return <CoachSignup />;
 }
