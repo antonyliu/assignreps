@@ -76,6 +76,7 @@ export default function CoachSignup() {
     // Insert coach row on first sign-up. On subsequent sign-ins the row already
     // exists — ignore the unique-constraint violation (Postgres code 23505).
     const { error: dbError } = await supabase.from("coaches").insert({
+      id: userId,
       name: name.trim() || "Coach",
       phone: toE164(phone),
     });
