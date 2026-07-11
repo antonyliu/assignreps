@@ -66,7 +66,8 @@ export default function CoachSignup() {
       token: code,
       type: "sms",
     });
-    if (verifyError || !data.user) {
+    const userId = data.user?.id;
+    if (verifyError || !userId) {
       setLoading(false);
       setError(verifyError?.message ?? "Verification failed. Try again.");
       return;
@@ -74,7 +75,7 @@ export default function CoachSignup() {
 
     // Upsert coach row — id matches auth.uid()
     const { error: dbError } = await supabase.from("coaches").upsert(
-      { id: data.user.id, name: name.trim() || "Coach", phone: toE164(phone) },
+      { id: userId, name: name.trim() || "Coach", phone: toE164(phone) },
       { onConflict: "id" }
     );
     setLoading(false);
