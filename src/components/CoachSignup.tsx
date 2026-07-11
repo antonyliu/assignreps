@@ -75,7 +75,7 @@ export default function CoachSignup() {
 
     // Upsert coach row — id matches auth.uid()
     const { error: dbError } = await supabase.from("coaches").upsert(
-      { id: userId, name: name.trim() || "Coach", phone: toE164(phone) },
+      { id: userId, name: name.trim() || "Coach", phone: toE164(phone) } as { id: string; name: string; phone: string },
       { onConflict: "id" }
     );
     setLoading(false);
