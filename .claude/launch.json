@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "assignreps-dev",
+      "runtimeExecutable": "/Users/antonyliu/Desktop/assignreps/.claude/dev.sh",
+      "runtimeArgs": [],
+      "port": 3000
+    }
+  ]
+}
