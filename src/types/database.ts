@@ -1,7 +1,9 @@
 export type Coach = {
   id: string
   name: string
-  phone: string
+  email: string | null
+  phone: string | null
+  instructor_type: string | null
   created_at: string
 }
 

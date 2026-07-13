@@ -3,12 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --background: #100d0b;
-  --foreground: #f5f0eb;
+  --reps-bg:         #161310;
+  --reps-card:       #221e1a;
+  --reps-raised:     #2a2420;
+  --reps-line:       #3a3328;
+  --reps-line-hi:    #4a4338;
+  --reps-ink:        #f0ede8;
+  --reps-sub:        #9a9189;
+  --reps-dim:        #6b6059;
+  --reps-orange:     #378add;
+  --reps-orange-hi:  #4a9ae8;
+  --reps-green:      #4ade80;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--reps-bg);
+  color: var(--reps-ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }

@@ -59,7 +59,6 @@ export default async function ParentPage({
   const { token } = await params;
   const supabase = await createClient();
 
-  // Look up player by token
   const { data: player } = await supabase
     .from("players")
     .select("id, name, coach_id")
@@ -89,78 +88,69 @@ export default async function ParentPage({
       .order("logged_at", { ascending: false }),
   ]);
 
-  const coachName = coach?.name ?? "Coach";
+  const coachName       = coach?.name ?? "Coach";
   const totalAssignments = assignments?.length ?? 0;
-  const logList = logs ?? [];
+  const logList         = logs ?? [];
 
-  // Unique practice days
   const practiceDays = new Set(logList.map((l) => l.logged_at.split("T")[0]));
-  const dayCount = practiceDays.size;
+  const dayCount     = practiceDays.size;
 
-  // Completed assignments (fully logged = at least one log entry per assignment)
   const loggedAssignmentIds = new Set(logList.map((l) => l.assignment_id));
-  const completedCount = (assignments ?? []).filter((a) => loggedAssignmentIds.has(a.id)).length;
+  const completedCount      = (assignments ?? []).filter((a) => loggedAssignmentIds.has(a.id)).length;
 
   const lastLoggedAt = logList[0]?.logged_at ?? null;
-
-  const headline = effortHeadline(dayCount, completedCount, totalAssignments);
-  const emoji = effortEmoji(dayCount, completedCount, totalAssignments);
+  const headline     = effortHeadline(dayCount, completedCount, totalAssignments);
+  const emoji        = effortEmoji(dayCount, completedCount, totalAssignments);
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <LogoMini />
-        <span className="text-[12px] text-[#5a5a5e]">{weekLabel(weekStart)}</span>
+        <span className="text-[12px] text-reps-dim">{weekLabel(weekStart)}</span>
       </div>
 
-      {/* Player intro */}
-      <p className="text-[13px] text-[#8a8a8e] mb-1">Weekly update</p>
-      <h1 className="text-[28px] font-semibold tracking-[-0.5px] text-[#e8e8ea] mb-1">{player.name}</h1>
-      <p className="text-[13px] text-[#5a5a5e] mb-8">Assigned by {coachName}</p>
+      <p className="text-[13px] text-reps-sub mb-1">Weekly update</p>
+      <h1 className="text-[28px] font-semibold tracking-[-0.5px] text-reps-ink mb-1">{player.name}</h1>
+      <p className="text-[13px] text-reps-dim mb-8">Assigned by {coachName}</p>
 
-      {/* Effort card */}
-      <div className="bg-[#1a1a1c] border border-[#2a2a2c] rounded-[14px] px-5 py-6 mb-4 text-center">
+      <div className="bg-reps-card border border-reps-line rounded-[14px] px-5 py-6 mb-4 text-center">
         <div className="text-[48px] mb-3">{emoji}</div>
-        <p className="text-[17px] font-semibold text-[#e8e8ea] mb-1">{headline}</p>
+        <p className="text-[17px] font-semibold text-reps-ink mb-1">{headline}</p>
         {totalAssignments > 0 && dayCount > 0 && (
-          <p className="text-[13px] text-[#8a8a8e]">
+          <p className="text-[13px] text-reps-sub">
             Practiced {dayCount} day{dayCount === 1 ? "" : "s"} this week
           </p>
         )}
       </div>
 
-      {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 mb-8">
-        <div className="bg-[#1a1a1c] border border-[#2a2a2c] rounded-[12px] px-4 py-4">
-          <p className="text-[11px] text-[#5a5a5e] uppercase tracking-[1px] mb-1">Practice days</p>
-          <p className="text-[24px] font-semibold text-[#e8e8ea]">{dayCount}</p>
-          <p className="text-[11px] text-[#5a5a5e]">this week</p>
+        <div className="bg-reps-card border border-reps-line rounded-[12px] px-4 py-4">
+          <p className="text-[11px] text-reps-dim uppercase tracking-[1px] mb-1">Practice days</p>
+          <p className="text-[24px] font-semibold text-reps-ink">{dayCount}</p>
+          <p className="text-[11px] text-reps-dim">this week</p>
         </div>
-        <div className="bg-[#1a1a1c] border border-[#2a2a2c] rounded-[12px] px-4 py-4">
-          <p className="text-[11px] text-[#5a5a5e] uppercase tracking-[1px] mb-1">Assignments</p>
-          <p className="text-[24px] font-semibold text-[#e8e8ea]">
+        <div className="bg-reps-card border border-reps-line rounded-[12px] px-4 py-4">
+          <p className="text-[11px] text-reps-dim uppercase tracking-[1px] mb-1">Assignments</p>
+          <p className="text-[24px] font-semibold text-reps-ink">
             {completedCount}
             {totalAssignments > 0 && (
-              <span className="text-[14px] text-[#5a5a5e] font-normal"> / {totalAssignments}</span>
+              <span className="text-[14px] text-reps-dim font-normal"> / {totalAssignments}</span>
             )}
           </p>
-          <p className="text-[11px] text-[#5a5a5e]">started</p>
+          <p className="text-[11px] text-reps-dim">started</p>
         </div>
       </div>
 
-      {/* Last active */}
-      <div className="border-t border-[#1e1e20] pt-5">
+      <div className="border-t border-reps-line pt-5">
         <div className="flex justify-between items-center">
-          <span className="text-[13px] text-[#5a5a5e]">Last active</span>
-          <span className="text-[13px] text-[#8a8a8e]">{lastActivityLabel(lastLoggedAt)}</span>
+          <span className="text-[13px] text-reps-dim">Last active</span>
+          <span className="text-[13px] text-reps-sub">{lastActivityLabel(lastLoggedAt)}</span>
         </div>
       </div>
 
-      {/* Footer */}
       <div className="mt-auto pt-8 text-center">
-        <p className="text-[11px] text-[#3a3a3c]">Read-only view · Reps</p>
+        <p className="text-[11px] text-reps-dim/50">Read-only view · Reps</p>
       </div>
     </main>
   );

@@ -4,7 +4,7 @@ import Image from "next/image";
 function TallyMark() {
   return (
     <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" rx="8" fill="#ff7a3d" />
+      <rect width="32" height="32" rx="8" fill="#378add" />
       <line x1="9"  y1="8" x2="9"  y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
       <line x1="14" y1="8" x2="14" y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
       <line x1="19" y1="8" x2="19" y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
@@ -86,7 +86,7 @@ export default function LandingPage() {
                 fontWeight: 700,
                 letterSpacing: "2px",
                 textTransform: "uppercase",
-                color: "#ff7a3d",
+                color: "#2d7bc4",
                 marginBottom: "24px",
               }}>
                 For coaches &amp; instructors
@@ -113,7 +113,7 @@ export default function LandingPage() {
                       width: "7px",
                       height: "7px",
                       borderRadius: "50%",
-                      backgroundColor: "#ff7a3d",
+                      backgroundColor: "#2d7bc4",
                       marginTop: "7px",
                     }} />
                     <span style={{ fontSize: "16px", lineHeight: 1.5, color: "#1a1a1a", fontWeight: 600 }}>
@@ -129,7 +129,7 @@ export default function LandingPage() {
                   href="/coach"
                   style={{
                     display: "block",
-                    backgroundColor: "#e86e2e",
+                    backgroundColor: "#2d7bc4",
                     color: "#fff",
                     fontWeight: 700,
                     fontSize: "16px",
@@ -145,7 +145,7 @@ export default function LandingPage() {
                 </Link>
                 <Link
                   href="/player/login"
-                  style={{ fontSize: "15px", color: "#b35510", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px" }}
+                  style={{ fontSize: "15px", color: "#1c6aa8", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px" }}
                   className="hover:opacity-80 transition-opacity"
                 >
                   I&apos;m a student →

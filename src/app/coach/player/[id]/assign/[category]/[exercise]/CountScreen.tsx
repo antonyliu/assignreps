@@ -27,7 +27,7 @@ export default function CountScreen({
 }: Props) {
   const router = useRouter();
   const [target, setTarget] = useState(defaultTarget);
-  const [error, setError] = useState("");
+  const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleConfirm() {
@@ -40,21 +40,17 @@ export default function CountScreen({
     router.push(`/coach/player/${playerId}`);
   }
 
-  const inputClass =
-    "bg-[#1a1a1c] border border-[#2a2a2c] rounded-[10px] px-[14px] py-[14px] text-lg text-center text-[#e8e8ea] outline-none focus:border-[#ff7a3d] transition-colors w-full placeholder:text-[#5a5a5e]";
-
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      {/* Back header */}
       <div className="flex items-center gap-3 mb-6">
         <Link
           href={`/coach/player/${playerId}/assign/${categorySlug}`}
-          className="text-[#8a8a8e] text-lg px-2 hover:text-[#e8e8ea] transition-colors"
+          className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
         >
           ←
         </Link>
-        <span className="text-[14px] font-medium text-[#e8e8ea]">Assign to {playerName}</span>
+        <span className="text-[14px] font-medium text-reps-ink">Assign to {playerName}</span>
       </div>
 
       {error && (
@@ -63,43 +59,39 @@ export default function CountScreen({
         </div>
       )}
 
-      {/* Exercise name */}
-      <span className="text-[13px] text-[#8a8a8e] mb-1">Exercise</span>
-      <h2 className="text-2xl font-medium tracking-[-0.3px] mb-8">{exerciseName}</h2>
+      <span className="text-[13px] text-reps-sub mb-1">Exercise</span>
+      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-8">{exerciseName}</h2>
 
-      {/* Quick-count buttons */}
-      <label className="text-[13px] text-[#8a8a8e] block mb-2">How many?</label>
+      <label className="text-[13px] text-reps-sub block mb-2">How many?</label>
       <div className="flex gap-2 mb-3 flex-wrap">
         {quickCounts.map((n) => (
           <button
             key={n}
             onClick={() => setTarget(n)}
-            className={`flex-1 py-3 rounded-[10px] text-[14px] font-medium border transition-all
-              ${target === n
-                ? "bg-[rgba(255,122,61,0.12)] border-[rgba(255,122,61,0.35)] text-[#ff7a3d]"
-                : "bg-[#1a1a1c] border-[#2a2a2c] text-[#e8e8ea] hover:border-[#3a3a3c]"
-              }`}
+            className={`flex-1 py-3 rounded-[10px] text-[14px] font-medium border transition-all ${
+              target === n
+                ? "bg-reps-orange/10 border-reps-orange/30 text-reps-orange"
+                : "bg-reps-card border-reps-line text-reps-ink hover:border-reps-line-hi"
+            }`}
           >
             {n}
           </button>
         ))}
       </div>
 
-      {/* Manual input */}
       <input
         type="number"
         min={1}
         value={target}
         onChange={(e) => setTarget(parseInt(e.target.value) || 0)}
-        className={`${inputClass} mb-1`}
+        className="bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-lg text-center text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim mb-1"
       />
-      <p className="text-[12px] text-[#5a5a5e] text-center mb-8">{unit}</p>
+      <p className="text-[12px] text-reps-dim text-center mb-8">{unit}</p>
 
-      {/* Confirm */}
       <button
         onClick={handleConfirm}
         disabled={loading}
-        className="w-full bg-[#ff7a3d] text-[#0f0f10] font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-[#ff8a52] active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
+        className="w-full bg-reps-orange text-reps-bg font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
       >
         {loading ? "Saving…" : `Send to ${playerName}`}
       </button>

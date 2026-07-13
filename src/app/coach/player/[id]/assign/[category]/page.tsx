@@ -29,31 +29,30 @@ export default async function AssignExerciseListPage({
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      {/* Back header */}
       <div className="flex items-center gap-3 mb-6">
         <Link
           href={`/coach/player/${id}/assign`}
-          className="text-[#8a8a8e] text-lg px-2 hover:text-[#e8e8ea] transition-colors"
+          className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
         >
           ←
         </Link>
-        <span className="text-[14px] font-medium text-[#e8e8ea]">{cat.title}</span>
+        <span className="text-[14px] font-medium text-reps-ink">{cat.title}</span>
       </div>
 
-      <h2 className="text-2xl font-medium tracking-[-0.3px] mb-6">{cat.title}</h2>
+      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6">{cat.title}</h2>
 
       <div className="flex flex-col gap-2">
         {cat.exercises.map((ex) => (
           <Link
             key={ex.slug}
             href={`/coach/player/${id}/assign/${category}/${ex.slug}`}
-            className="flex justify-between items-center px-[14px] py-3 border border-[#2a2a2c] rounded-[10px] hover:bg-[#1a1a1c] hover:border-[#3a3a3c] transition-all"
+            className="flex justify-between items-center px-[14px] py-3 border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi transition-all"
           >
             <div>
-              <div className="text-[15px] font-medium text-[#e8e8ea]">{ex.name}</div>
-              <div className="text-[11px] text-[#5a5a5e]">Default: {ex.default} {cat.unit}</div>
+              <div className="text-[15px] font-medium text-reps-ink">{ex.name}</div>
+              <div className="text-[11px] text-reps-dim">Default: {ex.default} {cat.unit}</div>
             </div>
-            <span className="text-[18px] text-[#5a5a5e]">›</span>
+            <span className="text-[18px] text-reps-dim">›</span>
           </Link>
         ))}
       </div>
@@ -61,7 +60,7 @@ export default async function AssignExerciseListPage({
       <div className="mt-auto pt-6 text-center">
         <Link
           href={`/coach/player/${id}/assign/custom`}
-          className="text-[13px] text-[#5a5a5e] hover:text-[#8a8a8e] transition-colors"
+          className="text-[13px] text-reps-dim hover:text-reps-sub transition-colors"
         >
           + Create your own
         </Link>

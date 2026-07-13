@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { LogoMini } from "@/components/Logo";
 import SignOutButton from "@/components/SignOutButton";
+import { getActivityLabels } from "@/config/activityTypes";
 import type { Metadata } from "next";
 import type { Player } from "@/types/database";
 
@@ -45,7 +46,7 @@ export default async function RosterPage() {
   const weekEndDate = weekEnd(weekStart);
 
   const [{ data: coach }, { data: players }, { data: logs }] = await Promise.all([
-    supabase.from("coaches").select("name").eq("id", user.id).single(),
+    supabase.from("coaches").select("name, instructor_type").eq("id", user.id).single(),
     supabase.from("players").select("*").eq("coach_id", user.id).order("created_at"),
     supabase
       .from("logs")
@@ -55,9 +56,9 @@ export default async function RosterPage() {
   ]);
 
   const coachInitials = coach?.name ? initials(coach.name) : "?";
+  const labels = getActivityLabels(coach?.instructor_type ?? null);
   const playerList: Player[] = players ?? [];
 
-  // Count unique practice days per player
   const daysByPlayer: Record<string, Set<string>> = {};
   for (const log of logs ?? []) {
     const day = log.logged_at.split("T")[0];
@@ -85,36 +86,35 @@ export default async function RosterPage() {
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <LogoMini />
         <SignOutButton initials={coachInitials} />
       </div>
 
-      <h1 className="text-2xl font-medium tracking-[-0.3px] mb-1">Your players</h1>
+      <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your {labels.studentsLabel}</h1>
 
       {playerList.length === 0 ? (
         <>
-          <p className="text-[13px] text-[#8a8a8e] mb-8">No players yet.</p>
+          <p className="text-[13px] text-reps-sub mb-8">No {labels.studentsLabel} yet.</p>
           <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
-            <div className="w-14 h-14 rounded-[14px] border border-dashed border-[#3a3a3c] flex items-center justify-center mb-4">
+            <div className="w-14 h-14 rounded-[14px] border border-dashed border-reps-line flex items-center justify-center mb-4">
               <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-                <path d="M10 4v12M4 10h12" stroke="#5a5a5e" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M10 4v12M4 10h12" stroke="#6b6059" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
-            <p className="text-[14px] text-[#8a8a8e] mb-5">Add your first player to start.</p>
+            <p className="text-[14px] text-reps-sub mb-5">Add your first {labels.studentLabel} to get started.</p>
             <Link
               href="/coach/add-player"
-              className="bg-[#ff7a3d] text-[#0f0f10] font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-[#ff8a52] transition-colors"
+              className="bg-reps-orange text-reps-bg font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
             >
-              + Add player
+              + Add {labels.studentLabel}
             </Link>
           </div>
         </>
       ) : (
         <>
-          <p className="text-[13px] text-[#8a8a8e] mb-6">
-            {playerList.length} {playerList.length === 1 ? "player" : "players"}
+          <p className="text-[13px] text-reps-sub mb-6">
+            {playerList.length} {playerList.length === 1 ? labels.studentLabel : labels.studentsLabel}
             {hasActivity && " · this week"}
           </p>
 
@@ -126,8 +126,8 @@ export default async function RosterPage() {
               return (
                 <div key={g}>
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-[13px] font-semibold text-[#e8e8ea]">{label}</span>
-                    <span className="text-[11px] text-[#5a5a5e]">{sub}</span>
+                    <span className="text-[13px] font-semibold text-reps-ink">{label}</span>
+                    <span className="text-[11px] text-reps-dim">{sub}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     {group.map((player) => {
@@ -137,26 +137,24 @@ export default async function RosterPage() {
                         <Link
                           key={player.id}
                           href={`/coach/player/${player.id}`}
-                          className="flex items-center gap-3 px-[14px] py-3 border border-[#2a2a2c] rounded-[10px] hover:bg-[#1a1a1c] hover:border-[#3a3a3c] active:scale-[0.99] transition-all"
+                          className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi active:scale-[0.99] transition-all"
                         >
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 ${
-                              isQuiet
-                                ? "bg-[rgba(90,90,94,0.15)] text-[#5a5a5e]"
-                                : "bg-[rgba(255,122,61,0.12)] text-[#ff7a3d]"
-                            }`}
-                          >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 ${
+                            isQuiet
+                              ? "bg-reps-dim/15 text-reps-dim"
+                              : "bg-reps-orange/10 text-reps-orange"
+                          }`}>
                             {initials(player.name)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className={`text-[15px] font-medium ${isQuiet ? "text-[#8a8a8e]" : "text-[#e8e8ea]"}`}>
+                            <div className={`text-[15px] font-medium ${isQuiet ? "text-reps-sub" : "text-reps-ink"}`}>
                               {player.name}
                             </div>
-                            <div className="text-[12px] text-[#5a5a5e]">
+                            <div className="text-[12px] text-reps-dim">
                               {isQuiet ? "No activity yet" : `${days} day${days === 1 ? "" : "s"} logged`}
                             </div>
                           </div>
-                          <span className="text-[18px] text-[#5a5a5e]">›</span>
+                          <span className="text-[18px] text-reps-dim">›</span>
                         </Link>
                       );
                     })}
@@ -168,9 +166,9 @@ export default async function RosterPage() {
 
           <Link
             href="/coach/add-player"
-            className="mt-auto block text-center border border-[#2a2a2c] text-[#e8e8ea] font-medium text-[15px] py-[14px] rounded-[10px] hover:border-[#3a3a3c] hover:bg-[#1a1a1c] transition-all"
+            className="mt-auto block text-center border border-reps-line text-reps-ink font-medium text-[15px] py-[14px] rounded-[10px] hover:border-reps-line-hi hover:bg-reps-card transition-all"
           >
-            + Add player
+            + Add {labels.studentLabel}
           </Link>
         </>
       )}

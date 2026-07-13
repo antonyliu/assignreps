@@ -33,12 +33,12 @@ export default async function PlayerWelcomePage({
   return (
     <main className="flex flex-col flex-1 min-h-screen items-center justify-center text-center px-6">
       <LogoLarge />
-      <h1 className="text-[36px] font-semibold tracking-[-1px] mb-2">Reps</h1>
-      <p className="text-[14px] text-[#8a8a8e] italic mb-10">
-        For players who want to be great.
+      <h1 className="text-[36px] font-semibold tracking-[-0.5px] mb-2">Reps</h1>
+      <p className="text-[14px] text-reps-sub italic mb-10">
+        Assign practice homework, the easy way.
       </p>
       <p className="text-[18px] font-medium mb-2">Hey {player.name} 👋</p>
-      <p className="text-[14px] text-[#8a8a8e] mb-8 max-w-[260px]">
+      <p className="text-[14px] text-reps-sub mb-8 max-w-[260px]">
         {`${coachName} assigned you work this week. Verify your number to continue.`}
       </p>
       <div className="w-full max-w-[300px]">

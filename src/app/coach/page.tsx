@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase-server";
 import CoachSignup from "@/components/CoachSignup";
 
-export const metadata: Metadata = { title: "Coach Sign In — Reps" };
+export const metadata: Metadata = { title: "Sign In — Reps" };
 
-// /coach — shows signup/sign-in flow if unauthenticated.
-// After verifying OTP, CoachSignup redirects to /coach/roster.
-export default function CoachPage() {
+export default async function CoachPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) redirect("/coach/roster");
   return <CoachSignup />;
 }

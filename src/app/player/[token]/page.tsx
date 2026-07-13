@@ -14,7 +14,6 @@ export default async function PlayerHomePage({
   const { token } = await params;
   const supabase = await createClient();
 
-  // Look up player by token — no auth required
   const { data: player } = await supabase
     .from("players")
     .select("id, name, coach_id")
@@ -23,7 +22,6 @@ export default async function PlayerHomePage({
 
   if (!player) notFound();
 
-  // Fetch coach name + this week's assignments + logs in parallel
   const weekStart = getWeekStart();
 
   const [{ data: coach }, { data: assignments }, { data: logs }] = await Promise.all([
@@ -44,7 +42,6 @@ export default async function PlayerHomePage({
   const coachInitial = coachName.trim()[0]?.toUpperCase() ?? "?";
   const assignmentList = assignments ?? [];
 
-  // Sum logged reps per assignment
   const loggedByAssignment: Record<string, number> = {};
   for (const log of logs ?? []) {
     loggedByAssignment[log.assignment_id] =
@@ -56,19 +53,18 @@ export default async function PlayerHomePage({
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <LogoMini />
         <div className="flex items-center gap-2">
-          <span className="text-[12px] text-[#8a8a8e]">{coachName}</span>
-          <div className="w-[30px] h-[30px] rounded-full bg-[rgba(255,255,255,0.06)] flex items-center justify-center text-[12px] font-semibold text-[#8a8a8e]">
+          <span className="text-[12px] text-reps-sub">{coachName}</span>
+          <div className="w-[30px] h-[30px] rounded-full bg-reps-raised flex items-center justify-center text-[12px] font-semibold text-reps-sub">
             {coachInitial}
           </div>
         </div>
       </div>
 
-      <h1 className="text-2xl font-medium tracking-[-0.3px] mb-1">This week</h1>
-      <p className="text-[13px] text-[#8a8a8e] mb-6">
+      <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">This week</h1>
+      <p className="text-[13px] text-reps-sub mb-6">
         {count === 0
           ? "No assignments yet."
           : `${count} assignment${count === 1 ? "" : "s"}`}
@@ -76,10 +72,10 @@ export default async function PlayerHomePage({
 
       {count === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
-          <p className="text-[14px] text-[#8a8a8e]">
+          <p className="text-[14px] text-reps-sub">
             Your coach hasn&apos;t assigned anything yet.
           </p>
-          <p className="text-[12px] text-[#5a5a5e] mt-2">Check back soon.</p>
+          <p className="text-[12px] text-reps-dim mt-2">Check back soon.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
@@ -92,19 +88,19 @@ export default async function PlayerHomePage({
               <Link
                 key={a.id}
                 href={`/player/${token}/log/${a.id}`}
-                className="bg-[#1a1a1c] border border-[#2a2a2c] rounded-[10px] px-4 py-[14px] hover:border-[#3a3a3c] transition-colors cursor-pointer"
+                className="bg-reps-card border border-reps-line rounded-[10px] px-4 py-[14px] hover:border-reps-line-hi transition-colors cursor-pointer"
               >
                 <div className="flex justify-between items-start mb-3">
-                  <span className="text-[15px] font-medium text-[#e8e8ea]">
+                  <span className="text-[15px] font-medium text-reps-ink">
                     {a.exercise_name}
                   </span>
-                  <span className={`text-[12px] ${done ? "text-[#4ade80]" : "text-[#5a5a5e]"}`}>
+                  <span className={`text-[12px] ${done ? "text-reps-green" : "text-reps-dim"}`}>
                     {done ? "Done ✓" : `${logged} / ${a.target} ${a.unit}`}
                   </span>
                 </div>
-                <div className="h-1 bg-[#2a2a2c] rounded-full overflow-hidden">
+                <div className="h-1 bg-reps-line rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${done ? "bg-[#4ade80]" : "bg-[#ff7a3d]"}`}
+                    className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-reps-orange"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>

@@ -9,13 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        orange: {
-          accent: "#ff7a3d",
-        },
-        green: {
-          complete: "#4ade80",
-        },
-        background: "#100d0b",
+        "reps-bg":        "#161310",
+        "reps-card":      "#221e1a",
+        "reps-raised":    "#2a2420",
+        "reps-line":      "#3a3328",
+        "reps-line-hi":   "#4a4338",
+        "reps-ink":       "#f0ede8",
+        "reps-sub":       "#9a9189",
+        "reps-dim":       "#6b6059",
+        "reps-orange":    "#378add",
+        "reps-orange-hi": "#4a9ae8",
+        "reps-green":     "#4ade80",
       },
       maxWidth: {
         mobile: "390px",

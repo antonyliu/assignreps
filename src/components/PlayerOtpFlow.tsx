@@ -5,23 +5,25 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 
 type Props = {
-  token: string;           // known when coming from welcome page; empty string on standalone login
-  prefillPhone?: string;   // E.164 from players table on welcome page
+  token: string;
+  prefillPhone?: string;
   lookupByPhone?: (phone: string) => Promise<{ ok: true; token: string } | { ok: false; error: string }>;
 };
 
 type Step = "phone" | "code";
 
+const INPUT = "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-base text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim";
+
 export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone }: Props) {
   const router = useRouter();
   const supabase = createClient();
 
-  const [step, setStep] = useState<Step>("phone");
-  const [phone, setPhone] = useState(prefillPhone ?? "");
+  const [step, setStep]               = useState<Step>("phone");
+  const [phone, setPhone]             = useState(prefillPhone ?? "");
   const [displayPhone, setDisplayPhone] = useState(prefillPhone ? formatDisplay(prefillPhone) : "");
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [code, setCode]               = useState("");
+  const [error, setError]             = useState("");
+  const [loading, setLoading]         = useState(false);
 
   const codeRef = useRef<HTMLInputElement>(null);
   useEffect(() => { if (step === "code") codeRef.current?.focus(); }, [step]);
@@ -34,7 +36,6 @@ export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone 
   }
 
   function formatDisplay(e164: string) {
-    // Show E.164 as-is if it can't be parsed; otherwise show (555) 123-4567
     const digits = e164.replace(/\D/g, "");
     if (digits.length === 11 && digits.startsWith("1")) {
       const d = digits.slice(1);
@@ -65,19 +66,10 @@ export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone 
       phone: e164, token: code, type: "sms",
     });
 
-    if (verifyError) {
-      setLoading(false);
-      setError(verifyError.message);
-      return;
-    }
+    if (verifyError) { setLoading(false); setError(verifyError.message); return; }
 
-    // If token already known (welcome flow), go straight there
-    if (token) {
-      router.push(`/player/${token}`);
-      return;
-    }
+    if (token) { router.push(`/player/${token}`); return; }
 
-    // Login flow: look up token by phone
     if (lookupByPhone) {
       const result = await lookupByPhone(e164);
       setLoading(false);
@@ -89,9 +81,6 @@ export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone 
     setLoading(false);
     setError("Something went wrong.");
   }
-
-  const inputClass =
-    "bg-[#1a1a1c] border border-[#2a2a2c] rounded-[10px] px-[14px] py-[14px] text-base text-[#e8e8ea] outline-none focus:border-[#ff7a3d] transition-colors w-full placeholder:text-[#5a5a5e]";
 
   if (step === "phone") {
     return (
@@ -106,12 +95,12 @@ export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone 
           placeholder={prefillPhone ? displayPhone : "(555) 123-4567"}
           value={displayPhone}
           onChange={(e) => { setDisplayPhone(e.target.value); setPhone(e.target.value); setError(""); }}
-          className={`${inputClass} mb-4`}
+          className={`${INPUT} mb-4`}
         />
         <button
           onClick={handleSendCode}
           disabled={loading}
-          className="w-full bg-[#ff7a3d] text-[#0f0f10] font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-[#ff8a52] active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
+          className="w-full bg-reps-orange text-reps-bg font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
         >
           {loading ? "Sending…" : "Send code"}
         </button>
@@ -121,7 +110,7 @@ export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone 
 
   return (
     <div className="w-full flex flex-col gap-0">
-      <p className="text-[13px] text-[#8a8a8e] text-center mb-4">
+      <p className="text-[13px] text-reps-sub text-center mb-4">
         Code sent to {displayPhone || phone}.
       </p>
       {error && (
@@ -138,18 +127,18 @@ export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone 
         value={code}
         onChange={(e) => { setCode(e.target.value.replace(/\D/g, "")); setError(""); }}
         onKeyDown={(e) => e.key === "Enter" && !loading && handleVerify()}
-        className={`${inputClass} tracking-[6px] text-center mb-4 placeholder:tracking-normal`}
+        className={`${INPUT} tracking-[6px] text-center mb-4 placeholder:tracking-normal`}
       />
       <button
         onClick={handleVerify}
         disabled={loading}
-        className="w-full bg-[#ff7a3d] text-[#0f0f10] font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-[#ff8a52] active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
+        className="w-full bg-reps-orange text-reps-bg font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
       >
         {loading ? "Verifying…" : "Verify"}
       </button>
       <button
         onClick={() => { setCode(""); setError(""); setStep("phone"); }}
-        className="mt-4 text-[13px] text-[#5a5a5e] hover:text-[#8a8a8e] transition-colors"
+        className="mt-4 text-[13px] text-reps-dim hover:text-reps-sub transition-colors"
       >
         Wrong number? Go back
       </button>

@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "assignreps-dev",
-      "runtimeExecutable": "/Users/antonyliu/Desktop/assignreps/.claude/dev.sh",
-      "runtimeArgs": [],
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH && exec node node_modules/.bin/next dev"],
       "port": 3000
     }
   ]
