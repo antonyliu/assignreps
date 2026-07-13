@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { LogoMini } from "./Logo";
 
-type Step = "name" | "instructor_type" | "email" | "check_email";
+type Step = "name" | "instructor_type" | "email" | "code";
 type InstructorType = "basketball" | "piano" | "martial_arts" | "tennis";
 
 const INSTRUCTOR_OPTIONS: { id: InstructorType; label: string; emoji: string; available: boolean }[] = [
@@ -47,11 +48,13 @@ function ErrorBanner({ error }: { error: string }) {
 
 export default function CoachSignup() {
   const supabase = createClient();
+  const router = useRouter();
 
   const [step, setStep]                     = useState<Step>("name");
   const [name, setName]                     = useState("");
   const [instructorType, setInstructorType] = useState<InstructorType>("basketball");
   const [email, setEmail]                   = useState("");
+  const [code, setCode]                     = useState("");
   const [error, setError]                   = useState("");
   const [loading, setLoading]               = useState(false);
 
@@ -72,14 +75,51 @@ export default function CoachSignup() {
     if (!email.trim() || !email.includes("@")) { setError("Enter a valid email address."); return; }
     setError("");
     setLoading(true);
+    // No emailRedirectTo → Supabase sends a 6-digit OTP code instead of a magic link.
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
     setLoading(false);
     if (otpError) { setError(otpError.message); return; }
-    localStorage.setItem("reps_pending_profile", JSON.stringify({ name: name.trim(), instructorType }));
-    setStep("check_email");
+    setCode("");
+    setStep("code");
+  }
+
+  async function submitCode(e: React.FormEvent) {
+    e.preventDefault();
+    const clean = code.trim();
+    if (!/^\d{6}$/.test(clean)) { setError("Enter the 6-digit code."); return; }
+    setError("");
+    setLoading(true);
+    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: clean,
+      type: "email",
+    });
+    if (verifyError) { setLoading(false); setError(verifyError.message); return; }
+
+    // Session is now set client-side. Create the coach row if it doesn't exist yet.
+    const user = data.user;
+    if (user) {
+      const { error: insertError } = await supabase.from("coaches").insert({
+        id: user.id,
+        name: name.trim() || user.email || "Coach",
+        email: user.email,
+        instructor_type: instructorType,
+      });
+      // 23505 = unique violation — coach row already exists (existing sign-in), that's fine.
+      if (insertError && insertError.code !== "23505") {
+        console.error("coaches insert error:", insertError.message);
+      }
+    }
+
+    router.push("/coach/roster");
+  }
+
+  async function resendCode() {
+    setError("");
+    const { error: otpError } = await supabase.auth.signInWithOtp({ email: email.trim() });
+    if (otpError) setError(otpError.message);
   }
 
   if (step === "name") {
@@ -173,7 +213,7 @@ export default function CoachSignup() {
       <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
         <ScreenHeader stepNum={3} total={3} onBack={() => setStep("instructor_type")} />
         <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your email</h2>
-        <p className="text-[13px] text-reps-sub mb-6">We&apos;ll send a magic link — no password needed.</p>
+        <p className="text-[13px] text-reps-sub mb-6">We&apos;ll email you a 6-digit code — no password needed.</p>
         <ErrorBanner error={error} />
         <form onSubmit={submitEmail}>
           <input
@@ -188,41 +228,52 @@ export default function CoachSignup() {
             disabled={loading}
             className={`${BTN_PRIMARY} disabled:opacity-50 disabled:pointer-events-none`}
           >
-            {loading ? "Sending…" : "Send magic link"}
+            {loading ? "Sending…" : "Send code"}
           </button>
         </form>
       </main>
     );
   }
 
-  // step === "check_email"
+  // step === "code"
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-      <div className="flex items-center mb-8">
-        <LogoMini />
-      </div>
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
-        <div className="w-14 h-14 rounded-[14px] bg-reps-orange/10 flex items-center justify-center mb-5">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-            <rect x="2" y="5" width="20" height="14" rx="2" stroke="#378add" strokeWidth="1.7" />
-            <path d="M2 8l10 7 10-7" stroke="#378add" strokeWidth="1.7" strokeLinecap="round" />
-          </svg>
-        </div>
-        <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-2">Check your email</h2>
-        <p className="text-[14px] text-reps-sub leading-relaxed max-w-[280px]">
-          We sent a link to <span className="text-reps-ink font-medium">{email}</span>. Tap it to sign in — no password needed.
-        </p>
-        <p className="mt-8 text-[12px] text-reps-dim">
-          Wrong email?{" "}
-          <button
-            type="button"
-            onClick={() => { setEmail(""); setError(""); setStep("email"); }}
-            className="text-reps-orange hover:text-reps-orange-hi"
-          >
-            Go back
-          </button>
-        </p>
-      </div>
+      <ScreenHeader stepNum={3} total={3} onBack={() => { setError(""); setStep("email"); }} />
+      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Enter your code</h2>
+      <p className="text-[13px] text-reps-sub mb-6">
+        We emailed a 6-digit code to <span className="text-reps-ink font-medium">{email}</span>.
+      </p>
+      <ErrorBanner error={error} />
+      <form onSubmit={submitCode}>
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="\d{6}"
+          maxLength={6}
+          placeholder="000000"
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+          className={`${INPUT} mb-6 text-center text-2xl tracking-[0.4em] font-semibold`}
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className={`${BTN_PRIMARY} disabled:opacity-50 disabled:pointer-events-none`}
+        >
+          {loading ? "Verifying…" : "Verify & continue"}
+        </button>
+      </form>
+      <p className="mt-6 text-center text-[12px] text-reps-dim">
+        Didn&apos;t get it?{" "}
+        <button
+          type="button"
+          onClick={resendCode}
+          className="text-reps-orange hover:text-reps-orange-hi transition-colors"
+        >
+          Resend code
+        </button>
+      </p>
     </main>
   );
 }
