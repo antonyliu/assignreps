@@ -15,9 +15,9 @@ function TallyMark() {
 }
 
 const bullets = [
-  "Assign drills to any player in seconds",
-  "Players log reps on their own phone",
-  "You see exactly what got done",
+  "Send work to any student in seconds",
+  "Students log it on their phone",
+  "You always know where they left off",
 ];
 
 export default function LandingPage() {
@@ -89,19 +89,19 @@ export default function LandingPage() {
                 color: "#ff7a3d",
                 marginBottom: "24px",
               }}>
-                For basketball coaches
+                For coaches &amp; instructors
               </p>
 
               {/* Headline */}
               <h1 className="headline" style={{
                 fontSize: "clamp(48px, 7vw, 72px)",
-                fontWeight: 800,
-                letterSpacing: "-3px",
-                lineHeight: 0.97,
+                fontWeight: 600,
+                letterSpacing: "-0.5px",
+                lineHeight: 1.1,
                 color: "#0f0f10",
                 marginBottom: "20px",
               }}>
-                Basketball<br/>homework.
+                Assign practice homework, the easy way.
               </h1>
 
               {/* Bullets */}
@@ -148,7 +148,7 @@ export default function LandingPage() {
                   style={{ fontSize: "15px", color: "#b35510", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px" }}
                   className="hover:opacity-80 transition-opacity"
                 >
-                  I&apos;m a player →
+                  I&apos;m a student →
                 </Link>
               </div>
 
@@ -183,7 +183,7 @@ export default function LandingPage() {
         .landing-text { width: 100%; }
         .cta-primary  { width: 100%; }
         .eyebrow  { margin-bottom: 8px !important; }
-        .headline { font-size: 52px !important; margin-bottom: 20px !important; }
+        .headline { font-size: 38px !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; margin-bottom: 20px !important; }
         .bullets  { margin-bottom: 36px !important; gap: 13px !important; }
         @media (min-width: 768px) {
           .page-header { padding: 24px 40px 0; }
@@ -201,23 +201,22 @@ export default function LandingPage() {
           .cta-primary  { width: auto; }
           .cta-section  { align-items: flex-start !important; }
           .eyebrow  { margin-bottom: 8px !important; }
-          .headline { font-size: clamp(48px, 7vw, 72px) !important; margin-bottom: 22px !important; }
+          .headline { font-size: clamp(38px, 4.5vw, 56px) !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; margin-bottom: 22px !important; }
           .bullets  { margin-bottom: 40px !important; gap: 14px !important; }
         }
         .footer-inner {
           display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 8px;
+          flex-direction: row;
+          flex-wrap: nowrap;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
           max-width: 1100px;
           margin: 0 auto;
         }
-        @media (min-width: 768px) {
-          .footer-inner {
-            flex-direction: row;
-            align-items: center;
-            gap: 28px;
-          }
+        .footer-inner a, .footer-inner span {
+          font-size: 11px !important;
+          white-space: nowrap;
         }
         @media (min-width: 1024px) {
           .landing-image-wrap {
