@@ -1,4 +1,4 @@
-import { createServerClient, type CookieMethodsServer } from "@supabase/ssr";
+import { createServerClient, type CookieMethodsServer, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function createClient() {
@@ -11,13 +11,13 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: Parameters<CookieMethodsServer["setAll"]>[0]) {
+        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
+            for (const { name, value, options } of cookiesToSet) {
+              cookieStore.set(name, value, options);
+            }
           } catch {
-            // setAll called from a Server Component — safe to ignore
+            // Called from a Server Component — mutations are ignored, safe to swallow
           }
         },
       },
