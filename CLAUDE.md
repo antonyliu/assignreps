@@ -104,6 +104,14 @@ Coach assigns → Student logs → Coach sees → Parent digest (weekly)
 - **⚠️ Shared-project caveat:** local/staging/prod all use one hosted Supabase project, so saving SMTP applies to prod too. There is no local-only apply for auth email on a shared project.
 - **To complete:** verify domain in Resend → create API key → Supabase Auth → SMTP settings → test magic link → check Resend logs
 
+### Coach auth = email OTP (6-digit code), NOT magic link
+
+- Coach signup uses `signInWithOtp({ email })` (no `emailRedirectTo`) + `verifyOtp({ type: "email" })`. See `CoachSignup.tsx`.
+- **`signInWithOtp` routes the email by user-existence:** new email → **"Confirm signup"** template; existing user → **"Magic Link"** template. It is NOT always the Magic Link template.
+- **Default templates render only `{{ .ConfirmationURL }}` (a link).** The 6-digit code comes from `{{ .Token }}`. A template without `{{ .Token }}` sends a link, no matter how the API is called.
+- **Fix / required config:** in Supabase → Authentication → Email Templates, edit **BOTH "Confirm signup" AND "Magic Link"** to include `{{ .Token }}` and drop `{{ .ConfirmationURL }}` (a link click runs a different path than `verifyOtp` code entry). Update subjects too.
+- `/auth/callback` and `/auth/complete` are leftover from the old magic-link flow and are no longer used by coach signup.
+
 ---
 
 ## DNS & infrastructure
