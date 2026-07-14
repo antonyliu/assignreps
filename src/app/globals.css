@@ -38,12 +38,25 @@ body {
 
    feFuncR/G/B (slope 1.5, mean-preserving) only widens sigma 23 -> 34; the
    raw spread is too tight to read as texture. Net effect on #ede9e3: mean
-   shift 0.00 levels, roughly +/-2.5 at 1 sigma. */
-.paper-grain::after {
+   shift 0.00 levels, roughly +/-2.5 at 1 sigma.
+
+   Stacking: the grain sits STRICTLY BEHIND every element. isolation:isolate
+   makes the page container a stacking context, which both keeps the negative
+   z-index from escaping behind the page background (where it would vanish) and
+   scopes the blend to this container. Paint order within it is: container
+   background, then z-index:-1 (the grain), then all content. So the grain
+   tints only bare background — never text, buttons, images or the logo, and
+   never the footer, which paints its own background over it. */
+.paper-grain {
+  position: relative;
+  isolation: isolate;
+}
+
+.paper-grain::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: -1;
   pointer-events: none;
   opacity: 0.55;
   mix-blend-mode: soft-light;
@@ -53,5 +66,5 @@ body {
 }
 
 @media print {
-  .paper-grain::after { display: none; }
+  .paper-grain::before { display: none; }
 }

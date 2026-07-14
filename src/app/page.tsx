@@ -191,7 +191,7 @@ export default function LandingPage() {
            explicit, equal width AND height in px removes the inference entirely.
            aspect-ratio is kept only as a belt-and-braces guard. */
         .landing-image-wrap {
-          --hero-w: 224px;
+          --hero-w: 258px; /* 224 + 15%, mobile only */
           width: var(--hero-w);
           flex-shrink: 0;
         }
@@ -264,17 +264,9 @@ export default function LandingPage() {
           .page-main   { padding: 24px 40px 48px; }
           .landing-layout {
             flex-direction: row;
-            /* 64, not 80: at exactly 768 the 340px hero + gap + the text column
-               (which cannot shrink past its nowrap bullets) overflowed the row
-               by 3px, giving a horizontal scrollbar at iPad portrait width.
-               Restored to 80 at >=1024, where there is room. */
-            gap: 64px;
+            gap: 80px;
             align-items: center;
           }
-          /* Tablet tier stays at 340. The text column cannot shrink below the
-             nowrap bullets (~311px), so hero + 80px gap + text already fills
-             the row here; enlarging the hero at this width overflows. The 12%
-             bump lands on the >=1024 tier, which has the headroom. */
           .landing-image-wrap {
             --hero-w: 340px;
             flex: 0 0 var(--hero-w);
@@ -329,9 +321,8 @@ export default function LandingPage() {
           }
         }
         @media (min-width: 1024px) {
-          .landing-layout { gap: 80px; }
           .landing-image-wrap {
-            --hero-w: 470px; /* 420 + 12% */
+            --hero-w: 420px;
             flex: 0 0 var(--hero-w);
             width: var(--hero-w);
           }
