@@ -139,7 +139,7 @@ export default function CoachSignup() {
             className={INPUT}
           />
           <p id="name-help" className="mt-2 mb-6 text-[13px] text-reps-dim">
-            Whatever your students call you.
+            Use whatever your students call you.
           </p>
           <button type="submit" className={BTN_PRIMARY}>Continue</button>
         </form>
