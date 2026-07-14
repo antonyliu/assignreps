@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Reps — Assign practice homework to your students.",
+  title: "Reps — Practice homework for your students.",
   description: "Reps keeps the work going between training sessions.",
 };
 
