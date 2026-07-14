@@ -15,9 +15,9 @@ function TallyMark() {
 }
 
 const bullets = [
-  "Send work to any student in seconds",
-  "Students log it on their phone",
-  "You always know where they left off",
+  "You assign the work",
+  "They log it on their phone",
+  "You see it",
 ];
 
 export default function LandingPage() {
@@ -103,7 +103,7 @@ export default function LandingPage() {
                 color: "#0f0f10",
                 marginBottom: "20px",
               }}>
-                Assign practice homework to your students.
+                Practice homework for your students.
               </h1>
 
               {/* Bullets */}
