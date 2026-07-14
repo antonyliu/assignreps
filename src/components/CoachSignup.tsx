@@ -34,7 +34,7 @@ function ScreenHeader({ stepNum, total, onBack }: { stepNum: number; total: numb
             ←
           </button>
         )}
-        <LogoMini size={24} textClass="text-base" gapClass="gap-2" />
+        <LogoMini />
       </div>
       {/* Sized and weighted to match the wordmark — the two read as a pair. */}
       <span className="text-base font-semibold text-reps-dim">Step {stepNum} of {total}</span>
@@ -139,7 +139,7 @@ export default function CoachSignup() {
             className={INPUT}
           />
           <p id="name-help" className="mt-2 mb-6 text-[13px] text-reps-dim">
-            Whatever your students call you.
+            Use whatever your students call you.
           </p>
           <button type="submit" className={BTN_PRIMARY}>Continue</button>
         </form>
