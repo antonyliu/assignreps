@@ -15,9 +15,9 @@ function TallyMark() {
 }
 
 const bullets = [
-  "Send work to any student in seconds",
-  "Students log it on their phone",
-  "You always know where they left off",
+  "Send assignments in seconds",
+  "Students log their progress",
+  "See their progress anytime",
 ];
 
 export default function LandingPage() {
