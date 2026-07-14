@@ -22,7 +22,7 @@ const ERROR_BOX = "bg-red-900/20 border border-red-500/30 text-red-400 rounded-[
 // Hoisted to module scope so they keep a stable identity and never remount.
 function ScreenHeader({ stepNum, total, onBack }: { stepNum: number; total: number; onBack?: () => void }) {
   return (
-    <div className="flex justify-between items-center mb-8">
+    <div className="flex justify-between items-center mb-12">
       <div className="flex items-center gap-3">
         {onBack && (
           <button
@@ -34,9 +34,10 @@ function ScreenHeader({ stepNum, total, onBack }: { stepNum: number; total: numb
             ←
           </button>
         )}
-        <LogoMini />
+        <LogoMini size={24} textClass="text-base" gapClass="gap-2" />
       </div>
-      <span className="text-xs text-reps-dim">Step {stepNum} of {total}</span>
+      {/* Sized and weighted to match the wordmark — the two read as a pair. */}
+      <span className="text-base font-semibold text-reps-dim">Step {stepNum} of {total}</span>
     </div>
   );
 }
@@ -131,11 +132,15 @@ export default function CoachSignup() {
         <form onSubmit={submitName}>
           <input
             type="text"
-            placeholder="e.g. Coach RJ, Mrs. Chen, or Sarah"
+            placeholder="Coach RJ, Mrs. Tai"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className={`${INPUT} mb-6`}
+            aria-describedby="name-help"
+            className={INPUT}
           />
+          <p id="name-help" className="mt-2 mb-6 text-[13px] text-reps-dim">
+            Whatever your students call you.
+          </p>
           <button type="submit" className={BTN_PRIMARY}>Continue</button>
         </form>
         <p className="mt-6 text-center text-[13px] text-reps-dim">
@@ -193,7 +198,7 @@ export default function CoachSignup() {
                   {selected && (
                     <span className="ml-auto w-5 h-5 rounded-full bg-reps-orange flex items-center justify-center shrink-0">
                       <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                        <path d="M1 4l3 3 5-6" stroke="#161310" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M1 4l3 3 5-6" stroke="var(--reps-bg)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </span>
                   )}
