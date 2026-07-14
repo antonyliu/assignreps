@@ -34,7 +34,7 @@ function ScreenHeader({ stepNum, total, onBack }: { stepNum: number; total: numb
             ←
           </button>
         )}
-        <LogoMini size={24} textClass="text-base" gapClass="gap-2" />
+        <LogoMini />
       </div>
       {/* Sized and weighted to match the wordmark — the two read as a pair. */}
       <span className="text-base font-semibold text-reps-dim">Step {stepNum} of {total}</span>
