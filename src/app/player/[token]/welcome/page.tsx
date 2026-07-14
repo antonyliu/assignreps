@@ -32,16 +32,13 @@ export default async function PlayerWelcomePage({
 
   return (
     <main className="flex flex-col flex-1 min-h-screen items-center justify-center text-center px-6">
-      <LogoLarge />
-      <h1 className="text-[36px] font-semibold tracking-[-0.5px] mb-2">Reps</h1>
-      <p className="text-[14px] text-reps-sub italic mb-10">
-        Assign practice homework, the easy way.
+      <LogoLarge size={44} />
+      <h1 className="text-[28px] font-semibold tracking-[-0.5px] mt-6 mb-2">Hey {player.name} 👋</h1>
+      <p className="text-[14px] text-reps-sub mb-8 max-w-[320px]">
+        {`${coachName} assigned you work this week.`}
       </p>
-      <p className="text-[18px] font-medium mb-2">Hey {player.name} 👋</p>
-      <p className="text-[14px] text-reps-sub mb-8 max-w-[260px]">
-        {`${coachName} assigned you work this week. Verify your number to continue.`}
-      </p>
-      <div className="w-full max-w-[300px]">
+      <div className="w-full max-w-[320px]">
+        <p className="text-[13px] text-reps-sub mb-4">Enter your number to continue.</p>
         <PlayerOtpFlow token={token} prefillPhone={player.phone} />
       </div>
     </main>

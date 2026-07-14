@@ -17,6 +17,7 @@ export default function AddPlayerForm({ studentLabel }: Props) {
   const [name, setName]               = useState("");
   const [phone, setPhone]             = useState("");
   const [parentPhone, setParentPhone] = useState("");
+  const [showParent, setShowParent]   = useState(false);
   const [error, setError]             = useState("");
   const [loading, setLoading]         = useState(false);
 
@@ -38,7 +39,7 @@ export default function AddPlayerForm({ studentLabel }: Props) {
     const result = await addPlayer(
       name.trim(),
       toE164(phone),
-      parentPhone.trim() ? toE164(parentPhone) : null
+      showParent && parentPhone.trim() ? toE164(parentPhone) : null
     );
     setLoading(false);
 
@@ -65,46 +66,57 @@ export default function AddPlayerForm({ studentLabel }: Props) {
         </div>
       )}
 
-      <label className="text-[13px] text-reps-sub block mb-1.5">Name</label>
+      <label className="text-[13px] text-reps-sub block mb-2">Name</label>
       <input
         type="text"
         placeholder="First name"
         value={name}
         onChange={(e) => setName(e.target.value)}
         autoFocus
-        className={`${INPUT} mb-6`}
+        className={`${INPUT} mb-7`}
       />
 
-      <label className="text-[13px] text-reps-sub block mb-1.5">{StudentLabel}&apos;s phone</label>
+      <label className="text-[13px] text-reps-sub block mb-2">{StudentLabel}&apos;s phone</label>
       <input
         type="tel"
-        placeholder="(555) 123-4567"
+        placeholder="(555) 000-0000"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        className={`${INPUT} mb-0.5`}
+        className={`${INPUT} mb-2`}
       />
-      <p className="text-[11px] text-reps-dim mb-6">
+      <p className="text-[11px] text-reps-dim mb-8">
         {name.trim()
           ? `${name.trim()} will get a text with their homework link.`
           : "They'll get a text with their homework link."}
       </p>
 
-      <div className="border-t border-reps-line pt-5 mb-6">
-        <label className="text-[13px] text-reps-sub block mb-1.5">
-          Parent&apos;s phone{" "}
-          <span className="text-reps-dim font-normal">(optional)</span>
-        </label>
-        <input
-          type="tel"
-          placeholder="(555) 123-4567"
-          value={parentPhone}
-          onChange={(e) => setParentPhone(e.target.value)}
-          className={`${INPUT} mb-0.5`}
-        />
-        <p className="text-[11px] text-reps-dim">
-          They&apos;ll get a short weekly digest. Skip if not needed.
-        </p>
-      </div>
+      {showParent ? (
+        <div className="border-t border-reps-line pt-6 mb-8">
+          <label className="text-[13px] text-reps-sub block mb-2">
+            Parent&apos;s phone{" "}
+            <span className="text-reps-dim font-normal">(optional)</span>
+          </label>
+          <input
+            type="tel"
+            placeholder="(555) 000-0000"
+            value={parentPhone}
+            onChange={(e) => setParentPhone(e.target.value)}
+            autoFocus
+            className={`${INPUT} mb-2`}
+          />
+          <p className="text-[11px] text-reps-dim">
+            They&apos;ll get a short weekly digest. Skip if not needed.
+          </p>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowParent(true)}
+          className="text-left text-[13px] text-reps-orange hover:text-reps-orange-hi transition-colors mb-8"
+        >
+          Add parent for weekly digest →
+        </button>
+      )}
 
       <button
         onClick={handleSubmit}

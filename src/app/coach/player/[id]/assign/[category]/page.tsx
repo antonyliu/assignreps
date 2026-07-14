@@ -57,7 +57,10 @@ export default async function AssignExerciseListPage({
         ))}
       </div>
 
-      <div className="mt-auto pt-6 text-center">
+      <div
+        className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-6 text-center bg-reps-bg"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+      >
         <Link
           href={`/coach/player/${id}/assign/custom`}
           className="text-[13px] text-reps-dim hover:text-reps-sub transition-colors"

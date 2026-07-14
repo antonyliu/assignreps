@@ -115,12 +115,17 @@ export default async function CoachPlayerPage({
             ))}
           </div>
 
-          <Link
-            href={`/coach/player/${id}/assign`}
-            className="mt-auto block text-center border border-reps-line text-reps-ink font-medium text-[15px] py-[14px] rounded-[10px] hover:border-reps-line-hi hover:bg-reps-card transition-all"
+          <div
+            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
           >
-            + Assign more
-          </Link>
+            <Link
+              href={`/coach/player/${id}/assign`}
+              className="block text-center border border-reps-line text-reps-ink font-medium text-[15px] py-[14px] rounded-[10px] hover:border-reps-line-hi hover:bg-reps-card transition-all"
+            >
+              + Assign more
+            </Link>
+          </div>
         </>
       )}
     </main>

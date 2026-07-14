@@ -11,6 +11,14 @@ function initials(name: string) {
   return name.trim()[0]?.toUpperCase() ?? "?";
 }
 
+// Coach avatar shows up to two initials from their actual name
+// (e.g. "Coach RJ" → "CR", "Mrs. Chen" → "MC", "Sarah" → "S").
+function coachInitialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return (parts[0]?.[0] ?? "?").toUpperCase();
+}
+
 function getWeekStart(): string {
   const now = new Date();
   const day = now.getDay();
@@ -30,8 +38,8 @@ type ActivityGroup = "fire" | "showing" | "quiet";
 
 function groupLabel(g: ActivityGroup) {
   if (g === "fire") return { label: "All in 🔥", sub: "4+ days this week" };
-  if (g === "showing") return { label: "Showing up", sub: "1–3 days this week" };
-  return { label: "Quiet", sub: "0 days this week" };
+  if (g === "showing") return { label: "Some activity", sub: "1–3 days this week" };
+  return { label: "No activity yet", sub: "0 days this week" };
 }
 
 export const metadata: Metadata = { title: "Roster — Reps" };
@@ -55,7 +63,7 @@ export default async function RosterPage() {
       .lte("logged_at", weekEndDate + "T23:59:59"),
   ]);
 
-  const coachInitials = coach?.name ? initials(coach.name) : "?";
+  const coachInitials = coach?.name ? coachInitialsOf(coach.name) : "?";
   const labels = getActivityLabels(coach?.instructor_type ?? null);
   const playerList: Player[] = players ?? [];
 
@@ -164,12 +172,17 @@ export default async function RosterPage() {
             })}
           </div>
 
-          <Link
-            href="/coach/add-player"
-            className="mt-auto block text-center border border-reps-line text-reps-ink font-medium text-[15px] py-[14px] rounded-[10px] hover:border-reps-line-hi hover:bg-reps-card transition-all"
+          <div
+            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
           >
-            + Add {labels.studentLabel}
-          </Link>
+            <Link
+              href="/coach/add-player"
+              className="block text-center border border-reps-line text-reps-ink font-medium text-[15px] py-[14px] rounded-[10px] hover:border-reps-line-hi hover:bg-reps-card transition-all"
+            >
+              + Add {labels.studentLabel}
+            </Link>
+          </div>
         </>
       )}
     </main>

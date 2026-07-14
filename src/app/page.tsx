@@ -53,27 +53,29 @@ export default function LandingPage() {
           {/* Mobile: stacked. Desktop: side by side */}
           <div className="landing-layout">
 
-            {/* Image — left on desktop, top on mobile */}
+            {/* Image — left on desktop, top on mobile. Two overlapping circles. */}
             <div className="landing-image-wrap">
-              <div
-                style={{
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  border: "5px solid #ede9e3",
-                  width: "100%",
-                  maxWidth: "400px",
-                  aspectRatio: "1",
-                  margin: "0 auto",
-                }}
-              >
-                <Image
-                  src="/hero.png"
-                  alt="Basketball player training"
-                  width={400}
-                  height={400}
-                  priority
-                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-                />
+              <div className="hero-duo">
+                <div className="hero-circle hero-circle-lg">
+                  <Image
+                    src="/basketball-hero.png"
+                    alt="Coach training a basketball player"
+                    width={500}
+                    height={500}
+                    priority
+                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+                  />
+                </div>
+                <div className="hero-circle hero-circle-sm">
+                  <Image
+                    src="/piano-hero.png"
+                    alt="Student practicing piano"
+                    width={360}
+                    height={360}
+                    priority
+                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -89,7 +91,7 @@ export default function LandingPage() {
                 color: "#2d7bc4",
                 marginBottom: "24px",
               }}>
-                For coaches &amp; instructors
+                For instructors &amp; coaches
               </p>
 
               {/* Headline */}
@@ -101,22 +103,21 @@ export default function LandingPage() {
                 color: "#0f0f10",
                 marginBottom: "20px",
               }}>
-                Assign practice homework, the easy way.
+                Assign practice homework to your students.
               </h1>
 
               {/* Bullets */}
               <ul className="bullets" style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: "16px" }}>
                 {bullets.map((b) => (
-                  <li key={b} style={{ display: "flex", alignItems: "flex-start", gap: "13px" }}>
+                  <li key={b} style={{ display: "flex", alignItems: "center", gap: "11px" }}>
                     <span style={{
                       flexShrink: 0,
                       width: "7px",
                       height: "7px",
                       borderRadius: "50%",
                       backgroundColor: "#2d7bc4",
-                      marginTop: "7px",
                     }} />
-                    <span style={{ fontSize: "16px", lineHeight: 1.5, color: "#1a1a1a", fontWeight: 600 }}>
+                    <span style={{ fontSize: "17px", lineHeight: 1.4, color: "#1a1a1a", fontWeight: 600, whiteSpace: "nowrap" }}>
                       {b}
                     </span>
                   </li>
@@ -177,14 +178,40 @@ export default function LandingPage() {
           align-items: center;
         }
         .landing-image-wrap {
-          width: 220px;
+          width: 260px;
           flex-shrink: 0;
+        }
+        .hero-duo {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 1 / 0.82;
+        }
+        .hero-circle {
+          position: absolute;
+          border-radius: 50%;
+          overflow: hidden;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        }
+        .hero-circle-lg {
+          width: 68%;
+          aspect-ratio: 1 / 1;
+          left: 0;
+          top: 0;
+        }
+        .hero-circle-sm {
+          width: 46%;
+          aspect-ratio: 1 / 1;
+          right: 0;
+          bottom: 0;
+          z-index: 2;
+          /* ring in the page background color separates the overlap, no visible border */
+          box-shadow: 0 0 0 5px #f8f7f5, 0 10px 30px rgba(0, 0, 0, 0.12);
         }
         .landing-text { width: 100%; }
         .cta-primary  { width: 100%; }
         .eyebrow  { margin-bottom: 8px !important; }
-        .headline { font-size: 38px !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; margin-bottom: 20px !important; }
-        .bullets  { margin-bottom: 36px !important; gap: 13px !important; }
+        .headline { font-size: 32px !important; letter-spacing: -0.5px !important; line-height: 1.15 !important; margin-bottom: 20px !important; }
+        .bullets  { margin-bottom: 36px !important; gap: 8px !important; }
         @media (min-width: 768px) {
           .page-header { padding: 24px 40px 0; }
           .page-main   { padding: 24px 40px 48px; }
@@ -202,7 +229,7 @@ export default function LandingPage() {
           .cta-section  { align-items: flex-start !important; }
           .eyebrow  { margin-bottom: 8px !important; }
           .headline { font-size: clamp(38px, 4.5vw, 56px) !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; margin-bottom: 22px !important; }
-          .bullets  { margin-bottom: 40px !important; gap: 14px !important; }
+          .bullets  { margin-bottom: 36px !important; gap: 12px !important; }
         }
         .footer-inner {
           display: flex;
