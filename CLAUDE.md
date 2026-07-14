@@ -232,14 +232,14 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 ## Landing page copy (current)
 
 - **Eyebrow:** FOR COACHES & INSTRUCTORS
-- **Headline:** Assign practice homework, the easy way.
+- **Headline:** Practice homework for your students.
 - **Bullets:**
   - Send work to any student in seconds
   - Students log it on their phone
   - You always know where they left off
 - **Primary CTA:** Get started
 - **Secondary CTA:** I'm a student →
-- **Hero:** Authentic photo of RJ coaching Tony's sons
+- **Hero:** Two overlapping circles — basketball and piano WebP images
 - **Background:** #f8f7f5 (warm off-white)
 
 ---
