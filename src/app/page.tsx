@@ -15,9 +15,9 @@ function TallyMark() {
 }
 
 const bullets = [
-  "You assign the work",
-  "They log it on their phone",
-  "You see it",
+  "Send work to any student in seconds",
+  "Students log it on their phone",
+  "You always know where they left off",
 ];
 
 export default function LandingPage() {
@@ -103,7 +103,7 @@ export default function LandingPage() {
                 color: "#0f0f10",
                 marginBottom: "20px",
               }}>
-                Practice homework for your students.
+                Practice homework<br />for your students.
               </h1>
 
               {/* Bullets */}
@@ -159,7 +159,7 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer style={{ borderTop: "1px solid #e0dbd3", padding: "20px 28px 28px" }}>
+      <footer style={{ backgroundColor: "#e0dbd3", padding: "20px 28px 28px" }}>
         {/* Desktop: single line */}
         <div className="footer-desktop">
           <span style={{ color: "#555" }}>© 2026 Reps</span>
