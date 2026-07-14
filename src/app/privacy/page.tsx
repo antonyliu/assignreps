@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Privacy Policy — Reps" };
 
-const heading: React.CSSProperties = { fontSize: "20px", fontWeight: 600, letterSpacing: "-0.3px", color: "#1a1a1a", marginTop: "32px", marginBottom: "8px" };
-const body: React.CSSProperties = { fontSize: "18px", lineHeight: 1.75, color: "#333" };
+const heading: React.CSSProperties = { fontSize: "17px", fontWeight: 600, letterSpacing: "-0.2px", color: "#378add", marginTop: "22px", marginBottom: "5px" };
+const body: React.CSSProperties = { fontSize: "15px", lineHeight: 1.55, color: "#333" };
+const intro: React.CSSProperties = { ...body, marginTop: "18px", fontStyle: "italic", color: "#6b6b6b" };
 
 export default function PrivacyPage() {
   return (
@@ -14,7 +15,7 @@ export default function PrivacyPage() {
         <h1 style={{ fontSize: "30px", fontWeight: 700, letterSpacing: "-0.5px", marginTop: "24px", marginBottom: "8px" }}>Privacy Policy</h1>
         <p style={{ fontSize: "14px", color: "#888", marginBottom: "8px" }}>Last updated: July 14, 2026</p>
 
-        <p style={{ ...body, marginTop: "24px" }}>
+        <p style={intro}>
           Reps is a small product, built by one person. Here&apos;s exactly what we collect and why.
         </p>
 

@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Terms of Service — Reps" };
 
-const heading: React.CSSProperties = { fontSize: "20px", fontWeight: 600, letterSpacing: "-0.3px", color: "#1a1a1a", marginTop: "32px", marginBottom: "8px" };
-const body: React.CSSProperties = { fontSize: "18px", lineHeight: 1.75, color: "#333" };
+const heading: React.CSSProperties = { fontSize: "17px", fontWeight: 600, letterSpacing: "-0.2px", color: "#378add", marginTop: "22px", marginBottom: "5px" };
+const body: React.CSSProperties = { fontSize: "15px", lineHeight: 1.55, color: "#333" };
 
 export default function TermsPage() {
   return (
