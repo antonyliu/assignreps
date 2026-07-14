@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Send, CheckCircle, TrendingUp } from "lucide-react";
 
 function TallyMark() {
   return (
@@ -15,9 +16,9 @@ function TallyMark() {
 }
 
 const bullets = [
-  "Send assignments in seconds",
-  "Students log their progress",
-  "See their progress anytime",
+  { icon: Send,        text: "Send assignments in seconds" },
+  { icon: CheckCircle, text: "Students log their progress" },
+  { icon: TrendingUp,  text: "See their progress anytime" },
 ];
 
 export default function LandingPage() {
@@ -108,17 +109,11 @@ export default function LandingPage() {
 
               {/* Bullets */}
               <ul className="bullets" style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                {bullets.map((b) => (
-                  <li key={b} style={{ display: "flex", alignItems: "center", gap: "11px" }}>
-                    <span style={{
-                      flexShrink: 0,
-                      width: "7px",
-                      height: "7px",
-                      borderRadius: "50%",
-                      backgroundColor: "#2d7bc4",
-                    }} />
+                {bullets.map(({ icon: Icon, text }) => (
+                  <li key={text} style={{ display: "flex", alignItems: "center", gap: "11px" }}>
+                    <Icon size={18} color="#378add" style={{ flexShrink: 0 }} aria-hidden />
                     <span style={{ fontSize: "17px", lineHeight: 1.4, color: "#1a1a1a", fontWeight: 600, whiteSpace: "nowrap" }}>
-                      {b}
+                      {text}
                     </span>
                   </li>
                 ))}
@@ -142,7 +137,7 @@ export default function LandingPage() {
                   }}
                   className="cta-primary hover:opacity-90 active:scale-[0.98] transition-all"
                 >
-                  Get started
+                  Get started free
                 </Link>
                 <Link
                   href="/player/login"
