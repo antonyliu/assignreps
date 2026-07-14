@@ -28,7 +28,7 @@ function ScreenHeader({ stepNum, total, onBack }: { stepNum: number; total: numb
           <button
             type="button"
             onClick={onBack}
-            className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
+            className="text-reps-orange text-lg -ml-1 px-1 hover:text-reps-orange-hi transition-colors"
             aria-label="Go back"
           >
             ←
@@ -202,7 +202,7 @@ export default function CoachSignup() {
               );
             })}
           </div>
-          <p className="text-[12px] text-reps-dim mb-8">More disciplines coming soon.</p>
+          <p className="text-[12px] text-reps-dim opacity-50 text-center mb-8">More disciplines coming soon.</p>
           <button type="submit" className={BTN_PRIMARY}>Continue</button>
         </form>
       </main>
