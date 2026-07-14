@@ -162,22 +162,22 @@ export default function LandingPage() {
       <footer style={{ borderTop: "1px solid #e0dbd3", padding: "20px 28px 28px" }}>
         {/* Desktop: single line */}
         <div className="footer-desktop">
-          <span style={{ color: "#aaa", fontSize: "12px" }}>© 2026 Reps</span>
-          <Link href="/privacy" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">Privacy Policy</Link>
-          <Link href="/terms"   style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">Terms of Service</Link>
-          <a href="mailto:hello@assignreps.com" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">hello@assignreps.com</a>
+          <span style={{ color: "#555" }}>© 2026 Reps</span>
+          <Link href="/privacy" style={{ color: "#378add", textDecoration: "none" }} className="hover:underline">Privacy Policy</Link>
+          <Link href="/terms"   style={{ color: "#378add", textDecoration: "none" }} className="hover:underline">Terms of Service</Link>
+          <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "none" }} className="hover:underline">hello@assignreps.com</a>
         </div>
         {/* Mobile: two lines */}
         <div className="footer-mobile">
           <div className="footer-line">
-            <Link href="/privacy" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">Privacy Policy</Link>
-            <span style={{ color: "#c4beb4" }}>·</span>
-            <Link href="/terms" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">Terms of Service</Link>
+            <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
+            <span style={{ color: "#8a857c" }}>·</span>
+            <Link href="/terms" style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
           </div>
           <div className="footer-line">
-            <span style={{ color: "#aaa", fontSize: "12px" }}>© 2026 Reps</span>
-            <span style={{ color: "#c4beb4" }}>·</span>
-            <a href="mailto:hello@assignreps.com" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">hello@assignreps.com</a>
+            <span style={{ color: "#555" }}>© 2026 Reps</span>
+            <span style={{ color: "#8a857c" }}>·</span>
+            <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a>
           </div>
         </div>
       </footer>
@@ -204,7 +204,9 @@ export default function LandingPage() {
           position: absolute;
           border-radius: 50%;
           overflow: hidden;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+          box-sizing: border-box;
+          border: 5px solid #ffffff;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
         .hero-circle-lg {
           width: 68%;
@@ -218,8 +220,6 @@ export default function LandingPage() {
           right: 0;
           bottom: 0;
           z-index: 2;
-          /* ring in the page background color separates the overlap, no visible border */
-          box-shadow: 0 0 0 5px #ede9e3, 0 10px 30px rgba(0, 0, 0, 0.12);
         }
         .landing-text { width: 100%; }
         .cta-primary  { width: 100%; }
@@ -258,7 +258,7 @@ export default function LandingPage() {
           gap: 8px;
         }
         .footer-mobile a, .footer-mobile span {
-          font-size: 12px !important;
+          font-size: 13px !important;
           white-space: nowrap;
         }
         @media (min-width: 768px) {
@@ -274,7 +274,7 @@ export default function LandingPage() {
             margin: 0 auto;
           }
           .footer-desktop a, .footer-desktop span {
-            font-size: 11px !important;
+            font-size: 12px !important;
             white-space: nowrap;
           }
         }
