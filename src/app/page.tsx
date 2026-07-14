@@ -59,7 +59,7 @@ export default function LandingPage() {
               <div className="hero-duo">
                 <div className="hero-circle hero-circle-lg">
                   <Image
-                    src="/basketball-hero.png?v=2"
+                    src="/basketball-hero.webp"
                     alt="Coach training a basketball player"
                     width={500}
                     height={500}
@@ -69,7 +69,7 @@ export default function LandingPage() {
                 </div>
                 <div className="hero-circle hero-circle-sm">
                   <Image
-                    src="/piano-hero.png?v=2"
+                    src="/piano-hero.webp"
                     alt="Student practicing piano"
                     width={360}
                     height={360}
