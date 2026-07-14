@@ -135,12 +135,8 @@ export default function CoachSignup() {
             placeholder="Coach RJ, Mrs. Tai"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            aria-describedby="name-help"
-            className={INPUT}
+            className={`${INPUT} mb-6 placeholder:italic`}
           />
-          <p id="name-help" className="mt-2 mb-6 text-[13px] text-reps-dim">
-            Use whatever your students call you.
-          </p>
           <button type="submit" className={BTN_PRIMARY}>Continue</button>
         </form>
         <p className="mt-6 text-center text-[13px] text-reps-dim">
