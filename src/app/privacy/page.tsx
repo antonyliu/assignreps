@@ -9,7 +9,7 @@ const intro: React.CSSProperties = { ...body, marginTop: "18px", fontStyle: "ita
 
 export default function PrivacyPage() {
   return (
-    <div style={{ backgroundColor: "#f8f7f5", minHeight: "100vh" }}>
+    <div className="paper-grain" style={{ backgroundColor: "#f8f7f5", minHeight: "100vh" }}>
       <main style={{ maxWidth: "680px", margin: "0 auto", padding: "48px 28px 80px", color: "#1a1a1a", fontFamily: "system-ui, sans-serif" }}>
         <Link href="/" style={{ fontSize: "15px", color: "#378add", textDecoration: "underline", textUnderlineOffset: "3px" }}>← Back</Link>
         <h1 style={{ fontSize: "30px", fontWeight: 700, letterSpacing: "-0.5px", marginTop: "24px", marginBottom: "8px" }}>Privacy Policy</h1>

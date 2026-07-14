@@ -23,7 +23,7 @@ const bullets = [
 
 export default function LandingPage() {
   return (
-    <div style={{ backgroundColor: "#ede9e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className="paper-grain" style={{ backgroundColor: "#ede9e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
       {/* Top bar */}
       <header className="page-header">
