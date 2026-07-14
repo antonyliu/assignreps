@@ -40,7 +40,7 @@ export default function AuthComplete() {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p className="text-[#5a5a5e] text-sm">Signing you in…</p>
+      <p className="text-reps-dim text-sm">Signing you in…</p>
     </div>
   );
 }

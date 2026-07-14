@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "reps-bg":        "#161310",
-        "reps-card":      "#221e1a",
+        "reps-bg":        "#1a1612",
+        "reps-card":      "#252018",
         "reps-raised":    "#2a2420",
         "reps-line":      "#3a3328",
         "reps-line-hi":   "#4a4338",

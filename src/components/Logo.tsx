@@ -1,7 +1,18 @@
-export function LogoMini() {
+// Defaults reproduce the original 16px mark + text-sm wordmark, so the roster,
+// player home and parent digest are unaffected. The signup header opts into a
+// larger pairing.
+export function LogoMini({
+  size = 16,
+  textClass = "text-sm",
+  gapClass = "gap-1.5",
+}: {
+  size?: number;
+  textClass?: string;
+  gapClass?: string;
+} = {}) {
   return (
-    <div className="flex items-center gap-1.5 text-sm font-semibold text-reps-ink">
-      <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
+    <div className={`flex items-center ${gapClass} ${textClass} font-semibold text-reps-ink`}>
+      <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
         <path d="M6 8 L6 24 M14 8 L14 24 M22 8 L22 24 M28 14 L28 18" stroke="#378add" strokeWidth="3" strokeLinecap="round" />
       </svg>
       <span>Reps</span>
