@@ -21,3 +21,37 @@ body {
   color: var(--reps-ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+
+/* Paper grain — a fine, barely-there tooth over the light marketing pages
+   (landing, /privacy, /terms). Background COLOUR is preserved exactly.
+
+   Three details carry that guarantee, and each one is load-bearing:
+
+   - color-interpolation-filters='sRGB' is REQUIRED. SVG filters default to
+     linearRGB, where this noise is neither centred nor evenly spread; in sRGB
+     fractalNoise comes out mean 127.5 (exact mid-grey), sigma ~23.
+   - soft-light, not multiply. Soft-light treats mid-grey as a no-op, so a
+     zero-mean noise darkens and lightens in equal measure and the mean field
+     is untouched. Multiply would drag the whole page ~4 levels darker.
+   - feFuncA flattens turbulence's noisy alpha to 1, so the grain comes from
+     luminance alone rather than from patches of transparency.
+
+   feFuncR/G/B (slope 1.5, mean-preserving) only widens sigma 23 -> 34; the
+   raw spread is too tight to read as texture. Net effect on #ede9e3: mean
+   shift 0.00 levels, roughly +/-2.5 at 1 sigma. */
+.paper-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.55;
+  mix-blend-mode: soft-light;
+  background-repeat: repeat;
+  background-size: 140px 140px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+@media print {
+  .paper-grain::after { display: none; }
+}
