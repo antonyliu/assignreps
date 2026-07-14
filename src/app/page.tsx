@@ -182,14 +182,23 @@ export default function LandingPage() {
           gap: 14px;
           align-items: center;
         }
+        /* The whole hero cluster is derived from one explicit width. Sizing the
+           circles with a percentage width + aspect-ratio (the obvious way) made
+           them render as ovals on iOS Safari: they are absolutely positioned
+           inside a parent whose own height also came from aspect-ratio, and
+           Safari does not reliably resolve the missing axis for an abspos box
+           in that case — the height fell back to stretch. Giving every circle an
+           explicit, equal width AND height in px removes the inference entirely.
+           aspect-ratio is kept only as a belt-and-braces guard. */
         .landing-image-wrap {
-          width: 224px;
+          --hero-w: 224px;
+          width: var(--hero-w);
           flex-shrink: 0;
         }
         .hero-duo {
           position: relative;
-          width: 100%;
-          aspect-ratio: 1 / 0.82;
+          width: var(--hero-w);
+          height: calc(var(--hero-w) * 0.82);
         }
         .hero-circle {
           position: absolute;
@@ -199,15 +208,23 @@ export default function LandingPage() {
           border: 5px solid #ffffff;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
+        .hero-circle > img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
         .hero-circle-lg {
-          width: 68%;
-          aspect-ratio: 1 / 1;
+          width:  calc(var(--hero-w) * 0.68);
+          height: calc(var(--hero-w) * 0.68);
+          aspect-ratio: 1;
           left: 0;
           top: 0;
         }
         .hero-circle-sm {
-          width: 46%;
-          aspect-ratio: 1 / 1;
+          width:  calc(var(--hero-w) * 0.46);
+          height: calc(var(--hero-w) * 0.46);
+          aspect-ratio: 1;
           right: 0;
           bottom: 0;
           z-index: 2;
@@ -247,12 +264,21 @@ export default function LandingPage() {
           .page-main   { padding: 24px 40px 48px; }
           .landing-layout {
             flex-direction: row;
-            gap: 80px;
+            /* 64, not 80: at exactly 768 the 340px hero + gap + the text column
+               (which cannot shrink past its nowrap bullets) overflowed the row
+               by 3px, giving a horizontal scrollbar at iPad portrait width.
+               Restored to 80 at >=1024, where there is room. */
+            gap: 64px;
             align-items: center;
           }
+          /* Tablet tier stays at 340. The text column cannot shrink below the
+             nowrap bullets (~311px), so hero + 80px gap + text already fills
+             the row here; enlarging the hero at this width overflows. The 12%
+             bump lands on the >=1024 tier, which has the headroom. */
           .landing-image-wrap {
-            flex: 0 0 340px;
-            width: 340px;
+            --hero-w: 340px;
+            flex: 0 0 var(--hero-w);
+            width: var(--hero-w);
           }
           .landing-text { flex: 1; }
           .cta-primary  { width: auto; }
@@ -303,9 +329,11 @@ export default function LandingPage() {
           }
         }
         @media (min-width: 1024px) {
+          .landing-layout { gap: 80px; }
           .landing-image-wrap {
-            flex: 0 0 420px;
-            width: 420px;
+            --hero-w: 470px; /* 420 + 12% */
+            flex: 0 0 var(--hero-w);
+            width: var(--hero-w);
           }
         }
       `}</style>
