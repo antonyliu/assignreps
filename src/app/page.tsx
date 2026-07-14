@@ -35,7 +35,7 @@ export default function LandingPage() {
           </div>
           <Link
             href="/coach"
-            style={{ fontSize: "14px", fontWeight: 500, color: "#666", textDecoration: "none" }}
+            style={{ fontSize: "14px", fontWeight: 500, color: "#666", textDecoration: "underline", textUnderlineOffset: "3px" }}
             className="hover:text-[#0f0f10] transition-colors"
           >
             Sign in
@@ -146,8 +146,8 @@ export default function LandingPage() {
                 </Link>
                 <Link
                   href="/player/login"
-                  style={{ fontSize: "15px", color: "#1c6aa8", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px" }}
-                  className="hover:opacity-80 transition-opacity"
+                  style={{ fontSize: "15px", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px" }}
+                  className="student-link hover:opacity-80 transition-opacity"
                 >
                   I&apos;m a student →
                 </Link>
@@ -163,9 +163,9 @@ export default function LandingPage() {
         {/* Desktop: single line */}
         <div className="footer-desktop">
           <span style={{ color: "#555" }}>© 2026 Reps</span>
-          <Link href="/privacy" style={{ color: "#378add", textDecoration: "none" }} className="hover:underline">Privacy Policy</Link>
-          <Link href="/terms"   style={{ color: "#378add", textDecoration: "none" }} className="hover:underline">Terms of Service</Link>
-          <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "none" }} className="hover:underline">hello@assignreps.com</a>
+          <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
+          <Link href="/terms"   style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
+          <span style={{ color: "#555" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
         </div>
         {/* Mobile: two lines */}
         <div className="footer-mobile">
@@ -177,12 +177,13 @@ export default function LandingPage() {
           <div className="footer-line">
             <span style={{ color: "#555" }}>© 2026 Reps</span>
             <span style={{ color: "#8a857c" }}>·</span>
-            <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a>
+            <span style={{ color: "#555" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
           </div>
         </div>
       </footer>
 
       <style>{`
+        .student-link, .student-link:visited { color: #378add; }
         .page-header { padding: 20px 28px 0; }
         .page-main   { padding: 16px 28px 32px; }
         .landing-layout {
