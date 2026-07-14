@@ -22,7 +22,7 @@ const bullets = [
 
 export default function LandingPage() {
   return (
-    <div style={{ backgroundColor: "#f8f7f5", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ backgroundColor: "#ede9e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
       {/* Top bar */}
       <header className="page-header">
@@ -58,7 +58,7 @@ export default function LandingPage() {
               <div className="hero-duo">
                 <div className="hero-circle hero-circle-lg">
                   <Image
-                    src="/basketball-hero.png"
+                    src="/basketball-hero.png?v=2"
                     alt="Coach training a basketball player"
                     width={500}
                     height={500}
@@ -68,7 +68,7 @@ export default function LandingPage() {
                 </div>
                 <div className="hero-circle hero-circle-sm">
                   <Image
-                    src="/piano-hero.png"
+                    src="/piano-hero.png?v=2"
                     alt="Student practicing piano"
                     width={360}
                     height={360}
@@ -159,12 +159,26 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer style={{ borderTop: "1px solid #e8e4df", padding: "20px 28px 28px" }}>
-        <div className="footer-inner">
+      <footer style={{ borderTop: "1px solid #e0dbd3", padding: "20px 28px 28px" }}>
+        {/* Desktop: single line */}
+        <div className="footer-desktop">
           <span style={{ color: "#aaa", fontSize: "12px" }}>© 2026 Reps</span>
           <Link href="/privacy" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">Privacy Policy</Link>
           <Link href="/terms"   style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">Terms of Service</Link>
           <a href="mailto:hello@assignreps.com" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">hello@assignreps.com</a>
+        </div>
+        {/* Mobile: two lines */}
+        <div className="footer-mobile">
+          <div className="footer-line">
+            <Link href="/privacy" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">Privacy Policy</Link>
+            <span style={{ color: "#c4beb4" }}>·</span>
+            <Link href="/terms" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">Terms of Service</Link>
+          </div>
+          <div className="footer-line">
+            <span style={{ color: "#aaa", fontSize: "12px" }}>© 2026 Reps</span>
+            <span style={{ color: "#c4beb4" }}>·</span>
+            <a href="mailto:hello@assignreps.com" style={{ color: "#aaa", fontSize: "12px", textDecoration: "none" }} className="hover:text-[#555] transition-colors">hello@assignreps.com</a>
+          </div>
         </div>
       </footer>
 
@@ -205,7 +219,7 @@ export default function LandingPage() {
           bottom: 0;
           z-index: 2;
           /* ring in the page background color separates the overlap, no visible border */
-          box-shadow: 0 0 0 5px #f8f7f5, 0 10px 30px rgba(0, 0, 0, 0.12);
+          box-shadow: 0 0 0 5px #ede9e3, 0 10px 30px rgba(0, 0, 0, 0.12);
         }
         .landing-text { width: 100%; }
         .cta-primary  { width: 100%; }
@@ -231,19 +245,38 @@ export default function LandingPage() {
           .headline { font-size: clamp(38px, 4.5vw, 56px) !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; margin-bottom: 22px !important; }
           .bullets  { margin-bottom: 36px !important; gap: 12px !important; }
         }
-        .footer-inner {
+        .footer-desktop { display: none; }
+        .footer-mobile {
           display: flex;
-          flex-direction: row;
-          flex-wrap: nowrap;
+          flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 12px;
-          max-width: 1100px;
-          margin: 0 auto;
+          gap: 6px;
         }
-        .footer-inner a, .footer-inner span {
-          font-size: 11px !important;
+        .footer-line {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .footer-mobile a, .footer-mobile span {
+          font-size: 12px !important;
           white-space: nowrap;
+        }
+        @media (min-width: 768px) {
+          .footer-mobile { display: none; }
+          .footer-desktop {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            max-width: 1100px;
+            margin: 0 auto;
+          }
+          .footer-desktop a, .footer-desktop span {
+            font-size: 11px !important;
+            white-space: nowrap;
+          }
         }
         @media (min-width: 1024px) {
           .landing-image-wrap {
