@@ -85,36 +85,31 @@ export default function LandingPage() {
 
               {/* Eyebrow */}
               <p className="eyebrow" style={{
-                fontSize: "12px",
                 fontWeight: 700,
                 letterSpacing: "2px",
                 textTransform: "uppercase",
                 color: "#2d7bc4",
-                marginBottom: "24px",
               }}>
                 For instructors &amp; coaches
               </p>
 
               {/* Headline */}
               <h1 className="headline" style={{
-                fontSize: "clamp(48px, 7vw, 72px)",
                 fontWeight: 600,
                 letterSpacing: "-0.5px",
-                lineHeight: 1.1,
                 color: "#0f0f10",
-                marginBottom: "20px",
               }}>
                 Practice homework<br />for your students.
               </h1>
 
               {/* Bullets */}
-              <ul className="bullets" style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: "16px" }}>
+              <ul className="bullets" style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {bullets.map(({ icon: Icon, text }) => (
-                  <li key={text} style={{ display: "flex", alignItems: "center", gap: "11px" }}>
-                    <Icon size={18} color="#378add" style={{ flexShrink: 0 }} aria-hidden />
-                    <span style={{ fontSize: "17px", lineHeight: 1.4, color: "#1a1a1a", fontWeight: 600, whiteSpace: "nowrap" }}>
-                      {text}
+                  <li key={text} className="bullet-row">
+                    <span className="bullet-icon-wrap" aria-hidden>
+                      <Icon className="bullet-icon" color="#378add" />
                     </span>
+                    <span className="bullet-text">{text}</span>
                   </li>
                 ))}
               </ul>
@@ -179,16 +174,16 @@ export default function LandingPage() {
 
       <style>{`
         .student-link, .student-link:visited { color: #378add; }
-        .page-header { padding: 20px 28px 0; }
-        .page-main   { padding: 16px 28px 32px; }
+        .page-header { padding: 20px 22px 0; }
+        .page-main   { padding: 6px 22px 20px; }
         .landing-layout {
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 14px;
           align-items: center;
         }
         .landing-image-wrap {
-          width: 260px;
+          width: 224px;
           flex-shrink: 0;
         }
         .hero-duo {
@@ -219,9 +214,34 @@ export default function LandingPage() {
         }
         .landing-text { width: 100%; }
         .cta-primary  { width: 100%; }
-        .eyebrow  { margin-bottom: 8px !important; }
-        .headline { font-size: 32px !important; letter-spacing: -0.5px !important; line-height: 1.15 !important; margin-bottom: 20px !important; }
-        .bullets  { margin-bottom: 36px !important; gap: 8px !important; }
+
+        /* Mobile type scale. Eyebrow, headline and bullet rows share the
+           same left edge — no extra indent on any of them. */
+        .eyebrow  { font-size: 13px; margin: 0 0 10px; }
+        .headline { font-size: 37px; line-height: 1.14; margin: 0 0 18px; }
+        .bullets  { margin-bottom: 24px !important; }
+        .bullet-row {
+          display: grid;
+          grid-template-columns: 22px 1fr;
+          column-gap: 12px;
+          align-items: center;
+          padding: 3px 0;
+        }
+        .bullet-icon-wrap {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 25px; /* matches bullet-text line box, so icon centers on it */
+        }
+        .bullet-icon { width: 20px; height: 20px; }
+        .bullet-text {
+          font-size: 18px;
+          line-height: 1.4;
+          color: #1a1a1a;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
         @media (min-width: 768px) {
           .page-header { padding: 24px 40px 0; }
           .page-main   { padding: 24px 40px 48px; }
@@ -237,9 +257,17 @@ export default function LandingPage() {
           .landing-text { flex: 1; }
           .cta-primary  { width: auto; }
           .cta-section  { align-items: flex-start !important; }
-          .eyebrow  { margin-bottom: 8px !important; }
-          .headline { font-size: clamp(38px, 4.5vw, 56px) !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; margin-bottom: 22px !important; }
-          .bullets  { margin-bottom: 36px !important; gap: 12px !important; }
+          .eyebrow  { font-size: 14px; margin: 0 0 10px; }
+          .headline { font-size: clamp(38px, 4.5vw, 56px); line-height: 1.1; margin: 0 0 24px; }
+          .bullets  { margin-bottom: 36px !important; }
+          .bullet-row {
+            grid-template-columns: 24px 1fr;
+            column-gap: 14px;
+            padding: 5px 0;
+          }
+          .bullet-icon-wrap { height: 28px; }
+          .bullet-icon { width: 22px; height: 22px; }
+          .bullet-text  { font-size: 20px; }
         }
         .footer-desktop { display: none; }
         .footer-mobile {
