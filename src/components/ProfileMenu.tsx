@@ -72,13 +72,13 @@ export default function ProfileMenu() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="signout-title"
-            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-6 pt-6 pb-7"
+            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="signout-title" className="text-[18px] font-semibold text-reps-ink mb-1.5">
+            <h2 id="signout-title" className="text-[16px] font-semibold text-reps-ink mb-2">
               Sign out?
             </h2>
-            <p className="text-[14px] text-reps-sub mb-6">
+            <p className="text-[13px] text-reps-sub mb-7">
               Sign back in anytime with your email.
             </p>
             <div className="flex gap-3">

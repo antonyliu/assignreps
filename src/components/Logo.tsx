@@ -1,17 +1,18 @@
-// The in-app header lockup: 28px contained mark + 16px wordmark. One size for
-// every platform screen (signup, roster, student home, parent digest) — the
-// header must not change size as you move between them. Marketing pages do not
-// use this; the landing page draws its own mark, and the student welcome /
-// sign-in screens use LogoLarge.
+// The in-app header lockup: 23px contained mark + 13px wordmark. Scaled down
+// so the logo reads quieter than the coach name / profile icon on the right.
+// One size for every platform screen (signup, roster, student home, parent
+// digest) — the header must not change size as you move between them. Marketing
+// pages do not use this; the landing page draws its own mark, and the student
+// welcome / sign-in screens use LogoLarge.
 export function LogoMini() {
   return (
-    <div className="flex items-center gap-2 text-base font-semibold text-reps-ink">
+    <div className="flex items-center gap-1.5 text-[13px] font-semibold text-reps-ink">
       {/* Full contained lockup: sky-blue rounded square with the white tally,
           same mark as the landing page, sized for the header. The filled box
           reaches the container's left edge (no internal stroke inset), which
           keeps the header flush-left. `block` removes the inline baseline gap
           so it centers cleanly on Safari iOS as well as Chrome. */}
-      <svg width={28} height={28} viewBox="0 0 32 32" fill="none" className="block shrink-0" xmlns="http://www.w3.org/2000/svg">
+      <svg width={23} height={23} viewBox="0 0 32 32" fill="none" className="block shrink-0" xmlns="http://www.w3.org/2000/svg">
         <rect width="32" height="32" rx="8" fill="#378add" />
         <line x1="9"  y1="8" x2="9"  y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
         <line x1="14" y1="8" x2="14" y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
