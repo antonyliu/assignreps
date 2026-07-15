@@ -35,7 +35,7 @@ export default function LandingPage() {
             </span>
           </div>
           <Link
-            href="/coach/signup/email"
+            href="/instructor/signup/email"
             style={{ fontSize: "14px", fontWeight: 500, color: "#666", textDecoration: "underline", textUnderlineOffset: "3px" }}
             className="hover:text-[#0f0f10] transition-colors"
           >
@@ -117,7 +117,7 @@ export default function LandingPage() {
               {/* CTAs */}
               <div className="cta-section" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
                 <Link
-                  href="/coach/signup"
+                  href="/instructor/signup"
                   style={{
                     display: "block",
                     backgroundColor: "#2d7bc4",
@@ -135,7 +135,7 @@ export default function LandingPage() {
                   Get started free
                 </Link>
                 <Link
-                  href="/player/login"
+                  href="/student/login"
                   style={{ fontSize: "15px", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px" }}
                   className="student-link hover:opacity-80 transition-opacity"
                 >

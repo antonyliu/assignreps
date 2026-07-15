@@ -68,13 +68,13 @@ export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone 
 
     if (verifyError) { setLoading(false); setError(verifyError.message); return; }
 
-    if (token) { router.push(`/player/${token}`); return; }
+    if (token) { router.push(`/student/${token}`); return; }
 
     if (lookupByPhone) {
       const result = await lookupByPhone(e164);
       setLoading(false);
       if (!result.ok) { setError(result.error); return; }
-      router.push(`/player/${result.token}`);
+      router.push(`/student/${result.token}`);
       return;
     }
 
