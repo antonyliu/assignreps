@@ -1,22 +1,23 @@
-// The in-app header lockup: 24px mark + 16px wordmark. One size for every
-// platform screen (signup, roster, student home, parent digest) — the header
-// must not change size as you move between them. Marketing pages do not use
-// this; the landing page draws its own mark, and the student welcome / sign-in
-// screens use LogoLarge.
+// The in-app header lockup: 28px contained mark + 16px wordmark. One size for
+// every platform screen (signup, roster, student home, parent digest) — the
+// header must not change size as you move between them. Marketing pages do not
+// use this; the landing page draws its own mark, and the student welcome /
+// sign-in screens use LogoLarge.
 export function LogoMini() {
   return (
-    <div className="flex items-center gap-1.5 text-base font-semibold text-reps-ink">
-      {/* Tally mark only — no box. Same four-tally + diagonal geometry as the
-          landing page and student welcome mark, drawn in sky blue on the app's
-          dark surface instead of white-in-a-box. `block` removes the inline
-          baseline gap so the mark centers cleanly next to the wordmark on
-          Safari iOS as well as Chrome. */}
-      <svg width={24} height={24} viewBox="0 0 32 32" fill="none" className="block shrink-0">
-        <line x1="9"  y1="8" x2="9"  y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="14" y1="8" x2="14" y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="19" y1="8" x2="19" y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="24" y1="8" x2="24" y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="6"  y1="23" x2="27" y2="9"  stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
+    <div className="flex items-center gap-2 text-base font-semibold text-reps-ink">
+      {/* Full contained lockup: sky-blue rounded square with the white tally,
+          same mark as the landing page, sized for the header. The filled box
+          reaches the container's left edge (no internal stroke inset), which
+          keeps the header flush-left. `block` removes the inline baseline gap
+          so it centers cleanly on Safari iOS as well as Chrome. */}
+      <svg width={28} height={28} viewBox="0 0 32 32" fill="none" className="block shrink-0" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="8" fill="#378add" />
+        <line x1="9"  y1="8" x2="9"  y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="14" y1="8" x2="14" y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="19" y1="8" x2="19" y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="24" y1="8" x2="24" y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="6"  y1="23" x2="27" y2="9"  stroke="white" strokeWidth="2.4" strokeLinecap="round" />
       </svg>
       <span>Reps</span>
     </div>
