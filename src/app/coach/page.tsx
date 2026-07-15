@@ -1,13 +1,12 @@
-import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
-import CoachSignup from "@/components/CoachSignup";
 
-export const metadata: Metadata = { title: "Sign In — Reps" };
-
+// /coach is the historical entry point; the signup flow now lives at
+// /coach/signup. Send signed-in coaches to the roster, everyone else into the
+// flow. (App links point straight at /coach/signup, so this mainly catches
+// bookmarks and direct visits.)
 export default async function CoachPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (user) redirect("/coach/roster");
-  return <CoachSignup />;
+  redirect(user ? "/coach/roster" : "/coach/signup");
 }
