@@ -22,7 +22,11 @@ const ERROR_BOX = "bg-red-900/20 border border-red-500/30 text-red-400 rounded-[
 // Hoisted to module scope so they keep a stable identity and never remount.
 function ScreenHeader({ stepNum, total, onBack }: { stepNum: number; total: number; onBack?: () => void }) {
   return (
-    <div className="flex justify-between items-center mb-12">
+    // Fixed height so the row is invariant to the back arrow: it is text-lg
+    // (~28px line box, taller than the 24px logo) and only present from step 2
+    // on, which would otherwise re-center the "Step X of 3" label 2px lower on
+    // later steps. Pinning the height keeps the label in the same spot.
+    <div className="flex justify-between items-center h-7 mb-12">
       <div className="flex items-center gap-3">
         {onBack && (
           <button
@@ -166,7 +170,7 @@ export default function CoachSignup() {
                 return (
                   <div
                     key={opt.id}
-                    className="flex items-center gap-3 px-[16px] py-[14px] rounded-[10px] border border-reps-line/40 bg-reps-card/50 opacity-50 cursor-not-allowed"
+                    className="flex items-center gap-3 px-[16px] py-[14px] rounded-[10px] border border-reps-line/40 bg-reps-card/50 opacity-75 cursor-not-allowed"
                   >
                     <span className="text-[22px] grayscale">{opt.emoji}</span>
                     <span className="text-[15px] font-medium text-reps-dim">{opt.label}</span>
@@ -202,7 +206,7 @@ export default function CoachSignup() {
               );
             })}
           </div>
-          <p className="text-[12px] text-reps-dim opacity-50 text-center mb-8">More disciplines coming soon.</p>
+          <p className="text-[12px] text-reps-dim opacity-75 text-center mb-8">More disciplines coming soon.</p>
           <button type="submit" className={BTN_PRIMARY}>Continue</button>
         </form>
       </main>
@@ -214,7 +218,7 @@ export default function CoachSignup() {
       <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
         <ScreenHeader stepNum={3} total={3} onBack={() => setStep("instructor_type")} />
         <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your email</h2>
-        <p className="text-[13px] text-reps-sub mb-6">We&apos;ll email you a 6-digit code — no password needed.</p>
+        <p className="text-[15px] text-reps-sub mb-6">We&apos;ll send a 6-digit code. No password.</p>
         <ErrorBanner error={error} />
         <form onSubmit={submitEmail}>
           <input
