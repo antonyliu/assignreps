@@ -100,7 +100,7 @@ export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone 
         <button
           onClick={handleSendCode}
           disabled={loading}
-          className="w-full bg-reps-orange text-reps-bg font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
+          className="w-full bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
         >
           {loading ? "Sending…" : "Send code"}
         </button>
@@ -132,7 +132,7 @@ export default function PlayerOtpFlow({ token, prefillPhone = "", lookupByPhone 
       <button
         onClick={handleVerify}
         disabled={loading}
-        className="w-full bg-reps-orange text-reps-bg font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
+        className="w-full bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none"
       >
         {loading ? "Verifying…" : "Verify"}
       </button>

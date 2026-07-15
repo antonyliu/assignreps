@@ -55,7 +55,7 @@ export default function CelebratePage({
 
       <Link
         href={`/student/${token}`}
-        className="w-full max-w-[240px] bg-reps-orange text-reps-bg font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+        className="w-full max-w-[240px] bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
       >
         Back to my week
       </Link>

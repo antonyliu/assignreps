@@ -42,9 +42,11 @@ export default function ProfileMenu() {
               className="fixed inset-0 z-40 cursor-default"
               onClick={() => setMenuOpen(false)}
             />
+            {/* Sizes to its widest item (no fixed width) with equal p-1 padding
+                on all sides — the pattern future menu items should follow. */}
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1.5 z-50 min-w-[132px] bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
+              className="absolute right-0 top-full mt-1.5 z-50 w-max bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
             >
               <button
                 role="menuitem"
@@ -52,7 +54,7 @@ export default function ProfileMenu() {
                   setMenuOpen(false);
                   setConfirmOpen(true);
                 }}
-                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink hover:bg-reps-raised transition-colors"
+                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
               >
                 Sign out
               </button>
@@ -70,7 +72,7 @@ export default function ProfileMenu() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="signout-title"
-            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] p-6"
+            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-6 pt-6 pb-7"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="signout-title" className="text-[18px] font-semibold text-reps-ink mb-1.5">
@@ -88,7 +90,7 @@ export default function ProfileMenu() {
               </button>
               <button
                 onClick={handleSignOut}
-                className="flex-1 min-h-[44px] rounded-[10px] bg-reps-orange text-reps-bg font-semibold text-[15px] hover:bg-reps-orange-hi transition-colors"
+                className="flex-1 min-h-[44px] rounded-[10px] bg-reps-orange text-white font-semibold text-[15px] hover:bg-reps-orange-hi transition-colors"
               >
                 Sign out
               </button>

@@ -108,7 +108,7 @@ export default function LogScreen({
       <button
         onClick={handleSave}
         disabled={added < 1 || saving}
-        className="mt-auto w-full bg-reps-orange text-reps-bg font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
+        className="mt-auto w-full bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
       >
         {saving ? "Saving…" : "Save"}
       </button>

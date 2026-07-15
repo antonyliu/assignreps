@@ -128,7 +128,7 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
               <button
                 onClick={handleSavePhone}
                 disabled={isPending}
-                className="flex-1 py-3 text-[15px] font-semibold text-reps-bg bg-reps-orange rounded-[10px] hover:bg-reps-orange-hi disabled:opacity-50 transition-colors"
+                className="flex-1 py-3 text-[15px] font-semibold text-white bg-reps-orange rounded-[10px] hover:bg-reps-orange-hi disabled:opacity-50 transition-colors"
               >
                 {isPending ? "Saving…" : "Save"}
               </button>

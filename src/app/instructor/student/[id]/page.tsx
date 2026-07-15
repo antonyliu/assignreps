@@ -82,7 +82,7 @@ export default async function CoachPlayerPage({
           <p className="text-[14px] text-reps-sub mb-5">Nothing assigned yet.</p>
           <Link
             href={`/instructor/student/${id}/assign`}
-            className="bg-reps-orange text-reps-bg font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+            className="bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
           >
             + {assignLabel}
           </Link>

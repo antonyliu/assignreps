@@ -87,11 +87,11 @@ export default async function RosterPage() {
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
       <div className="flex justify-between items-center mb-12">
+        <LogoMini />
         <div className="flex items-center gap-2.5">
-          <LogoMini />
-          <span className="text-[14px] font-medium text-reps-sub">{coachName}</span>
+          <span className="text-[14px] font-medium text-reps-sub text-right">{coachName}</span>
+          <ProfileMenu />
         </div>
-        <ProfileMenu />
       </div>
 
       <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your {labels.studentsLabel}</h1>
@@ -130,7 +130,7 @@ export default async function RosterPage() {
           </div>
           <Link
             href="/instructor/add-student"
-            className="block text-center bg-reps-orange text-reps-bg font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+            className="block text-center bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
           >
             + Add your first {labels.studentLabel}
           </Link>
