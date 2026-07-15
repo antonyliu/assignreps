@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Send, CheckCircle, Layers } from "lucide-react";
 
 export const metadata: Metadata = {
+  // Resolves the relative og:image below to an absolute (canonical) URL.
+  metadataBase: new URL("https://assignreps.com"),
   title: "Reps — Practice Homework App for Coaches & Instructors",
   description:
     "Assign practice homework to your students, they log it on their phone. Built for coaches and instructors.",
@@ -11,6 +13,14 @@ export const metadata: Metadata = {
     title: "Reps — Practice Homework App for Coaches & Instructors",
     description:
       "Assign practice homework to your students, they log it on their phone. Built for coaches and instructors.",
+    images: [
+      {
+        url: "/og-basketball.jpg",
+        width: 1200,
+        height: 630,
+        alt: "A basketball player dribbling through cones on an outdoor court",
+      },
+    ],
   },
 };
 
