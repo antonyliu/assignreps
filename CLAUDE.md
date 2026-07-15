@@ -8,7 +8,7 @@ A lightweight web app for coaches and instructors to assign practice homework to
 **Live domain:** assignreps.com
 **Staging:** staging.assignreps.com
 **Stack:** Next.js · Supabase · Vercel · Tailwind CSS · Twilio · Resend
-**Design:** Mobile-first, light/warm background (#f8f7f5) on landing; warm dark mode inside the app; sky blue (#378add) as sole accent
+**Design:** Mobile-first, light/warm background (#f8f7f5) on landing; cool dark mode inside the app (#111318 bg, #1c1f26 surfaces, #2a2d36 borders); sky blue (#378add) as sole accent
 
 ---
 
@@ -17,11 +17,18 @@ The instructor is the customer — not the student. Students never choose this t
 
 ---
 
+## Product north star
+More students. More revenue. A reputation that spreads.
+
+Every screen should serve this. Reps isn't a homework tracker — it's part of what makes an instructor look professional and invested, which drives renewals and referrals.
+
+---
+
 ## Three users
 
 ### Coach / Instructor (e.g. RJ)
 - Signs up via email OTP (6-digit code, no password, no magic link)
-- Signup flow: name → instructor type → email → enter 6-digit code → roster
+- Signup flow (per-step URLs, native browser back): name (`/instructor/signup`) → instructor type (`/instructor/signup/type`) → email + 6-digit code (`/instructor/signup/email`) → students list (`/instructor/students`)
 - Adds students by name + phone number
 - Optional: adds parent phone per student (collapsed by default — tap to expand)
 - Assigns exercises from a default library or creates custom ones
@@ -87,8 +94,10 @@ Instructor assigns → Student logs → Instructor sees → Parent digest (weekl
 
 ## Twilio status & config
 
-- **Status:** Toll-free registration submitted, In Review
+- **Status:** Toll-free registration **IN_REVIEW** — resubmitted July 14 2026 via API after an initial rejection.
 - **Toll-free number:** (833) 892-5640
+- **Resubmission (July 14 2026):** initial rejection fixed on three points — business email set to hello@assignreps.com, invalid website URL fixed (site now live), and the missing verbal consent script added to `UseCaseSummary`. **Edit expiration: July 22 2026.**
+- **If rejected again for code 30511:** add the verbal consent script to the `AdditionalInformation` field on the next submission.
 - **Old local number:** +15625487985 (blocked, release when possible)
 - **Messaging Service SID:** `MGe3a0a18bf618d102aae9cb26943cd239`
 - **TWILIO_FROM_NUMBER:** update to `+18338925640` in `.env.local` AND Vercel env vars once registration approved
@@ -117,7 +126,7 @@ Instructor assigns → Student logs → Instructor sees → Parent digest (weekl
 - **Neither template should contain `{{ .ConfirmationURL }}`** — a link click runs a different auth path than OTP code entry
 - **Email OTP length:** 6 digits (set in Supabase → Authentication → Sign In / Providers → Email)
 - **Email OTP expiry:** 3600 seconds (1 hour) — set in Supabase → Authentication → Sign In / Providers → Email
-- `/auth/callback` and `/auth/complete` are dead routes — leftover from old magic-link flow, unused
+- `/auth/callback` and `/auth/complete` were **removed July 14 2026** — dead routes from the old magic-link flow. Their Supabase redirect-URL entries were removed from the dashboard at the same time.
 
 ### Current email template (both Confirm signup and Magic Link or OTP)
 **Subject:** Your Reps code
@@ -151,7 +160,7 @@ Instructor assigns → Student logs → Instructor sees → Parent digest (weekl
 
 **Supabase URL Configuration:**
 - Site URL: https://assignreps.com
-- Redirect URLs: https://assignreps.com/auth/callback, https://staging.assignreps.com/auth/callback
+- Redirect URLs: none required — the OTP flow uses no `emailRedirectTo`. The old `/auth/callback` entries (prod + staging) were removed July 14 2026 when the dead magic-link routes were deleted.
 
 ---
 
@@ -177,16 +186,19 @@ Note: `instructor_type` field added now even though basketball is the only optio
 
 ## Activity type content system
 
-`src/config/activityTypes.ts` maps instructor_type to UI labels:
+`src/config/activityTypes.ts` is the single source of truth for the discipline picker AND for UI copy that branches by discipline. Each entry has: `label`, `emoji`, `available`, `studentLabel`, `studentsLabel`, `groupLabel`, `verb`.
 
 ```
-basketball: { studentLabel: "player", studentsLabel: "players", groupLabel: "roster", verb: "assign reps", available: true }
-piano: { ..., available: false }
-martial_arts: { ..., available: false }
-tennis: { ..., available: false }
+basketball: { label: "Basketball", emoji: "🏀", available: true, studentLabel: "player", studentsLabel: "players", groupLabel: "roster", verb: "assign reps" }
+piano/martial_arts/tennis/golf/guitar/gymnastics/soccer/swimming/voice: { ..., available: false }
 ```
 
-All UI labels pull from this config based on coach's instructor_type. Adding a new activity type is a content sprint — no engineering rework needed.
+10 activity types (display order via `ACTIVITY_TYPE_ORDER`), all `available: false` except basketball:
+**Basketball (active) · Piano · Martial Arts · Tennis · Golf · Guitar · Gymnastics · Soccer · Swimming · Voice/Vocal**
+
+- The signup screen maps over `ACTIVITY_TYPE_ORDER` — no duplicated list.
+- `labels.verb` (e.g. "assign reps" / "assign practice" / "assign drills") is wired into the assign CTA, so a piano coach sees "Assign practice", not "Assign reps".
+- All UI labels pull from this config based on the instructor's `instructor_type`. Adding/enabling an activity type is a content change — no engineering rework needed.
 
 ---
 
@@ -249,7 +261,7 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 - **Accent color:** Sky blue #378add
 - **Green:** #4ade80 — completion states only
 - **Logo:** Tally mark SVG (4 vertical lines + 1 diagonal) — sport-agnostic, scalable
-- **Warm dark backgrounds:** #161310 app bg, #221e1a surfaces — NOT cold gray
+- **Warm dark palette (locked):** #1a1612 app bg, #252018 surfaces, #3a3328 borders, #4a4338 strong borders — NOT cold gray. Sky blue #378add replaced orange throughout the app.
 - **Typography:** System font stack; font-weight 600, letter-spacing -0.5px for headlines
 - **Mobile-first:** App is mobile-only (max-width ~390px). Landing page is responsive.
 - **Roster grouping:** All in 🔥 (4+ days) / Some activity (1–3 days) / No activity yet (0 days, gray avatar)
@@ -257,6 +269,14 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 - **iOS forms:** All input+button flows use form onSubmit + type="submit" — required for iOS WebKit
 - **Add player — parent phone:** Collapsed by default. Shown as "Add parent for weekly digest →" tap to expand. Reduces visual weight for instructors who don't need it.
 - **Phone placeholder:** (555) 000-0000
+- **Signup step indicator:** "Step X of 3" text, top-right (small, dim). Pill dots were tried and reverted.
+- **Signup back navigation:** no back arrow in the header — each step is its own URL, so native browser/phone back handles it.
+- **Signup name placeholder:** `Coach RJ, Mrs. Tai` (italicized).
+- **Activity list ("What do you teach?"):** scrollable list with a sticky Continue button pinned at the bottom; a bottom gradient fade (transparent → app bg) softens the scroll edge.
+- **Inactive activity rows:** subtle dark surface background, ~60% opacity content, no border highlight; SOON badge (muted gray on gray).
+- **"Create your own" row:** last item in the list — dashed border, `+` icon, same height as the preset rows, SOON badge. Escape hatch, not a preset.
+- **Removed** "More coming soon." caption + hairline from the activity list (was "More disciplines coming soon.").
+- **Logo size standardized** across all in-app header screens (24px mark + 16px wordmark).
 
 ### What was killed and why
 - **Leaderboard:** Privacy (minors) + breaks the 1:1 mentorship dynamic
@@ -280,6 +300,44 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 - **Account deletion:** Button in settings — deletes all assignments, players, coach row, and Supabase auth user. Required by privacy policy. ~30 min with Claude Code.
 - **"Our story" page:** Personal founding story (Tony built this for his friend RJ). Photo of RJ coaching. Plain language. Tina Roth Eisenberg / TeuxDeux energy. Biggest trust signal available.
 - **Coach re-engagement:** Weekly nudge if a coach has players with no assignments this week.
+- **One-tap coach nudge to quiet students:** same mechanic as the reaction — a preselected message ("Don't forget your reps this week") fires as an SMS, no open text field. High-value future feature.
+- **Gate signups** with an invite code or waitlist before broader launch.
+- **Stripe billing:** free tier 3 students, 30-day trial, paywall at the 4th student, ~$5/month, promo codes (COACHRJ = 1 use = lifetime free).
+- **WhatsApp via Twilio** for international student SMS.
+- **Meta ads** targeting instructors once the beta is validated.
+
+---
+
+## Future ideas (tracked, not scheduled)
+
+- **Light mode / dark mode toggle** — data shows females prefer light mode; educational app context also favors light. Build light mode after dark mode polish is complete and validated with RJ. Implement as a simple toggle in user settings, defaulting to system preference. Do not build before RJ demo.
+- **New-signup notification email** — fire an email to hello@assignreps.com every time a new coach signs up (not return logins). Include: name, email, instructor type, timestamp. Implement via Supabase webhook → Next.js API route → Resend. Simple, high signal.
+- **og:image** — added July 15 2026 using basketball hero photo. Future: consider a designed OG image with logo + tagline for richer link previews.
+- **Early launch cohort strategy** — Tony will personally reach out to coaches/instructors he knows in: basketball (RJ), piano, soccer, guitar, possibly ESL. Validates across activity types with real relationships before broader launch.
+- **Student image uploads** — raised by a guitar teacher (Tony's wife): students may need to upload a photo of sheet music or a specific section to practice. Future feature — not V1.
+- **One-tap coach reaction** — after viewing a student's log, coach sends a preselected reaction (e.g. 'Nice work') as SMS to student. No open text field. High-value future feature.
+- **Monday re-engagement email** — nudge to coaches who haven't assigned anything that week.
+- **Account deletion flow** — required before wider launch.
+- **Demo mode** — 'Try as Coach' with seeded database.
+- **Stripe billing** — free tier 3 students, 30-day trial, paywall at 4th student, ~\$5/month, promo codes (e.g. COACHRJ = lifetime free).
+
+---
+
+## Product thinking
+
+- **Closes an existing loop, doesn't create new behavior.** Instructors already assign work verbally between sessions — Reps gives them a way to track the follow-through that already (fails to) happen. Not a new habit to sell; a tool for something that already occurs.
+- **Seasonal / cycle use case, not daily maintenance.** Reps is a commitment tracker for defined training blocks — a summer goal, pre-season, pre-recital, a belt test prep — not an everyday habit app.
+- **Top 10 activity types by fit:** Basketball, Piano, Martial Arts, Tennis, Golf, Guitar, Gymnastics, Soccer, Swimming, Voice/Vocal.
+- **Future: fully custom mode** for any instructor type outside the preset list — instructor names everything themselves.
+- **Student SMS nudge from the coach** (one-tap, preselected message) is the highest-value future feature identified so far.
+
+---
+
+## Stranger signup incident (July 14 2026)
+
+- An unknown user attempted a signup with `jewellanne032499@gmail.com`. The email bounced; a user record was created in Supabase auth with "waiting for verification" status and **deleted manually**.
+- Root cause: the site is publicly indexed and signup is open to anyone.
+- **Action:** gate signups (invite code / waitlist) before broader launch — tracked in Pending.
 
 ---
 
@@ -302,27 +360,31 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 | Screen | URL |
 |--------|-----|
 | Landing | / |
-| Coach sign in / sign up | /coach |
-| Coach roster | /coach/roster |
-| Add student | /coach/add-player |
-| Student detail | /coach/player/[id] |
-| Assign — category | /coach/player/[id]/assign |
-| Assign — exercise | /coach/player/[id]/assign/[category] |
-| Assign — count | /coach/player/[id]/assign/[category]/[exercise] |
-| Player login | /player/login |
-| Player welcome | /player/[token]/welcome |
-| Player home | /player/[token] |
-| Log reps | /player/[token]/log/[assignmentId] |
-| Celebrate | /player/[token]/celebrate |
+| Instructor entry (redirects) | /instructor |
+| Signup — name (step 1) | /instructor/signup |
+| Signup — activity type (step 2) | /instructor/signup/type |
+| Signup — email + code (step 3) | /instructor/signup/email |
+| Instructor students list | /instructor/students |
+| Add student | /instructor/add-student |
+| Student detail | /instructor/student/[id] |
+| Assign — category | /instructor/student/[id]/assign |
+| Assign — exercise | /instructor/student/[id]/assign/[category] |
+| Assign — count | /instructor/student/[id]/assign/[category]/[exercise] |
+| Custom exercise | /instructor/student/[id]/assign/custom |
+| Student login (phone OTP) | /student/login |
+| Student welcome | /student/[token]/welcome |
+| Student home | /student/[token] |
+| Log reps | /student/[token]/log/[assignmentId] |
+| Celebrate | /student/[token]/celebrate |
 | Parent digest | /parent/[token] |
 | Privacy policy | /privacy |
 | Terms of service | /terms |
-| (Dead) Magic link callback | /auth/callback |
-| (Dead) Complete profile | /auth/complete |
+
+**Route rename (July 14 2026):** all `/coach/*` → `/instructor/*`, all `/player/*` → `/student/*`, `/instructor/roster` → `/instructor/students`. Dead `/auth/callback` and `/auth/complete` removed. DB table/column names (`coaches`, `players`, `coach_id`, `player_id`) were intentionally NOT renamed — internal only. ⚠️ Old `/player/[token]` SMS links and `/coach` bookmarks now 404 (no redirect stubs added).
 
 ---
 
-## Features built (as of July 13 2026)
+## Features built (as of July 14 2026)
 
 - Coach signup — email OTP (name → instructor type → email → 6-digit code → roster)
 - Instructor type selection (basketball active, piano/martial arts/tennis coming soon)
@@ -346,6 +408,33 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 - Auth cookie fix on /auth/callback redirect
 - Email OTP switch (was magic link)
 
+### Added July 14 2026
+- Warm dark theme across all app screens (#1a1612 bg, #252018 surfaces)
+- Sky blue (#378add) color system replacing orange throughout the app
+- Per-step signup URLs (`/instructor/signup`, `/signup/type`, `/signup/email`) with native browser back support
+- Activity type list expanded to 10 — Basketball active; Piano, Martial Arts, Tennis, Golf, Guitar, Gymnastics, Soccer, Swimming, Voice/Vocal all SOON
+- "Create your own" escape-hatch row (SOON) at the bottom of the activity list
+- `labels.verb` wired into the assign UI — activity-specific CTA language
+- Gradient fade on the scrollable activity list
+- Celebrate screen no longer leaks the coach name in the URL query string (moved to sessionStorage)
+- Student-facing error messages use "instructor" not "coach"
+- aria-labels updated "Player options" → "Student options"
+- Console logs sanitized — no longer expose phone numbers, SMS bodies, or Supabase table names
+- SMS links now use `/student/${token}` not `/player/${token}`
+- Route rename: `/coach/*` → `/instructor/*`, `/player/*` → `/student/*`, `/instructor/roster` → `/instructor/students`
+- Dead `/auth` routes removed; stale Supabase `/auth/callback` redirect URLs removed
+- `.env.local.example` comment updated magic-link → OTP
+
+### Added July 15 2026
+- Landing page headline updated: 'The work continues between sessions.'
+- Landing page bullets updated: Assign work in seconds / Students log their progress / Everything in one place (Layers icon)
+- SEO metadata added to landing page: title, description, og:title, og:description, og:image (basketball hero photo)
+- App background color updated to cooler palette: #111318 bg, #1c1f26 surfaces, #2a2d36 borders
+- Step 3 signup helper text updated: 'We'll email you a sign-in code.'
+- Step 2 activity list bottom padding fix — Create your own row now fully clears gradient
+- Dead file deleted: src/lib/supabase.ts
+- CLAUDE.md logs RLS pending note added
+
 ---
 
 ## Pending / loose ends
@@ -362,6 +451,9 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 - Page title metadata review
 - Account deletion flow
 - Re-engagement nudge (Monday email)
+- **Gate stranger signups** — signup is currently open to the public; a bot already attempted a signup July 14 2026 (see incident note below). Add invite code / waitlist before broader launch.
+- **Tighten logs RLS policy** — `logs` INSERT/SELECT is currently open. Before wider launch, tighten INSERT to verify the student token matches the player on the assignment.
+- ~~CLAUDE.md routes table was stale~~ — updated July 14 2026.
 
 ---
 
@@ -384,17 +476,20 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 
 ---
 
-## Priority build list (updated July 13 2026)
+## Priority build list (updated July 15 2026)
 
-1. UI polish pass (see notes above) ← in progress
-2. Privacy policy + terms final copy at /privacy and /terms
-3. hello@assignreps.com Gmail "Send as" setup
-4. Stripe infrastructure (build early, not actively charging)
-5. Account deletion flow
-6. Demo mode — "Try as Coach" seeded database
-7. Re-engagement nudge (Monday email to coaches)
-8. Page title metadata review
-9. Update TWILIO_FROM_NUMBER once toll-free approved
+1. UI polish pass — instructor, student, parent flows (for RJ demo) ← in progress
+2. Schedule RJ meeting this week
+3. Update TWILIO_FROM_NUMBER once toll-free approved
+4. Privacy policy + terms final copy
+5. hello@assignreps.com Gmail Send as setup
+6. Gate stranger signups — add invite code or waitlist
+7. Stripe infrastructure
+8. Demo mode
+9. Account deletion flow
+10. Re-engagement nudge (Monday email)
+11. New-signup notification email to hello@
+12. Light mode — after dark mode polish is complete
 
 **Near-term goal:** Get the app into RJ's hands this week.
 
