@@ -16,32 +16,43 @@ const INSTRUCTOR_OPTIONS: { id: InstructorType; label: string; emoji: string; av
 ];
 
 const INPUT = "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-base text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim";
-const BTN_PRIMARY = "w-full bg-reps-orange text-reps-bg font-semibold text-[15px] py-[14px] rounded-[10px] transition-colors hover:bg-reps-orange-hi active:scale-[0.99]";
+// Width is applied per use (w-full when standalone, flex-1 when paired with Back).
+const BTN_BASE = "font-semibold text-[15px] py-[14px] rounded-[10px] transition-colors active:scale-[0.99]";
+const BTN_PRIMARY = `${BTN_BASE} bg-reps-orange text-reps-bg hover:bg-reps-orange-hi`;
+const BTN_SECONDARY = `${BTN_BASE} bg-transparent border border-reps-line text-reps-sub hover:border-reps-line-hi hover:text-reps-ink`;
 const ERROR_BOX = "bg-red-900/20 border border-red-500/30 text-red-400 rounded-[10px] px-4 py-3 text-sm mb-4";
 
 // Hoisted to module scope so they keep a stable identity and never remount.
-function ScreenHeader({ stepNum, total, onBack }: { stepNum: number; total: number; onBack?: () => void }) {
+
+// Progress pills below the logo: active step is a wide blue pill, completed
+// steps a small faded-blue dot, upcoming steps a small dark dot.
+function StepDots({ stepNum, total }: { stepNum: number; total: number }) {
   return (
-    // Fixed height so the row is invariant to the back arrow: it is text-lg
-    // (~28px line box, taller than the 24px logo) and only present from step 2
-    // on, which would otherwise re-center the "Step X of 3" label 2px lower on
-    // later steps. Pinning the height keeps the label in the same spot.
-    <div className="flex justify-between items-center h-7 mb-12">
-      <div className="flex items-center gap-3">
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="text-reps-orange text-lg -ml-1 px-1 hover:text-reps-orange-hi transition-colors"
-            aria-label="Go back"
-          >
-            ←
-          </button>
-        )}
+    <div className="flex justify-center items-center gap-1.5" aria-hidden>
+      {Array.from({ length: total }, (_, i) => {
+        const idx = i + 1;
+        const active = idx === stepNum;
+        const completed = idx < stepNum;
+        return (
+          <span
+            key={idx}
+            className={`h-1.5 rounded-full transition-all ${
+              active ? "w-6 bg-reps-orange" : completed ? "w-1.5 bg-reps-orange/40" : "w-1.5 bg-reps-line"
+            }`}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function ScreenHeader({ stepNum, total }: { stepNum: number; total: number }) {
+  return (
+    <div className="mb-12">
+      <div className="flex items-center h-7 mb-5">
         <LogoMini />
       </div>
-      {/* Sized and weighted to match the wordmark — the two read as a pair. */}
-      <span className="text-base font-semibold text-reps-dim">Step {stepNum} of {total}</span>
+      <StepDots stepNum={stepNum} total={total} />
     </div>
   );
 }
@@ -141,7 +152,7 @@ export default function CoachSignup() {
             onChange={(e) => setName(e.target.value)}
             className={`${INPUT} mb-6 placeholder:italic`}
           />
-          <button type="submit" className={BTN_PRIMARY}>Continue</button>
+          <button type="submit" className={`${BTN_PRIMARY} w-full`}>Continue</button>
         </form>
         <p className="mt-6 text-center text-[13px] text-reps-dim">
           Already have an account?{" "}
@@ -160,7 +171,7 @@ export default function CoachSignup() {
   if (step === "instructor_type") {
     return (
       <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-        <ScreenHeader stepNum={2} total={3} onBack={() => setStep("name")} />
+        <ScreenHeader stepNum={2} total={3} />
         <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6">What do you teach?</h2>
         <form onSubmit={submitInstructorType}>
           <div className="flex flex-col gap-3 mb-4">
@@ -170,14 +181,14 @@ export default function CoachSignup() {
                 return (
                   <div
                     key={opt.id}
-                    className="flex items-center gap-3 px-[16px] py-[14px] rounded-[10px] border border-reps-line/40 bg-reps-card/50 cursor-not-allowed"
+                    // Disabled row: transparent bg, transparent border (kept so
+                    // the box height matches the bordered active rows), no hover,
+                    // not-allowed cursor — nothing reads as tappable.
+                    className="flex items-center gap-3 px-[16px] py-[14px] rounded-[10px] border border-transparent bg-transparent cursor-not-allowed"
                   >
-                    {/* No opacity on the row — it would compound onto the badge
-                        and label and cap their legibility. Each element carries
-                        its own muting instead. */}
-                    <span className="text-[22px] grayscale opacity-60">{opt.emoji}</span>
-                    <span className="text-[15px] font-medium text-reps-ink/60">{opt.label}</span>
-                    <span className="ml-auto text-[10px] font-semibold text-reps-ink bg-reps-line-hi px-[7px] py-[3px] rounded-full tracking-wide uppercase">
+                    <span className="text-[22px] grayscale opacity-40">{opt.emoji}</span>
+                    <span className="text-[15px] font-medium text-reps-ink/40">{opt.label}</span>
+                    <span className="ml-auto text-[10px] font-semibold text-reps-sub bg-reps-raised px-[7px] py-[3px] rounded-full tracking-wide uppercase">
                       Soon
                     </span>
                   </div>
@@ -210,7 +221,10 @@ export default function CoachSignup() {
             })}
           </div>
           <p className="text-[12px] text-reps-sub text-center mb-8">More disciplines coming soon.</p>
-          <button type="submit" className={BTN_PRIMARY}>Continue</button>
+          <div className="flex gap-3">
+            <button type="button" onClick={() => setStep("name")} className={`${BTN_SECONDARY} flex-1`}>Back</button>
+            <button type="submit" className={`${BTN_PRIMARY} flex-1`}>Continue</button>
+          </div>
         </form>
       </main>
     );
@@ -219,7 +233,7 @@ export default function CoachSignup() {
   if (step === "email") {
     return (
       <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-        <ScreenHeader stepNum={3} total={3} onBack={() => setStep("instructor_type")} />
+        <ScreenHeader stepNum={3} total={3} />
         <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your email</h2>
         <p className="text-[15px] text-reps-sub mb-6">We&apos;ll send a 6-digit code. No password.</p>
         <ErrorBanner error={error} />
@@ -231,13 +245,16 @@ export default function CoachSignup() {
             onChange={(e) => setEmail(e.target.value)}
             className={`${INPUT} mb-6`}
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className={`${BTN_PRIMARY} disabled:opacity-50 disabled:pointer-events-none`}
-          >
-            {loading ? "Sending…" : "Send code"}
-          </button>
+          <div className="flex gap-3">
+            <button type="button" onClick={() => setStep("instructor_type")} className={`${BTN_SECONDARY} flex-1`}>Back</button>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`${BTN_PRIMARY} flex-1 disabled:opacity-50 disabled:pointer-events-none`}
+            >
+              {loading ? "Sending…" : "Send code"}
+            </button>
+          </div>
         </form>
       </main>
     );
@@ -246,7 +263,7 @@ export default function CoachSignup() {
   // step === "code"
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-      <ScreenHeader stepNum={3} total={3} onBack={() => { setError(""); setStep("email"); }} />
+      <ScreenHeader stepNum={3} total={3} />
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Enter your code</h2>
       <p className="text-[13px] text-reps-sub mb-6">
         We emailed a 6-digit code to <span className="text-reps-ink font-medium">{email}</span>.
@@ -264,13 +281,16 @@ export default function CoachSignup() {
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
           className={`${INPUT} mb-6 text-center text-2xl tracking-[0.4em] font-semibold`}
         />
-        <button
-          type="submit"
-          disabled={loading}
-          className={`${BTN_PRIMARY} disabled:opacity-50 disabled:pointer-events-none`}
-        >
-          {loading ? "Verifying…" : "Verify & continue"}
-        </button>
+        <div className="flex gap-3">
+          <button type="button" onClick={() => { setError(""); setStep("email"); }} className={`${BTN_SECONDARY} flex-1`}>Back</button>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`${BTN_PRIMARY} flex-1 disabled:opacity-50 disabled:pointer-events-none`}
+          >
+            {loading ? "Verifying…" : "Verify & continue"}
+          </button>
+        </div>
       </form>
       <p className="mt-6 text-center text-[12px] text-reps-dim">
         Didn&apos;t get it?{" "}
