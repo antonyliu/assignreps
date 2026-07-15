@@ -1,7 +1,7 @@
 import { LogoMini } from "./Logo";
 
 // Shared styling + chrome for the coach signup steps, each of which is its own
-// route under /coach/signup.
+// route under /instructor/signup.
 
 export const INPUT =
   "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-base text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim";
