@@ -170,11 +170,14 @@ export default function CoachSignup() {
                 return (
                   <div
                     key={opt.id}
-                    className="flex items-center gap-3 px-[16px] py-[14px] rounded-[10px] border border-reps-line/40 bg-reps-card/50 opacity-75 cursor-not-allowed"
+                    className="flex items-center gap-3 px-[16px] py-[14px] rounded-[10px] border border-reps-line/40 bg-reps-card/50 cursor-not-allowed"
                   >
-                    <span className="text-[22px] grayscale">{opt.emoji}</span>
-                    <span className="text-[15px] font-medium text-reps-dim">{opt.label}</span>
-                    <span className="ml-auto text-[10px] font-semibold text-reps-dim bg-reps-line px-[7px] py-[3px] rounded-full tracking-wide uppercase">
+                    {/* No opacity on the row — it would compound onto the badge
+                        and label and cap their legibility. Each element carries
+                        its own muting instead. */}
+                    <span className="text-[22px] grayscale opacity-60">{opt.emoji}</span>
+                    <span className="text-[15px] font-medium text-reps-ink/60">{opt.label}</span>
+                    <span className="ml-auto text-[10px] font-semibold text-reps-ink bg-reps-line-hi px-[7px] py-[3px] rounded-full tracking-wide uppercase">
                       Soon
                     </span>
                   </div>
@@ -206,7 +209,7 @@ export default function CoachSignup() {
               );
             })}
           </div>
-          <p className="text-[12px] text-reps-dim opacity-75 text-center mb-8">More disciplines coming soon.</p>
+          <p className="text-[12px] text-reps-sub text-center mb-8">More disciplines coming soon.</p>
           <button type="submit" className={BTN_PRIMARY}>Continue</button>
         </form>
       </main>
