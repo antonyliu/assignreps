@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Send, CheckCircle, TrendingUp } from "lucide-react";
+import { Send, CheckCircle, Layers } from "lucide-react";
 
 function TallyMark() {
   return (
@@ -16,9 +16,9 @@ function TallyMark() {
 }
 
 const bullets = [
-  { icon: Send,        text: "Send assignments in seconds" },
+  { icon: Send,        text: "Assign work in seconds" },
   { icon: CheckCircle, text: "Students log their progress" },
-  { icon: TrendingUp,  text: "See their progress anytime" },
+  { icon: Layers,      text: "Everything in one place" },
 ];
 
 export default function LandingPage() {
@@ -99,7 +99,7 @@ export default function LandingPage() {
                 letterSpacing: "-0.5px",
                 color: "#0f0f10",
               }}>
-                Practice homework<br />for your students.
+                The work continues<br />between sessions.
               </h1>
 
               {/* Bullets */}
