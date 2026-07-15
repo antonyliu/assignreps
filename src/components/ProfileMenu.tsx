@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { User } from "lucide-react";
 
-// Top-right profile control: a person silhouette + the coach's name, tappable.
-// Tapping opens a dropdown with a large "Sign out" target; sign out is gated
-// behind a confirmation dialog so an accidental tap can't end the session.
-export default function ProfileMenu({ name }: { name: string }) {
+// Profile control: a person silhouette icon on the right of the header (the
+// coach's name is shown separately on the left, display-only). Tapping the
+// icon opens a compact dropdown whose "Sign out" is gated behind a
+// confirmation dialog so an accidental tap can't end the session.
+export default function ProfileMenu() {
   const router = useRouter();
   const supabase = createClient();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -24,13 +25,12 @@ export default function ProfileMenu({ name }: { name: string }) {
       <div className="relative">
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="flex items-center gap-2 min-h-[44px] pl-1.5 pr-2.5 rounded-[10px] hover:bg-reps-card active:scale-[0.98] transition-all"
+          className="flex items-center justify-center w-9 h-9 -mr-1 rounded-full hover:bg-reps-card active:scale-[0.95] transition-all"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           aria-label="Profile menu"
         >
           <User size={20} color="#378add" strokeWidth={2} />
-          <span className="text-[14px] font-medium text-reps-sub">{name}</span>
         </button>
 
         {menuOpen && (
@@ -44,7 +44,7 @@ export default function ProfileMenu({ name }: { name: string }) {
             />
             <div
               role="menu"
-              className="absolute right-0 top-full mt-2 z-50 min-w-[190px] bg-reps-card border border-reps-line rounded-[12px] p-1.5 shadow-xl shadow-black/40"
+              className="absolute right-0 top-full mt-1.5 z-50 min-w-[132px] bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
             >
               <button
                 role="menuitem"
@@ -52,7 +52,7 @@ export default function ProfileMenu({ name }: { name: string }) {
                   setMenuOpen(false);
                   setConfirmOpen(true);
                 }}
-                className="flex items-center w-full min-h-[44px] px-3 rounded-[8px] text-left text-[15px] text-reps-ink hover:bg-reps-raised transition-colors"
+                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink hover:bg-reps-raised transition-colors"
               >
                 Sign out
               </button>
@@ -77,7 +77,7 @@ export default function ProfileMenu({ name }: { name: string }) {
               Sign out?
             </h2>
             <p className="text-[14px] text-reps-sub mb-6">
-              You can always sign back in with your email.
+              Sign back in anytime with your email.
             </p>
             <div className="flex gap-3">
               <button

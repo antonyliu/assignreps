@@ -22,11 +22,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-reps-bg text-reps-ink">
-        {/* Portrait lock: this overlay is hidden by default and only appears
-            when a phone is held in landscape (see globals.css). */}
-        <div className="landscape-lock" aria-hidden="true">
-          <span>Please rotate your device to portrait.</span>
-        </div>
         {children}
       </body>
     </html>

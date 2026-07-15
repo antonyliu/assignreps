@@ -70,32 +70,22 @@ body {
 }
 
 /* Portrait lock — Reps is a portrait-only phone app. The web platform can't
-   hard-lock orientation outside an installed PWA, so we enforce it in the UX:
-   when a phone is rotated to landscape (landscape orientation AND a short
-   viewport, which excludes tall desktop/tablet windows), everything on the
-   page is hidden and a single rotate prompt takes over. The short-height
-   guard keeps desktop landscape — including the responsive landing page —
-   completely unaffected. */
-.landscape-lock {
-  display: none;
-}
-
+   hard-lock orientation outside an installed PWA, so we enforce it silently
+   in CSS: when a phone is rotated to landscape (landscape orientation AND a
+   short viewport, which excludes tall desktop/tablet windows), the whole page
+   is counter-rotated back to portrait. No message — the app simply stays
+   upright as if rotation never happened. The short-height guard keeps desktop
+   landscape — including the responsive landing page — completely unaffected. */
 @media screen and (orientation: landscape) and (max-height: 500px) {
-  body > *:not(.landscape-lock) {
-    display: none !important;
-  }
-  .landscape-lock {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    text-align: center;
-    background: var(--reps-bg);
-    color: var(--reps-sub);
-    font-size: 15px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  html {
+    transform: rotate(-90deg);
+    transform-origin: left top;
+    /* Swap the axes so the rotated page fills the physical screen. */
+    width: 100vh;
+    height: 100vw;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    overflow-x: hidden;
   }
 }

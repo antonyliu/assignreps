@@ -86,9 +86,12 @@ export default async function RosterPage() {
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      <div className="flex justify-between items-center mb-8">
-        <LogoMini />
-        <ProfileMenu name={coachName} />
+      <div className="flex justify-between items-center mb-12">
+        <div className="flex items-center gap-2.5">
+          <LogoMini />
+          <span className="text-[14px] font-medium text-reps-sub">{coachName}</span>
+        </div>
+        <ProfileMenu />
       </div>
 
       <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your {labels.studentsLabel}</h1>
@@ -97,12 +100,24 @@ export default async function RosterPage() {
         <>
           {/* Ghost roster — faded skeleton rows mirroring a real student row
               (avatar, name bar, status bar, chevron) hint at what fills this
-              screen, in place of an empty-state illustration. */}
-          <div className="flex flex-col gap-1 mt-6 mb-8" aria-hidden="true">
-            {[0, 1, 2].map((i) => (
+              screen, in place of an empty-state illustration. Opacity steps
+              down per row and a mask fades the bottom so the rows dissolve
+              rather than hard-stop. */}
+          <div
+            className="flex flex-col gap-1 mt-6 mb-12"
+            aria-hidden="true"
+            style={{
+              WebkitMaskImage:
+                "linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%)",
+              maskImage:
+                "linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%)",
+            }}
+          >
+            {[0.25, 0.18, 0.12].map((op, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] opacity-[0.18] pointer-events-none select-none"
+                className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] pointer-events-none select-none"
+                style={{ opacity: op }}
               >
                 <div className="w-8 h-8 rounded-full bg-reps-ink shrink-0" />
                 <div className="flex-1 min-w-0 flex flex-col gap-1.5">
