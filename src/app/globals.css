@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 :root {
-  --reps-bg:         #1a1612;
-  --reps-card:       #252018;
-  --reps-raised:     #2a2420;
-  --reps-line:       #3a3328;
-  --reps-line-hi:    #4a4338;
+  --reps-bg:         #111318;
+  --reps-card:       #1c1f26;
+  --reps-raised:     #22252e;
+  --reps-line:       #2a2d36;
+  --reps-line-hi:    #3a3d46;
   --reps-ink:        #f0ede8;
   --reps-sub:        #9a9189;
   --reps-dim:        #6b6059;
@@ -67,4 +67,35 @@ body {
 
 @media print {
   .paper-grain::before { display: none; }
+}
+
+/* Portrait lock — Reps is a portrait-only phone app. The web platform can't
+   hard-lock orientation outside an installed PWA, so we enforce it in the UX:
+   when a phone is rotated to landscape (landscape orientation AND a short
+   viewport, which excludes tall desktop/tablet windows), everything on the
+   page is hidden and a single rotate prompt takes over. The short-height
+   guard keeps desktop landscape — including the responsive landing page —
+   completely unaffected. */
+.landscape-lock {
+  display: none;
+}
+
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  body > *:not(.landscape-lock) {
+    display: none !important;
+  }
+  .landscape-lock {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    background: var(--reps-bg);
+    color: var(--reps-sub);
+    font-size: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
 }

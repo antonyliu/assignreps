@@ -8,12 +8,19 @@ A lightweight web app for coaches and instructors to assign practice homework to
 **Live domain:** assignreps.com
 **Staging:** staging.assignreps.com
 **Stack:** Next.js · Supabase · Vercel · Tailwind CSS · Twilio · Resend
-**Design:** Mobile-first, light/warm background (#f8f7f5) on landing; warm dark mode inside the app; sky blue (#378add) as sole accent
+**Design:** Mobile-first, light/warm background (#f8f7f5) on landing; cool dark mode inside the app (#111318 bg, #1c1f26 surfaces, #2a2d36 borders); sky blue (#378add) as sole accent
 
 ---
 
 ## The core insight
 The instructor is the customer — not the student. Students never choose this tool; they receive a link. Marketing targets instructor pain: they assign work verbally between sessions with no way to verify follow-through.
+
+---
+
+## Product north star
+More students. More revenue. A reputation that spreads.
+
+Every screen should serve this. Reps isn't a homework tracker — it's part of what makes an instructor look professional and invested, which drives renewals and referrals.
 
 ---
 
@@ -301,6 +308,21 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 
 ---
 
+## Future ideas (tracked, not scheduled)
+
+- **Light mode / dark mode toggle** — data shows females prefer light mode; educational app context also favors light. Build light mode after dark mode polish is complete and validated with RJ. Implement as a simple toggle in user settings, defaulting to system preference. Do not build before RJ demo.
+- **New-signup notification email** — fire an email to hello@assignreps.com every time a new coach signs up (not return logins). Include: name, email, instructor type, timestamp. Implement via Supabase webhook → Next.js API route → Resend. Simple, high signal.
+- **og:image** — added July 15 2026 using basketball hero photo. Future: consider a designed OG image with logo + tagline for richer link previews.
+- **Early launch cohort strategy** — Tony will personally reach out to coaches/instructors he knows in: basketball (RJ), piano, soccer, guitar, possibly ESL. Validates across activity types with real relationships before broader launch.
+- **Student image uploads** — raised by a guitar teacher (Tony's wife): students may need to upload a photo of sheet music or a specific section to practice. Future feature — not V1.
+- **One-tap coach reaction** — after viewing a student's log, coach sends a preselected reaction (e.g. 'Nice work') as SMS to student. No open text field. High-value future feature.
+- **Monday re-engagement email** — nudge to coaches who haven't assigned anything that week.
+- **Account deletion flow** — required before wider launch.
+- **Demo mode** — 'Try as Coach' with seeded database.
+- **Stripe billing** — free tier 3 students, 30-day trial, paywall at 4th student, ~\$5/month, promo codes (e.g. COACHRJ = lifetime free).
+
+---
+
 ## Product thinking
 
 - **Closes an existing loop, doesn't create new behavior.** Instructors already assign work verbally between sessions — Reps gives them a way to track the follow-through that already (fails to) happen. Not a new habit to sell; a tool for something that already occurs.
@@ -403,6 +425,16 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 - Dead `/auth` routes removed; stale Supabase `/auth/callback` redirect URLs removed
 - `.env.local.example` comment updated magic-link → OTP
 
+### Added July 15 2026
+- Landing page headline updated: 'The work continues between sessions.'
+- Landing page bullets updated: Assign work in seconds / Students log their progress / Everything in one place (Layers icon)
+- SEO metadata added to landing page: title, description, og:title, og:description, og:image (basketball hero photo)
+- App background color updated to cooler palette: #111318 bg, #1c1f26 surfaces, #2a2d36 borders
+- Step 3 signup helper text updated: 'We'll email you a sign-in code.'
+- Step 2 activity list bottom padding fix — Create your own row now fully clears gradient
+- Dead file deleted: src/lib/supabase.ts
+- CLAUDE.md logs RLS pending note added
+
 ---
 
 ## Pending / loose ends
@@ -444,17 +476,20 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 
 ---
 
-## Priority build list (updated July 13 2026)
+## Priority build list (updated July 15 2026)
 
-1. UI polish pass (see notes above) ← in progress
-2. Privacy policy + terms final copy at /privacy and /terms
-3. hello@assignreps.com Gmail "Send as" setup
-4. Stripe infrastructure (build early, not actively charging)
-5. Account deletion flow
-6. Demo mode — "Try as Coach" seeded database
-7. Re-engagement nudge (Monday email to coaches)
-8. Page title metadata review
-9. Update TWILIO_FROM_NUMBER once toll-free approved
+1. UI polish pass — instructor, student, parent flows (for RJ demo) ← in progress
+2. Schedule RJ meeting this week
+3. Update TWILIO_FROM_NUMBER once toll-free approved
+4. Privacy policy + terms final copy
+5. hello@assignreps.com Gmail Send as setup
+6. Gate stranger signups — add invite code or waitlist
+7. Stripe infrastructure
+8. Demo mode
+9. Account deletion flow
+10. Re-engagement nudge (Monday email)
+11. New-signup notification email to hello@
+12. Light mode — after dark mode polish is complete
 
 **Near-term goal:** Get the app into RJ's hands this week.
 

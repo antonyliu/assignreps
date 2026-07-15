@@ -2,21 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { LogoMini } from "@/components/Logo";
-import SignOutButton from "@/components/SignOutButton";
+import ProfileMenu from "@/components/ProfileMenu";
 import { getActivityLabels } from "@/config/activityTypes";
 import type { Metadata } from "next";
 import type { Player } from "@/types/database";
 
 function initials(name: string) {
   return name.trim()[0]?.toUpperCase() ?? "?";
-}
-
-// Coach avatar shows up to two initials from their actual name
-// (e.g. "Coach RJ" → "CR", "Mrs. Chen" → "MC", "Sarah" → "S").
-function coachInitialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return (parts[0]?.[0] ?? "?").toUpperCase();
 }
 
 function getWeekStart(): string {
@@ -63,7 +55,7 @@ export default async function RosterPage() {
       .lte("logged_at", weekEndDate + "T23:59:59"),
   ]);
 
-  const coachInitials = coach?.name ? coachInitialsOf(coach.name) : "?";
+  const coachName = coach?.name?.trim() || "Coach";
   const labels = getActivityLabels(coach?.instructor_type ?? null);
   const playerList: Player[] = players ?? [];
 
@@ -96,28 +88,37 @@ export default async function RosterPage() {
 
       <div className="flex justify-between items-center mb-8">
         <LogoMini />
-        <SignOutButton initials={coachInitials} />
+        <ProfileMenu name={coachName} />
       </div>
 
       <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your {labels.studentsLabel}</h1>
 
       {playerList.length === 0 ? (
         <>
-          <p className="text-[13px] text-reps-sub mb-8">No {labels.studentsLabel} yet.</p>
-          <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
-            <div className="w-14 h-14 rounded-[14px] border border-dashed border-reps-line flex items-center justify-center mb-4">
-              <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-                <path d="M10 4v12M4 10h12" stroke="#6b6059" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
-            <p className="text-[14px] text-reps-sub mb-5">Add your first {labels.studentLabel} to get started.</p>
-            <Link
-              href="/instructor/add-student"
-              className="bg-reps-orange text-reps-bg font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
-            >
-              + Add {labels.studentLabel}
-            </Link>
+          {/* Ghost roster — faded skeleton rows mirroring a real student row
+              (avatar, name bar, status bar, chevron) hint at what fills this
+              screen, in place of an empty-state illustration. */}
+          <div className="flex flex-col gap-1 mt-6 mb-8" aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] opacity-[0.18] pointer-events-none select-none"
+              >
+                <div className="w-8 h-8 rounded-full bg-reps-ink shrink-0" />
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <div className="h-3 w-24 rounded-full bg-reps-ink" />
+                  <div className="h-2.5 w-16 rounded-full bg-reps-ink" />
+                </div>
+                <span className="text-[18px] text-reps-ink">›</span>
+              </div>
+            ))}
           </div>
+          <Link
+            href="/instructor/add-student"
+            className="block text-center bg-reps-orange text-reps-bg font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+          >
+            + Add your first {labels.studentLabel}
+          </Link>
         </>
       ) : (
         <>

@@ -86,7 +86,7 @@ export default function EmailStep() {
       <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
         <ScreenHeader stepNum={3} total={3} />
         <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your email</h2>
-        <p className="text-[15px] text-reps-sub mb-6">We&apos;ll send a 6-digit code. No password.</p>
+        <p className="text-[15px] text-reps-sub mb-6">We&apos;ll email you a sign-in code.</p>
         <ErrorBanner error={error} />
         <form onSubmit={submitEmail}>
           <input
