@@ -35,7 +35,7 @@ export default function LandingPage() {
             </span>
           </div>
           <Link
-            href="/coach"
+            href="/coach/signup/email"
             style={{ fontSize: "14px", fontWeight: 500, color: "#666", textDecoration: "underline", textUnderlineOffset: "3px" }}
             className="hover:text-[#0f0f10] transition-colors"
           >
@@ -117,7 +117,7 @@ export default function LandingPage() {
               {/* CTAs */}
               <div className="cta-section" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
                 <Link
-                  href="/coach"
+                  href="/coach/signup"
                   style={{
                     display: "block",
                     backgroundColor: "#2d7bc4",
