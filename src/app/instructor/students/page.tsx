@@ -86,10 +86,13 @@ export default async function RosterPage() {
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      <div className="flex justify-between items-center mb-12">
+      {/* items-center keeps the left lockup and right name/icon group on the
+          same centerline across Chrome and Safari iOS. */}
+      <div className="flex items-center justify-between mb-16">
         <LogoMini />
-        <div className="flex items-center gap-2.5">
-          <span className="text-[14px] font-medium text-reps-sub text-right">{coachName}</span>
+        <div className="flex items-center gap-1.5">
+          {/* Dimmer than reps-sub but still ~5:1 on the #111318 bg → WCAG AA. */}
+          <span className="text-[14px] font-medium text-[#8a827b] text-right">{coachName}</span>
           <ProfileMenu />
         </div>
       </div>
@@ -108,12 +111,12 @@ export default async function RosterPage() {
             aria-hidden="true"
             style={{
               WebkitMaskImage:
-                "linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%)",
+                "linear-gradient(to bottom, #000 0%, #000 20%, transparent 100%)",
               maskImage:
-                "linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%)",
+                "linear-gradient(to bottom, #000 0%, #000 20%, transparent 100%)",
             }}
           >
-            {[0.25, 0.18, 0.12].map((op, i) => (
+            {[0.25, 0.18, 0.12, 0.07].map((op, i) => (
               <div
                 key={i}
                 className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] pointer-events-none select-none"

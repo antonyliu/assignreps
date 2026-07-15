@@ -5,11 +5,13 @@
 // screens use LogoLarge.
 export function LogoMini() {
   return (
-    <div className="flex items-center gap-2 text-base font-semibold text-reps-ink">
+    <div className="flex items-center gap-1.5 text-base font-semibold text-reps-ink">
       {/* Tally mark only — no box. Same four-tally + diagonal geometry as the
           landing page and student welcome mark, drawn in sky blue on the app's
-          dark surface instead of white-in-a-box. */}
-      <svg width={24} height={24} viewBox="0 0 32 32" fill="none">
+          dark surface instead of white-in-a-box. `block` removes the inline
+          baseline gap so the mark centers cleanly next to the wordmark on
+          Safari iOS as well as Chrome. */}
+      <svg width={24} height={24} viewBox="0 0 32 32" fill="none" className="block shrink-0">
         <line x1="9"  y1="8" x2="9"  y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
         <line x1="14" y1="8" x2="14" y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
         <line x1="19" y1="8" x2="19" y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
