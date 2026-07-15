@@ -1,6 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Send, CheckCircle, Layers } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Reps — Practice Homework App for Coaches & Instructors",
+  description:
+    "Assign practice homework to your students, they log it on their phone. Built for coaches and instructors.",
+  openGraph: {
+    title: "Reps — Practice Homework App for Coaches & Instructors",
+    description:
+      "Assign practice homework to your students, they log it on their phone. Built for coaches and instructors.",
+  },
+};
 
 function TallyMark() {
   return (
