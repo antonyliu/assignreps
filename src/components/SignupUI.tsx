@@ -14,7 +14,8 @@ export function ScreenHeader({ stepNum, total }: { stepNum: number; total: numbe
   return (
     <div className="flex justify-between items-center h-7 mb-12">
       <LogoMini />
-      <span className="text-base font-semibold text-reps-dim">
+      {/* Small and dim — a secondary marker that shouldn't rival the logo. */}
+      <span className="text-xs font-medium text-reps-dim">
         Step {stepNum} of {total}
       </span>
     </div>

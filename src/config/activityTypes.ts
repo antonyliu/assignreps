@@ -1,4 +1,14 @@
-export type ActivityType = "basketball" | "piano" | "martial_arts" | "tennis" | "golf";
+export type ActivityType =
+  | "basketball"
+  | "piano"
+  | "martial_arts"
+  | "tennis"
+  | "golf"
+  | "guitar"
+  | "gymnastics"
+  | "soccer"
+  | "swimming"
+  | "voice";
 
 type ActivityConfig = {
   /** Display name + icon for the signup picker. */
@@ -59,6 +69,51 @@ export const ACTIVITY_TYPES: Record<ActivityType, ActivityConfig> = {
     groupLabel: "roster",
     verb: "assign drills",
   },
+  guitar: {
+    label: "Guitar",
+    emoji: "🎸",
+    available: false,
+    studentLabel: "student",
+    studentsLabel: "students",
+    groupLabel: "roster",
+    verb: "assign practice",
+  },
+  gymnastics: {
+    label: "Gymnastics",
+    emoji: "🤸",
+    available: false,
+    studentLabel: "gymnast",
+    studentsLabel: "gymnasts",
+    groupLabel: "roster",
+    verb: "assign drills",
+  },
+  soccer: {
+    label: "Soccer",
+    emoji: "⚽",
+    available: false,
+    studentLabel: "player",
+    studentsLabel: "players",
+    groupLabel: "roster",
+    verb: "assign drills",
+  },
+  swimming: {
+    label: "Swimming",
+    emoji: "🏊",
+    available: false,
+    studentLabel: "swimmer",
+    studentsLabel: "swimmers",
+    groupLabel: "roster",
+    verb: "assign sets",
+  },
+  voice: {
+    label: "Voice/Vocal",
+    emoji: "🎤",
+    available: false,
+    studentLabel: "student",
+    studentsLabel: "students",
+    groupLabel: "roster",
+    verb: "assign practice",
+  },
 };
 
 // Display order for the signup discipline picker.
@@ -68,6 +123,11 @@ export const ACTIVITY_TYPE_ORDER: ActivityType[] = [
   "martial_arts",
   "tennis",
   "golf",
+  "guitar",
+  "gymnastics",
+  "soccer",
+  "swimming",
+  "voice",
 ];
 
 export function getActivityLabels(instructorType: string | null) {
