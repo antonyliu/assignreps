@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 :root {
-  --reps-bg:         #1a1612;
-  --reps-card:       #252018;
-  --reps-raised:     #2a2420;
-  --reps-line:       #3a3328;
-  --reps-line-hi:    #4a4338;
+  --reps-bg:         #111318;
+  --reps-card:       #1c1f26;
+  --reps-raised:     #22252e;
+  --reps-line:       #2a2d36;
+  --reps-line-hi:    #3a3d46;
   --reps-ink:        #f0ede8;
   --reps-sub:        #9a9189;
   --reps-dim:        #6b6059;

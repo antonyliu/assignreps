@@ -29,7 +29,7 @@ export default function TypeStep() {
             gradient overlay fades items into the background as they reach the
             bottom edge instead of clipping on a hard line. */}
         <div className="relative flex-1 min-h-0">
-          <div className="flex flex-col gap-3 h-full overflow-y-auto">
+          <div className="flex flex-col gap-3 h-full overflow-y-auto pb-12">
             {ACTIVITY_TYPE_ORDER.map((id) => {
               const opt = ACTIVITY_TYPES[id];
               const selected = instructorType === id;
