@@ -4,22 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { LogoMini } from "./Logo";
+import { ACTIVITY_TYPES, ACTIVITY_TYPE_ORDER, type ActivityType } from "@/config/activityTypes";
 
 type Step = "name" | "instructor_type" | "email" | "code";
-type InstructorType = "basketball" | "piano" | "martial_arts" | "tennis";
-
-const INSTRUCTOR_OPTIONS: { id: InstructorType; label: string; emoji: string; available: boolean }[] = [
-  { id: "basketball",   label: "Basketball",   emoji: "🏀", available: true  },
-  { id: "piano",        label: "Piano",        emoji: "🎹", available: false },
-  { id: "martial_arts", label: "Martial Arts", emoji: "🥋", available: false },
-  { id: "tennis",       label: "Tennis",       emoji: "🎾", available: false },
-];
 
 const INPUT = "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-base text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim";
-// Width is applied per use (w-full when standalone, flex-1 when paired with Back).
-const BTN_BASE = "font-semibold text-[15px] py-[14px] rounded-[10px] transition-colors active:scale-[0.99]";
-const BTN_PRIMARY = `${BTN_BASE} bg-reps-orange text-reps-bg hover:bg-reps-orange-hi`;
-const BTN_SECONDARY = `${BTN_BASE} bg-transparent border border-reps-line text-reps-sub hover:border-reps-line-hi hover:text-reps-ink`;
+const BTN_PRIMARY = "w-full bg-reps-orange text-reps-bg font-semibold text-[15px] py-[14px] rounded-[10px] transition-colors hover:bg-reps-orange-hi active:scale-[0.99]";
 const ERROR_BOX = "bg-red-900/20 border border-red-500/30 text-red-400 rounded-[10px] px-4 py-3 text-sm mb-4";
 
 // Hoisted to module scope so they keep a stable identity and never remount.
@@ -48,8 +38,10 @@ function StepDots({ stepNum, total }: { stepNum: number; total: number }) {
 
 function ScreenHeader({ stepNum, total }: { stepNum: number; total: number }) {
   return (
-    <div className="mb-12">
-      <div className="flex items-center h-7 mb-5">
+    // Generous space above and below the dots so they read as an anchored
+    // progress band rather than floating between the logo and the heading.
+    <div className="mb-14">
+      <div className="flex items-center h-7 mb-9">
         <LogoMini />
       </div>
       <StepDots stepNum={stepNum} total={total} />
@@ -68,7 +60,7 @@ export default function CoachSignup() {
 
   const [step, setStep]                     = useState<Step>("name");
   const [name, setName]                     = useState("");
-  const [instructorType, setInstructorType] = useState<InstructorType>("basketball");
+  const [instructorType, setInstructorType] = useState<ActivityType>("basketball");
   const [email, setEmail]                   = useState("");
   const [code, setCode]                     = useState("");
   const [error, setError]                   = useState("");
@@ -175,19 +167,20 @@ export default function CoachSignup() {
         <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6">What do you teach?</h2>
         <form onSubmit={submitInstructorType}>
           <div className="flex flex-col gap-3 mb-4">
-            {INSTRUCTOR_OPTIONS.map((opt) => {
-              const selected = instructorType === opt.id;
+            {ACTIVITY_TYPE_ORDER.map((id) => {
+              const opt = ACTIVITY_TYPES[id];
+              const selected = instructorType === id;
               if (!opt.available) {
                 return (
                   <div
-                    key={opt.id}
-                    // Disabled row: transparent bg, transparent border (kept so
-                    // the box height matches the bordered active rows), no hover,
-                    // not-allowed cursor — nothing reads as tappable.
-                    className="flex items-center gap-3 px-[16px] py-[14px] rounded-[10px] border border-transparent bg-transparent cursor-not-allowed"
+                    key={id}
+                    // Disabled row: a very subtle dark surface with a near-invisible
+                    // border to give it shape, and opacity-60 on the whole row so all
+                    // its content recedes. No hover, not-allowed cursor.
+                    className="flex items-center gap-3 px-[16px] py-[14px] rounded-[10px] border border-reps-line/40 bg-reps-card/50 opacity-60 cursor-not-allowed"
                   >
-                    <span className="text-[22px] grayscale opacity-40">{opt.emoji}</span>
-                    <span className="text-[15px] font-medium text-reps-ink/40">{opt.label}</span>
+                    <span className="text-[22px] grayscale">{opt.emoji}</span>
+                    <span className="text-[15px] font-medium text-reps-ink">{opt.label}</span>
                     <span className="ml-auto text-[10px] font-semibold text-reps-sub bg-reps-raised px-[7px] py-[3px] rounded-full tracking-wide uppercase">
                       Soon
                     </span>
@@ -197,8 +190,8 @@ export default function CoachSignup() {
               return (
                 <button
                   type="button"
-                  key={opt.id}
-                  onClick={() => setInstructorType(opt.id)}
+                  key={id}
+                  onClick={() => setInstructorType(id)}
                   className={`flex items-center gap-3 px-[16px] py-[14px] rounded-[10px] border text-left transition-all ${
                     selected
                       ? "border-reps-orange bg-reps-orange/10"
@@ -220,11 +213,9 @@ export default function CoachSignup() {
               );
             })}
           </div>
-          <p className="text-[12px] text-reps-sub text-center mb-8">More disciplines coming soon.</p>
-          <div className="flex gap-3">
-            <button type="button" onClick={() => setStep("name")} className={`${BTN_SECONDARY} flex-1`}>Back</button>
-            <button type="submit" className={`${BTN_PRIMARY} flex-1`}>Continue</button>
-          </div>
+          {/* Hairline above anchors this as a section footer, not floating text. */}
+          <p className="text-[12px] text-reps-sub text-center border-t border-reps-line pt-4 mt-1 mb-8">More disciplines coming soon.</p>
+          <button type="submit" className={BTN_PRIMARY}>Continue</button>
         </form>
       </main>
     );
@@ -245,16 +236,13 @@ export default function CoachSignup() {
             onChange={(e) => setEmail(e.target.value)}
             className={`${INPUT} mb-6`}
           />
-          <div className="flex gap-3">
-            <button type="button" onClick={() => setStep("instructor_type")} className={`${BTN_SECONDARY} flex-1`}>Back</button>
-            <button
-              type="submit"
-              disabled={loading}
-              className={`${BTN_PRIMARY} flex-1 disabled:opacity-50 disabled:pointer-events-none`}
-            >
-              {loading ? "Sending…" : "Send code"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`${BTN_PRIMARY} disabled:opacity-50 disabled:pointer-events-none`}
+          >
+            {loading ? "Sending…" : "Send code"}
+          </button>
         </form>
       </main>
     );
@@ -281,16 +269,13 @@ export default function CoachSignup() {
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
           className={`${INPUT} mb-6 text-center text-2xl tracking-[0.4em] font-semibold`}
         />
-        <div className="flex gap-3">
-          <button type="button" onClick={() => { setError(""); setStep("email"); }} className={`${BTN_SECONDARY} flex-1`}>Back</button>
-          <button
-            type="submit"
-            disabled={loading}
-            className={`${BTN_PRIMARY} flex-1 disabled:opacity-50 disabled:pointer-events-none`}
-          >
-            {loading ? "Verifying…" : "Verify & continue"}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className={`${BTN_PRIMARY} disabled:opacity-50 disabled:pointer-events-none`}
+        >
+          {loading ? "Verifying…" : "Verify & continue"}
+        </button>
       </form>
       <p className="mt-6 text-center text-[12px] text-reps-dim">
         Didn&apos;t get it?{" "}
