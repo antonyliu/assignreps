@@ -11,6 +11,11 @@ function initials(name: string) {
   return name.trim()[0]?.toUpperCase() ?? "?";
 }
 
+function firstName(name: string) {
+  const trimmed = name.trim();
+  return trimmed.split(/\s+/)[0] || trimmed;
+}
+
 function getWeekStart(): string {
   const now = new Date();
   const day = now.getDay();
@@ -26,13 +31,16 @@ function weekEnd(weekStart: string): string {
   return d.toISOString().split("T")[0];
 }
 
-type ActivityGroup = "fire" | "showing" | "quiet";
+// Completion-based roster groups, in display order.
+type Group = "done" | "progress" | "notstarted" | "unassigned";
 
-function groupLabel(g: ActivityGroup) {
-  if (g === "fire") return { label: "All in 🔥", sub: "4+ days this week" };
-  if (g === "showing") return { label: "Some activity", sub: "1–3 days this week" };
-  return { label: "No activity yet", sub: "0 days this week" };
-}
+const GROUP_ORDER: Group[] = ["done", "progress", "notstarted", "unassigned"];
+const GROUP_TITLES: Record<Group, string> = {
+  done: "Done",
+  progress: "In progress",
+  notstarted: "Not started",
+  unassigned: "Nothing assigned",
+};
 
 export const metadata: Metadata = { title: "Students — Reps" };
 
@@ -64,26 +72,7 @@ export default async function RosterPage() {
   const labels = getActivityLabels(coach?.instructor_type ?? null);
   const playerList: Player[] = players ?? [];
 
-  const daysByPlayer: Record<string, Set<string>> = {};
-  for (const log of logs ?? []) {
-    const day = log.logged_at.split("T")[0];
-    if (!daysByPlayer[log.player_id]) daysByPlayer[log.player_id] = new Set();
-    daysByPlayer[log.player_id].add(day);
-  }
-
-  function daysLogged(playerId: string): number {
-    return daysByPlayer[playerId]?.size ?? 0;
-  }
-
-  function activityGroup(playerId: string): ActivityGroup {
-    const d = daysLogged(playerId);
-    if (d >= 4) return "fire";
-    if (d >= 1) return "showing";
-    return "quiet";
-  }
-
-  // Sum logged reps per assignment, then flag players whose every assigned
-  // exercise this week is complete (sum of logs >= target).
+  // Sum logged reps per assignment (same sum >= target logic used elsewhere).
   const loggedByAssignment: Record<string, number> = {};
   for (const log of logs ?? []) {
     if (!log.assignment_id) continue;
@@ -95,17 +84,19 @@ export default async function RosterPage() {
     (assignmentsByPlayer[a.player_id] ??= []).push({ id: a.id, target: a.target });
   }
 
-  function allComplete(playerId: string): boolean {
-    const list = assignmentsByPlayer[playerId];
-    if (!list || list.length === 0) return false;
-    return list.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target);
+  // Group by completion: all assignments complete → Done; some logged but not
+  // all complete → In progress; assignments but no logs → Not started; no
+  // assignments at all → Nothing assigned.
+  function playerGroup(playerId: string): Group {
+    const list = assignmentsByPlayer[playerId] ?? [];
+    if (list.length === 0) return "unassigned";
+    if (list.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target)) return "done";
+    if (list.some((a) => (loggedByAssignment[a.id] ?? 0) > 0)) return "progress";
+    return "notstarted";
   }
 
-  const grouped: Record<ActivityGroup, Player[]> = { fire: [], showing: [], quiet: [] };
-  for (const p of playerList) grouped[activityGroup(p.id)].push(p);
-
-  const groupOrder: ActivityGroup[] = ["fire", "showing", "quiet"];
-  const hasActivity = grouped.fire.length + grouped.showing.length > 0;
+  const grouped: Record<Group, Player[]> = { done: [], progress: [], notstarted: [], unassigned: [] };
+  for (const p of playerList) grouped[playerGroup(p.id)].push(p);
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
@@ -164,60 +155,41 @@ export default async function RosterPage() {
         </>
       ) : (
         <>
-          <p className="text-[13px] text-reps-sub mb-6">
-            {playerList.length} {playerList.length === 1 ? labels.studentLabel : labels.studentsLabel}
-            {hasActivity && " · this week"}
-          </p>
-
-          <div className="flex flex-col gap-6 mb-6">
-            {groupOrder.map((g) => {
+          <div className="flex flex-col gap-6 mt-6 mb-6">
+            {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;
-              const { label, sub } = groupLabel(g);
+              // Reuse the existing avatar color variants: green (done),
+              // orange (in progress), dim (not started / nothing assigned).
+              const avatarClass =
+                g === "done"
+                  ? "bg-reps-green/15 text-reps-green"
+                  : g === "progress"
+                  ? "bg-reps-orange/10 text-reps-orange"
+                  : "bg-reps-dim/15 text-reps-dim";
               return (
                 <div key={g}>
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-[13px] font-semibold text-reps-ink">{label}</span>
-                    <span className="text-[11px] text-reps-dim">{sub}</span>
+                  <div className="mb-2">
+                    <span className="text-[13px] font-semibold text-reps-ink">{GROUP_TITLES[g]}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    {group.map((player) => {
-                      const days = daysLogged(player.id);
-                      const isQuiet = g === "quiet";
-                      const complete = allComplete(player.id);
-                      return (
-                        <Link
-                          key={player.id}
-                          href={`/instructor/student/${player.id}`}
-                          className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi active:scale-[0.99] transition-all"
-                        >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 ${
-                            complete
-                              ? "bg-reps-green/15 text-reps-green"
-                              : isQuiet
-                              ? "bg-reps-dim/15 text-reps-dim"
-                              : "bg-reps-orange/10 text-reps-orange"
-                          }`}>
-                            {initials(player.name)}
+                    {group.map((player) => (
+                      <Link
+                        key={player.id}
+                        href={`/instructor/student/${player.id}`}
+                        className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi active:scale-[0.99] transition-all"
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 ${avatarClass}`}>
+                          {initials(player.name)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[15px] font-medium text-reps-ink truncate">
+                            {firstName(player.name)}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className={`text-[15px] font-medium ${isQuiet && !complete ? "text-reps-sub" : "text-reps-ink"}`}>
-                              {player.name}
-                            </div>
-                            <div className="text-[12px] text-reps-dim">
-                              {complete ? (
-                                <span className="text-reps-green font-medium">✓ All done</span>
-                              ) : isQuiet ? (
-                                "No activity yet"
-                              ) : (
-                                `${days} day${days === 1 ? "" : "s"} logged`
-                              )}
-                            </div>
-                          </div>
-                          <span className="text-[18px] text-reps-dim">›</span>
-                        </Link>
-                      );
-                    })}
+                        </div>
+                        <span className="text-[18px] text-reps-dim">›</span>
+                      </Link>
+                    ))}
                   </div>
                 </div>
               );
