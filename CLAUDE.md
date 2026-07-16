@@ -195,6 +195,16 @@ Note: `instructor_type` field added now even though basketball is the only optio
 
 `send_to_parent` — boolean, default false. Determines whether the homework SMS goes to the student's phone or the parent's phone.
 
+### Foreign key cascade rules
+
+All foreign keys confirmed with `ON DELETE CASCADE` — deletes cascade down the chain **coaches → players → assignments → logs**:
+- `players.coach_id → coaches.id`
+- `assignments.player_id → players.id`
+- `logs.assignment_id → assignments.id`
+- `logs.player_id → players.id`
+
+Deleting a coach removes their players, those players' assignments, and all related logs. No action needed.
+
 ---
 
 ## Activity type content system
