@@ -16,7 +16,7 @@ const config: Config = {
         "reps-line-hi":   "#3a3d46",
         "reps-ink":       "#f0ede8",
         "reps-sub":       "#9a9189",
-        "reps-dim":       "#6b6059",
+        "reps-dim":       "#8a8fa8",
         "reps-orange":    "#378add",
         "reps-orange-hi": "#4a9ae8",
         "reps-green":     "#4ade80",

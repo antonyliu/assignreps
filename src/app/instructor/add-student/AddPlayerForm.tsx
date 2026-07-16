@@ -145,7 +145,7 @@ export default function AddPlayerForm({ studentLabel }: Props) {
           onChange={(e) => setPhone(e.target.value)}
           className={INPUT}
         />
-        <p className="mt-2 text-[13px] text-[#8a8fa8]">
+        <p className="mt-2 text-[13px] text-[#5a5f72]">
           {isParent
             ? "They'll get a text with their child's homework link."
             : "They'll get a text with their homework link."}
