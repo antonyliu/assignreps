@@ -9,7 +9,8 @@ export type AddPlayerResult =
 export async function addPlayer(
   name: string,
   phone: string,
-  parentPhone: string | null
+  parentPhone: string | null,
+  sendToParent: boolean
 ): Promise<AddPlayerResult> {
   const supabase = await createClient();
 
@@ -30,6 +31,7 @@ export async function addPlayer(
     name,
     phone,
     parent_phone: parentPhone,
+    send_to_parent: sendToParent,
     token,
   });
 

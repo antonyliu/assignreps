@@ -174,7 +174,7 @@ coaches
   id, name, email, phone (nullable), instructor_type, created_at
 
 players
-  id, coach_id, name, phone, parent_phone, token (unique link key), created_at
+  id, coach_id, name, phone, parent_phone, send_to_parent, token (unique link key), created_at
 
 assignments
   id, coach_id, player_id, exercise_name, target, unit (reps/minutes/target), video_url, week_start, created_at
@@ -184,6 +184,8 @@ logs
 ```
 
 Note: `instructor_type` field added now even though basketball is the only option at launch — enables content branching later without schema rework. `phone` on coaches is nullable since email OTP does not require it.
+
+`send_to_parent` — boolean, default false. Determines whether the homework SMS goes to the student's phone or the parent's phone.
 
 ---
 
