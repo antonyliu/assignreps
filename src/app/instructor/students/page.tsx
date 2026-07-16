@@ -97,7 +97,7 @@ export default async function RosterPage() {
         </div>
       </div>
 
-      <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your {labels.studentsLabel}</h1>
+      <h1 className="text-2xl font-semibold tracking-[-0.5px] mt-8 mb-1">Your {labels.studentsLabel}</h1>
 
       {playerList.length === 0 ? (
         <>
