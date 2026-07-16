@@ -39,7 +39,7 @@ function TallyMark() {
 
 const bullets = [
   { icon: Send,        text: "Assign work in seconds" },
-  { icon: CheckCircle, text: "Students log their progress" },
+  { icon: CheckCircle, text: "Students log it from anywhere" },
   { icon: Layers,      text: "Everything in one place" },
 ];
 

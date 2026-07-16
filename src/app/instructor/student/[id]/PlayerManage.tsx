@@ -71,7 +71,7 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
       <div className="relative shrink-0">
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          className="text-reps-sub text-[22px] leading-none px-2 hover:text-reps-ink transition-colors"
+          className="text-reps-sub text-[26px] font-bold leading-none px-2 hover:text-reps-ink transition-colors"
           aria-label="Student options"
         >
           ···

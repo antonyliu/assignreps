@@ -92,7 +92,7 @@ export default async function CoachPlayerPage({
       {assignmentList.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
           <p className="text-[15px] text-reps-sub mb-5">
-            Nothing assigned yet. Give {firstName} some homework.
+            Nothing assigned yet.<br />Give {firstName} some homework.
           </p>
           <Link
             href={`/instructor/student/${id}/assign`}
