@@ -86,6 +86,8 @@ Instructor assigns → Student logs → Instructor sees → Parent digest (weekl
 2. Push to staging branch → test on iPhone at staging.assignreps.com
 3. Merge staging → main → prod deploys automatically
 
+> ⚠️ Always build and test locally first. Never commit directly to staging or push to staging before local is updated. Staging should always be a mirror of local, pushed for iPhone testing only. Main should always be ahead of or equal to staging.
+
 **Important:** Local, staging, and prod all share the same hosted Supabase project. Changes to Supabase dashboard (email templates, SMTP, auth settings) affect all environments immediately.
 
 **Claude Code prompts:** say "push to staging only" or "push to prod" explicitly. Default is local only.
