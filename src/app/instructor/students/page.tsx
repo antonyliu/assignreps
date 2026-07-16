@@ -117,7 +117,7 @@ export default async function RosterPage() {
 
       {/* items-center keeps the left lockup and right name/icon group on the
           same centerline across Chrome and Safari iOS. */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <LogoMini />
         <div className="flex items-center gap-1">
           {/* One step dimmer than before, still ~4.7:1 on #111318 → WCAG AA. */}
@@ -170,7 +170,7 @@ export default async function RosterPage() {
       ) : (
         <>
           {/* Tight but distinct spacing between completion groups. */}
-          <div className="flex flex-col gap-5 mt-6 mb-8">
+          <div className="flex flex-col gap-5 mt-3 mb-8">
             {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;
@@ -189,12 +189,12 @@ export default async function RosterPage() {
                       {style.title}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col gap-1.5">
                     {group.map((player) => (
                       <Link
                         key={player.id}
                         href={`/instructor/student/${player.id}`}
-                        className="flex items-center gap-3 px-[14px] py-2 rounded-[10px] bg-[#1c1f26] hover:bg-[#22252e] active:scale-[0.99] transition-colors"
+                        className="flex items-center gap-3 px-[14px] py-2 rounded-[10px] bg-[#161a20] hover:bg-[#1c1f26] active:scale-[0.99] transition-colors"
                         style={{ WebkitTapHighlightColor: "transparent" }}
                       >
                         <div
