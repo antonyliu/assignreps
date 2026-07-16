@@ -45,14 +45,19 @@ export default async function RosterPage() {
   const weekStart = getWeekStart();
   const weekEndDate = weekEnd(weekStart);
 
-  const [{ data: coach }, { data: players }, { data: logs }] = await Promise.all([
+  const [{ data: coach }, { data: players }, { data: logs }, { data: assignments }] = await Promise.all([
     supabase.from("coaches").select("name, instructor_type").eq("id", user.id).single(),
     supabase.from("players").select("*").eq("coach_id", user.id).order("created_at"),
     supabase
       .from("logs")
-      .select("player_id, logged_at")
+      .select("player_id, assignment_id, amount, logged_at")
       .gte("logged_at", weekStart)
       .lte("logged_at", weekEndDate + "T23:59:59"),
+    supabase
+      .from("assignments")
+      .select("id, player_id, target")
+      .eq("coach_id", user.id)
+      .eq("week_start", weekStart),
   ]);
 
   const coachName = coach?.name?.trim() || "Coach";
@@ -75,6 +80,25 @@ export default async function RosterPage() {
     if (d >= 4) return "fire";
     if (d >= 1) return "showing";
     return "quiet";
+  }
+
+  // Sum logged reps per assignment, then flag players whose every assigned
+  // exercise this week is complete (sum of logs >= target).
+  const loggedByAssignment: Record<string, number> = {};
+  for (const log of logs ?? []) {
+    if (!log.assignment_id) continue;
+    loggedByAssignment[log.assignment_id] = (loggedByAssignment[log.assignment_id] ?? 0) + log.amount;
+  }
+
+  const assignmentsByPlayer: Record<string, { id: string; target: number }[]> = {};
+  for (const a of assignments ?? []) {
+    (assignmentsByPlayer[a.player_id] ??= []).push({ id: a.id, target: a.target });
+  }
+
+  function allComplete(playerId: string): boolean {
+    const list = assignmentsByPlayer[playerId];
+    if (!list || list.length === 0) return false;
+    return list.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target);
   }
 
   const grouped: Record<ActivityGroup, Player[]> = { fire: [], showing: [], quiet: [] };
@@ -160,6 +184,7 @@ export default async function RosterPage() {
                     {group.map((player) => {
                       const days = daysLogged(player.id);
                       const isQuiet = g === "quiet";
+                      const complete = allComplete(player.id);
                       return (
                         <Link
                           key={player.id}
@@ -167,18 +192,26 @@ export default async function RosterPage() {
                           className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi active:scale-[0.99] transition-all"
                         >
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 ${
-                            isQuiet
+                            complete
+                              ? "bg-reps-green/15 text-reps-green"
+                              : isQuiet
                               ? "bg-reps-dim/15 text-reps-dim"
                               : "bg-reps-orange/10 text-reps-orange"
                           }`}>
                             {initials(player.name)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className={`text-[15px] font-medium ${isQuiet ? "text-reps-sub" : "text-reps-ink"}`}>
+                            <div className={`text-[15px] font-medium ${isQuiet && !complete ? "text-reps-sub" : "text-reps-ink"}`}>
                               {player.name}
                             </div>
                             <div className="text-[12px] text-reps-dim">
-                              {isQuiet ? "No activity yet" : `${days} day${days === 1 ? "" : "s"} logged`}
+                              {complete ? (
+                                <span className="text-reps-green font-medium">✓ All done</span>
+                              ) : isQuiet ? (
+                                "No activity yet"
+                              ) : (
+                                `${days} day${days === 1 ? "" : "s"} logged`
+                              )}
                             </div>
                           </div>
                           <span className="text-[18px] text-reps-dim">›</span>

@@ -38,6 +38,21 @@ export default async function CoachPlayerPage({
 
   const initial = player.name.trim()[0]?.toUpperCase() ?? "?";
   const assignmentList: Assignment[] = assignments ?? [];
+
+  // Sum every log per assignment so each card can show real progress and a
+  // completed (sum >= target) state.
+  const assignmentIds = assignmentList.map((a) => a.id);
+  const loggedByAssignment: Record<string, number> = {};
+  if (assignmentIds.length > 0) {
+    const { data: logs } = await supabase
+      .from("logs")
+      .select("assignment_id, amount")
+      .in("assignment_id", assignmentIds);
+    for (const l of logs ?? []) {
+      loggedByAssignment[l.assignment_id] = (loggedByAssignment[l.assignment_id] ?? 0) + l.amount;
+    }
+  }
+
   const joinedLabel = formatJoined(player.created_at);
   const labels = getActivityLabels(coach?.instructor_type ?? null);
   // Activity-specific CTA, e.g. "Assign reps" / "Assign practice" / "Assign drills".
@@ -90,20 +105,32 @@ export default async function CoachPlayerPage({
       ) : (
         <>
           <div className="flex flex-col gap-2.5 mb-6">
-            {assignmentList.map((a) => (
-              <div
-                key={a.id}
-                className="bg-reps-card border border-reps-line rounded-[10px] px-4 py-[14px]"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
-                  <span className="text-[12px] text-reps-dim">{a.target} {a.unit}</span>
+            {assignmentList.map((a) => {
+              const logged = loggedByAssignment[a.id] ?? 0;
+              const done = logged >= a.target;
+              const pct = a.target > 0 ? Math.min(100, Math.round((logged / a.target) * 100)) : 0;
+              return (
+                <div
+                  key={a.id}
+                  className="bg-reps-card border border-reps-line rounded-[10px] px-4 py-[14px]"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
+                    {done ? (
+                      <span className="text-[12px] font-medium text-reps-green">✓ Done</span>
+                    ) : (
+                      <span className="text-[12px] text-reps-dim">{logged}/{a.target} {a.unit}</span>
+                    )}
+                  </div>
+                  <div className="h-1 bg-reps-line rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${done ? "bg-reps-green" : "bg-reps-orange"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1 bg-reps-line rounded-full overflow-hidden">
-                  <div className="h-full bg-reps-orange rounded-full w-0" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div
