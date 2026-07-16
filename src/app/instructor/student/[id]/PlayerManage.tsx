@@ -2,35 +2,49 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deletePlayer, updatePlayerPhone, resendPlayerLink } from "./actions";
+import { deletePlayer, updatePlayerPhone } from "./actions";
 
 type Props = {
   playerId: string;
   playerName: string;
   playerPhone: string;
   playerToken: string;
-  studentLabel: string;
 };
 
-export default function PlayerManage({ playerId, playerName, playerPhone, playerToken, studentLabel }: Props) {
+export default function PlayerManage({ playerId, playerName, playerPhone, playerToken }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [menuOpen, setMenuOpen]       = useState(false);
-  const [editingPhone, setEditingPhone] = useState(false);
-  const [phone, setPhone]             = useState(playerPhone);
-  const [phoneError, setPhoneError]   = useState("");
+  const [menuOpen, setMenuOpen]           = useState(false);
+  const [editingPhone, setEditingPhone]   = useState(false);
+  const [phone, setPhone]                 = useState(playerPhone);
+  const [phoneError, setPhoneError]       = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [resendState, setResendState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [toast, setToast]                 = useState("");
 
-  function handleResend() {
+  const firstName = playerName.trim().split(/\s+/)[0] || playerName.trim();
+  const playerLink = `https://assignreps.com/student/${playerToken}`;
+
+  async function handleShare() {
     setMenuOpen(false);
-    setResendState("sending");
-    startTransition(async () => {
-      const result = await resendPlayerLink(playerId);
-      setResendState(result.ok ? "done" : "error");
-      setTimeout(() => setResendState("idle"), 3000);
-    });
+    // iOS/Android native share sheet when available.
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ title: "Reps", text: `${firstName}'s homework link`, url: playerLink });
+        return;
+      }
+    } catch {
+      // Share sheet dismissed/cancelled — nothing more to do.
+      return;
+    }
+    // No native share (e.g. desktop) — fall back to copying the link.
+    try {
+      await navigator.clipboard.writeText(playerLink);
+      setToast("Link copied");
+    } catch {
+      setToast("Couldn't copy link");
+    }
+    setTimeout(() => setToast(""), 2500);
   }
 
   function handleSavePhone() {
@@ -52,11 +66,9 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
     startTransition(async () => { await deletePlayer(playerId); });
   }
 
-  const playerLink = `https://assignreps.com/student/${playerToken}`;
-
   return (
     <>
-      <div className="relative">
+      <div className="relative shrink-0">
         <button
           onClick={() => setMenuOpen((v) => !v)}
           className="text-reps-sub text-[22px] leading-none px-2 hover:text-reps-ink transition-colors"
@@ -70,16 +82,10 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
             <div className="absolute right-0 top-8 z-20 bg-reps-raised border border-reps-line rounded-[10px] shadow-xl min-w-[180px] overflow-hidden">
               <button
-                onClick={() => { navigator.clipboard.writeText(playerLink); setMenuOpen(false); }}
+                onClick={handleShare}
                 className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors"
               >
-                Copy {studentLabel} link
-              </button>
-              <button
-                onClick={handleResend}
-                className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors border-t border-reps-line"
-              >
-                Resend link via SMS
+                Share homework link
               </button>
               <button
                 onClick={() => { setMenuOpen(false); setEditingPhone(true); }}
@@ -91,18 +97,16 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
                 onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
                 className="w-full text-left px-4 py-3 text-[14px] text-red-400 hover:bg-reps-line transition-colors border-t border-reps-line"
               >
-                Remove {studentLabel}
+                Remove {firstName}
               </button>
             </div>
           </>
         )}
       </div>
 
-      {resendState !== "idle" && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-reps-raised border border-reps-line rounded-[10px] px-5 py-3 text-[14px] shadow-xl">
-          {resendState === "sending" && <span className="text-reps-sub">Sending…</span>}
-          {resendState === "done"    && <span className="text-reps-green">Link sent ✓</span>}
-          {resendState === "error"   && <span className="text-red-400">Failed to send.</span>}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-reps-raised border border-reps-line rounded-[10px] px-5 py-3 text-[14px] text-reps-sub shadow-xl">
+          {toast}
         </div>
       )}
 

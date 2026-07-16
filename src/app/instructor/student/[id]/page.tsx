@@ -55,55 +55,56 @@ export default async function CoachPlayerPage({
 
   const joinedLabel = formatJoined(player.created_at);
   const labels = getActivityLabels(coach?.instructor_type ?? null);
-  // Activity-specific CTA, e.g. "Assign reps" / "Assign practice" / "Assign drills".
-  const assignLabel = labels.verb.charAt(0).toUpperCase() + labels.verb.slice(1);
+  const firstName = player.name.trim().split(/\s+/)[0] || player.name.trim();
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/instructor/students"
-            className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
-          >
-            ←
-          </Link>
-          <span className="text-[14px] font-medium text-reps-sub" style={{ textTransform: "capitalize" }}>{labels.studentsLabel}</span>
-        </div>
-        <PlayerManage
-          playerId={player.id}
-          playerName={player.name}
-          playerPhone={player.phone}
-          playerToken={player.token}
-          studentLabel={labels.studentLabel}
-        />
+      <div className="flex items-center gap-3 mb-6">
+        <Link
+          href="/instructor/students"
+          className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
+        >
+          ←
+        </Link>
+        <span className="text-[14px] font-medium text-reps-sub" style={{ textTransform: "capitalize" }}>{labels.studentsLabel}</span>
       </div>
 
       <div className="flex items-center gap-[14px] mb-6">
-        <div className="w-[52px] h-[52px] rounded-full bg-reps-orange/10 flex items-center justify-center text-[18px] font-semibold text-reps-orange shrink-0">
+        <div
+          className="w-[52px] h-[52px] rounded-full flex items-center justify-center text-[18px] font-semibold shrink-0"
+          style={{ background: "#252830", border: "0.5px solid #2a2d36", color: "#8a8fa8" }}
+        >
           {initial}
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-2xl font-semibold tracking-[-0.5px] text-reps-ink">{player.name}</div>
           <div className="text-[12px] text-reps-sub mt-0.5">{joinedLabel}</div>
         </div>
+        <PlayerManage
+          playerId={player.id}
+          playerName={player.name}
+          playerPhone={player.phone}
+          playerToken={player.token}
+        />
       </div>
-
-      <div className="text-[11px] text-reps-dim uppercase tracking-[1.5px] mb-3">This week</div>
 
       {assignmentList.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
-          <p className="text-[14px] text-reps-sub mb-5">Nothing assigned yet.</p>
+          <p className="text-[15px] text-reps-sub mb-5">
+            Nothing assigned yet. Give {firstName} some homework.
+          </p>
           <Link
             href={`/instructor/student/${id}/assign`}
             className="bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
           >
-            + {assignLabel}
+            + Assign homework
           </Link>
         </div>
       ) : (
         <>
+          <div className="text-[11px] text-reps-dim uppercase tracking-[1.5px] mb-3">Assignments</div>
+
           <div className="flex flex-col gap-2.5 mb-6">
             {assignmentList.map((a) => {
               const logged = loggedByAssignment[a.id] ?? 0;
@@ -112,7 +113,7 @@ export default async function CoachPlayerPage({
               return (
                 <div
                   key={a.id}
-                  className="bg-reps-card border border-reps-line rounded-[10px] px-4 py-[14px]"
+                  className="rounded-[10px] px-4 py-[14px] bg-[#161a20]"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
@@ -124,7 +125,7 @@ export default async function CoachPlayerPage({
                   </div>
                   <div className="h-1 bg-reps-line rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${done ? "bg-reps-green" : "bg-reps-orange"}`}
+                      className={`h-full rounded-full ${done ? "bg-reps-green" : "bg-[#fbbf24]"}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -134,12 +135,14 @@ export default async function CoachPlayerPage({
           </div>
 
           <div
-            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
           >
+            <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
             <Link
               href={`/instructor/student/${id}/assign`}
-              className="block text-center border border-reps-line text-reps-ink font-medium text-[15px] py-[14px] rounded-[10px] hover:border-reps-line-hi hover:bg-reps-card transition-all"
+              className="block text-center bg-[#1c1f26] text-[#c8cdd8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
+              style={{ WebkitTapHighlightColor: "transparent", borderTop: "0.5px solid #2a2d36" }}
             >
               + Assign more
             </Link>
@@ -165,6 +168,10 @@ function formatJoined(createdAt: string): string {
   if (diffDays === 0) return "Joined today";
   if (diffDays === 1) return "Joined yesterday";
   if (diffDays < 7) return `Joined ${diffDays} days ago`;
-  const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-  return `Joined ${created.toLocaleDateString("en-US", opts)}`;
+  if (diffDays < 14) return "Joined 1 week ago";
+  if (diffDays < 30) return `Joined ${Math.floor(diffDays / 7)} weeks ago`;
+  if (diffDays < 60) return "Joined 1 month ago";
+  if (diffDays < 365) return `Joined ${Math.floor(diffDays / 30)} months ago`;
+  if (diffDays < 730) return "Joined 1 year ago";
+  return `Joined ${Math.floor(diffDays / 365)} years ago`;
 }
