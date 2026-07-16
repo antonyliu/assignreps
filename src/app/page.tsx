@@ -261,7 +261,7 @@ export default function LandingPage() {
         /* Mobile type scale. Eyebrow, headline and bullet rows share the
            same left edge — no extra indent on any of them. */
         .eyebrow  { font-size: 13px; margin: 0 0 10px; }
-        .headline { font-size: 37px; line-height: 1.14; margin: 0 0 18px; }
+        .headline { font-size: 32px; line-height: 1.14; margin: 0 0 18px; }
         .bullets  { margin-bottom: 24px !important; }
         .bullet-row {
           display: grid;
