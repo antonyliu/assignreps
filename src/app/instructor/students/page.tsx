@@ -169,15 +169,15 @@ export default async function RosterPage() {
         </>
       ) : (
         <>
-          {/* Generous gap so each completion group breathes. */}
-          <div className="flex flex-col gap-8 mt-6 mb-8">
+          {/* Tight but distinct spacing between completion groups. */}
+          <div className="flex flex-col gap-5 mt-6 mb-8">
             {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;
               const style = GROUP_STYLE[g];
               return (
                 <div key={g}>
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <span
                       className="inline-flex items-center gap-1.5 rounded-[20px] text-[11px] font-semibold"
                       style={{ padding: "3px 8px", background: style.bg, color: style.text }}
@@ -189,12 +189,13 @@ export default async function RosterPage() {
                       {style.title}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-0.5">
                     {group.map((player) => (
                       <Link
                         key={player.id}
                         href={`/instructor/student/${player.id}`}
-                        className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi active:scale-[0.99] transition-all"
+                        className="flex items-center gap-3 px-[14px] py-2 rounded-[10px] bg-[#1c1f26] hover:bg-[#22252e] active:scale-[0.99] transition-colors"
+                        style={{ WebkitTapHighlightColor: "transparent" }}
                       >
                         <div
                           className="flex items-center justify-center shrink-0 rounded-full text-[13px] font-semibold"
@@ -225,14 +226,17 @@ export default async function RosterPage() {
             })}
           </div>
 
-          {/* Pinned add button, separated from the list by a hairline. */}
+          {/* Pinned secondary add button. A gradient fade above it lets list
+              rows dissolve into the page background as they scroll underneath. */}
           <div
-            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-4 border-t border-reps-line bg-reps-bg"
+            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
           >
+            <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
             <Link
               href="/instructor/add-student"
-              className="block text-center border border-reps-line text-reps-ink font-medium text-[15px] py-[14px] rounded-[10px] hover:border-reps-line-hi hover:bg-reps-card transition-all"
+              className="block text-center bg-[#1c1f26] text-[#8a8fa8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
+              style={{ WebkitTapHighlightColor: "transparent" }}
             >
               + Add {labels.studentLabel}
             </Link>
