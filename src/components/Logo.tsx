@@ -7,18 +7,18 @@
 export function LogoMini() {
   return (
     <div className="flex items-center gap-1.5 text-[13px] font-semibold text-reps-ink">
-      {/* Full contained lockup: sky-blue rounded square with the white tally,
-          same mark as the landing page, sized for the header. The filled box
-          reaches the container's left edge (no internal stroke inset), which
-          keeps the header flush-left. `block` removes the inline baseline gap
-          so it centers cleanly on Safari iOS as well as Chrome. */}
+      {/* Full contained lockup: muted dark rounded square (#252830) with a
+          light tally (#e8e8ea), sized for the header. The filled box reaches
+          the container's left edge (no internal stroke inset), which keeps the
+          header flush-left. `block` removes the inline baseline gap so it
+          centers cleanly on Safari iOS as well as Chrome. */}
       <svg width={23} height={23} viewBox="0 0 32 32" fill="none" className="block shrink-0" xmlns="http://www.w3.org/2000/svg">
-        <rect width="32" height="32" rx="8" fill="#378add" />
-        <line x1="9"  y1="8" x2="9"  y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="14" y1="8" x2="14" y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="19" y1="8" x2="19" y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="24" y1="8" x2="24" y2="24" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="6"  y1="23" x2="27" y2="9"  stroke="white" strokeWidth="2.4" strokeLinecap="round" />
+        <rect width="32" height="32" rx="8" fill="#252830" />
+        <line x1="9"  y1="8" x2="9"  y2="24" stroke="#e8e8ea" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="14" y1="8" x2="14" y2="24" stroke="#e8e8ea" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="19" y1="8" x2="19" y2="24" stroke="#e8e8ea" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="24" y1="8" x2="24" y2="24" stroke="#e8e8ea" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="6"  y1="23" x2="27" y2="9"  stroke="#e8e8ea" strokeWidth="2.4" strokeLinecap="round" />
       </svg>
       <span>Reps</span>
     </div>
