@@ -35,11 +35,13 @@ function weekEnd(weekStart: string): string {
 type Group = "done" | "progress" | "notstarted" | "unassigned";
 
 const GROUP_ORDER: Group[] = ["done", "progress", "notstarted", "unassigned"];
-const GROUP_TITLES: Record<Group, string> = {
-  done: "Done",
-  progress: "In progress",
-  notstarted: "Not started",
-  unassigned: "Nothing assigned",
+
+// Pill styling per group (Nothing assigned mirrors Not started).
+const GROUP_STYLE: Record<Group, { title: string; bg: string; text: string; dot: string }> = {
+  done:       { title: "Done",             bg: "rgba(74,222,128,0.12)", text: "#4ade80", dot: "#4ade80" },
+  progress:   { title: "In progress",      bg: "rgba(251,191,36,0.1)",  text: "#fbbf24", dot: "#fbbf24" },
+  notstarted: { title: "Not started",      bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#5a5f72" },
+  unassigned: { title: "Nothing assigned", bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#5a5f72" },
 };
 
 export const metadata: Metadata = { title: "Students — Reps" };
@@ -84,6 +86,11 @@ export default async function RosterPage() {
     (assignmentsByPlayer[a.player_id] ??= []).push({ id: a.id, target: a.target });
   }
 
+  function doneCount(playerId: string): number {
+    const list = assignmentsByPlayer[playerId] ?? [];
+    return list.filter((a) => (loggedByAssignment[a.id] ?? 0) >= a.target).length;
+  }
+
   // Group by completion: all assignments complete → Done; some logged but not
   // all complete → In progress; assignments but no logs → Not started; no
   // assignments at all → Nothing assigned.
@@ -93,6 +100,13 @@ export default async function RosterPage() {
     if (list.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target)) return "done";
     if (list.some((a) => (loggedByAssignment[a.id] ?? 0) > 0)) return "progress";
     return "notstarted";
+  }
+
+  function subline(playerId: string, g: Group): string {
+    const total = (assignmentsByPlayer[playerId] ?? []).length;
+    if (g === "unassigned") return "No assignments yet";
+    if (g === "notstarted") return `${total} assignment${total === 1 ? "" : "s"} waiting`;
+    return `${doneCount(playerId)} of ${total} done`;
   }
 
   const grouped: Record<Group, Player[]> = { done: [], progress: [], notstarted: [], unassigned: [] };
@@ -155,22 +169,25 @@ export default async function RosterPage() {
         </>
       ) : (
         <>
-          <div className="flex flex-col gap-6 mt-6 mb-6">
+          {/* Generous gap so each completion group breathes. */}
+          <div className="flex flex-col gap-8 mt-6 mb-8">
             {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;
-              // Reuse the existing avatar color variants: green (done),
-              // orange (in progress), dim (not started / nothing assigned).
-              const avatarClass =
-                g === "done"
-                  ? "bg-reps-green/15 text-reps-green"
-                  : g === "progress"
-                  ? "bg-reps-orange/10 text-reps-orange"
-                  : "bg-reps-dim/15 text-reps-dim";
+              const style = GROUP_STYLE[g];
               return (
                 <div key={g}>
-                  <div className="mb-2">
-                    <span className="text-[13px] font-semibold text-reps-ink">{GROUP_TITLES[g]}</span>
+                  <div className="mb-3">
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-[20px] text-[11px] font-semibold"
+                      style={{ padding: "3px 8px", background: style.bg, color: style.text }}
+                    >
+                      <span
+                        className="rounded-full shrink-0"
+                        style={{ width: 6, height: 6, background: style.dot }}
+                      />
+                      {style.title}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1">
                     {group.map((player) => (
@@ -179,15 +196,27 @@ export default async function RosterPage() {
                         href={`/instructor/student/${player.id}`}
                         className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi active:scale-[0.99] transition-all"
                       >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 ${avatarClass}`}>
+                        <div
+                          className="flex items-center justify-center shrink-0 rounded-full text-[13px] font-semibold"
+                          style={{
+                            width: 34,
+                            height: 34,
+                            background: "#252830",
+                            border: "0.5px solid #2a2d36",
+                            color: "#8a8fa8",
+                          }}
+                        >
                           {initials(player.name)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[15px] font-medium text-reps-ink truncate">
+                          <div className="text-[15px] font-medium truncate" style={{ color: "#e8eaf0" }}>
                             {firstName(player.name)}
                           </div>
+                          <div className="text-[12px] truncate" style={{ color: "#5a5f72" }}>
+                            {subline(player.id, g)}
+                          </div>
                         </div>
-                        <span className="text-[18px] text-reps-dim">›</span>
+                        <span className="text-[18px]" style={{ color: "#5a5f72" }}>›</span>
                       </Link>
                     ))}
                   </div>
@@ -196,8 +225,9 @@ export default async function RosterPage() {
             })}
           </div>
 
+          {/* Pinned add button, separated from the list by a hairline. */}
           <div
-            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg"
+            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-4 border-t border-reps-line bg-reps-bg"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
           >
             <Link
