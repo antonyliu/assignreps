@@ -65,7 +65,7 @@ export default function ProfileMenu() {
 
       {confirmOpen && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/60"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70"
           onClick={() => setConfirmOpen(false)}
         >
           <div
