@@ -97,7 +97,7 @@ export default function EmailStep() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`${INPUT} mb-6`}
+            className={`${INPUT.replace("placeholder:text-reps-dim", "placeholder:text-[#5a5f72]")} mb-6`}
           />
           <button
             type="submit"
