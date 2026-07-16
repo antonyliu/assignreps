@@ -62,7 +62,7 @@ export default function CountScreen({
       <span className="text-[13px] text-reps-sub mb-1">Exercise</span>
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-8">{exerciseName}</h2>
 
-      <label className="text-[13px] text-reps-sub block mb-2">How many?</label>
+      <label className="text-[13px] text-[var(--reps-label)] block mb-2">How many?</label>
       <div className="flex gap-2 mb-3 flex-wrap">
         {quickCounts.map((n) => (
           <button

@@ -59,7 +59,7 @@ export default function CustomExerciseScreen({ playerId, playerName }: Props) {
         </div>
       )}
 
-      <label className="text-[13px] text-reps-sub block mb-2">Exercise name</label>
+      <label className="text-[13px] text-[var(--reps-label)] block mb-2">Exercise name</label>
       <input
         type="text"
         placeholder="e.g. Wall sits"
@@ -69,7 +69,7 @@ export default function CustomExerciseScreen({ playerId, playerName }: Props) {
         className={`${INPUT} mb-7`}
       />
 
-      <label className="text-[13px] text-reps-sub block mb-2">Track by</label>
+      <label className="text-[13px] text-[var(--reps-label)] block mb-2">Track by</label>
       <div className="flex gap-2 mb-7">
         {UNITS.map((u) => (
           <button
@@ -87,7 +87,7 @@ export default function CustomExerciseScreen({ playerId, playerName }: Props) {
         ))}
       </div>
 
-      <label className="text-[13px] text-reps-sub block mb-2">How many?</label>
+      <label className="text-[13px] text-[var(--reps-label)] block mb-2">How many?</label>
       <input
         type="number"
         min={1}

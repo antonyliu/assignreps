@@ -88,16 +88,16 @@ export default async function RosterPage() {
 
       {/* items-center keeps the left lockup and right name/icon group on the
           same centerline across Chrome and Safari iOS. */}
-      <div className="flex items-center justify-between mb-16">
+      <div className="flex items-center justify-between mb-8">
         <LogoMini />
         <div className="flex items-center gap-1">
           {/* One step dimmer than before, still ~4.7:1 on #111318 → WCAG AA. */}
-          <span className="text-[14px] font-medium text-[#857d76] text-right">{coachName}</span>
+          <span className="text-[14px] font-medium text-[#8a8fa8] text-right">{coachName}</span>
           <ProfileMenu />
         </div>
       </div>
 
-      <h1 className="text-2xl font-semibold tracking-[-0.5px] mt-8 mb-1">Your {labels.studentsLabel}</h1>
+      <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your {labels.studentsLabel}</h1>
 
       {playerList.length === 0 ? (
         <>

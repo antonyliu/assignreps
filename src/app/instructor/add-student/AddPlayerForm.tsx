@@ -102,7 +102,7 @@ export default function AddPlayerForm({ studentLabel }: Props) {
       <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
 
         {/* Name */}
-        <label className="mb-2 block text-[13px] font-medium text-[#8a8fa8]">Name</label>
+        <label className="mb-2 block text-[13px] font-medium text-[var(--reps-label)]">Name</label>
         <input
           type="text"
           placeholder="First name"
@@ -114,7 +114,7 @@ export default function AddPlayerForm({ studentLabel }: Props) {
 
         {/* Phone — label with an inline mini-segment for whose number this is */}
         <div className="mb-2 flex items-center justify-between">
-          <label className="block text-[13px] font-medium text-[#8a8fa8]">Phone</label>
+          <label className="block text-[13px] font-medium text-[var(--reps-label)]">Phone</label>
           <div className="flex items-center gap-[2px] rounded-[7px] bg-[#1c1f26] p-[3px]">
             {([
               ["player", `${studentLabel.charAt(0).toUpperCase() + studentLabel.slice(1)}'s`],
@@ -193,7 +193,7 @@ export default function AddPlayerForm({ studentLabel }: Props) {
               >
                 <div className="overflow-hidden">
                   <div className="border-t-[0.5px] border-[#2a2d36] px-4 pb-4 pt-4">
-                    <label className="mb-2 block text-[13px] font-medium text-[#8a8fa8]">
+                    <label className="mb-2 block text-[13px] font-medium text-[var(--reps-label)]">
                       Parent&apos;s phone{" "}
                       <span className="font-normal text-[#5a5f72]">(optional)</span>
                     </label>
