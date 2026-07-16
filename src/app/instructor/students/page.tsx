@@ -235,8 +235,8 @@ export default async function RosterPage() {
             <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
             <Link
               href="/instructor/add-student"
-              className="block text-center bg-[#1c1f26] text-[#8a8fa8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
-              style={{ WebkitTapHighlightColor: "transparent" }}
+              className="block text-center bg-[#1c1f26] text-[#c8cdd8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
+              style={{ WebkitTapHighlightColor: "transparent", borderTop: "0.5px solid #2a2d36" }}
             >
               + Add {labels.studentLabel}
             </Link>

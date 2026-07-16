@@ -121,7 +121,7 @@ export default function LandingPage() {
                 letterSpacing: "-0.5px",
                 color: "#0f0f10",
               }}>
-                The work continues<br />between sessions.
+                Keep students working<br />between sessions.
               </h1>
 
               {/* Bullets */}
