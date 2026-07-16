@@ -194,7 +194,11 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      <style>{`
+      {/* href + precedence make React 19 hoist this into <head> as a managed,
+          render-blocking stylesheet — so the landing's own styles apply on
+          first paint (fixing Safari's unstyled flash) instead of loading late
+          from the end of <body>. Rules are unchanged. */}
+      <style href="landing" precedence="default">{`
         .student-link, .student-link:visited { color: #378add; }
         .page-header { padding: 20px 22px 0; }
         .page-main   { padding: 6px 22px 20px; }
