@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase-server";
 import { getActivityLabels } from "@/config/activityTypes";
 import type { Assignment } from "@/types/database";
 import PlayerManage from "./PlayerManage";
+import AllDoneActions from "./AllDoneActions";
 
 // Static title — deliberately does not include the student's name, which would
 // otherwise leak into the browser tab / history.
@@ -56,6 +57,9 @@ export default async function CoachPlayerPage({
   const joinedLabel = formatJoined(player.created_at);
   const labels = getActivityLabels(coach?.instructor_type ?? null);
   const firstName = player.name.trim().split(/\s+/)[0] || player.name.trim();
+  const allDone =
+    assignmentList.length > 0 &&
+    assignmentList.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target);
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
@@ -134,19 +138,38 @@ export default async function CoachPlayerPage({
             })}
           </div>
 
-          <div
-            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
-          >
-            <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
-            <Link
-              href={`/instructor/student/${id}/assign`}
-              className="block text-center bg-[#1c1f26] text-[#c8cdd8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
-              style={{ WebkitTapHighlightColor: "transparent", borderTop: "0.5px solid #2a2d36" }}
+          {allDone && (
+            <div
+              className="text-center rounded-[10px] mb-6"
+              style={{
+                background: "rgba(74,222,128,0.06)",
+                border: "0.5px solid rgba(74,222,128,0.15)",
+                padding: "12px 14px",
+              }}
             >
-              + Assign more
-            </Link>
-          </div>
+              <div className="text-[22px] leading-none mb-1.5">🎉</div>
+              <div className="text-[14px] font-medium text-reps-ink">{firstName} finished everything.</div>
+              <div className="text-[13px] mt-0.5" style={{ color: "#5a5f72" }}>Ready for next week?</div>
+            </div>
+          )}
+
+          {allDone ? (
+            <AllDoneActions playerId={id} firstName={firstName} />
+          ) : (
+            <div
+              className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
+            >
+              <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
+              <Link
+                href={`/instructor/student/${id}/assign`}
+                className="block text-center bg-[#1c1f26] text-[#c8cdd8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
+                style={{ WebkitTapHighlightColor: "transparent", borderTop: "0.5px solid #2a2d36" }}
+              >
+                + Assign more
+              </Link>
+            </div>
+          )}
         </>
       )}
     </main>

@@ -42,6 +42,36 @@ export async function updatePlayerPhone(
   return { ok: true };
 }
 
+export type ClearAssignmentsResult = { ok: true } | { ok: false; error: string };
+
+function currentWeekStart(): string {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now.setDate(diff));
+  return monday.toISOString().split("T")[0];
+}
+
+export async function clearCompletedAssignments(playerId: string): Promise<ClearAssignmentsResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not authenticated." };
+
+  // Clears the current week's assignment list (the visible "all done" set),
+  // scoped to this coach's own player. The app does not touch the logs table
+  // here — but note logs.assignment_id has ON DELETE CASCADE, so the DB itself
+  // removes the related logs when these assignment rows are deleted.
+  const { error } = await supabase
+    .from("assignments")
+    .delete()
+    .eq("player_id", playerId)
+    .eq("coach_id", user.id)
+    .eq("week_start", currentWeekStart());
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 export type ResendLinkResult = { ok: true } | { ok: false; error: string };
 
 export async function resendPlayerLink(playerId: string): Promise<ResendLinkResult> {
