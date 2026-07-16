@@ -94,15 +94,16 @@ Instructor assigns → Student logs → Instructor sees → Parent digest (weekl
 
 ## Twilio status & config
 
-- **Status:** Toll-free registration **IN_REVIEW** — resubmitted July 14 2026 via API after an initial rejection.
+- **Compliance profile:** New business profile approved July 15 2026. Bundle SID: `BUe3d4ce29abb03b218cdb16560fdce0e6`. Legal name: ANTONY LIU. EIN: 42-3784882. Email: hello@assignreps.com.
+- **Toll-free registration:** Still blocked — ISV business identity type is incompatible with toll-free verification. Waiting on Twilio support (Julieta, ticket #28211833) to advise whether to change to Direct Customer.
+- **Do not resubmit toll-free registration until hearing back from Julieta.**
 - **Toll-free number:** (833) 892-5640
-- **Resubmission (July 14 2026):** initial rejection fixed on three points — business email set to hello@assignreps.com, invalid website URL fixed (site now live), and the missing verbal consent script added to `UseCaseSummary`. **Edit expiration: July 22 2026.**
-- **If rejected again for code 30511:** add the verbal consent script to the `AdditionalInformation` field on the next submission.
 - **Old local number:** +15625487985 (blocked, release when possible)
 - **Messaging Service SID:** `MGe3a0a18bf618d102aae9cb26943cd239`
 - **TWILIO_FROM_NUMBER:** update to `+18338925640` in `.env.local` AND Vercel env vars once registration approved
 - **Important:** Use `MessagingServiceSid` parameter when sending SMS, not `From`
 - **Test setup:** Tony's personal number set as test phone in Supabase with code `123456` to bypass real SMS during local dev
+- **For RJ demo:** manually share student link via text — SMS invite not needed for the demo
 
 ---
 
@@ -434,6 +435,14 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 - Step 2 activity list bottom padding fix — Create your own row now fully clears gradient
 - Dead file deleted: src/lib/supabase.ts
 - CLAUDE.md logs RLS pending note added
+- Empty state: 3 ghost/skeleton rows with graduated opacity (0.25/0.18/0.12) + bottom fade + '+ Add your first player' CTA
+- Profile menu: person icon + coach name (display only) on right; person icon is tap target for dropdown
+- Sign out confirmation dialog with backdrop rgba(0,0,0,0.6)
+- Portrait lock with landscape message (CSS only, no overlay)
+- App header logo: dark muted box (#252830) with dimmed tally mark (#6a6a72) + 'Reps' wordmark
+- Primary buttons globally: white text on #378add
+- Sign out confirmation: improved padding, dimmed body text, updated copy 'Sign back in anytime with your email.'
+- Safari iPhone CSS load order fixed — styles now apply correctly on first paint
 
 ---
 
@@ -459,20 +468,13 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 
 ## UI polish notes (outstanding)
 
-- "Create your own" link on player detail → 404, needs fix
-- Logo on player welcome and welcome back screens — wrong/old version
-- Player welcome: shrink logo, remove/minimize tagline, prioritize "Hey [name]" and CTA
-- Player welcome: "Enter your number to find your assignments" → fit on one line
-- Player welcome back: same logo fix, same one-line fix, update old tagline
-- Coach avatar → show initials from actual name, not "C"
-- Roster group labels → "Some activity" and "No activity yet" (replacing "Showing up" / "Quiet")
-- Add player: spacing between helper text and input fields too tight
-- Add player: parent phone collapsed by default → "Add parent for weekly digest →"
-- Add player: phone placeholder → (555) 000-0000
-- "Assign more" and "Create your own" buttons not visible below fold — fix positioning
-- Add player button on mobile cut off by iPhone UI — sticky bottom + safe area inset
-- Terms/privacy: text size too small, links still orange → fix to #378add
-- All screens: consistent padding review
+- Instructor signup flow — needs review pass
+- Add player screen — needs review pass
+- Student detail / assign flow — needs review pass
+- Student welcome, home, log, celebrate screens — needs review pass
+- Parent digest screen — needs review pass
+- 'Create your own' link on student detail → 404, needs fix
+- Tablet/responsive layout — deferred until a real tablet user requests it
 
 ---
 
