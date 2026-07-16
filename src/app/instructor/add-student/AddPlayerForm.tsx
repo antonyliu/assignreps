@@ -29,6 +29,11 @@ export default function AddPlayerForm({ studentLabel }: Props) {
 
   const isParent = recipient === "parent";
 
+  // CTA is active only with a name and a full 10-digit phone number.
+  const firstName  = name.trim().split(/\s+/)[0];
+  const phoneValid = phone.replace(/\D/g, "").length === 10;
+  const formValid  = name.trim().length > 0 && phoneValid;
+
   // Auto-focus the parent input once the expand animation (200ms) has settled.
   useEffect(() => {
     if (!showParent) return;
@@ -107,30 +112,30 @@ export default function AddPlayerForm({ studentLabel }: Props) {
           className={`${INPUT} mb-8`}
         />
 
-        {/* Phone */}
-        <label className="mb-2 block text-[13px] font-medium text-[#8a8fa8]">Phone</label>
-
-        {/* Segmented control — whose number this is */}
-        <div className="mb-3 flex rounded-[10px] border border-[#2a2d36] bg-[#1c1f26] p-1">
-          {([
-            ["player", `${studentLabel.charAt(0).toUpperCase() + studentLabel.slice(1)}'s`],
-            ["parent", "Parent's"],
-          ] as [Recipient, string][]).map(([value, label]) => {
-            const active = recipient === value;
-            return (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={active}
-                onClick={() => selectRecipient(value)}
-                className={`flex-1 rounded-[7px] py-2 text-[13px] font-medium transition-colors ${
-                  active ? "bg-[#378add] text-white" : "text-[#8a8fa8] hover:text-white"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
+        {/* Phone — label with an inline mini-segment for whose number this is */}
+        <div className="mb-2 flex items-center justify-between">
+          <label className="block text-[13px] font-medium text-[#8a8fa8]">Phone</label>
+          <div className="flex items-center gap-[2px] rounded-[7px] bg-[#1c1f26] p-[3px]">
+            {([
+              ["player", `${studentLabel.charAt(0).toUpperCase() + studentLabel.slice(1)}'s`],
+              ["parent", "Parent's"],
+            ] as [Recipient, string][]).map(([value, label]) => {
+              const active = recipient === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => selectRecipient(value)}
+                  className={`rounded-[5px] px-[10px] py-[3px] text-[11px] transition-colors ${
+                    active ? "bg-[#378add] text-white" : "text-[#8a8fa8] hover:text-white"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <input
@@ -159,7 +164,7 @@ export default function AddPlayerForm({ studentLabel }: Props) {
             >
               <div className="flex items-center justify-between gap-4 p-4">
                 <div>
-                  <div className="text-[14px] font-medium text-white">Also notify a parent</div>
+                  <div className="text-[12px] font-normal text-[#8a8fa8]">Parent notification</div>
                   <div className="mt-1 text-[12px] text-[#8a8fa8]">
                     Sunday recap sent by text
                   </div>
@@ -214,10 +219,14 @@ export default function AddPlayerForm({ studentLabel }: Props) {
         {/* Submit */}
         <button
           type="submit"
-          disabled={loading}
-          className="mt-8 w-full rounded-[10px] bg-[#378add] py-[14px] text-[15px] font-semibold text-white transition-all hover:bg-[#4a9ae8] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
+          disabled={loading || !formValid}
+          className={`mt-8 w-full rounded-[10px] py-[14px] text-[15px] font-semibold transition-all disabled:pointer-events-none ${
+            formValid
+              ? "bg-[#378add] text-white hover:bg-[#4a9ae8] active:scale-[0.99]"
+              : "bg-[#1c1f26] text-[#3d4252]"
+          }`}
         >
-          {loading ? "Adding…" : name.trim() ? `Add ${name.trim()}` : `Add ${studentLabel}`}
+          {loading ? "Adding…" : formValid ? `Add ${firstName}` : `Add ${studentLabel}`}
         </button>
       </form>
     </main>
