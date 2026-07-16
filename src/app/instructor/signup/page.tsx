@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSignup } from "./provider";
-import { ScreenHeader, ErrorBanner, INPUT, BTN_PRIMARY } from "@/components/SignupUI";
+import { ScreenHeader, ErrorBanner, INPUT } from "@/components/SignupUI";
 
 export default function NameStep() {
   const router = useRouter();
@@ -33,7 +33,17 @@ export default function NameStep() {
           onChange={(e) => setName(e.target.value)}
           className={`${INPUT} mb-6 placeholder:italic`}
         />
-        <button type="submit" className={BTN_PRIMARY}>Continue</button>
+        <button
+          type="submit"
+          disabled={!name.trim()}
+          className={`w-full rounded-[10px] py-[14px] text-[15px] font-semibold transition-colors disabled:pointer-events-none ${
+            name.trim()
+              ? "bg-[#378add] text-white hover:bg-[#4a9ae8] active:scale-[0.99]"
+              : "bg-[#1c1f26] text-[#3d4252]"
+          }`}
+        >
+          Continue
+        </button>
       </form>
       <p className="mt-6 text-center text-[13px] text-reps-dim">
         Already have an account?{" "}

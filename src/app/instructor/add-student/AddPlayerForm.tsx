@@ -145,7 +145,7 @@ export default function AddPlayerForm({ studentLabel }: Props) {
           onChange={(e) => setPhone(e.target.value)}
           className={INPUT}
         />
-        <p className="mt-2 text-[12px] text-[#8a8fa8]">
+        <p className="mt-2 text-[13px] text-[#8a8fa8]">
           {isParent
             ? "They'll get a text with their child's homework link."
             : "They'll get a text with their homework link."}
@@ -163,11 +163,8 @@ export default function AddPlayerForm({ studentLabel }: Props) {
               }`}
             >
               <div className="flex items-center justify-between gap-4 p-4">
-                <div>
-                  <div className="text-[12px] font-normal text-[#8a8fa8]">Parent notification</div>
-                  <div className="mt-1 text-[12px] text-[#8a8fa8]">
-                    Sunday recap sent by text
-                  </div>
+                <div className="text-[13px] font-normal text-[#8a8fa8]">
+                  Send parent a weekly recap
                 </div>
 
                 <button

@@ -81,12 +81,20 @@ Instructor assigns → Student logs → Instructor sees → Parent digest (weekl
 | Staging | staging.assignreps.com | staging | iPhone testing before prod push |
 | Local | localhost:3000 | — | Desktop dev only |
 
+**There are 4 places code lives:**
+1. **Local** — your computer, runs at localhost:3000.
+2. **GitHub (origin/main)** — cloud backup, source of truth. Vercel watches this.
+3. **Staging** — auto-deploys to staging.assignreps.com when the staging branch is pushed.
+4. **Production** — auto-deploys to assignreps.com when main is pushed to origin/main.
+
 **Workflow:**
 1. Build + test on desktop at localhost:3000
 2. Push to staging branch → test on iPhone at staging.assignreps.com
 3. Merge staging → main → prod deploys automatically
 
 > ⚠️ Always build and test locally first. Never commit directly to staging or push to staging before local is updated. Staging should always be a mirror of local, pushed for iPhone testing only. Main should always be ahead of or equal to staging.
+
+> **End of every session:** Always commit to main and push to staging. Local, GitHub, and staging should always be in sync. The only exception is half-built broken work — hold that locally until it's stable. Never let local and staging drift apart.
 
 **Important:** Local, staging, and prod all share the same hosted Supabase project. Changes to Supabase dashboard (email templates, SMTP, auth settings) affect all environments immediately.
 

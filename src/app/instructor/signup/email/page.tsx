@@ -18,6 +18,9 @@ export default function EmailStep() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Send code is active only for an email with an @ and a dot after it.
+  const emailValid = /.+@.+\..+/.test(email.trim());
+
   async function submitEmail(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !email.includes("@")) {
@@ -98,8 +101,12 @@ export default function EmailStep() {
           />
           <button
             type="submit"
-            disabled={loading}
-            className={`${BTN_PRIMARY} disabled:opacity-50 disabled:pointer-events-none`}
+            disabled={loading || !emailValid}
+            className={`w-full rounded-[10px] py-[14px] text-[15px] font-semibold transition-colors disabled:pointer-events-none ${
+              emailValid
+                ? "bg-[#378add] text-white hover:bg-[#4a9ae8] active:scale-[0.99]"
+                : "bg-[#1c1f26] text-[#3d4252]"
+            }`}
           >
             {loading ? "Sending…" : "Send code"}
           </button>
