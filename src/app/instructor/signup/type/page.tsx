@@ -22,7 +22,7 @@ export default function TypeStep() {
     // own, and Continue is pinned at the bottom.
     <main className="flex flex-col h-[100dvh] p-[1.75rem_1.25rem]">
       <ScreenHeader stepNum={2} total={3} />
-      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6">What do you teach?</h2>
+      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6 text-reps-ink">What do you teach?</h2>
 
       <form onSubmit={submit} className="flex flex-col flex-1 min-h-0">
         {/* The list scrolls independently; Continue below stays pinned. The

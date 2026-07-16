@@ -4,7 +4,7 @@ import { LogoMini } from "./Logo";
 // route under /instructor/signup.
 
 export const INPUT =
-  "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-base text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim";
+  "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-base text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-[#5a5f72]";
 export const BTN_PRIMARY =
   "w-full bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] transition-colors hover:bg-reps-orange-hi active:scale-[0.99]";
 export const ERROR_BOX =
