@@ -301,6 +301,18 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 - **Removed** "More coming soon." caption + hairline from the activity list (was "More disciplines coming soon.").
 - **Logo size standardized** across all in-app header screens (24px mark + 16px wordmark).
 
+### Polish session (locked)
+- **Field labels:** `#c8cdd8`, defined as the `--reps-label` CSS token in globals.css.
+- **Placeholders:** `#5a5f72`.
+- **Helper text:** `#8a8fa8`.
+- **Progress bars:** green `#4ade80` for done, yellow `#fbbf24` for in progress.
+- **"Reps" is becoming the brand name, not a product descriptor** — use "homework" in UI copy where possible (e.g. "Assign homework", "homework link").
+- **Assignment row:** no row-level edit actions for now — keep it clean.
+- **"All done" state on student detail:** celebration banner + "Clear completed" and "Assign new work" buttons appear when all assignments are complete.
+- **Clearing assignments:** deletes from the `assignments` table only — the `logs` table is never deleted, preserved forever. *(See conflict note below: `logs.assignment_id` currently has ON DELETE CASCADE, so this intent is not yet true at the DB level.)*
+- **Roster groups (in order):** Done / In progress / Not started / Nothing assigned — colored pills with a dot.
+- **Student detail `...` menu:** Share homework link / Edit phone number / Remove [first name].
+
 ### What was killed and why
 - **Leaderboard:** Privacy (minors) + breaks the 1:1 mentorship dynamic
 - **Coach qualitative comments:** Won't stick — RJ's feedback is in-person
@@ -484,6 +496,13 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 - Re-engagement nudge (Monday email)
 - **Gate stranger signups** — signup is currently open to the public; a bot already attempted a signup July 14 2026 (see incident note below). Add invite code / waitlist before broader launch.
 - **Tighten logs RLS policy** — `logs` INSERT/SELECT is currently open. Before wider launch, tighten INSERT to verify the student token matches the player on the assignment.
+- **Third landing page bullet** still needs updating: "Everything in one place" → "Always know where they left off".
+- **Roster row:** add a thin progress bar + "X of X done" subline (no taller row) — not yet built.
+- **Assign flow polish** not yet done.
+- **Student/player side screens** not yet polished (welcome, home, log, celebrate).
+- **Parent digest screen** not yet polished.
+- **Sign in flow (returning coach)** not yet polished.
+- **"Clear completed" vs logs cascade** — the locked "logs preserved forever" decision conflicts with `logs.assignment_id` ON DELETE CASCADE; deleting assignments currently deletes their logs. Reconcile before prod (change the FK to SET NULL/RESTRICT, soft-clear assignments, or reword the copy).
 - ~~CLAUDE.md routes table was stale~~ — updated July 14 2026.
 
 ---
