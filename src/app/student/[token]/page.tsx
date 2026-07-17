@@ -22,15 +22,12 @@ export default async function PlayerHomePage({
 
   if (!player) notFound();
 
-  const weekStart = getWeekStart();
-
   const [{ data: coach }, { data: assignments }, { data: logs }] = await Promise.all([
     supabase.from("coaches").select("name").eq("id", player.coach_id).single(),
     supabase
       .from("assignments")
       .select("id, exercise_name, target, unit")
       .eq("player_id", player.id)
-      .eq("week_start", weekStart)
       .order("created_at"),
     supabase
       .from("logs")
@@ -111,13 +108,4 @@ export default async function PlayerHomePage({
       )}
     </main>
   );
-}
-
-function getWeekStart(): string {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(now);
-  monday.setDate(diff);
-  return monday.toISOString().split("T")[0];
 }
