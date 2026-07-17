@@ -20,8 +20,14 @@ export default function TermsPage() {
         </p>
 
         <h2 style={heading}>Your responsibilities</h2>
+        <p style={{ ...body, marginBottom: "10px" }}>
+          You are responsible for obtaining explicit verbal consent before adding any student or parent phone number to Reps.
+        </p>
+        <p style={{ ...body, marginBottom: "10px" }}>
+          Before entering a phone number you must confirm with the recipient: &ldquo;I&apos;d like to send your practice assignments through Reps. You&apos;ll get a text with a link to view and log your work. Is that okay?&rdquo;
+        </p>
         <p style={body}>
-          You are responsible for getting consent before adding any student or parent contact information. You agree not to use Reps to contact people who haven&apos;t agreed to receive messages from you. Before adding any student or parent phone number, you must obtain their verbal consent to receive SMS messages from Reps. This includes confirming they understand messages will be sent to their phone and that they can reply STOP at any time to opt out.
+          You agree not to add phone numbers of anyone who has not verbally agreed to receive messages. Recipients can reply STOP at any time to opt out.
         </p>
 
         <h2 style={heading}>Payments</h2>

@@ -29,6 +29,11 @@ export default function PrivacyPage() {
           To send you a sign-in code. To send your students their assignment link via SMS. To send parents a weekly digest if you&apos;ve added their number. To show you your students&apos; progress. Students and parents receive SMS notifications via Twilio. Reply STOP to opt out at any time. Message and data rates may apply.
         </p>
 
+        <h2 style={heading}>SMS consent</h2>
+        <p style={body}>
+          Before a coach adds any student or parent phone number to Reps, they must obtain verbal consent. The recipient must agree to receive SMS messages before their number is entered. Every SMS includes instructions to reply STOP to opt out at any time. Message and data rates may apply.
+        </p>
+
         <h2 style={heading}>Who we share it with</h2>
         <p style={body}>
           We don&apos;t sell your data. We use Supabase (database), Twilio (SMS), and Resend (email) to operate the product.
