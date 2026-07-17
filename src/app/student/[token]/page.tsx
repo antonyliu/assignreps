@@ -55,13 +55,10 @@ export default async function PlayerHomePage({
         <LogoMini />
       </div>
 
-      <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">{firstName}</h1>
-      <p className="text-[13px] text-reps-sub">{coachName}&apos;s assignments</p>
-      <p className="text-[12px] text-reps-dim mb-6">
-        {count === 0
-          ? "No assignments yet."
-          : `${count} assignment${count === 1 ? "" : "s"}`}
-      </p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-[-0.5px] text-reps-ink">{firstName}</h1>
+        <p className="text-[12px] text-reps-sub mt-0.5">{coachName}&apos;s assignments</p>
+      </div>
 
       {count === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
@@ -71,36 +68,42 @@ export default async function PlayerHomePage({
           <p className="text-[12px] text-reps-dim mt-2">Check back soon.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2.5">
-          {assignmentList.map((a) => {
-            const logged = Math.min(loggedByAssignment[a.id] ?? 0, a.target);
-            const pct = a.target > 0 ? Math.round((logged / a.target) * 100) : 0;
-            const done = logged >= a.target;
+        <>
+          <div className="text-[11px] text-reps-dim uppercase tracking-[1.5px] mb-3">Assignments</div>
 
-            return (
-              <Link
-                key={a.id}
-                href={`/student/${token}/log/${a.id}`}
-                className="bg-reps-card border border-reps-line rounded-[10px] px-4 py-[14px] hover:border-reps-line-hi transition-colors cursor-pointer"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <span className="text-[15px] font-medium text-reps-ink">
-                    {a.exercise_name}
-                  </span>
-                  <span className={`text-[12px] ${done ? "text-reps-green" : "text-reps-dim"}`}>
-                    {done ? "Done ✓" : `${logged} / ${a.target} ${a.unit}`}
-                  </span>
-                </div>
-                <div className="h-1 bg-reps-line rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-[#fbbf24]"}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+          <div className="flex flex-col gap-2.5">
+            {assignmentList.map((a) => {
+              const logged = Math.min(loggedByAssignment[a.id] ?? 0, a.target);
+              const pct = a.target > 0 ? Math.round((logged / a.target) * 100) : 0;
+              const done = logged >= a.target;
+
+              return (
+                <Link
+                  key={a.id}
+                  href={`/student/${token}/log/${a.id}`}
+                  className="bg-[#161a20] border border-reps-line rounded-[10px] px-4 py-[14px] hover:border-reps-line-hi transition-colors cursor-pointer"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[15px] font-medium text-reps-ink">
+                      {a.exercise_name}
+                    </span>
+                    {done ? (
+                      <span className="text-[12px] font-medium text-reps-green">✓ Done</span>
+                    ) : (
+                      <span className="text-[12px] text-reps-dim">{logged}/{a.target} {a.unit}</span>
+                    )}
+                  </div>
+                  <div className="h-1 bg-reps-line rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-[#fbbf24]"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </>
       )}
     </main>
   );
