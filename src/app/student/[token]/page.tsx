@@ -96,7 +96,7 @@ export default async function PlayerHomePage({
                   </div>
                   <div className="h-1 bg-reps-line rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-[#fbbf24]"}`}
+                      className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>

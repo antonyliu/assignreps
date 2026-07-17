@@ -59,7 +59,7 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
           <button
             type="button"
             onClick={openModal}
-            className="w-full text-center border-[0.5px] border-[#2a2d36] text-[#8a8fa8] font-medium text-[15px] py-[14px] rounded-[10px] hover:border-[#4ade804d] hover:text-[#4ade80] transition-colors"
+            className="w-full text-center border-[0.5px] border-[#2a2d36] text-[#8a8fa8] font-medium text-[15px] py-[14px] rounded-[10px] hover:border-[#3dd68c4d] hover:text-[#3dd68c] transition-colors"
             style={{ WebkitTapHighlightColor: "transparent" }}
           >
             Clear completed
@@ -95,7 +95,7 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
               type="button"
               onClick={handleClear}
               disabled={isPending}
-              className="w-full text-center bg-[#4ade801a] border border-[#4ade80] text-[#4ade80] font-semibold text-[15px] py-[14px] rounded-[10px] disabled:opacity-50 transition-colors mb-2"
+              className="w-full text-center bg-[#3dd68c1a] border border-[#3dd68c] text-[#3dd68c] font-semibold text-[15px] py-[14px] rounded-[10px] disabled:opacity-50 transition-colors mb-2"
               style={{ WebkitTapHighlightColor: "transparent" }}
             >
               {isPending ? "Clearing…" : "Clear completed"}

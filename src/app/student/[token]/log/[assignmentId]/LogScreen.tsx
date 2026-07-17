@@ -87,7 +87,7 @@ export default function LogScreen({
 
       <div className="h-1.5 bg-reps-line rounded-full overflow-hidden mb-8">
         <div
-          className={`h-full rounded-full transition-all duration-300 ${done ? "bg-reps-green" : "bg-reps-orange"}`}
+          className={`h-full rounded-full transition-all duration-300 ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
           style={{ width: `${pct}%` }}
         />
       </div>

@@ -19,7 +19,7 @@ const config: Config = {
         "reps-dim":       "#8a8fa8",
         "reps-orange":    "#378add",
         "reps-orange-hi": "#4a9ae8",
-        "reps-green":     "#4ade80",
+        "reps-green":     "#3dd68c",
       },
       maxWidth: {
         mobile: "390px",
