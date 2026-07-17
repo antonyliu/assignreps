@@ -29,12 +29,10 @@ export default async function CoachPlayerPage({
 
   if (!player) notFound();
 
-  const weekStart = getWeekStart();
   const { data: assignments } = await supabase
     .from("assignments")
     .select("*")
     .eq("player_id", id)
-    .eq("week_start", weekStart)
     .order("created_at");
 
   const initial = player.name.trim()[0]?.toUpperCase() ?? "?";
@@ -174,14 +172,6 @@ export default async function CoachPlayerPage({
       )}
     </main>
   );
-}
-
-function getWeekStart(): string {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(now.setDate(diff));
-  return monday.toISOString().split("T")[0];
 }
 
 function formatJoined(createdAt: string): string {

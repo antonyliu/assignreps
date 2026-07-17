@@ -38,7 +38,7 @@ Every screen should serve this. Reps isn't a homework tracker — it's part of w
 ### Student (e.g. Neo)
 - Gets a text with a unique link — no signup required
 - Can also log in from any device at assignreps.com via phone OTP (in case SMS is deleted)
-- Taps link → sees this week's assignments
+- Taps link → sees their assignments (not time-bounded — persist until cleared/deleted)
 - Logs reps using a counter (+1 / +10 / +25 / +50)
 - Sees a quiet celebration when done: 🔥 + "[Instructor name] will see this."
 - Counter caps at assigned target — no inflating
@@ -194,6 +194,10 @@ logs
 Note: `instructor_type` field added now even though basketball is the only option at launch — enables content branching later without schema rework. `phone` on coaches is nullable since email OTP does not require it.
 
 `send_to_parent` — boolean, default false. Determines whether the homework SMS goes to the student's phone or the parent's phone.
+
+**Assignments are not time-bounded — they persist until the instructor clears or deletes them.** The `week_start` column is still stored (set at assign time) but is no longer used as a query filter on the instructor student-detail view or the student page. "Clear completed" deletes the player's assignment rows (logs preserved via `ON DELETE SET NULL`). The parent digest still scopes to the current week.
+
+**Student page loads unauthenticated (anon role) — RLS policies must allow anon SELECT on `assignments` and `logs` by player token** (plus `coaches.name` for the header). The student taps a magic link with no auth session, so those reads run as the `anon` role, not as the coach.
 
 ### Foreign key cascade rules
 

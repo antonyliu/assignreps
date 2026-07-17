@@ -35,8 +35,9 @@ export default async function PlayerHomePage({
       .eq("player_id", player.id),
   ]);
 
-  const coachName = coach?.name ?? "Coach";
-  const coachInitial = coachName.trim()[0]?.toUpperCase() ?? "?";
+  // Coach name comes from the player's coach relationship (coaches.id = player.coach_id).
+  const coachName = coach?.name?.trim() || "Coach";
+  const coachInitial = coachInitials(coachName);
   const assignmentList = assignments ?? [];
 
   const loggedByAssignment: Record<string, number> = {};
@@ -108,4 +109,19 @@ export default async function PlayerHomePage({
       )}
     </main>
   );
+}
+
+// Avatar initials for a coach name. A leading title ("Coach", "Mrs.", …) is
+// dropped so "Coach RJ" -> "RJ" and "Mrs. Tai" -> "TA". Single remaining word
+// uses its first two letters; multiple words use first + last initial.
+const TITLE_WORDS = new Set(["coach", "mr", "mrs", "ms", "dr", "prof", "mr.", "mrs.", "ms.", "dr.", "prof."]);
+
+function coachInitials(name: string): string {
+  let parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length > 1 && TITLE_WORDS.has(parts[0].toLowerCase())) {
+    parts = parts.slice(1);
+  }
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
