@@ -92,13 +92,13 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
               </button>
               <button
                 onClick={() => { setMenuOpen(false); setEditingPhone(true); }}
-                className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors"
+                className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors border-t border-reps-line"
               >
                 Edit phone number
               </button>
               <button
                 onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
-                className="w-full text-left px-4 py-3 text-[14px] text-red-400 hover:bg-reps-line transition-colors"
+                className="w-full text-left px-4 py-3 text-[14px] text-red-400 hover:bg-reps-line transition-colors border-t border-reps-line"
               >
                 Remove {firstName}
               </button>

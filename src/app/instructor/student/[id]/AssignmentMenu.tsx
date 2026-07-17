@@ -31,43 +31,48 @@ export default function AssignmentMenu({ assignmentId, exerciseName }: Props) {
   }
 
   return (
-    <div className="relative flex items-center self-stretch">
-      <button
-        onClick={() => setMenuOpen((v) => !v)}
-        className="flex h-full items-center px-2.5 text-reps-line hover:text-reps-sub transition-colors"
-        aria-label="Assignment options"
-        aria-haspopup="menu"
-        aria-expanded={menuOpen}
-      >
-        <MoreVertical size={18} strokeWidth={2} />
-      </button>
+    <div className="flex items-center self-stretch">
+      {/* relative wraps just the button so the dropdown anchors to the icon
+          (top-full = directly below it), matching the header dropdown — not
+          the full-height card column. */}
+      <div className="relative">
+        <button
+          onClick={() => setMenuOpen((v) => !v)}
+          className="flex items-center py-2 pl-1 pr-2.5 text-[#5a5f72] hover:text-reps-ink transition-colors"
+          aria-label="Assignment options"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+        >
+          <MoreVertical size={18} strokeWidth={2} />
+        </button>
 
-      {menuOpen && (
-        <>
-          {/* Click-away layer closes the menu on any outside tap. */}
-          <button
-            type="button"
-            aria-label="Close menu"
-            className="fixed inset-0 z-40 cursor-default"
-            onClick={() => setMenuOpen(false)}
-          />
-          <div
-            role="menu"
-            className="absolute right-0 top-full mt-1 z-50 w-max bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
-          >
+        {menuOpen && (
+          <>
+            {/* Click-away layer closes the menu on any outside tap. */}
             <button
-              role="menuitem"
-              onClick={() => {
-                setMenuOpen(false);
-                setConfirmOpen(true);
-              }}
-              className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-red-400 whitespace-nowrap hover:bg-reps-raised transition-colors"
+              type="button"
+              aria-label="Close menu"
+              className="fixed inset-0 z-40 cursor-default"
+              onClick={() => setMenuOpen(false)}
+            />
+            <div
+              role="menu"
+              className="absolute right-0 top-full mt-1 z-50 w-max bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
             >
-              Remove assignment
-            </button>
-          </div>
-        </>
-      )}
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setConfirmOpen(true);
+                }}
+                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-red-400 whitespace-nowrap hover:bg-reps-raised transition-colors"
+              >
+                Remove assignment
+              </button>
+            </div>
+          </>
+        )}
+      </div>
 
       {confirmOpen && (
         <div
