@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { LogoMini } from "@/components/Logo";
 
-export const metadata: Metadata = { title: "This Week — Reps" };
+export const metadata: Metadata = { title: "Your homework — Reps" };
 
 export default async function PlayerHomePage({
   params,
@@ -37,7 +37,7 @@ export default async function PlayerHomePage({
 
   // Coach name comes from the player's coach relationship (coaches.id = player.coach_id).
   const coachName = coach?.name?.trim() || "Coach";
-  const coachInitial = coachInitials(coachName);
+  const firstName = player.name?.trim().split(/\s+/)[0] || "there";
   const assignmentList = assignments ?? [];
 
   const loggedByAssignment: Record<string, number> = {};
@@ -51,18 +51,13 @@ export default async function PlayerHomePage({
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex items-center mb-8">
         <LogoMini />
-        <div className="flex items-center gap-2">
-          <span className="text-[12px] text-reps-sub">{coachName}</span>
-          <div className="w-[30px] h-[30px] rounded-full bg-reps-raised flex items-center justify-center text-[12px] font-semibold text-reps-sub">
-            {coachInitial}
-          </div>
-        </div>
       </div>
 
-      <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">This week</h1>
-      <p className="text-[13px] text-reps-sub mb-6">
+      <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">{firstName}</h1>
+      <p className="text-[13px] text-reps-sub">{coachName}&apos;s assignments</p>
+      <p className="text-[12px] text-reps-dim mb-6">
         {count === 0
           ? "No assignments yet."
           : `${count} assignment${count === 1 ? "" : "s"}`}
@@ -98,7 +93,7 @@ export default async function PlayerHomePage({
                 </div>
                 <div className="h-1 bg-reps-line rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-reps-orange"}`}
+                    className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-[#fbbf24]"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -109,19 +104,4 @@ export default async function PlayerHomePage({
       )}
     </main>
   );
-}
-
-// Avatar initials for a coach name. A leading title ("Coach", "Mrs.", …) is
-// dropped so "Coach RJ" -> "RJ" and "Mrs. Tai" -> "TA". Single remaining word
-// uses its first two letters; multiple words use first + last initial.
-const TITLE_WORDS = new Set(["coach", "mr", "mrs", "ms", "dr", "prof", "mr.", "mrs.", "ms.", "dr.", "prof."]);
-
-function coachInitials(name: string): string {
-  let parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length > 1 && TITLE_WORDS.has(parts[0].toLowerCase())) {
-    parts = parts.slice(1);
-  }
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
