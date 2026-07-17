@@ -74,7 +74,7 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
       <div className="relative shrink-0">
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          className="flex items-center justify-center w-9 h-9 rounded-[8px] border border-reps-line bg-reps-card text-reps-sub hover:text-reps-ink hover:bg-reps-raised transition-colors"
+          className="flex items-center justify-center w-9 h-9 rounded-[8px] border border-[rgba(42,45,54,0.4)] bg-[rgba(28,31,38,0.3)] text-reps-sub hover:text-reps-ink hover:bg-[rgba(28,31,38,0.6)] transition-colors"
           aria-label="Student options"
         >
           <MoreHorizontal size={20} strokeWidth={2} />
@@ -92,13 +92,13 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
               </button>
               <button
                 onClick={() => { setMenuOpen(false); setEditingPhone(true); }}
-                className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors border-t border-reps-line"
+                className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors"
               >
                 Edit phone number
               </button>
               <button
                 onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
-                className="w-full text-left px-4 py-3 text-[14px] text-red-400 hover:bg-reps-line transition-colors border-t border-reps-line"
+                className="w-full text-left px-4 py-3 text-[14px] text-red-400 hover:bg-reps-line transition-colors"
               >
                 Remove {firstName}
               </button>

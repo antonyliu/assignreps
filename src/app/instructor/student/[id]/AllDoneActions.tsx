@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { clearCompletedAssignments } from "./actions";
 
 type Props = {
@@ -16,8 +15,6 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [sheetIn, setSheetIn] = useState(false);
   const [error, setError] = useState("");
-
-  const assignHref = `/instructor/student/${playerId}/assign`;
 
   // Slide the sheet up once it has mounted.
   useEffect(() => {
@@ -50,28 +47,15 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
 
   return (
     <>
-      <div
-        className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
-      >
-        <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
-        <div className="flex flex-col gap-2.5">
-          <button
-            type="button"
-            onClick={openModal}
-            className="w-full text-center border-[0.5px] border-[#2a2d36] text-[#8a8fa8] font-medium text-[15px] py-[14px] rounded-[10px] hover:border-[#3dd68c4d] hover:text-[#3dd68c] transition-colors"
-            style={{ WebkitTapHighlightColor: "transparent" }}
-          >
-            Clear completed
-          </button>
-          <Link
-            href={assignHref}
-            className="w-full text-center bg-[#378add] text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-[#4a9ae8] transition-colors"
-            style={{ WebkitTapHighlightColor: "transparent" }}
-          >
-            + Assign new work
-          </Link>
-        </div>
+      <div className="flex justify-center mb-6">
+        <button
+          type="button"
+          onClick={openModal}
+          className="text-[13px] text-reps-sub hover:text-reps-ink transition-colors py-1"
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          Clear completed
+        </button>
       </div>
 
       {modalOpen && (

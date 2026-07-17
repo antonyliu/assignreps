@@ -31,10 +31,10 @@ export default function AssignmentMenu({ assignmentId, exerciseName }: Props) {
   }
 
   return (
-    <div className="relative flex items-center self-stretch border-l border-reps-line">
+    <div className="relative flex items-center self-stretch">
       <button
         onClick={() => setMenuOpen((v) => !v)}
-        className="flex h-full items-center px-2.5 text-reps-sub hover:text-reps-ink transition-colors"
+        className="flex h-full items-center px-2.5 text-reps-line hover:text-reps-sub transition-colors"
         aria-label="Assignment options"
         aria-haspopup="menu"
         aria-expanded={menuOpen}

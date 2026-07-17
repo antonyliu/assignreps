@@ -119,14 +119,14 @@ export default async function CoachPlayerPage({
                   className="rounded-[10px] bg-[#161a20] flex items-stretch"
                 >
                   <div className="flex-1 min-w-0 px-4 py-[14px]">
-                    <div className="flex justify-between items-start gap-2 mb-2">
-                      <span className="text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="flex-1 min-w-0 truncate text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
                       {done ? (
-                        <span className="text-[12px] font-medium text-reps-green whitespace-nowrap">
-                          ✓ {Math.min(logged, a.target)}/{a.target} {a.unit}
+                        <span className="shrink-0 text-[12px] font-medium text-reps-green whitespace-nowrap">
+                          ✓ {Math.min(logged, a.target)}/{a.target} {unitLabel(a.unit)}
                         </span>
                       ) : (
-                        <span className="text-[12px] text-reps-dim whitespace-nowrap">{logged}/{a.target} {a.unit}</span>
+                        <span className="shrink-0 text-[12px] text-reps-dim whitespace-nowrap">{logged}/{a.target} {unitLabel(a.unit)}</span>
                       )}
                     </div>
                     <div className="h-1 bg-reps-line rounded-full overflow-hidden">
@@ -157,27 +157,39 @@ export default async function CoachPlayerPage({
             </div>
           )}
 
-          {allDone ? (
-            <AllDoneActions playerId={id} firstName={firstName} />
-          ) : (
-            <div
-              className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
-              style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
+          {allDone && <AllDoneActions playerId={id} firstName={firstName} />}
+
+          <div
+            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
+          >
+            <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
+            <Link
+              href={`/instructor/student/${id}/assign`}
+              className={
+                allDone
+                  ? "block text-center bg-[#378add] text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-[#4a9ae8] transition-colors"
+                  : "block text-center bg-[#1c1f26] text-[#c8cdd8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
+              }
+              style={
+                allDone
+                  ? { WebkitTapHighlightColor: "transparent" }
+                  : { WebkitTapHighlightColor: "transparent", borderTop: "0.5px solid #2a2d36" }
+              }
             >
-              <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
-              <Link
-                href={`/instructor/student/${id}/assign`}
-                className="block text-center bg-[#1c1f26] text-[#c8cdd8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
-                style={{ WebkitTapHighlightColor: "transparent", borderTop: "0.5px solid #2a2d36" }}
-              >
-                + Assign more
-              </Link>
-            </div>
-          )}
+              {allDone ? "+ Assign new work" : "+ Assign more"}
+            </Link>
+          </div>
         </>
       )}
     </main>
   );
+}
+
+// Card unit label — "minutes" is abbreviated to "min" to keep the label short
+// next to the assignment name; other units ("reps", "target") are shown as-is.
+function unitLabel(unit: string): string {
+  return unit === "minutes" ? "min" : unit;
 }
 
 function formatJoined(createdAt: string): string {
