@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { MoreHorizontal } from "lucide-react";
 import { deletePlayer, updatePlayerPhone } from "./actions";
 
 type Props = {
@@ -73,10 +74,10 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
       <div className="relative shrink-0">
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          className="text-reps-sub text-[26px] font-bold leading-none px-2 hover:text-reps-ink transition-colors"
+          className="flex items-center justify-center w-9 h-9 rounded-[8px] border border-reps-line bg-reps-card text-reps-sub hover:text-reps-ink hover:bg-reps-raised transition-colors"
           aria-label="Student options"
         >
-          ···
+          <MoreHorizontal size={20} strokeWidth={2} />
         </button>
 
         {menuOpen && (

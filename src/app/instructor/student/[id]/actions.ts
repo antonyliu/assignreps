@@ -62,6 +62,25 @@ export async function clearCompletedAssignments(playerId: string): Promise<Clear
   return { ok: true };
 }
 
+export type DeleteAssignmentResult = { ok: true } | { ok: false; error: string };
+
+export async function deleteAssignment(assignmentId: string): Promise<DeleteAssignmentResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not authenticated." };
+
+  // Scoped to this coach's own assignment. logs.assignment_id is ON DELETE
+  // SET NULL, so the student's logged progress is preserved, not deleted.
+  const { error } = await supabase
+    .from("assignments")
+    .delete()
+    .eq("id", assignmentId)
+    .eq("coach_id", user.id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 export type ResendLinkResult = { ok: true } | { ok: false; error: string };
 
 export async function resendPlayerLink(playerId: string): Promise<ResendLinkResult> {

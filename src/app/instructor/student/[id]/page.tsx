@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase-server";
 import { getActivityLabels } from "@/config/activityTypes";
 import type { Assignment } from "@/types/database";
 import PlayerManage from "./PlayerManage";
+import AssignmentMenu from "./AssignmentMenu";
 import AllDoneActions from "./AllDoneActions";
 
 // Static title — deliberately does not include the student's name, which would
@@ -115,22 +116,27 @@ export default async function CoachPlayerPage({
               return (
                 <div
                   key={a.id}
-                  className="rounded-[10px] px-4 py-[14px] bg-[#161a20]"
+                  className="rounded-[10px] bg-[#161a20] flex items-stretch"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
-                    {done ? (
-                      <span className="text-[12px] font-medium text-reps-green">✓ Done</span>
-                    ) : (
-                      <span className="text-[12px] text-reps-dim">{logged}/{a.target} {a.unit}</span>
-                    )}
+                  <div className="flex-1 min-w-0 px-4 py-[14px]">
+                    <div className="flex justify-between items-start gap-2 mb-2">
+                      <span className="text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
+                      {done ? (
+                        <span className="text-[12px] font-medium text-reps-green whitespace-nowrap">
+                          ✓ {Math.min(logged, a.target)}/{a.target} {a.unit}
+                        </span>
+                      ) : (
+                        <span className="text-[12px] text-reps-dim whitespace-nowrap">{logged}/{a.target} {a.unit}</span>
+                      )}
+                    </div>
+                    <div className="h-1 bg-reps-line rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-1 bg-reps-line rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
+                  <AssignmentMenu assignmentId={a.id} exerciseName={a.exercise_name} />
                 </div>
               );
             })}
