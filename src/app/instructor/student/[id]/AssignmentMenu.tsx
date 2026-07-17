@@ -38,7 +38,7 @@ export default function AssignmentMenu({ assignmentId, exerciseName }: Props) {
       <div className="relative">
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          className="flex items-center py-2 pl-1 pr-2.5 text-[#5a5f72] hover:text-reps-ink transition-colors"
+          className="flex items-center py-2 pl-0 pr-2.5 text-[#52576a] hover:text-reps-ink transition-colors"
           aria-label="Assignment options"
           aria-haspopup="menu"
           aria-expanded={menuOpen}

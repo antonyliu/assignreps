@@ -51,7 +51,7 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
         <button
           type="button"
           onClick={openModal}
-          className="text-[13px] text-reps-sub hover:text-reps-ink transition-colors py-1"
+          className="text-[13px] text-[#454a5b] hover:text-reps-sub transition-colors py-1"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
           Clear completed

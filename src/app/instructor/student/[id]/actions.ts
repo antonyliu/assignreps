@@ -26,7 +26,8 @@ export type UpdatePlayerResult = { ok: true } | { ok: false; error: string };
 
 export async function updatePlayerPhone(
   playerId: string,
-  phone: string
+  phone: string,
+  sendToParent: boolean
 ): Promise<UpdatePlayerResult> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -34,7 +35,7 @@ export async function updatePlayerPhone(
 
   const { error } = await supabase
     .from("players")
-    .update({ phone })
+    .update({ phone, send_to_parent: sendToParent })
     .eq("id", playerId)
     .eq("coach_id", user.id);
 

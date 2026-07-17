@@ -89,6 +89,8 @@ export default async function CoachPlayerPage({
           playerName={player.name}
           playerPhone={player.phone}
           playerToken={player.token}
+          sendToParent={player.send_to_parent ?? false}
+          studentLabel={labels.studentLabel}
         />
       </div>
 

@@ -10,20 +10,24 @@ type Props = {
   playerName: string;
   playerPhone: string;
   playerToken: string;
+  sendToParent: boolean;
+  studentLabel: string;
 };
 
-export default function PlayerManage({ playerId, playerName, playerPhone, playerToken }: Props) {
+export default function PlayerManage({ playerId, playerName, playerPhone, playerToken, sendToParent, studentLabel }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const [menuOpen, setMenuOpen]           = useState(false);
   const [editingPhone, setEditingPhone]   = useState(false);
   const [phone, setPhone]                 = useState(playerPhone);
+  const [toParent, setToParent]           = useState(sendToParent);
   const [phoneError, setPhoneError]       = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast]                 = useState("");
 
   const firstName = playerName.trim().split(/\s+/)[0] || playerName.trim();
+  const studentLabelCap = studentLabel.charAt(0).toUpperCase() + studentLabel.slice(1);
   const playerLink = `https://assignreps.com/student/${playerToken}`;
 
   async function handleShare() {
@@ -55,7 +59,7 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
     if (!trimmed) { setPhoneError("Phone number required."); return; }
     setPhoneError("");
     startTransition(async () => {
-      const result = await updatePlayerPhone(playerId, trimmed);
+      const result = await updatePlayerPhone(playerId, trimmed, toParent);
       if (result.ok) {
         setEditingPhone(false);
         router.refresh();
@@ -114,28 +118,62 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
       )}
 
       {editingPhone && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60">
-          <div className="bg-reps-raised border border-reps-line rounded-t-[16px] w-full max-w-[390px] p-6 pb-10">
-            <h2 className="text-[17px] font-semibold text-reps-ink mb-4">Edit phone number</h2>
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70"
+          onClick={() => { setEditingPhone(false); setPhone(playerPhone); setToParent(sendToParent); setPhoneError(""); }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-phone-title"
+            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="edit-phone-title" className="text-[16px] font-semibold text-reps-ink mb-2">
+              Edit phone number
+            </h2>
+            <p className="text-[13px] text-reps-sub mb-4">Who gets the homework link?</p>
+
+            {/* Player/Parent toggle — sets who the homework link is sent to. */}
+            <div className="flex items-center gap-[2px] rounded-[8px] bg-reps-bg p-[3px] mb-4">
+              {([["player", studentLabelCap], ["parent", "Parent"]] as [string, string][]).map(([value, label]) => {
+                const active = (value === "parent") === toParent;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setToParent(value === "parent")}
+                    className={`flex-1 rounded-[6px] py-[7px] text-[12px] font-medium transition-colors ${
+                      active ? "bg-[#378add] text-white" : "text-reps-sub hover:text-reps-ink"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full bg-reps-card border border-reps-line rounded-[10px] px-4 py-3 text-[15px] text-reps-ink placeholder:text-reps-dim outline-none focus:border-reps-orange transition-colors mb-1"
-              placeholder="+1 555 000 0000"
+              className="w-full bg-reps-bg border border-reps-line rounded-[10px] px-4 py-3 text-[15px] text-reps-ink placeholder:text-reps-dim outline-none focus:border-[#378add] transition-colors"
+              placeholder="(555) 000-0000"
             />
-            {phoneError && <p className="text-[12px] text-red-400 mb-3">{phoneError}</p>}
-            <div className="flex gap-3 mt-4">
+            {phoneError && <p className="text-[12px] text-red-400 mt-2">{phoneError}</p>}
+
+            <div className="flex gap-3 mt-6">
               <button
-                onClick={() => { setEditingPhone(false); setPhone(playerPhone); setPhoneError(""); }}
-                className="flex-1 py-3 text-[15px] text-reps-sub border border-reps-line rounded-[10px] hover:bg-reps-line transition-colors"
+                onClick={() => { setEditingPhone(false); setPhone(playerPhone); setToParent(sendToParent); setPhoneError(""); }}
+                className="flex-1 min-h-[44px] rounded-[10px] border border-reps-line text-reps-ink font-medium text-[15px] hover:bg-reps-raised transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSavePhone}
                 disabled={isPending}
-                className="flex-1 py-3 text-[15px] font-semibold text-white bg-reps-orange rounded-[10px] hover:bg-reps-orange-hi disabled:opacity-50 transition-colors"
+                className="flex-1 min-h-[44px] rounded-[10px] bg-[#378add] text-white font-semibold text-[15px] hover:bg-[#4a9ae8] disabled:opacity-50 transition-colors"
               >
                 {isPending ? "Saving…" : "Save"}
               </button>
@@ -145,24 +183,34 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
       )}
 
       {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60">
-          <div className="bg-reps-raised border border-reps-line rounded-t-[16px] w-full max-w-[390px] p-6 pb-10">
-            <h2 className="text-[17px] font-semibold text-reps-ink mb-2">Remove {playerName}?</h2>
-
-            <p className="text-[14px] text-reps-sub mb-6">
-              This will delete all their assignments and logs. This can&apos;t be undone.
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70"
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-student-title"
+            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="remove-student-title" className="text-[16px] font-semibold text-reps-ink mb-2">
+              Remove {playerName}?
+            </h2>
+            <p className="text-[13px] text-reps-sub mb-7">
+              This deletes all their assignments and logs. This can&apos;t be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="flex-1 py-3 text-[15px] text-reps-sub border border-reps-line rounded-[10px] hover:bg-reps-line transition-colors"
+                className="flex-1 min-h-[44px] rounded-[10px] border border-reps-line text-reps-ink font-medium text-[15px] hover:bg-reps-raised transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isPending}
-                className="flex-1 py-3 text-[15px] font-semibold text-white bg-red-500 rounded-[10px] hover:bg-red-400 disabled:opacity-50 transition-colors"
+                className="flex-1 min-h-[44px] rounded-[10px] bg-red-500 text-white font-semibold text-[15px] hover:bg-red-400 disabled:opacity-50 transition-colors"
               >
                 {isPending ? "Removing…" : "Remove"}
               </button>
