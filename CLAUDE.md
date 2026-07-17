@@ -197,7 +197,18 @@ Note: `instructor_type` field added now even though basketball is the only optio
 
 **Assignments are not time-bounded — they persist until the instructor clears or deletes them.** The `week_start` column is still stored (set at assign time) but is no longer used as a query filter on the instructor student-detail view or the student page. "Clear completed" deletes the player's assignment rows (logs preserved via `ON DELETE SET NULL`). The parent digest still scopes to the current week.
 
-**Student page loads unauthenticated (anon role) — RLS policies must allow anon SELECT on `assignments` and `logs` by player token** (plus `coaches.name` for the header). The student taps a magic link with no auth session, so those reads run as the `anon` role, not as the coach.
+**Student page loads unauthenticated (anon role) — RLS policies must allow anon SELECT on `assignments` and `logs` by player token.** The student taps a magic link with no auth session, so those reads run as the `anon` role, not as the coach.
+
+**Coach name on the student header — resolved via RPC, not RLS (July 16 2026).** The `coaches` table is deliberately NOT anon-readable (it holds email/phone). The student header's "[Coach]'s assignments" line comes from a `SECURITY DEFINER` function, `public.coach_name_for_token(text)`, keyed on the student's link token and granted `EXECUTE` to `anon`. It returns only the coach's name for a valid token (null otherwise → "Coach" fallback). Lives in the shared Supabase project, so it is live across local/staging/prod:
+
+```sql
+create or replace function public.coach_name_for_token(p_token text)
+returns text language sql security definer set search_path = public as $$
+  select c.name from players p join coaches c on c.id = p.coach_id
+  where p.token::text = p_token
+$$;
+grant execute on function public.coach_name_for_token(text) to anon;
+```
 
 ### Foreign key cascade rules
 
