@@ -26,7 +26,7 @@ export default function PrivacyPage() {
 
         <h2 style={heading}>How we use it</h2>
         <p style={body}>
-          To send you a sign-in code. To send your students their assignment link via SMS. To send parents a weekly digest if you&apos;ve added their number. To show you your students&apos; progress.
+          To send you a sign-in code. To send your students their assignment link via SMS. To send parents a weekly digest if you&apos;ve added their number. To show you your students&apos; progress. Students and parents receive SMS notifications via Twilio. Reply STOP to opt out at any time. Message and data rates may apply.
         </p>
 
         <h2 style={heading}>Who we share it with</h2>
