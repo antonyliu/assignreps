@@ -30,7 +30,9 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
     // iOS/Android native share sheet when available.
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({ title: "Reps", text: `${firstName}'s homework link`, url: playerLink });
+        // Only pass url — a `text` field gets concatenated onto the URL by
+        // many share targets, producing a malformed link.
+        await navigator.share({ title: "Reps", url: playerLink });
         return;
       }
     } catch {
