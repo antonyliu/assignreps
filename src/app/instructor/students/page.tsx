@@ -16,21 +16,6 @@ function firstName(name: string) {
   return trimmed.split(/\s+/)[0] || trimmed;
 }
 
-function getWeekStart(): string {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(now);
-  monday.setDate(diff);
-  return monday.toISOString().split("T")[0];
-}
-
-function weekEnd(weekStart: string): string {
-  const d = new Date(weekStart);
-  d.setDate(d.getDate() + 6);
-  return d.toISOString().split("T")[0];
-}
-
 // Completion-based roster groups, in display order.
 type Group = "done" | "progress" | "notstarted" | "unassigned";
 
@@ -52,23 +37,25 @@ export default async function RosterPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/instructor");
 
-  const weekStart = getWeekStart();
-  const weekEndDate = weekEnd(weekStart);
-
-  const [{ data: coach }, { data: players }, { data: logs }, { data: assignments }] = await Promise.all([
+  const [{ data: coach }, { data: players }, { data: assignments }] = await Promise.all([
     supabase.from("coaches").select("name, instructor_type").eq("id", user.id).single(),
     supabase.from("players").select("*").eq("coach_id", user.id).order("created_at"),
-    supabase
-      .from("logs")
-      .select("player_id, assignment_id, amount, logged_at")
-      .gte("logged_at", weekStart)
-      .lte("logged_at", weekEndDate + "T23:59:59"),
+    // Assignments are not time-bounded — grouping reflects every assignment
+    // that still exists (they persist until cleared), matching the student
+    // detail view. The old `.eq("week_start", weekStart)` filter here dropped
+    // every assignment whenever the stored week_start differed from the
+    // roster's computed Monday, forcing all students into "Nothing assigned".
     supabase
       .from("assignments")
       .select("id, player_id, target")
-      .eq("coach_id", user.id)
-      .eq("week_start", weekStart),
+      .eq("coach_id", user.id),
   ]);
+
+  // Sum all logs for those assignments (no date filter), same as student detail.
+  const assignmentIds = (assignments ?? []).map((a) => a.id);
+  const { data: logs } = assignmentIds.length
+    ? await supabase.from("logs").select("assignment_id, amount").in("assignment_id", assignmentIds)
+    : { data: [] };
 
   const coachName = coach?.name?.trim() || "Coach";
   const labels = getActivityLabels(coach?.instructor_type ?? null);
