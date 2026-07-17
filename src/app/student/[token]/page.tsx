@@ -16,14 +16,16 @@ export default async function PlayerHomePage({
 
   const { data: player } = await supabase
     .from("players")
-    .select("id, name, coach_id")
+    .select("id, name")
     .eq("token", token)
     .single();
 
   if (!player) notFound();
 
-  const [{ data: coach }, { data: assignments }, { data: logs }] = await Promise.all([
-    supabase.from("coaches").select("name").eq("id", player.coach_id).single(),
+  const [coachNameRes, { data: assignments }, { data: logs }] = await Promise.all([
+    // The `coaches` table isn't readable by the anon role, so the coach name
+    // comes from a SECURITY DEFINER RPC keyed on the student's link token.
+    supabase.rpc("coach_name_for_token", { p_token: token }),
     supabase
       .from("assignments")
       .select("id, exercise_name, target, unit")
@@ -35,8 +37,7 @@ export default async function PlayerHomePage({
       .eq("player_id", player.id),
   ]);
 
-  // Coach name comes from the player's coach relationship (coaches.id = player.coach_id).
-  const coachName = coach?.name?.trim() || "Coach";
+  const coachName = (coachNameRes.data as string | null)?.trim() || "Coach";
   const firstName = player.name?.trim().split(/\s+/)[0] || "there";
   const assignmentList = assignments ?? [];
 
