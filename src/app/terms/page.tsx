@@ -12,7 +12,7 @@ export default function TermsPage() {
       <main style={{ maxWidth: "680px", margin: "0 auto", padding: "48px 28px 80px", color: "#1a1a1a", fontFamily: "system-ui, sans-serif" }}>
         <Link href="/" style={{ fontSize: "15px", color: "#378add", textDecoration: "underline", textUnderlineOffset: "3px" }}>← Back</Link>
         <h1 style={{ fontSize: "30px", fontWeight: 700, letterSpacing: "-0.5px", marginTop: "24px", marginBottom: "8px" }}>Terms of Service</h1>
-        <p style={{ fontSize: "14px", color: "#888", marginBottom: "8px" }}>Last updated: July 14, 2026</p>
+        <p style={{ fontSize: "14px", color: "#888", marginBottom: "8px" }}>Last updated: July 17, 2026</p>
 
         <h2 style={heading}>What Reps is</h2>
         <p style={body}>
@@ -21,7 +21,7 @@ export default function TermsPage() {
 
         <h2 style={heading}>Your responsibilities</h2>
         <p style={body}>
-          You are responsible for getting consent before adding any student or parent contact information. You agree not to use Reps to contact people who haven&apos;t agreed to receive messages from you.
+          You are responsible for getting consent before adding any student or parent contact information. You agree not to use Reps to contact people who haven&apos;t agreed to receive messages from you. Before adding any student or parent phone number, you must obtain their verbal consent to receive SMS messages from Reps. This includes confirming they understand messages will be sent to their phone and that they can reply STOP at any time to opt out.
         </p>
 
         <h2 style={heading}>Payments</h2>
