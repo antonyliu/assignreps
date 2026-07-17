@@ -197,13 +197,13 @@ Note: `instructor_type` field added now even though basketball is the only optio
 
 ### Foreign key cascade rules
 
-All foreign keys confirmed with `ON DELETE CASCADE` — deletes cascade down the chain **coaches → players → assignments → logs**:
-- `players.coach_id → coaches.id`
-- `assignments.player_id → players.id`
-- `logs.assignment_id → assignments.id`
-- `logs.player_id → players.id`
+Cascade down the chain **coaches → players → logs**, with one deliberate exception so student progress is never destroyed by clearing assignments:
+- `players.coach_id → coaches.id` — **ON DELETE CASCADE**
+- `assignments.player_id → players.id` — **ON DELETE CASCADE**
+- `logs.player_id → players.id` — **ON DELETE CASCADE**
+- `logs.assignment_id → assignments.id` — **ON DELETE SET NULL** (exception, applied July 17 2026)
 
-Deleting a coach removes their players, those players' assignments, and all related logs. No action needed.
+Deleting a coach removes their players, those players' assignments, and all related logs (logs go via `player_id`). But deleting an **assignment** only detaches its logs — `logs.assignment_id` is set null and the `amount`/`logged_at` rows survive. This is what makes the student-detail "Clear completed" action safe: the current list is cleared, logged progress is preserved forever.
 
 ---
 
@@ -309,7 +309,7 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 - **"Reps" is becoming the brand name, not a product descriptor** — use "homework" in UI copy where possible (e.g. "Assign homework", "homework link").
 - **Assignment row:** no row-level edit actions for now — keep it clean.
 - **"All done" state on student detail:** celebration banner + "Clear completed" and "Assign new work" buttons appear when all assignments are complete.
-- **Clearing assignments:** deletes from the `assignments` table only — the `logs` table is never deleted, preserved forever. *(See conflict note below: `logs.assignment_id` currently has ON DELETE CASCADE, so this intent is not yet true at the DB level.)*
+- **Clearing assignments:** deletes from the `assignments` table only — the `logs` table is never deleted, preserved forever. Enforced at the DB level: `logs.assignment_id → assignments.id` is `ON DELETE SET NULL`, so clearing assignments detaches logs rather than deleting them (applied July 17 2026).
 - **Roster groups (in order):** Done / In progress / Not started / Nothing assigned — colored pills with a dot.
 - **Student detail `...` menu:** Share homework link / Edit phone number / Remove [first name].
 
@@ -502,7 +502,6 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 - **Student/player side screens** not yet polished (welcome, home, log, celebrate).
 - **Parent digest screen** not yet polished.
 - **Sign in flow (returning coach)** not yet polished.
-- **"Clear completed" vs logs cascade** — the locked "logs preserved forever" decision conflicts with `logs.assignment_id` ON DELETE CASCADE; deleting assignments currently deletes their logs. Reconcile before prod (change the FK to SET NULL/RESTRICT, soft-clear assignments, or reword the copy).
 - ~~CLAUDE.md routes table was stale~~ — updated July 14 2026.
 
 ---
