@@ -58,11 +58,6 @@ export default async function PlayerHomePage({
         <LogoMini />
       </div>
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-[-0.5px] text-reps-ink">{firstName}</h1>
-        <p className="text-[12px] text-reps-sub mt-0.5">{coachName}&apos;s assignments</p>
-      </div>
-
       {allDone && (
         <div
           className="text-center rounded-[10px] mb-6"
@@ -74,11 +69,16 @@ export default async function PlayerHomePage({
         >
           <div className="text-[22px] leading-none mb-1.5">🎉</div>
           <div className="text-[14px] font-medium text-reps-ink">You finished everything.</div>
-          <div className="text-[13px] mt-0.5" style={{ color: "#5a5f72" }}>
+          <div className="text-[13px] mt-0.5" style={{ color: "rgba(255, 255, 255, 0.75)" }}>
             {coachName} can see your progress.
           </div>
         </div>
       )}
+
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-[-0.5px] text-reps-ink">{firstName}</h1>
+        <p className="text-[12px] text-reps-sub mt-0.5">{coachName}&apos;s assignments</p>
+      </div>
 
       {count === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
