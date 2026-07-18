@@ -162,7 +162,6 @@ export default async function CoachPlayerPage({
             >
               <div className="text-[22px] leading-none mb-1.5">🎉</div>
               <div className="text-[14px] font-medium text-reps-ink">{firstName} finished everything.</div>
-              <div className="text-[13px] mt-0.5" style={{ color: "#5a5f72" }}>Ready for next week?</div>
             </div>
           )}
 

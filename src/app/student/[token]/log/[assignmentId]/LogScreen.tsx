@@ -114,13 +114,19 @@ export default function LogScreen({
         ))}
       </div>
 
-      <button
-        onClick={handleSave}
-        disabled={added < 1 || saving}
-        className="mt-auto w-full bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
+      <div
+        className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
       >
-        {saving ? "Logging…" : "Log it"}
-      </button>
+        <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
+        <button
+          onClick={handleSave}
+          disabled={added < 1 || saving}
+          className="w-full bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
+        >
+          {saving ? "Logging…" : "Log it"}
+        </button>
+      </div>
     </main>
   );
 }

@@ -14,6 +14,15 @@ type Celebration = {
 
 const CONFETTI_COLORS = ["#378add", "#3dd68c", "#f0b429", "#e8eaf0"];
 
+// Singular/plural unit label ("1 minute" / "8 minutes", "1 rep" / "5 reps").
+function unitWord(count: number, unit: string): string {
+  if (count === 1) {
+    if (unit === "reps") return "rep";
+    if (unit === "minutes") return "minute";
+  }
+  return unit;
+}
+
 // Lightweight CSS confetti — a burst of colored pieces falling once. Rendered
 // only on the client (after the celebration payload loads), so the random
 // layout never causes a hydration mismatch. Keyframe lives in globals.css.
@@ -72,7 +81,6 @@ export default function CelebratePage({
 
   const coachName = data?.coachName || "Your instructor";
   const done = data?.done ?? true;
-  const added = data?.added ?? 0;
   const remaining = data?.remaining ?? 0;
   const unit = data?.unit ?? "reps";
   const allDone = data?.allDone ?? false;
@@ -84,13 +92,13 @@ export default function CelebratePage({
       <div className="text-[64px] mb-6">🔥</div>
 
       <h1 className={`font-semibold tracking-[-0.5px] mb-2 ${done ? "text-[40px]" : "text-[26px]"}`}>
-        {done ? "Done." : `+${added} ${unit} logged.`}
+        {done ? "Done." : "Logged."}
       </h1>
 
-      <p className="text-[14px] text-reps-sub mb-10 max-w-[260px]">
+      <p className="text-[14px] text-reps-sub mb-10 max-w-[300px]">
         {done
           ? `${coachName} will see this.`
-          : `${remaining} ${unit} to go. ${coachName} will see this.`}
+          : `${remaining} ${unitWord(remaining, unit)} to go. ${coachName} will see this.`}
       </p>
 
       <Link

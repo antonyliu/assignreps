@@ -48,6 +48,8 @@ export default async function PlayerHomePage({
   }
 
   const count = assignmentList.length;
+  const allDone =
+    count > 0 && assignmentList.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target);
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
@@ -60,6 +62,23 @@ export default async function PlayerHomePage({
         <h1 className="text-2xl font-semibold tracking-[-0.5px] text-reps-ink">{firstName}</h1>
         <p className="text-[12px] text-reps-sub mt-0.5">{coachName}&apos;s assignments</p>
       </div>
+
+      {allDone && (
+        <div
+          className="text-center rounded-[10px] mb-6"
+          style={{
+            background: "rgba(61,214,140,0.06)",
+            border: "0.5px solid rgba(61,214,140,0.15)",
+            padding: "12px 14px",
+          }}
+        >
+          <div className="text-[22px] leading-none mb-1.5">🎉</div>
+          <div className="text-[14px] font-medium text-reps-ink">You finished everything.</div>
+          <div className="text-[13px] mt-0.5" style={{ color: "#5a5f72" }}>
+            {coachName} can see your progress.
+          </div>
+        </div>
+      )}
 
       {count === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
