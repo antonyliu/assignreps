@@ -17,10 +17,10 @@ export async function addPlayer(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not authenticated." };
 
-  // Fetch coach name for the SMS
+  // Fetch coach name + activity type for the SMS
   const { data: coach } = await supabase
     .from("coaches")
-    .select("name")
+    .select("name, instructor_type")
     .eq("id", user.id)
     .single();
 
@@ -37,9 +37,14 @@ export async function addPlayer(
 
   if (insertError) return { ok: false, error: insertError.message };
 
-  // Send SMS to player via Twilio REST API
+  // Send SMS to player via Twilio REST API. When the coach's activity type is
+  // available, make the message specific ("…assigned you basketball homework");
+  // if it couldn't be fetched, fall back to the generic wording.
   const coachName = coach?.name ?? "Coach";
-  const smsBody = `Hey ${name} — ${coachName} assigned you work. Tap here: https://assignreps.com/student/${token}`;
+  const activityType = coach?.instructor_type?.trim().replace(/_/g, " ");
+  const smsBody = activityType
+    ? `Hey ${name} — ${coachName} assigned you ${activityType} homework. Tap here: https://assignreps.com/student/${token}`
+    : `Hey ${name} — ${coachName} assigned you work. Tap here: https://assignreps.com/student/${token}`;
 
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
