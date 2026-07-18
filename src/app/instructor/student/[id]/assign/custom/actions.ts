@@ -16,6 +16,23 @@ export async function saveCustomAssignment(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not authenticated." };
 
+  // Save this as a reusable custom exercise for the coach's "My exercises"
+  // list, deduped by name. Best-effort: never block the assignment on it.
+  const { data: existing } = await supabase
+    .from("custom_exercises")
+    .select("id")
+    .eq("coach_id", user.id)
+    .eq("name", exerciseName)
+    .maybeSingle();
+  if (!existing) {
+    await supabase.from("custom_exercises").insert({
+      coach_id: user.id,
+      name: exerciseName,
+      unit,
+      default_amount: target,
+    });
+  }
+
   // Week start = Monday of current week (ISO date)
   const now = new Date();
   const day = now.getDay();

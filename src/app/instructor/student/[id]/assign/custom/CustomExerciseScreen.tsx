@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Check } from "lucide-react";
 import type { Unit } from "@/lib/exercises";
 import { saveCustomAssignment } from "./actions";
 
@@ -11,7 +12,6 @@ const INPUT = "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-
 const UNITS: { id: Unit; label: string }[] = [
   { id: "reps",    label: "Reps" },
   { id: "minutes", label: "Minutes" },
-  { id: "target",  label: "Target" },
 ];
 
 type Props = {
@@ -26,16 +26,48 @@ export default function CustomExerciseScreen({ playerId, playerName }: Props) {
   const [target, setTarget] = useState(25);
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
+  const [sent, setSent]     = useState(false);
+  const [sentIn, setSentIn] = useState(false);
+
+  // On success: land a brief confirmation (scale/fade in), hold a beat, then
+  // navigate back to the student detail screen — same as the preset flow.
+  useEffect(() => {
+    if (!sent) return;
+    const raf = requestAnimationFrame(() => setSentIn(true));
+    const nav = setTimeout(() => router.push(`/instructor/student/${playerId}`), 1300);
+    return () => { cancelAnimationFrame(raf); clearTimeout(nav); };
+  }, [sent, playerId, router]);
 
   async function handleConfirm() {
     setError("");
     if (!name.trim()) { setError("Name the exercise."); return; }
-    if (!target || target < 1) { setError("Enter a target greater than 0."); return; }
+    if (!target || target < 1) { setError("Enter an amount greater than 0."); return; }
     setLoading(true);
     const result = await saveCustomAssignment(playerId, name.trim(), target, unit);
-    setLoading(false);
-    if (!result.ok) { setError(result.error); return; }
-    router.push(`/instructor/student/${playerId}`);
+    if (!result.ok) { setLoading(false); setError(result.error); return; }
+    setSent(true);
+  }
+
+  if (sent) {
+    return (
+      <main className="flex flex-col min-h-screen items-center justify-center text-center px-6">
+        <div
+          className={`w-[72px] h-[72px] rounded-full flex items-center justify-center transition-all duration-300 ease-out ${
+            sentIn ? "opacity-100 scale-100" : "opacity-0 scale-90"
+          }`}
+          style={{ background: "rgba(61,214,140,0.12)" }}
+        >
+          <Check size={34} color="#3dd68c" strokeWidth={2.5} />
+        </div>
+        <p
+          className={`text-[17px] font-semibold text-reps-ink mt-5 transition-opacity duration-300 ${
+            sentIn ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          Sent to {playerName} 🏀
+        </p>
+      </main>
+    );
   }
 
   return (
@@ -93,9 +125,9 @@ export default function CustomExerciseScreen({ playerId, playerName }: Props) {
         min={1}
         value={target}
         onChange={(e) => setTarget(parseInt(e.target.value) || 0)}
-        className="bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-lg text-center text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim mb-1"
+        onFocus={(e) => e.target.select()}
+        className="bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-lg text-center text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim mb-8"
       />
-      <p className="text-[12px] text-reps-dim text-center mb-8">{unit}</p>
 
       <button
         onClick={handleConfirm}

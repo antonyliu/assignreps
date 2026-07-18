@@ -17,12 +17,13 @@ export default async function AssignCategoriesPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/instructor");
 
-  const { data: player } = await supabase
-    .from("players")
-    .select("name")
-    .eq("id", id)
-    .eq("coach_id", user.id)
-    .single();
+  const [{ data: player }, { count: customCount }] = await Promise.all([
+    supabase.from("players").select("name").eq("id", id).eq("coach_id", user.id).single(),
+    supabase
+      .from("custom_exercises")
+      .select("*", { count: "exact", head: true })
+      .eq("coach_id", user.id),
+  ]);
 
   if (!player) notFound();
 
@@ -43,6 +44,20 @@ export default async function AssignCategoriesPage({
       <p className="text-[13px] text-reps-sub mb-6">Choose a category</p>
 
       <div className="flex flex-col gap-2">
+        {customCount ? (
+          <Link
+            href={`/instructor/student/${id}/assign/mine`}
+            className="flex justify-between items-center px-4 py-[14px] border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi transition-all"
+          >
+            <div>
+              <div className="text-[15px] font-medium text-reps-ink">My exercises</div>
+              <div className="text-[12px] text-reps-dim mt-0.5">
+                {customCount} exercise{customCount === 1 ? "" : "s"}
+              </div>
+            </div>
+            <span className="text-[18px] text-reps-dim">›</span>
+          </Link>
+        ) : null}
         {Object.entries(CATEGORIES).map(([slug, cat]) => (
           <Link
             key={slug}

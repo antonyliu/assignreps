@@ -113,17 +113,15 @@ export default function CountScreen({
       </div>
 
       {showCustom ? (
-        <>
-          <input
-            type="number"
-            min={1}
-            value={target}
-            onChange={(e) => setTarget(parseInt(e.target.value) || 0)}
-            autoFocus
-            className="bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-lg text-center text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim mb-1"
-          />
-          <p className="text-[12px] text-reps-dim text-center mb-8">{unit}</p>
-        </>
+        <input
+          type="number"
+          min={1}
+          value={target}
+          onChange={(e) => setTarget(parseInt(e.target.value) || 0)}
+          onFocus={(e) => e.target.select()}
+          autoFocus
+          className="bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-lg text-center text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim mb-8"
+        />
       ) : (
         <button
           type="button"
