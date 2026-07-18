@@ -3,7 +3,7 @@
 // One size for every platform screen (signup, roster, student home, parent
 // digest) — the header must not change size as you move between them. Marketing
 // pages do not use this; the landing page draws its own mark, and the student
-// welcome / sign-in screens use LogoLarge.
+// sign-in screen uses LogoLarge.
 export function LogoMini() {
   return (
     <div className="flex items-center gap-1.5 text-[13px] font-semibold text-reps-ink">

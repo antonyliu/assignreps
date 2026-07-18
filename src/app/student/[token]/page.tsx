@@ -63,10 +63,10 @@ export default async function PlayerHomePage({
 
       {count === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
-          <p className="text-[14px] text-reps-sub">
-            Your coach hasn&apos;t assigned anything yet.
+          <p className="text-[14px] text-reps-ink">You&apos;re all caught up. 🙌</p>
+          <p className="text-[14px] text-reps-sub mt-2 max-w-[280px]">
+            {`${coachName} will assign new work when it's time.`}
           </p>
-          <p className="text-[12px] text-reps-dim mt-2">Check back soon.</p>
         </div>
       ) : (
         <>
