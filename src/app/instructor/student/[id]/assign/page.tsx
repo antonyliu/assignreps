@@ -47,7 +47,8 @@ export default async function AssignCategoriesPage({
         {customCount ? (
           <Link
             href={`/instructor/student/${id}/assign/mine`}
-            className="flex justify-between items-center px-4 py-[14px] border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi transition-all"
+            className="flex justify-between items-center px-4 py-[14px] border border-reps-line rounded-[10px] hover:border-reps-line-hi transition-all"
+            style={{ background: "rgba(55, 138, 221, 0.06)" }}
           >
             <div>
               <div className="text-[15px] font-medium text-reps-ink">My exercises</div>

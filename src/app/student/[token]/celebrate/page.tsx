@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 type Celebration = {
@@ -9,7 +9,44 @@ type Celebration = {
   added: number;
   remaining: number;
   unit: string;
+  allDone: boolean;
 };
+
+const CONFETTI_COLORS = ["#378add", "#3dd68c", "#f0b429", "#e8eaf0"];
+
+// Lightweight CSS confetti — a burst of colored pieces falling once. Rendered
+// only on the client (after the celebration payload loads), so the random
+// layout never causes a hydration mismatch. Keyframe lives in globals.css.
+function Confetti() {
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: 44 }, () => ({
+        left: Math.random() * 100,
+        delay: Math.random() * 0.6,
+        duration: 2.2 + Math.random() * 1.6,
+        color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+        size: 6 + Math.random() * 6,
+      })),
+    []
+  );
+  return (
+    <div className="pointer-events-none fixed inset-0 overflow-hidden z-50" aria-hidden="true">
+      {pieces.map((p, i) => (
+        <span
+          key={i}
+          className="absolute top-0 rounded-[2px]"
+          style={{
+            left: `${p.left}%`,
+            width: p.size,
+            height: p.size,
+            background: p.color,
+            animation: `reps-confetti-fall ${p.duration}s linear ${p.delay}s both`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function CelebratePage({
   params,
@@ -38,12 +75,15 @@ export default function CelebratePage({
   const added = data?.added ?? 0;
   const remaining = data?.remaining ?? 0;
   const unit = data?.unit ?? "reps";
+  const allDone = data?.allDone ?? false;
 
   return (
     <main className="flex flex-col flex-1 min-h-screen items-center justify-center text-center px-6">
+      {allDone && <Confetti />}
+
       <div className="text-[64px] mb-6">🔥</div>
 
-      <h1 className="text-[26px] font-semibold tracking-[-0.5px] mb-2">
+      <h1 className={`font-semibold tracking-[-0.5px] mb-2 ${done ? "text-[40px]" : "text-[26px]"}`}>
         {done ? "Done." : `+${added} ${unit} logged.`}
       </h1>
 
@@ -57,7 +97,7 @@ export default function CelebratePage({
         href={`/student/${token}`}
         className="w-full max-w-[240px] bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
       >
-        Back to my week
+        Back to my assignments
       </Link>
     </main>
   );

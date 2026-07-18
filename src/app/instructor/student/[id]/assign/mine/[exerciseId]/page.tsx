@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
-import { presetsForUnit, type Unit } from "@/lib/exercises";
+import type { Unit } from "@/lib/exercises";
 import CountScreen from "../../[category]/[exercise]/CountScreen";
 
 export default async function AssignCustomCountPage({
@@ -37,7 +37,7 @@ export default async function AssignCustomCountPage({
       exerciseName={ex.name}
       defaultTarget={ex.default_amount}
       unit={unit}
-      quickCounts={presetsForUnit(unit)}
+      quickCounts={[]}
     />
   );
 }

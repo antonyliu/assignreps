@@ -16,6 +16,15 @@ type Props = {
   coachName: string;
 };
 
+// Quick-add buttons tuned to a realistic range for the assignment: minutes get
+// small steps; reps scale with the target (small / medium / large).
+function logPresets(unit: string, target: number): number[] {
+  if (unit === "minutes") return [1, 5, 10, 15];
+  if (target >= 200) return [25, 50, 100];
+  if (target >= 50) return [10, 25, 50];
+  return [1, 5, 10];
+}
+
 export default function LogScreen({
   token,
   playerId,
@@ -51,7 +60,7 @@ export default function LogScreen({
     // the address bar and browser history.
     sessionStorage.setItem(
       "reps:celebrate",
-      JSON.stringify({ coachName, done, added, remaining, unit })
+      JSON.stringify({ coachName, done, added, remaining, unit, allDone: result.allDone })
     );
     router.push(`/student/${token}/celebrate`);
   }
@@ -77,7 +86,7 @@ export default function LogScreen({
 
       <div className="text-center mb-8">
         <div className="text-[13px] text-reps-sub mb-2">{exerciseName}</div>
-        <div className={`text-[72px] font-light leading-none tracking-[-3px] tabular-nums transition-colors ${done ? "text-reps-green" : "text-reps-orange"}`}>
+        <div className={`text-[72px] font-light leading-none tracking-[-3px] tabular-nums transition-colors ${done ? "text-[#3dd68c]" : "text-[#f0b429]"}`}>
           {current}
         </div>
         <div className="text-[13px] text-reps-dim mt-1.5">
@@ -93,7 +102,7 @@ export default function LogScreen({
       </div>
 
       <div className="flex gap-2 mb-3">
-        {[1, 10, 25, 50].map((n) => (
+        {logPresets(unit, target).map((n) => (
           <button
             key={n}
             onClick={() => addReps(n)}
@@ -110,7 +119,7 @@ export default function LogScreen({
         disabled={added < 1 || saving}
         className="mt-auto w-full bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
       >
-        {saving ? "Saving…" : "Save"}
+        {saving ? "Logging…" : "Log it"}
       </button>
     </main>
   );

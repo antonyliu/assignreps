@@ -34,7 +34,7 @@ export default function CustomExerciseMenu({ exerciseId, exerciseName }: Props) 
       <div className="relative">
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          className="flex items-center py-3 px-3 text-[#52576a] hover:text-reps-ink transition-colors"
+          className="flex items-center py-[14px] px-3 text-[#52576a] hover:text-reps-ink transition-colors"
           aria-label="Exercise options"
           aria-haspopup="menu"
           aria-expanded={menuOpen}

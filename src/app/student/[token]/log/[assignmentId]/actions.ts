@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase-server";
 
-export type SaveLogResult = { ok: true } | { ok: false; error: string };
+export type SaveLogResult = { ok: true; allDone: boolean } | { ok: false; error: string };
 
 export async function saveLog(
   playerId: string,
@@ -19,5 +19,20 @@ export async function saveLog(
   });
 
   if (error) return { ok: false, error: error.message };
-  return { ok: true };
+
+  // Is every assignment for this player now complete? (Drives the celebrate
+  // confetti — signals the whole list is finished, not just this one.)
+  const [{ data: assignments }, { data: allLogs }] = await Promise.all([
+    supabase.from("assignments").select("id, target").eq("player_id", playerId),
+    supabase.from("logs").select("assignment_id, amount").eq("player_id", playerId),
+  ]);
+  const loggedByAssignment: Record<string, number> = {};
+  for (const l of allLogs ?? []) {
+    if (!l.assignment_id) continue;
+    loggedByAssignment[l.assignment_id] = (loggedByAssignment[l.assignment_id] ?? 0) + l.amount;
+  }
+  const list = assignments ?? [];
+  const allDone = list.length > 0 && list.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target);
+
+  return { ok: true, allDone };
 }

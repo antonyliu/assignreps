@@ -32,12 +32,14 @@ export default async function LogPage({
 
   if (!assignment) notFound();
 
-  // Fetch coach name + already-logged reps in parallel
-  const [{ data: coach }, { data: logs }] = await Promise.all([
-    supabase.from("coaches").select("name").eq("id", player.coach_id).single(),
+  // Coach name via the SECURITY DEFINER RPC (coaches isn't anon-readable),
+  // same as the student home header. Fetch alongside already-logged reps.
+  const [coachNameRes, { data: logs }] = await Promise.all([
+    supabase.rpc("coach_name_for_token", { p_token: token }),
     supabase.from("logs").select("amount").eq("assignment_id", assignmentId).eq("player_id", player.id),
   ]);
 
+  const coachName = (coachNameRes.data as string | null)?.trim() || "Coach";
   const alreadyLogged = (logs ?? []).reduce((sum, l) => sum + l.amount, 0);
 
   return (
@@ -49,7 +51,7 @@ export default async function LogPage({
       target={assignment.target}
       unit={assignment.unit}
       alreadyLogged={Math.min(alreadyLogged, assignment.target)}
-      coachName={coach?.name ?? "Coach"}
+      coachName={coachName}
     />
   );
 }

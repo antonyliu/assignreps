@@ -28,7 +28,8 @@ export default function CountScreen({
 }: Props) {
   const router = useRouter();
   const [target, setTarget] = useState(defaultTarget);
-  const [showCustom, setShowCustom] = useState(false);
+  // No presets (e.g. a saved custom exercise) → show the input directly.
+  const [showCustom, setShowCustom] = useState(quickCounts.length === 0);
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent]     = useState(false);
@@ -96,21 +97,23 @@ export default function CountScreen({
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-8">{exerciseName}</h2>
 
       <label className="text-[13px] text-[var(--reps-label)] block mb-2">How many?</label>
-      <div className="flex gap-2 mb-3 flex-wrap">
-        {quickCounts.map((n) => (
-          <button
-            key={n}
-            onClick={() => setTarget(n)}
-            className={`flex-1 py-3 rounded-[10px] text-[14px] font-medium border transition-all ${
-              target === n
-                ? "bg-reps-orange/10 border-reps-orange/30 text-reps-orange"
-                : "bg-reps-card border-reps-line text-reps-ink hover:border-reps-line-hi"
-            }`}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
+      {quickCounts.length > 0 && (
+        <div className="flex gap-2 mb-3 flex-wrap">
+          {quickCounts.map((n) => (
+            <button
+              key={n}
+              onClick={() => setTarget(n)}
+              className={`flex-1 py-3 rounded-[10px] text-[14px] font-medium border transition-all ${
+                target === n
+                  ? "bg-reps-orange/10 border-reps-orange/30 text-reps-orange"
+                  : "bg-reps-card border-reps-line text-reps-ink hover:border-reps-line-hi"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      )}
 
       {showCustom ? (
         <input

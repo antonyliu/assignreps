@@ -24,11 +24,6 @@ export function presetsForExercise(exerciseName: string): number[] {
   return [];
 }
 
-// Preset buttons for a saved custom exercise, which has a unit but no category.
-export function presetsForUnit(unit: Unit): number[] {
-  return unit === "minutes" ? [5, 10, 15, 20] : [25, 50, 100, 200];
-}
-
 export const CATEGORIES: Record<string, Category> = {
   shooting: {
     title: "Shooting",
