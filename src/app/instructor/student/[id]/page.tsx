@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase-server";
 import { getActivityLabels } from "@/config/activityTypes";
+import { presetsForExercise } from "@/lib/exercises";
 import type { Assignment } from "@/types/database";
 import PlayerManage from "./PlayerManage";
 import AssignmentMenu from "./AssignmentMenu";
@@ -138,7 +139,13 @@ export default async function CoachPlayerPage({
                       />
                     </div>
                   </div>
-                  <AssignmentMenu assignmentId={a.id} exerciseName={a.exercise_name} />
+                  <AssignmentMenu
+                    assignmentId={a.id}
+                    exerciseName={a.exercise_name}
+                    target={a.target}
+                    presets={presetsForExercise(a.exercise_name)}
+                    hasProgress={logged > 0}
+                  />
                 </div>
               );
             })}

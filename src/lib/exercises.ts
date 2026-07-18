@@ -14,6 +14,16 @@ export type Category = {
   exercises: Exercise[]
 }
 
+// The count-screen preset buttons for a given exercise, found by matching the
+// exercise name to its category. Custom exercises (no category) return [] — the
+// Edit-amount modal then falls back to the number input.
+export function presetsForExercise(exerciseName: string): number[] {
+  for (const cat of Object.values(CATEGORIES)) {
+    if (cat.exercises.some((e) => e.name === exerciseName)) return cat.quick;
+  }
+  return [];
+}
+
 export const CATEGORIES: Record<string, Category> = {
   shooting: {
     title: "Shooting",

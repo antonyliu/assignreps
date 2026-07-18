@@ -82,6 +82,29 @@ export async function deleteAssignment(assignmentId: string): Promise<DeleteAssi
   return { ok: true };
 }
 
+export type UpdateAssignmentResult = { ok: true } | { ok: false; error: string };
+
+export async function updateAssignmentTarget(
+  assignmentId: string,
+  target: number
+): Promise<UpdateAssignmentResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not authenticated." };
+  if (!Number.isFinite(target) || target < 1) return { ok: false, error: "Enter an amount greater than 0." };
+
+  // Silent correction — updates the target only, no SMS. Ownership-scoped.
+  // The UI only offers this when the assignment has no logged progress.
+  const { error } = await supabase
+    .from("assignments")
+    .update({ target })
+    .eq("id", assignmentId)
+    .eq("coach_id", user.id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 export type ResendLinkResult = { ok: true } | { ok: false; error: string };
 
 export async function resendPlayerLink(playerId: string): Promise<ResendLinkResult> {

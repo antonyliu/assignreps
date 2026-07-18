@@ -3,28 +3,54 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { MoreVertical } from "lucide-react";
-import { deleteAssignment } from "./actions";
+import { deleteAssignment, updateAssignmentTarget } from "./actions";
 
 type Props = {
   assignmentId: string;
   exerciseName: string;
+  target: number;
+  presets: number[];
+  hasProgress: boolean;
 };
 
 // Per-card overflow menu: a vertical three-dot trigger sitting in its own
-// column (the card gives it a left border) with a single "Remove assignment"
-// action. Removal is gated behind a confirmation dialog that mirrors the
-// sign-out confirmation pattern.
-export default function AssignmentMenu({ assignmentId, exerciseName }: Props) {
+// column. "Remove assignment" is always available (gated behind a confirm
+// dialog). "Edit amount" appears only when the assignment has no logged
+// progress yet, and updates the target silently (no SMS).
+export default function AssignmentMenu({ assignmentId, exerciseName, target, presets, hasProgress }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(target);
+  const [editCustom, setEditCustom] = useState(false);
+
+  function openEdit() {
+    setMenuOpen(false);
+    setEditTarget(target);
+    // If the current target isn't a preset, reveal the input pre-filled;
+    // otherwise show the presets with the current one selected.
+    setEditCustom(!presets.includes(target));
+    setEditOpen(true);
+  }
 
   function handleRemove() {
     startTransition(async () => {
       const result = await deleteAssignment(assignmentId);
       if (result.ok) {
         setConfirmOpen(false);
+        router.refresh();
+      }
+    });
+  }
+
+  function handleSaveAmount() {
+    if (!editTarget || editTarget < 1) return;
+    startTransition(async () => {
+      const result = await updateAssignmentTarget(assignmentId, editTarget);
+      if (result.ok) {
+        setEditOpen(false);
         router.refresh();
       }
     });
@@ -59,6 +85,15 @@ export default function AssignmentMenu({ assignmentId, exerciseName }: Props) {
               role="menu"
               className="absolute right-0 top-full mt-1 z-50 w-max bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
             >
+              {!hasProgress && (
+                <button
+                  role="menuitem"
+                  onClick={openEdit}
+                  className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
+                >
+                  Edit amount
+                </button>
+              )}
               <button
                 role="menuitem"
                 onClick={() => {
@@ -105,6 +140,85 @@ export default function AssignmentMenu({ assignmentId, exerciseName }: Props) {
                 className="flex-1 min-h-[44px] rounded-[10px] bg-red-500 text-white font-semibold text-[15px] hover:bg-red-400 disabled:opacity-50 transition-colors"
               >
                 {isPending ? "Removing…" : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70"
+          onClick={() => setEditOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-amount-title"
+            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="edit-amount-title" className="text-[16px] font-semibold text-reps-ink mb-1">
+              {exerciseName}
+            </h2>
+            <p className="text-[13px] text-reps-sub mb-5">Edit amount</p>
+
+            {presets.length > 0 && (
+              <div className="flex gap-2 mb-3 flex-wrap">
+                {presets.map((n) => {
+                  const active = !editCustom && editTarget === n;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => { setEditTarget(n); setEditCustom(false); }}
+                      className={`flex-1 py-3 rounded-[10px] text-[14px] font-medium border transition-all ${
+                        active
+                          ? "bg-reps-orange/10 border-reps-orange/30 text-reps-orange"
+                          : "bg-reps-bg border-reps-line text-reps-ink hover:border-reps-line-hi"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {editCustom ? (
+              <input
+                type="number"
+                min={1}
+                value={editTarget}
+                onChange={(e) => setEditTarget(parseInt(e.target.value) || 0)}
+                autoFocus
+                className="w-full bg-reps-bg border border-reps-line rounded-[10px] px-[14px] py-3 text-lg text-center text-reps-ink outline-none focus:border-[#378add] transition-colors"
+              />
+            ) : (
+              presets.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setEditCustom(true)}
+                  className="text-[13px] text-reps-sub hover:text-reps-ink transition-colors"
+                >
+                  + enter your own
+                </button>
+              )
+            )}
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditOpen(false)}
+                className="flex-1 min-h-[44px] rounded-[10px] border border-reps-line text-reps-ink font-medium text-[15px] hover:bg-reps-raised transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveAmount}
+                disabled={isPending}
+                className="flex-1 min-h-[44px] rounded-[10px] bg-[#378add] text-white font-semibold text-[15px] hover:bg-[#4a9ae8] disabled:opacity-50 transition-colors"
+              >
+                {isPending ? "Saving…" : "Save"}
               </button>
             </div>
           </div>
