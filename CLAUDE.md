@@ -105,13 +105,13 @@ Instructor assigns → Student logs → Instructor sees → Parent digest (weekl
 ## Twilio status & config
 
 - **Compliance profile:** New business profile approved July 15 2026. Bundle SID: `BUe3d4ce29abb03b218cdb16560fdce0e6`. Legal name: ANTONY LIU. EIN: 42-3784882. Email: hello@assignreps.com.
-- **Toll-free registration:** Still blocked — ISV business identity type is incompatible with toll-free verification. Waiting on Twilio support (Julieta, ticket #28211833) to advise whether to change to Direct Customer.
-- **Do not resubmit toll-free registration until hearing back from Julieta.**
+- **Toll-free registration:** ✅ **Approved** (July 2026). Toll-free number (833) 892-5640 is registered and cleared to send. The earlier ISV-vs-toll-free block (Twilio support ticket #28211833, Julieta) is resolved — no longer waiting on support.
 - **Toll-free number:** (833) 892-5640
-- **Old local number:** +15625487985 (blocked, release when possible)
+- **Old local number:** +15625487985 — released.
 - **Messaging Service SID:** `MGe3a0a18bf618d102aae9cb26943cd239`
-- **TWILIO_FROM_NUMBER:** update to `+18338925640` in `.env.local` AND Vercel env vars once registration approved
+- **⏳ Still pending — repoint the app to the toll-free number:** update `TWILIO_FROM_NUMBER` to `+18338925640` in `.env.local` AND Vercel env vars. Approved but not yet switched over.
 - **Important:** Use `MessagingServiceSid` parameter when sending SMS, not `From`
+- **Invite SMS body** includes the coach's activity type when available: `Hey <name> — <Coach> assigned you <type> homework. Tap here: <link>` (e.g. "basketball homework"); falls back to `…assigned you work` if `instructor_type` is null/empty or the fetch fails. `instructor_type` is fetched from `coaches` alongside the coach name in `add-student/actions.ts` (added July 17 2026).
 - **Test setup:** Tony's personal number set as test phone in Supabase with code `123456` to bypass real SMS during local dev
 - **For RJ demo:** manually share student link via text — SMS invite not needed for the demo
 
@@ -195,7 +195,7 @@ Note: `instructor_type` field added now even though basketball is the only optio
 
 `send_to_parent` — boolean, default false. Determines whether the homework SMS goes to the student's phone or the parent's phone.
 
-**Assignments are not time-bounded — they persist until the instructor clears or deletes them.** The `week_start` column is still stored (set at assign time) but is no longer used as a query filter on the instructor student-detail view or the student page. "Clear completed" deletes the player's assignment rows (logs preserved via `ON DELETE SET NULL`). The parent digest still scopes to the current week.
+**Assignments are not time-bounded — they persist until the instructor clears or deletes them.** The `week_start` column is still stored (set at assign time) but is no longer used as a query filter on the instructor student-detail view, the student page, **or the roster view** (the roster `week_start` filter was removed July 17 2026 — it had bucketed every student into "Nothing assigned" whenever the stored `week_start` differed from the roster's computed Monday). "Clear completed" deletes the player's assignment rows (logs preserved via `ON DELETE SET NULL`). The parent digest still scopes to the current week.
 
 **Student page loads unauthenticated (anon role) — RLS policies must allow anon SELECT on `assignments` and `logs` by player token.** The student taps a magic link with no auth session, so those reads run as the `anon` role, not as the coach.
 
@@ -297,15 +297,15 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 ## Design decisions locked
 
 - **Accent color:** Sky blue #378add
-- **Green:** #4ade80 — completion states only
+- **Green:** #3dd68c — completion states only (was #4ade80; updated July 16 2026)
 - **Logo:** Tally mark SVG (4 vertical lines + 1 diagonal) — sport-agnostic, scalable
 - **Warm dark palette (locked):** #1a1612 app bg, #252018 surfaces, #3a3328 borders, #4a4338 strong borders — NOT cold gray. Sky blue #378add replaced orange throughout the app.
 - **Typography:** System font stack; font-weight 600, letter-spacing -0.5px for headlines
 - **Mobile-first:** App is mobile-only (max-width ~390px). Landing page is responsive.
-- **Roster grouping:** All in 🔥 (4+ days) / Some activity (1–3 days) / No activity yet (0 days, gray avatar)
+- **Roster grouping (current):** completion-based — Done / In progress / Not started / Nothing assigned (colored pills; see "Roster groups" under the Polish session below). The old day-count grouping (4+ / 1–3 / 0 days) was replaced.
 - **Coach avatar:** Initials from coach's actual name (e.g. RJ, TL) — not generic "C"
 - **iOS forms:** All input+button flows use form onSubmit + type="submit" — required for iOS WebKit
-- **Add player — parent phone:** Collapsed by default. Shown as "Add parent for weekly digest →" tap to expand. Reduces visual weight for instructors who don't need it.
+- **Add student — recipient toggle (updated July 16 2026):** the phone field is labelled "Send homework to" with a Player/Parent segmented toggle (the Player option uses `studentLabel`, e.g. "Player"/"Student"). The old "Send parent a weekly recap" expandable card was removed — the add-student form no longer captures a separate optional parent number; the Parent toggle simply routes the homework link to the parent (`send_to_parent`).
 - **Phone placeholder:** (555) 000-0000
 - **Signup step indicator:** "Step X of 3" text, top-right (small, dim). Pill dots were tried and reverted.
 - **Signup back navigation:** no back arrow in the header — each step is its own URL, so native browser/phone back handles it.
@@ -320,13 +320,13 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 - **Field labels:** `#c8cdd8`, defined as the `--reps-label` CSS token in globals.css.
 - **Placeholders:** `#5a5f72`.
 - **Helper text:** `#8a8fa8`.
-- **Progress bars:** green `#4ade80` for done, yellow `#fbbf24` for in progress.
+- **Progress bars:** green `#3dd68c` for done, yellow `#f0b429` for in progress (updated July 16 2026; applies to student home, log screen, instructor student-detail cards, and the roster Done/In-progress pills). Note: the `reps-orange` Tailwind token is legacy-named but resolves to sky-blue `#378add`.
 - **"Reps" is becoming the brand name, not a product descriptor** — use "homework" in UI copy where possible (e.g. "Assign homework", "homework link").
-- **Assignment row:** no row-level edit actions for now — keep it clean.
-- **"All done" state on student detail:** celebration banner + "Clear completed" and "Assign new work" buttons appear when all assignments are complete.
+- **Assignment row (updated July 16–17 2026):** each card has a vertical three-dot (⋮) overflow menu in its own column (no divider line) → "Remove assignment" → centered confirm modal → `deleteAssignment` (ownership-scoped server action; logs preserved via `ON DELETE SET NULL`). The kebab icon is dimmed (`#52576a`). Long names truncate with ellipsis and never push the amount label. Done state shows the full count (e.g. "✓ 20/20 min"), not just "✓ Done". "minutes" is abbreviated to "min" on cards.
+- **"All done" state on student detail (restyled July 17 2026):** 🎉 celebration banner appears when all assignments are complete. "Clear completed" is a quiet centered text link directly under the banner (dim `#454a5b`); "+ Assign new work" is the primary blue bottom CTA. (Was a stacked pair of full-width buttons at the bottom.)
 - **Clearing assignments:** deletes from the `assignments` table only — the `logs` table is never deleted, preserved forever. Enforced at the DB level: `logs.assignment_id → assignments.id` is `ON DELETE SET NULL`, so clearing assignments detaches logs rather than deleting them (applied July 17 2026).
 - **Roster groups (in order):** Done / In progress / Not started / Nothing assigned — colored pills with a dot.
-- **Student detail `...` menu:** Share homework link / Edit phone number / Remove [first name].
+- **Student detail header menu (updated July 16–17 2026):** the `···` trigger is a faint boxed/outlined icon (lucide `MoreHorizontal`); the dropdown (Share homework link / Edit phone number / Remove [first name]) keeps divider lines between items. "Edit phone number" and "Remove [name]" open **centered** modals matching the assignment-remove modal. The Edit-phone modal includes a Player/Parent toggle that sets who receives the homework link — `updatePlayerPhone` now also writes `send_to_parent`.
 
 ### What was killed and why
 - **Leaderboard:** Privacy (minors) + breaks the 1:1 mentorship dynamic
@@ -393,15 +393,15 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 
 ## Privacy policy & terms of service
 
-Plain language versions drafted. Key points:
+Plain-language pages live at /privacy and /terms (both "Last updated: July 17, 2026"). Key points:
 
-**Privacy:** Collect name, email, phone. Used only to operate the product. Shared with Supabase, Twilio, Resend. No selling. Coaches responsible for consent for minors. Delete via hello@assignreps.com.
+**Privacy:** Collect name, email, phone. Used only to operate the product. Shared with Supabase, Twilio, Resend. No selling. Coaches responsible for consent for minors. Delete via hello@assignreps.com. **"How we use it"** discloses SMS via Twilio + reply STOP to opt out + "message and data rates may apply." A dedicated **"SMS consent"** section (between "How we use it" and "Who we share it with") states a coach must obtain verbal consent before adding any number, and that every SMS includes STOP-to-opt-out instructions. (Added July 16–17 2026.)
 
-**Terms:** Coach responsible for consent before adding player/parent contacts. Reps provided as-is. Accounts can be terminated. Payments monthly, cancel anytime.
+**Terms:** Coach responsible for consent before adding player/parent contacts. Reps provided as-is. Accounts can be terminated. Payments monthly, cancel anytime. **"Your responsibilities"** was rewritten (July 17 2026) into clear lines requiring explicit verbal consent before entering a number — including the exact confirmation script the coach reads to the recipient — plus the STOP opt-out.
 
 **COPPA note:** Students log reps via link — we don't collect data directly from children. Coaches are responsible for parental consent for players under 13.
 
-Pages at /privacy and /terms — placeholder copy in place, final copy to be dropped in.
+These SMS-consent additions are A2P / toll-free compliance signals. Substantive copy is in place; a final legal review is still advisable before wider launch.
 
 ---
 
@@ -493,15 +493,23 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 - Sign out confirmation: improved padding, dimmed body text, updated copy 'Sign back in anytime with your email.'
 - Safari iPhone CSS load order fixed — styles now apply correctly on first paint
 
+### Added July 16–17 2026
+- **Color update:** completion green `#4ade80` → `#3dd68c`; in-progress yellow `#fbbf24` → `#f0b429`. Applied to the `reps-green` token + all literals — student home, log screen, instructor student-detail cards, roster Done/In-progress pills, celebration banner, all-done buttons. Blue `#378add` and the log counter number untouched.
+- **Student home (`/student/[token]`) redesign:** heading is the student's first name; subline "[Coach]'s assignments" (coach name via the `coach_name_for_token` RPC); "ASSIGNMENTS" section label; tappable assignment cards (`bg-[#161a20]`, border, hover) linking to the log screen; in-progress bar yellow / done bar green; page title "Your homework — Reps".
+- **coach_name_for_token RPC** added to the shared Supabase project — `SECURITY DEFINER` function returning the coach's name for a valid student token (granted `EXECUTE` to `anon`); replaces the blocked anon read of `coaches` on the student header (see Database schema).
+- **Add-student form:** phone label → "Send homework to"; recipient toggle relabelled to `studentLabel`/"Parent" (possessive dropped); removed the "Send parent a weekly recap" card and all its state (the form no longer captures a separate parent number).
+- **Roster grouping fix:** removed the `week_start` filter (and the logs date filter) on the roster so it mirrors the student-detail view — every persistent assignment counts. Fixes all students showing "Nothing assigned."
+- **Assignment cards (instructor detail):** per-card vertical ⋮ menu → "Remove assignment" → centered confirm → new `deleteAssignment` server action (ownership-scoped; logs preserved). Done cards show the full count ("✓ 20/20 min"); long names truncate; "minutes" → "min".
+- **Student-detail polish:** faint boxed header `···` trigger (lucide `MoreHorizontal`); "Edit phone number" + "Remove [name]" redesigned as centered modals; Edit-phone modal gained a Player/Parent toggle that writes `send_to_parent` via `updatePlayerPhone`; "Clear completed" moved under the celebration banner as a quiet text link, "+ Assign new work" is the primary bottom CTA.
+- **Invite SMS** now names the coach's activity type ("…assigned you basketball homework") with a generic fallback.
+- **Legal / SMS consent:** new "SMS consent" section + STOP/rates line on /privacy; "Your responsibilities" rewrite with the verbal-consent script on /terms. Both dated July 17 2026.
+
 ---
 
 ## Pending / loose ends
 
-- Update TWILIO_FROM_NUMBER to +18338925640 once toll-free registration approved
-- Update .env.local TWILIO_FROM_NUMBER to toll-free number
-- Release old 562 Twilio number
-- Privacy policy final copy at /privacy
-- Terms of service final copy at /terms
+- **Repoint SMS to the toll-free number** — toll-free (833) 892-5640 is APPROVED; update `TWILIO_FROM_NUMBER` to `+18338925640` in `.env.local` AND Vercel env vars (not yet switched over). Old 562 number released; support ticket resolved.
+- **Final legal review of /privacy + /terms** — SMS-consent copy is in place (added July 16–17 2026); a lawyer pass is still advisable before wider launch.
 - hello@assignreps.com Gmail "Send as" setup
 - UI polish pass (see notes below)
 - Stripe infrastructure
@@ -514,7 +522,7 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 - **Third landing page bullet** still needs updating: "Everything in one place" → "Always know where they left off".
 - **Roster row:** add a thin progress bar + "X of X done" subline (no taller row) — not yet built.
 - **Assign flow polish** not yet done.
-- **Student/player side screens** not yet polished (welcome, home, log, celebrate).
+- **Student/player side screens** not yet polished (welcome, log, celebrate — student home was polished July 16 2026).
 - **Parent digest screen** not yet polished.
 - **Sign in flow (returning coach)** not yet polished.
 - ~~CLAUDE.md routes table was stale~~ — updated July 14 2026.
@@ -525,8 +533,8 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 
 - Instructor signup flow — needs review pass
 - Add player screen — needs review pass
-- Student detail / assign flow — needs review pass
-- Student welcome, home, log, celebrate screens — needs review pass
+- Assign flow — needs review pass (student-detail view polished July 16–17 2026)
+- Student welcome, log, celebrate screens — needs review pass (student home polished July 16 2026)
 - Parent digest screen — needs review pass
 - 'Create your own' link on student detail → 404, needs fix
 - Tablet/responsive layout — deferred until a real tablet user requests it
@@ -537,8 +545,8 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 
 1. UI polish pass — instructor, student, parent flows (for RJ demo) ← in progress
 2. Schedule RJ meeting this week
-3. Update TWILIO_FROM_NUMBER once toll-free approved
-4. Privacy policy + terms final copy
+3. Repoint `TWILIO_FROM_NUMBER` to `+18338925640` — toll-free now APPROVED, just switch env vars (.env.local + Vercel)
+4. Final legal review of /privacy + /terms — SMS-consent copy added July 16–17 2026
 5. hello@assignreps.com Gmail Send as setup
 6. Gate stranger signups — add invite code or waitlist
 7. Stripe infrastructure
@@ -579,7 +587,7 @@ Pages at /privacy and /terms — placeholder copy in place, final copy to be dro
 - Demo mode ❌ in progress
 - Account deletion ❌
 - Push notifications ❌
-- Edit/delete assignments ❌
+- Remove (delete) assignment ✅ (per-card menu, July 16 2026) / Edit assignment ❌
 - Multi-coach per roster ❌
 - Video playback in-app ❌
 - Historical weeks / season view ❌
