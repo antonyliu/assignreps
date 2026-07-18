@@ -46,12 +46,9 @@ export default async function AssignExerciseListPage({
           <Link
             key={ex.slug}
             href={`/instructor/student/${id}/assign/${category}/${ex.slug}`}
-            className="flex justify-between items-center px-[14px] py-3 border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi transition-all"
+            className="flex justify-between items-center px-4 py-[14px] border border-reps-line rounded-[10px] hover:bg-reps-card hover:border-reps-line-hi transition-all"
           >
-            <div>
-              <div className="text-[15px] font-medium text-reps-ink">{ex.name}</div>
-              <div className="text-[11px] text-reps-dim">Default: {ex.default} {cat.unit}</div>
-            </div>
+            <span className="text-[15px] font-medium text-reps-ink">{ex.name}</span>
             <span className="text-[18px] text-reps-dim">›</span>
           </Link>
         ))}
@@ -63,7 +60,7 @@ export default async function AssignExerciseListPage({
       >
         <Link
           href={`/instructor/student/${id}/assign/custom`}
-          className="text-[13px] text-reps-dim hover:text-reps-sub transition-colors"
+          className="inline-flex items-center text-[13px] font-medium text-[#c8cdd8] hover:text-reps-ink border border-reps-line hover:border-reps-line-hi rounded-[10px] px-5 py-3 transition-colors"
         >
           + Create your own
         </Link>

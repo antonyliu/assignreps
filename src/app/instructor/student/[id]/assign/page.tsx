@@ -51,7 +51,7 @@ export default async function AssignCategoriesPage({
           >
             <div>
               <div className="text-[15px] font-medium text-reps-ink">{cat.title}</div>
-              <div className="text-[12px] text-reps-dim">{cat.exercises.length} exercises</div>
+              <div className="text-[12px] text-reps-dim mt-0.5">{cat.hint}</div>
             </div>
             <span className="text-[18px] text-reps-dim">›</span>
           </Link>
@@ -64,7 +64,7 @@ export default async function AssignCategoriesPage({
       >
         <Link
           href={`/instructor/student/${id}/assign/custom`}
-          className="text-[13px] text-reps-dim hover:text-reps-sub transition-colors"
+          className="inline-flex items-center text-[13px] font-medium text-[#c8cdd8] hover:text-reps-ink border border-reps-line hover:border-reps-line-hi rounded-[10px] px-5 py-3 transition-colors"
         >
           + Create your own
         </Link>

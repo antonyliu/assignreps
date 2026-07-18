@@ -8,6 +8,7 @@ export type Exercise = {
 
 export type Category = {
   title: string
+  hint: string
   unit: Unit
   quick: number[]
   exercises: Exercise[]
@@ -16,6 +17,7 @@ export type Category = {
 export const CATEGORIES: Record<string, Category> = {
   shooting: {
     title: "Shooting",
+    hint: "Free throws, corner 3s, catch & shoot",
     unit: "reps",
     quick: [25, 50, 100, 200],
     exercises: [
@@ -28,6 +30,7 @@ export const CATEGORIES: Record<string, Category> = {
   },
   handling: {
     title: "Ball-handling",
+    hint: "Stationary, two-ball, figure 8s",
     unit: "minutes",
     quick: [5, 10, 15, 20],
     exercises: [
@@ -39,6 +42,7 @@ export const CATEGORIES: Record<string, Category> = {
   },
   finishing: {
     title: "Finishing",
+    hint: "Layups, floaters",
     unit: "reps",
     quick: [20, 50, 100],
     exercises: [
@@ -49,6 +53,7 @@ export const CATEGORIES: Record<string, Category> = {
   },
   footwork: {
     title: "Footwork",
+    hint: "Pivots, jump stops, defensive slides",
     unit: "reps",
     quick: [10, 20, 50],
     exercises: [
@@ -59,6 +64,7 @@ export const CATEGORIES: Record<string, Category> = {
   },
   conditioning: {
     title: "Conditioning",
+    hint: "Suicides, sprints, jump rope",
     unit: "reps",
     quick: [5, 10, 20],
     exercises: [

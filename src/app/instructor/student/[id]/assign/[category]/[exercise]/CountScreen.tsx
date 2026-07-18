@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Check } from "lucide-react";
 import type { Unit } from "@/lib/exercises";
 import { saveAssignment } from "./actions";
 
@@ -27,17 +28,50 @@ export default function CountScreen({
 }: Props) {
   const router = useRouter();
   const [target, setTarget] = useState(defaultTarget);
+  const [showCustom, setShowCustom] = useState(false);
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
+  const [sent, setSent]     = useState(false);
+  const [sentIn, setSentIn] = useState(false);
+
+  // On success: land a brief confirmation (scale/fade in), hold a beat, then
+  // navigate back to the student detail screen — a moment, not a flash.
+  useEffect(() => {
+    if (!sent) return;
+    const raf = requestAnimationFrame(() => setSentIn(true));
+    const nav = setTimeout(() => router.push(`/instructor/student/${playerId}`), 1300);
+    return () => { cancelAnimationFrame(raf); clearTimeout(nav); };
+  }, [sent, playerId, router]);
 
   async function handleConfirm() {
     setError("");
     if (!target || target < 1) { setError("Enter a target greater than 0."); return; }
     setLoading(true);
     const result = await saveAssignment(playerId, exerciseName, target, unit);
-    setLoading(false);
-    if (!result.ok) { setError(result.error); return; }
-    router.push(`/instructor/student/${playerId}`);
+    if (!result.ok) { setLoading(false); setError(result.error); return; }
+    setSent(true);
+  }
+
+  if (sent) {
+    return (
+      <main className="flex flex-col min-h-screen items-center justify-center text-center px-6">
+        <div
+          className={`w-[72px] h-[72px] rounded-full flex items-center justify-center transition-all duration-300 ease-out ${
+            sentIn ? "opacity-100 scale-100" : "opacity-0 scale-90"
+          }`}
+          style={{ background: "rgba(61,214,140,0.12)" }}
+        >
+          <Check size={34} color="#3dd68c" strokeWidth={2.5} />
+        </div>
+        <p
+          className={`text-[17px] font-semibold text-reps-ink mt-5 transition-opacity duration-300 ${
+            sentIn ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          Sent to {playerName} 🏀
+        </p>
+      </main>
+    );
   }
 
   return (
@@ -59,7 +93,6 @@ export default function CountScreen({
         </div>
       )}
 
-      <span className="text-[13px] text-reps-sub mb-1">Exercise</span>
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-8">{exerciseName}</h2>
 
       <label className="text-[13px] text-[var(--reps-label)] block mb-2">How many?</label>
@@ -79,14 +112,27 @@ export default function CountScreen({
         ))}
       </div>
 
-      <input
-        type="number"
-        min={1}
-        value={target}
-        onChange={(e) => setTarget(parseInt(e.target.value) || 0)}
-        className="bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-lg text-center text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim mb-1"
-      />
-      <p className="text-[12px] text-reps-dim text-center mb-8">{unit}</p>
+      {showCustom ? (
+        <>
+          <input
+            type="number"
+            min={1}
+            value={target}
+            onChange={(e) => setTarget(parseInt(e.target.value) || 0)}
+            autoFocus
+            className="bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-lg text-center text-reps-ink outline-none focus:border-reps-orange transition-colors w-full placeholder:text-reps-dim mb-1"
+          />
+          <p className="text-[12px] text-reps-dim text-center mb-8">{unit}</p>
+        </>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowCustom(true)}
+          className="self-start text-[13px] text-reps-sub hover:text-reps-ink transition-colors mb-8"
+        >
+          + enter your own
+        </button>
+      )}
 
       <button
         onClick={handleConfirm}

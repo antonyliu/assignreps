@@ -171,13 +171,9 @@ export default async function CoachPlayerPage({
               className={
                 allDone
                   ? "block text-center bg-[#378add] text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-[#4a9ae8] transition-colors"
-                  : "block text-center bg-[#1c1f26] text-[#c8cdd8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
+                  : "block text-center bg-[#1c1f26] text-reps-ink font-medium text-[15px] py-[14px] rounded-[10px] border border-reps-line-hi hover:bg-[#22252e] hover:border-[#4a4d57] transition-colors"
               }
-              style={
-                allDone
-                  ? { WebkitTapHighlightColor: "transparent" }
-                  : { WebkitTapHighlightColor: "transparent", borderTop: "0.5px solid #2a2d36" }
-              }
+              style={{ WebkitTapHighlightColor: "transparent" }}
             >
               {allDone ? "+ Assign new work" : "+ Assign more"}
             </Link>
