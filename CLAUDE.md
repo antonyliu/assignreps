@@ -189,7 +189,12 @@ assignments
 
 logs
   id, player_id, assignment_id, amount, logged_at
+
+custom_exercises
+  id, coach_id, name, unit (reps/minutes), default_amount, created_at
 ```
+
+`custom_exercises` (added July 17 2026) — a coach's saved custom exercises, powering the "My exercises" category. RLS: coach reads/writes only their own rows (`coach_id = auth.uid()`, `to authenticated`). Saved (deduped by name) when a custom exercise is sent; assignments copy name/target as their own rows, so deleting a saved custom exercise does not touch existing assignments.
 
 Note: `instructor_type` field added now even though basketball is the only option at launch — enables content branching later without schema rework. `phone` on coaches is nullable since email OTP does not require it.
 
@@ -504,12 +509,26 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - **Invite SMS** now names the coach's activity type ("…assigned you basketball homework") with a generic fallback.
 - **Legal / SMS consent:** new "SMS consent" section + STOP/rates line on /privacy; "Your responsibilities" rewrite with the verbal-consent script on /terms. Both dated July 17 2026.
 
+### Added July 17–18 2026
+- **Welcome screen deleted** — `/student/[token]/welcome` (the phone-OTP gate) removed; the SMS link goes straight to `/student/[token]`. `PlayerOtpFlow` still used by `/student/login`.
+- **Student empty state:** "You're all caught up. 🙌" + "Coach [name] will assign new work when it's time." (coach name via RPC).
+- **Assign flow polish:** category rows show example hints; exercise-row height normalized to match category rows; "Default: X reps" subline removed (name only); count screen hides the number input behind a "+ enter your own" link (presets only by default); confirmation moment after send — green check + "Sent to [name] 🏀", holds ~1.3s, then navigates back.
+- **Custom exercises:** new `custom_exercises` table (see Database schema). "My exercises" category shown above the presets (faint blue tint `rgba(55,138,221,0.06)`) when the coach has any saved; its count screen skips presets and shows the saved amount directly in the input; each row has a "Delete exercise" dots menu (centered confirm; existing assignments unaffected). Created customs are saved/deduped by name on send.
+- **"Target" track type removed** from Create-your-own — Reps and Minutes only.
+- **Edit amount:** dots menu on instructor assignment cards, shown only when the assignment has zero logged progress; opens a centered modal (count-screen presets, current target pre-selected; input auto-revealed if not a preset); silent save via `updateAssignmentTarget` (no SMS, no resend).
+- **Log screen:** big counter is yellow (`#f0b429`) in progress / green (`#3dd68c`) when done; "Save" → "Log it"; quick-add presets normalized per exercise (minutes 1/5/10/15; small-rep 1/5/10; medium 10/25/50; large 25/50/100); "Log it" button fixed to the bottom of the viewport (sticky + safe-area) so it stays visible under iOS chrome.
+- **Celebrate screen:** partial-log heading is unit-agnostic "Logged."; subline widened so it no longer orphans "this."; singular/plural on the remaining count ("1 minute" / "8 minutes"); real coach name via the `coach_name_for_token` RPC; "Back to my week" → "Back to my assignments"; larger "Done."; confetti on full completion (fire stays for individual completions).
+- **Student all-done banner:** green banner on the student home when every assignment is complete — "You finished everything. 🎉" + "Coach [name] can see your progress." Sits below the name header, above the assignment list. No "Clear completed" (instructor only).
+- **Instructor all-done banner:** "Ready for next week?" removed — just 🎉 + "[Name] finished everything." (no longer week-based); single-line, no subline.
+- **All-done banner subline:** `rgba(255,255,255,0.55)` soft white, subordinate to the headline (applies to the student banner; the instructor banner is single-line).
+
 ---
 
 ## Pending / loose ends
 
 - **Repoint SMS to the toll-free number** — toll-free (833) 892-5640 is APPROVED; update `TWILIO_FROM_NUMBER` to `+18338925640` in `.env.local` AND Vercel env vars (not yet switched over). Old 562 number released; support ticket resolved.
 - **Final legal review of /privacy + /terms** — SMS-consent copy is in place (added July 16–17 2026); a lawyer pass is still advisable before wider launch.
+- **SMS on assignment send** — assigning work is currently silent (no SMS to the student); only add-student and "resend link" send SMS. The notify-on-assign flow is not yet built.
 - hello@assignreps.com Gmail "Send as" setup
 - UI polish pass (see notes below)
 - Stripe infrastructure
@@ -520,8 +539,7 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - **Gate stranger signups** — signup is currently open to the public; a bot already attempted a signup July 14 2026 (see incident note below). Add invite code / waitlist before broader launch.
 - **Tighten logs RLS policy** — `logs` INSERT/SELECT is currently open. Before wider launch, tighten INSERT to verify the student token matches the player on the assignment.
 - **Third landing page bullet** still needs updating: "Everything in one place" → "Always know where they left off".
-- **Roster row:** add a thin progress bar + "X of X done" subline (no taller row) — not yet built.
-- **Assign flow polish** not yet done.
+- **Roster row layout** — name + progress inline with a thin bar underneath ("X of X done", no taller row) — not yet built. (Assign flow polish itself is done — see July 17–18 changelog.)
 - **Student/player side screens** not yet polished (welcome, log, celebrate — student home was polished July 16 2026).
 - **Parent digest screen** not yet polished.
 - **Sign in flow (returning coach)** not yet polished.
