@@ -4,6 +4,10 @@ export type Exercise = {
   name: string
   default: number
   slug: string
+  // Overrides the category's unit for this exercise only. Most exercises inherit
+  // it; holds (planks, isometric squats) are timed even though they sit in a
+  // reps category. Resolve as `ex.unit ?? cat.unit`.
+  unit?: Unit
 }
 
 export type Category = {
@@ -36,6 +40,8 @@ export const CATEGORIES: Record<string, Category> = {
       { name: "Mid-range jumpers",  default: 50,  slug: "mid-range-jumpers" },
       { name: "Corner 3s",          default: 25,  slug: "corner-3s" },
       { name: "Catch & shoot",      default: 50,  slug: "catch-and-shoot" },
+      { name: "Elbow jumpers",      default: 25,  slug: "elbow-jumpers" },
+      { name: "Short corner jumpers", default: 25, slug: "short-corner-jumpers" },
     ],
   },
   handling: {
@@ -52,13 +58,18 @@ export const CATEGORIES: Record<string, Category> = {
   },
   finishing: {
     title: "Finishing",
-    hint: "Layups, floaters",
+    hint: "Layups, floaters, euro-step",
     unit: "reps",
-    quick: [20, 50, 100],
+    // Holds both 20 and 25 so every exercise below opens with its default
+    // pre-selected — the layups default to 25, everything else to 20.
+    quick: [20, 25, 50, 100],
     exercises: [
       { name: "Layups (right hand)", default: 25, slug: "layups-right" },
       { name: "Layups (left hand)",  default: 25, slug: "layups-left" },
       { name: "Floaters",            default: 20, slug: "floaters" },
+      { name: "Euro-step",           default: 20, slug: "euro-step" },
+      { name: "Hop-step",            default: 20, slug: "hop-step" },
+      { name: "Spin",                default: 20, slug: "spin" },
     ],
   },
   footwork: {
@@ -76,11 +87,23 @@ export const CATEGORIES: Record<string, Category> = {
     title: "Conditioning",
     hint: "Suicides, sprints, jump rope",
     unit: "reps",
-    quick: [5, 10, 20],
+    quick: [5, 10, 15, 20],
     exercises: [
       { name: "Suicides",                      default: 10, slug: "suicides" },
       { name: "Sprints (baseline to baseline)", default: 10, slug: "sprints" },
       { name: "Jump rope",                     default: 5,  slug: "jump-rope" },
+      { name: "Planks",                        default: 5,  slug: "planks",           unit: "minutes" },
+      { name: "Isometric squats",              default: 5,  slug: "isometric-squats", unit: "minutes" },
+    ],
+  },
+  "spot-shots": {
+    title: "Spot shots",
+    hint: "Corner-to-wing spots",
+    unit: "reps",
+    quick: [5, 10, 15, 20],
+    exercises: [
+      { name: "Right corner-to-wing", default: 5, slug: "right-corner-to-wing" },
+      { name: "Left corner-to-wing",  default: 5, slug: "left-corner-to-wing" },
     ],
   },
 };
