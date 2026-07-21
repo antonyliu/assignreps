@@ -91,7 +91,7 @@ export const CATEGORIES: Record<string, Category> = {
     exercises: [
       { name: "Suicides",                      default: 10, slug: "suicides" },
       { name: "Sprints (baseline to baseline)", default: 10, slug: "sprints" },
-      { name: "Jump rope",                     default: 5,  slug: "jump-rope" },
+      { name: "Jump rope",                     default: 5,  slug: "jump-rope",        unit: "minutes" },
       { name: "Planks",                        default: 5,  slug: "planks",           unit: "minutes" },
       { name: "Isometric squats",              default: 5,  slug: "isometric-squats", unit: "minutes" },
     ],

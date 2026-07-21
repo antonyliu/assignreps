@@ -115,6 +115,12 @@ export default function CountScreen({
         </div>
       )}
 
+      {/* The presets are bare numbers, so timed exercises need the unit spelled
+          out — "5" reads as reps otherwise. Rep-based exercises stay unlabelled. */}
+      {unit === "minutes" && (
+        <p className="text-[12px] text-reps-dim mb-3">minutes</p>
+      )}
+
       {showCustom ? (
         <input
           type="number"
