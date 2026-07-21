@@ -13,8 +13,12 @@ export type Player = {
   name: string
   phone: string
   parent_phone: string | null
+  send_to_parent: boolean
   token: string
   created_at: string
+  /** Last assign-notification SMS. Null = never texted. Compared as an
+   *  America/Los_Angeles calendar date to cap sends at one per day. */
+  last_texted_at: string | null
 }
 
 export type Assignment = {

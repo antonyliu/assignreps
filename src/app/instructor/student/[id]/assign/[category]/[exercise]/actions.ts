@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase-server";
+import { notifyAssignmentOnce } from "@/lib/notify-assignment";
 import type { Unit } from "@/lib/exercises";
 
 export type SaveAssignmentResult = { ok: true } | { ok: false; error: string };
@@ -34,5 +35,10 @@ export async function saveAssignment(
   });
 
   if (error) return { ok: false, error: error.message };
+
+  // Best-effort: tell the student new work landed, at most once per LA day.
+  // Runs only after the insert succeeded, and never fails the save.
+  await notifyAssignmentOnce(supabase, user.id, playerId);
+
   return { ok: true };
 }
