@@ -53,15 +53,15 @@ export async function notifyAssignmentOnce(
       .eq("id", coachId)
       .single();
 
-    // Mirrors the invite SMS wording, but says "new" — this is a repeat message
-    // to an existing student, not a first-touch invite. Falls back to generic
-    // wording when instructor_type is null/empty.
+    // This is the student's only text — nothing is sent when they're added — so
+    // the wording has to work as a first touch as well as a repeat. Falls back
+    // to generic wording when instructor_type is null/empty.
     const coachName = coach?.name ?? "Coach";
     const activityType = coach?.instructor_type?.trim().replace(/_/g, " ");
     const link = `https://assignreps.com/student/${player.token}`;
     const body = activityType
-      ? `Hey ${player.name} — ${coachName} assigned you new ${activityType} homework. Tap here: ${link}`
-      : `Hey ${player.name} — ${coachName} assigned you new homework. Tap here: ${link}`;
+      ? `Hey ${player.name} — ${coachName} assigned you ${activityType} homework. Tap here: ${link}`
+      : `Hey ${player.name} — ${coachName} assigned you homework. Tap here: ${link}`;
 
     const sent = await sendSms(player.phone, body);
 

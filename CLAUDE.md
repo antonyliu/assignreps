@@ -66,7 +66,7 @@ Instructor assigns → Student logs → Instructor sees → Parent digest (weekl
 - **Repo:** github.com/antonyliu/assignreps
 - **Framework:** Next.js (App Router, TypeScript)
 - **Styling:** Tailwind CSS
-- **SMS:** Twilio — used only for student invite SMS and parent digest SMS. NOT used for coach auth.
+- **SMS:** Twilio — used only for the assignment SMS to students and the parent digest SMS. NOT used for coach auth.
 - **Email:** Resend as Supabase Auth custom SMTP. Sends from hello@assignreps.com. Configured in Supabase dashboard — not in app code. Free tier: 3,000 emails/month, 100/day.
 - **Payments:** Stripe (build infrastructure early, not actively charging yet)
 - **Domain:** assignreps.com via Porkbun
@@ -111,7 +111,7 @@ Instructor assigns → Student logs → Instructor sees → Parent digest (weekl
 - **Messaging Service SID:** `MGe3a0a18bf618d102aae9cb26943cd239`
 - **⏳ Still pending — repoint the app to the toll-free number:** update `TWILIO_FROM_NUMBER` to `+18338925640` in `.env.local` AND Vercel env vars. Approved but not yet switched over.
 - **Important:** Use `MessagingServiceSid` parameter when sending SMS, not `From`
-- **Invite SMS body** includes the coach's activity type when available: `Hey <name> — <Coach> assigned you <type> homework. Tap here: <link>` (e.g. "basketball homework"); falls back to `…assigned you work` if `instructor_type` is null/empty or the fetch fails. `instructor_type` is fetched from `coaches` alongside the coach name in `add-student/actions.ts` (added July 17 2026).
+- **Assignment SMS body** includes the coach's activity type when available: `Hey <name> — <Coach> assigned you <type> homework. Tap here: <link>` (e.g. "basketball homework"); falls back to `…assigned you homework` if `instructor_type` is null/empty or the fetch fails. Built in `src/lib/notify-assignment.ts` (July 20 2026); the same copy previously lived in `add-student/actions.ts` as an invite SMS and was removed — see "SMS on assignment" below.
 - **Test setup:** Tony's personal number set as test phone in Supabase with code `123456` to bypass real SMS during local dev
 - **For RJ demo:** manually share student link via text — SMS invite not needed for the demo
 
@@ -182,7 +182,7 @@ coaches
   id, name, email, phone (nullable), instructor_type, created_at
 
 players
-  id, coach_id, name, phone, parent_phone, send_to_parent, token (unique link key), created_at
+  id, coach_id, name, phone, parent_phone, send_to_parent, token (unique link key), last_texted_at, created_at
 
 assignments
   id, coach_id, player_id, exercise_name, target, unit (reps/minutes/target), video_url, week_start, created_at
@@ -198,7 +198,9 @@ custom_exercises
 
 Note: `instructor_type` field added now even though basketball is the only option at launch — enables content branching later without schema rework. `phone` on coaches is nullable since email OTP does not require it.
 
-`send_to_parent` — boolean, default false. Determines whether the homework SMS goes to the student's phone or the parent's phone.
+`send_to_parent` — boolean, default false. Determines whether the homework SMS goes to the student's phone or the parent's phone. ⚠️ The assignment SMS does **not** consult this yet — it always sends to `players.phone`. That's correct today because the recipient toggle governs whose number was typed into `phone` in the first place, but it means `parent_phone` is currently unused by the notify path.
+
+`last_texted_at` — timestamptz, nullable (added July 20 2026). Timestamp of the last assignment SMS sent to this student; powers the once-per-day gate in `notify-assignment.ts`. Written only after Twilio confirms the send, so an outage doesn't burn the student's one text for the day.
 
 **Assignments are not time-bounded — they persist until the instructor clears or deletes them.** The `week_start` column is still stored (set at assign time) but is no longer used as a query filter on the instructor student-detail view, the student page, **or the roster view** (the roster `week_start` filter was removed July 17 2026 — it had bucketed every student into "Nothing assigned" whenever the stored `week_start` differed from the roster's computed Monday). "Clear completed" deletes the player's assignment rows (logs preserved via `ON DELETE SET NULL`). The parent digest still scopes to the current week.
 
@@ -489,6 +491,7 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - Celebrate screen
 - Parent digest page
 - Coach utilities: delete player, edit phone, resend link, copy link
+- SMS to the student on assignment — once per day per student (added July 20 2026)
 - Monday roster view grouped by activity level
 - Landing page (assignreps.com)
 - Sky blue color system
@@ -558,13 +561,19 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - **Instructor all-done banner:** "Ready for next week?" removed — just 🎉 + "[Name] finished everything." (no longer week-based); single-line, no subline.
 - **All-done banner subline:** `rgba(255,255,255,0.55)` soft white, subordinate to the headline (applies to the student banner; the instructor banner is single-line).
 
+### Added July 20 2026
+- **SMS on assignment — built and live.** Assigning work now texts the student their homework link. `notifyAssignmentOnce` (`src/lib/notify-assignment.ts`) is awaited by both `saveAssignment` and `saveCustomAssignment`, and sends via the shared `sendSms` helper (`src/lib/sms.ts`, wraps the Twilio REST call and the `MessagingServiceSid` param).
+- **Once per day, per student, America/Los_Angeles.** The gate compares LA *calendar dates* (via `Intl`, `en-CA` → `YYYY-MM-DD`), not elapsed hours — so a 5pm and an 8pm assignment count as the same day, where plain UTC would roll over mid-evening in California and send twice. Assign five exercises in one sitting → one text. State lives in `players.last_texted_at`, written only after Twilio confirms success so an outage retries on the next assignment instead of silently burning the day's text.
+- **Best-effort and silent by design.** Every failure in the notify path (player lookup, Twilio, the bookkeeping write) is swallowed — a notification problem must never fail an assignment that already saved successfully. Corollary: a coach gets no UI signal when a text doesn't go out. Check Twilio logs, not the app, when debugging a missing SMS.
+- **Add-player SMS intentionally removed.** `addPlayer` no longer texts anyone; its `coaches` select narrowed to `id`, since it now serves only as the profile-completion gate. Adding a student is silent — **the student receives nothing until the coach assigns their first exercise.** This was the point: the old invite SMS said "assigned you homework" at a moment when nothing had been assigned. The message copy dropped the word "new" for the same reason — it's now a student's first touch as often as a repeat.
+- **Still the only student-facing SMS paths:** this assignment text, "resend link" (manual, coach-triggered), and the weekly parent digest.
+
 ---
 
 ## Pending / loose ends
 
 - **Repoint SMS to the toll-free number** — toll-free (833) 892-5640 is APPROVED; update `TWILIO_FROM_NUMBER` to `+18338925640` in `.env.local` AND Vercel env vars (not yet switched over). Old 562 number released; support ticket resolved.
 - **Final legal review of /privacy + /terms** — SMS-consent copy is in place (added July 16–17 2026); a lawyer pass is still advisable before wider launch.
-- **SMS on assignment send** — assigning work is currently silent (no SMS to the student); only add-student and "resend link" send SMS. The notify-on-assign flow is not yet built.
 - hello@assignreps.com Gmail "Send as" setup
 - UI polish pass (see notes below)
 - Stripe infrastructure
