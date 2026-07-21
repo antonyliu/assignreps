@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase-server";
+import { requireCoach } from "@/lib/require-coach";
 import { getActivityLabels } from "@/config/activityTypes";
 import { presetsForExercise } from "@/lib/exercises";
 import type { Assignment } from "@/types/database";
@@ -19,15 +19,14 @@ export default async function CoachPlayerPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const { supabase, user, coach } = await requireCoach();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/instructor");
-
-  const [{ data: player }, { data: coach }] = await Promise.all([
-    supabase.from("players").select("*").eq("id", id).eq("coach_id", user.id).single(),
-    supabase.from("coaches").select("instructor_type").eq("id", user.id).single(),
-  ]);
+  const { data: player } = await supabase
+    .from("players")
+    .select("*")
+    .eq("id", id)
+    .eq("coach_id", user.id)
+    .single();
 
   if (!player) notFound();
 

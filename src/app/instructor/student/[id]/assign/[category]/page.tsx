@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { redirect, notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase-server";
+import { notFound } from "next/navigation";
+import { requireCoach } from "@/lib/require-coach";
 import { CATEGORIES } from "@/lib/exercises";
 
 export default async function AssignExerciseListPage({
@@ -9,10 +9,7 @@ export default async function AssignExerciseListPage({
   params: Promise<{ id: string; category: string }>;
 }) {
   const { id, category } = await params;
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/instructor");
+  const { supabase, user } = await requireCoach();
 
   const { data: player } = await supabase
     .from("players")

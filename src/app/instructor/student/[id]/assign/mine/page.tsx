@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect, notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase-server";
+import { notFound } from "next/navigation";
+import { requireCoach } from "@/lib/require-coach";
 import CustomExerciseMenu from "./CustomExerciseMenu";
 
 export const metadata: Metadata = { title: "My Exercises — Reps" };
@@ -12,10 +12,7 @@ export default async function MyExercisesPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/instructor");
+  const { supabase, user } = await requireCoach();
 
   const [{ data: player }, { data: exercises }] = await Promise.all([
     supabase.from("players").select("name").eq("id", id).eq("coach_id", user.id).single(),

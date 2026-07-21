@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { redirect, notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase-server";
+import { notFound } from "next/navigation";
+import { requireCoach } from "@/lib/require-coach";
 import CustomExerciseScreen from "./CustomExerciseScreen";
 
 export const metadata: Metadata = { title: "Custom Exercise — Reps" };
@@ -11,10 +11,7 @@ export default async function AssignCustomPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/instructor");
+  const { supabase, user } = await requireCoach();
 
   const { data: player } = await supabase
     .from("players")

@@ -388,6 +388,42 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 
 ---
 
+## User Research
+
+### RJ — Session 1 · July 20 2026
+
+**Who RJ is**
+LB Poly CIF champion, still plays competitively at 32. Trains players from age 6 through early college. Deeply invested in the arc of a player, not just weekly reps. Coaches finesse and details at a high level. Generous, casual, relational — his strength is intuitive and in-person, which is also where structure slips.
+
+**Overall signal**
+Open and engaged. Most honest validation: this category just hasn't existed in his world before. Not a painkiller — fills a vacuum he'd normalized. Eyes lit up on the parent visibility piece.
+
+**Count/assign screen**
+Currently runs drills about consistency and makes, not just reps — e.g. "5 in a row" from wing to corner. Logging isn't just "I did it" but a scorecard per set (5/10, 7/10, 9/10). The percentage is the point of the drill. Validates "create your own" but hints the count screen may eventually need a makes/attempts mode.
+
+**Progress data over time**
+Sees value in longitudinal tracking. Mentioned imposter syndrome — students doubt themselves and data becomes evidence against the lie. Ultimate measure is always game performance, but the arc of practice data matters. Future feature, not V1.
+
+**Student motivation**
+Some kids are there because parents made them — he holds that as reality, not a problem to fix. Talked about students needing to "commit" — almost a handshake moment. Reps could formalize that: getting the link means you've earned it. That said, he's also giving it to his entire HS team, so it's not strictly gatekept.
+
+**Student agency (speculative, late in conversation)**
+Floated the idea of students setting their own goals — working toward something they named, not just executing the coach's plan. Interesting future direction, not a core revision signal.
+
+**Gaming/cheating**
+Students could spam the counter, but the makes/percentage format is a natural deterrent — harder to convincingly fake a scorecard. Ultimately coaches just know: seeing them in session or a game is his "cheat code." Reps doesn't need to be cheat-proof. He is.
+
+**Parents**
+Surfaced parent value unprompted. Framed parents as allies who hold students accountable, not just observers. Liked the parent phone toggle immediately. Current reality: parent debrief happens at pickup in 2 fragile minutes. Reps is a better version of that for parents who want it.
+
+**Curriculum blocks**
+Runs themes across students — "right now I'm having my kids do X." Assignments aren't always one-off; sometimes it's a group focus for a period of time.
+
+**Between-session communication today**
+Informal — text here and there depending on student commitment level. No structured follow-up system. Reps fills a vacuum, doesn't disrupt anything.
+
+---
+
 ## Stranger signup incident (July 14 2026)
 
 - An unknown user attempted a signup with `jewellanne032499@gmail.com`. The email bounced; a user record was created in Supabase auth with "waiting for verification" status and **deleted manually**.

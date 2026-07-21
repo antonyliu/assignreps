@@ -17,12 +17,18 @@ export async function addPlayer(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not authenticated." };
 
-  // Fetch coach name + activity type for the SMS
+  // Fetch coach name + activity type for the SMS. This also serves as the
+  // profile-completion gate at the mutation layer: an authed user with no
+  // coaches row hasn't finished signup and must not create players (matching
+  // the requireCoach() gate on the pages; also avoids a raw foreign-key error
+  // from players.coach_id -> coaches.id).
   const { data: coach } = await supabase
     .from("coaches")
     .select("name, instructor_type")
     .eq("id", user.id)
     .single();
+
+  if (!coach) return { ok: false, error: "Finish signing up before adding players." };
 
   const token = crypto.randomUUID();
 

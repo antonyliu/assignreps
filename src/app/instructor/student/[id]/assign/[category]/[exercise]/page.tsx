@@ -1,5 +1,5 @@
-import { redirect, notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase-server";
+import { notFound } from "next/navigation";
+import { requireCoach } from "@/lib/require-coach";
 import { CATEGORIES } from "@/lib/exercises";
 import CountScreen from "./CountScreen";
 
@@ -9,10 +9,7 @@ export default async function AssignCountPage({
   params: Promise<{ id: string; category: string; exercise: string }>;
 }) {
   const { id, category, exercise } = await params;
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/instructor");
+  const { supabase, user } = await requireCoach();
 
   const { data: player } = await supabase
     .from("players")

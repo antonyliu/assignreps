@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase-server";
+import { requireCoach } from "@/lib/require-coach";
 import { LogoMini } from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import { getActivityLabels } from "@/config/activityTypes";
@@ -32,13 +31,9 @@ const GROUP_STYLE: Record<Group, { title: string; bg: string; text: string; dot:
 export const metadata: Metadata = { title: "Students — Reps" };
 
 export default async function RosterPage() {
-  const supabase = await createClient();
+  const { supabase, user, coach } = await requireCoach();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/instructor");
-
-  const [{ data: coach }, { data: players }, { data: assignments }] = await Promise.all([
-    supabase.from("coaches").select("name, instructor_type").eq("id", user.id).single(),
+  const [{ data: players }, { data: assignments }] = await Promise.all([
     supabase.from("players").select("*").eq("coach_id", user.id).order("created_at"),
     // Assignments are not time-bounded — grouping reflects every assignment
     // that still exists (they persist until cleared), matching the student
