@@ -49,6 +49,10 @@ export async function saveCustomAssignment(
     target,
     unit,
     week_start: weekStart,
+    // Create-your-own has no category to infer from, so makes stay off. A coach
+    // who wants them can enable it next time from "My exercises", which runs
+    // through the count screen and its toggle.
+    track_makes: false,
   });
 
   if (error) return { ok: false, error: error.message };

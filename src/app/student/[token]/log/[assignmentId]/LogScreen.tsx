@@ -14,6 +14,7 @@ type Props = {
   unit: string;
   alreadyLogged: number;
   coachName: string;
+  trackMakes: boolean;
 };
 
 // Quick-add buttons tuned to a realistic range for the assignment: minutes get
@@ -34,11 +35,15 @@ export default function LogScreen({
   unit,
   alreadyLogged,
   coachName,
+  trackMakes,
 }: Props) {
   const router = useRouter();
   const [added, setAdded]   = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState("");
+  // Kept as a string so an empty field stays empty — "" means "didn't say",
+  // which is not the same as 0.
+  const [makesInput, setMakesInput] = useState("");
 
   const current = Math.min(alreadyLogged + added, target);
   const pct     = target > 0 ? Math.round((current / target) * 100) : 0;
@@ -51,7 +56,10 @@ export default function LogScreen({
   async function handleSave() {
     if (added < 1) return;
     setSaving(true);
-    const result = await saveLog(playerId, assignmentId, added);
+    const parsed = parseInt(makesInput, 10);
+    const makes =
+      !trackMakes || makesInput.trim() === "" || Number.isNaN(parsed) ? null : parsed;
+    const result = await saveLog(playerId, assignmentId, added, makes);
     setSaving(false);
     if (!result.ok) { setError(result.error); return; }
     const remaining = Math.max(0, target - current);
@@ -113,6 +121,24 @@ export default function LogScreen({
           </button>
         ))}
       </div>
+
+      {trackMakes && (
+        <div className="mt-3">
+          <label htmlFor="makes" className="block text-[12px] text-reps-sub mb-1.5">
+            How many did you make? <span className="text-reps-dim">(optional)</span>
+          </label>
+          <input
+            id="makes"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={makesInput}
+            onChange={(e) => setMakesInput(e.target.value)}
+            placeholder="—"
+            className="w-full bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-3 text-base text-center text-reps-ink outline-none focus:border-reps-orange transition-colors placeholder:text-reps-dim"
+          />
+        </div>
+      )}
 
       <div
         className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"

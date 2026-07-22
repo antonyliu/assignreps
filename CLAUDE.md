@@ -276,13 +276,55 @@ The default exercise libraries are the product experience — not custom creatio
 
 ## Exercise categories + defaults (Basketball)
 
-**Shooting** (reps): Form shooting 50, Free throws 50, Mid-range 50, Corner 3s 25, Catch & shoot 50
-**Ball-handling** (minutes): Stationary dribbling 10, Two-ball 10, Crossovers 5, Figure 8s 5
-**Finishing** (reps): Layups right 25, Layups left 25, Floaters 20
-**Footwork** (reps): Pivots 20, Jump stops 20, Defensive slides 10
-**Conditioning** (reps): Suicides 10, Sprints 10, Jump rope 5
+Source of truth: `src/lib/exercises.ts`. **30 exercises across 6 categories** as of
+July 22 2026. Numbers after each name are its `default`; the category's preset row
+(`quick`) is listed per category. A trailing `[unit, presets]` marks an exercise
+that overrides its category.
 
-Custom exercise: name + track type (reps/time/target) + optional video URL
+**Shooting** (reps) · presets 25 · 50 · 100 · 200
+Form shooting 50, Free throws 50, Mid-range jumpers 50, Corner 3s 25, Catch & shoot 50, Elbow jumpers 25, Short corner jumpers 25, Dribble pull-ups 25
+
+**Ball-handling** (minutes) · presets 5 · 10 · 15 · 20
+Stationary dribbling 10, Two-ball dribbling 10, Crossovers 5, Figure 8s 5, Dribble series 10
+
+**Finishing** (reps) · presets 10 · 20 · 50 · 100
+Layups (right hand) 20, Layups (left hand) 20, Floaters 20, Euro-step 20, Hop-step 20, Spin 20
+
+**Footwork** (reps) · presets 10 · 20 · 30 · 50
+Pivots 20, Jump stops 20, Defensive slides 10 `[minutes, 5/10/15/20]`
+
+**Conditioning** (reps) · presets 5 · 10 · 15 · 20
+Suicides 10, Sprints (baseline to baseline) 10, Jump rope 10 `[minutes, 5/10/15]`, Planks 2 `[minutes, 1/2/3/5]`, Isometric squats 2 `[minutes, 1/2/3/5]`, Pick-up basketball 30 `[minutes, 20/30/45/60]`
+
+**Spot shots** (reps) · presets 5 · 10 · 15 · 20
+Right corner-to-wing 10, Left corner-to-wing 10 — sets of 5 shots, not total reps
+
+Custom exercise: name + track type (reps/minutes) + optional video URL
+
+### Two per-exercise overrides, and the invariant they must respect
+
+`unit` and `quick` are category properties; an `Exercise` may override either.
+Both resolve the same way — `ex.unit ?? cat.unit`, `ex.quick ?? cat.quick`.
+
+- **`unit`** — for timed drills sitting in a reps category (defensive slides, jump
+  rope, planks, isometric squats, pick-up basketball). **Ten exercises are
+  minutes-based**: those five, plus all five Ball-handling drills, which inherit it.
+- **`quick`** — for exercises whose scale differs from their category's. Conditioning
+  runs suicides in tens but holds in single minutes, so five of its six entries
+  carry their own preset row.
+
+> ⚠️ **INVARIANT: every exercise's `default` must appear in whichever `quick` array
+> wins.** If it doesn't, that count screen opens with *no preset highlighted and the
+> number input hidden* — the coach sees no sign of the target "Send" will assign.
+> This shipped once (layups defaulted to 25 while Finishing's presets were
+> `[20,50,100]`) and is the reason Finishing carried a 25 until the presets were
+> reworked. Re-check after any edit to this file.
+
+**Both consumers must honour an override**, or it sits in the config doing nothing:
+`assign/[category]/[exercise]/page.tsx` (the count screen) and `presetsForExercise`
+in `exercises.ts` (the Edit-amount modal on instructor student-detail). The log
+screen is unrelated — it computes its own quick-add buttons in `logPresets()` from
+unit and target.
 
 ---
 
@@ -614,6 +656,17 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - **Add-student copy fixed** — both helper strings said the student would get a text, which stopped being true when the invite SMS was removed July 20. They now name the real trigger: "They'll get a text when you assign work."
 - **Landing page: product loop section** (see "Landing page copy" above) — four phone mocks, dark footer, reworked bullets, hero no longer viewport-filling, "I'm a student" removed. Live on prod.
 - **Verified on staging:** Conditioning → Jump rope (minutes + label), Finishing → Layups right (opens with 25 selected), Shooting → Free throws (unchanged control). Confirmed in a browser against the deployed build.
+
+### Added July 22 2026 — exercise library reworked (live on prod, `0102d83`)
+- **Per-exercise `quick` override** added alongside the existing `unit` one, because a category can mix scales — Conditioning runs suicides in tens and planks in single minutes. Resolved as `ex.quick ?? cat.quick`. Both consumers updated: the count screen and `presetsForExercise` (the Edit-amount modal, easy to miss).
+- **Presets grounded per category:** Finishing `[20,25,50,100]` → `[10,20,50,100]`, Footwork `[10,20,50]` → `[10,20,30,50]`. Holds run `[1,2,3,5]`, jump rope `[5,10,15]`, pick-up basketball `[20,30,45,60]`.
+- **Both layups moved 25 → 20.** Not cosmetic — dropping 25 from Finishing's presets would otherwise have left them with no preset selected, re-creating the exact bug fixed on July 21.
+- **Defensive slides is now minutes** (`[5,10,15,20]`, default 10) — it was rep-counted in a reps category despite being a timed drill.
+- **Jump rope default 5 → 10; planks and isometric squats 5 → 2** (single-minute holds). **Spot shots defaults 5 → 10** — read as sets of 5 shots, not total reps.
+- **New:** Dribble series (Ball-handling, minutes 10), Dribble pull-ups (Shooting, 25), Pick-up basketball (Conditioning, minutes 30).
+- **Removed from Shooting:** Off the dribble, Midrange totals, 3pt totals — redundant; the planned makes-logging feature covers that use case. The first two never shipped; 3pt totals reached staging for minutes only.
+- **Ball-handling left alone.** Note its defaults are *not* uniform: Crossovers and Figure 8s are 5 while the rest are 10. Both are valid presets, so nothing breaks.
+- **⚠️ Not verified in a browser.** Checked by `tsc` plus a scripted assertion over all 30 exercises (every `default` lands on a visible preset, no duplicate names or slugs) — but no screen was opened, unlike the July 21 batch. Worth confirming Conditioning → Planks (`1·2·3·5`, 2 selected, minutes label), Footwork → Defensive slides (now minutes), Finishing → Layups right (`10·20·50·100`, 20 selected), and the Edit-amount modal on a Planks assignment.
 
 ---
 

@@ -8,14 +8,21 @@ export async function saveLog(
   playerId: string,
   assignmentId: string,
   amount: number,
+  makes: number | null = null,
 ): Promise<SaveLogResult> {
   if (amount < 1) return { ok: false, error: "Nothing to save." };
+
+  // Null stays null — "didn't say" is a real answer and must not collapse to 0.
+  // Negatives are clamped rather than rejected: the DB check would fail the whole
+  // insert and lose the reps the student actually did.
+  const safeMakes = makes === null || Number.isNaN(makes) ? null : Math.max(0, Math.round(makes));
 
   const supabase = await createClient();
   const { error } = await supabase.from("logs").insert({
     player_id: playerId,
     assignment_id: assignmentId,
     amount,
+    makes: safeMakes,
   });
 
   if (error) return { ok: false, error: error.message };

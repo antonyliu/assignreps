@@ -15,6 +15,7 @@ type Props = {
   defaultTarget: number;
   unit: Unit;
   quickCounts: number[];
+  defaultTrackMakes: boolean;
 };
 
 export default function CountScreen({
@@ -25,9 +26,15 @@ export default function CountScreen({
   defaultTarget,
   unit,
   quickCounts,
+  defaultTrackMakes,
 }: Props) {
   const router = useRouter();
   const [target, setTarget] = useState(defaultTarget);
+  // The toggle is always offered — a coach may well score a timed drill by makes
+  // — but a minutes assignment doesn't default to it, since "makes out of 10
+  // minutes" is not what most timed drills mean. Category default applies to
+  // rep-based work only; timed work is opt-in.
+  const [trackMakes, setTrackMakes] = useState(unit !== "minutes" && defaultTrackMakes);
   // No presets (e.g. a saved custom exercise) → show the input directly.
   const [showCustom, setShowCustom] = useState(quickCounts.length === 0);
   const [error, setError]   = useState("");
@@ -48,7 +55,7 @@ export default function CountScreen({
     setError("");
     if (!target || target < 1) { setError("Enter a target greater than 0."); return; }
     setLoading(true);
-    const result = await saveAssignment(playerId, exerciseName, target, unit);
+    const result = await saveAssignment(playerId, exerciseName, target, unit, trackMakes);
     if (!result.ok) { setLoading(false); setError(result.error); return; }
     setSent(true);
   }
@@ -140,6 +147,31 @@ export default function CountScreen({
           + enter your own
         </button>
       )}
+
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div className="min-w-0">
+          <div className="text-[14px] font-medium text-reps-ink">Track makes?</div>
+          <div className="text-[12px] text-reps-sub mt-0.5">
+            Lets {playerName} log how many they made.
+          </div>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={trackMakes}
+          aria-label="Track makes"
+          onClick={() => setTrackMakes((v) => !v)}
+          className={`relative shrink-0 w-[46px] h-[26px] rounded-full transition-colors ${
+            trackMakes ? "bg-reps-orange" : "bg-reps-line"
+          }`}
+        >
+          <span
+            className={`absolute top-[3px] left-[3px] w-5 h-5 rounded-full bg-white transition-transform ${
+              trackMakes ? "translate-x-5" : ""
+            }`}
+          />
+        </button>
+      </div>
 
       <button
         onClick={handleConfirm}

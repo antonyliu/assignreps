@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireCoach } from "@/lib/require-coach";
-import { CATEGORIES } from "@/lib/exercises";
+import { CATEGORIES, defaultTrackMakes } from "@/lib/exercises";
 import CountScreen from "./CountScreen";
 
 export default async function AssignCountPage({
@@ -35,6 +35,7 @@ export default async function AssignCountPage({
       defaultTarget={ex.default}
       unit={ex.unit ?? cat.unit}
       quickCounts={ex.quick ?? cat.quick}
+      defaultTrackMakes={defaultTrackMakes(category)}
     />
   );
 }

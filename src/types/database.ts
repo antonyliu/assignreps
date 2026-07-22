@@ -31,6 +31,9 @@ export type Assignment = {
   video_url: string | null
   week_start: string
   created_at: string
+  /** Coach's choice at assign time: may the student record makes for this drill?
+   *  Defaults on for shooting-type categories, off everywhere else. */
+  track_makes: boolean
 }
 
 export type Log = {
@@ -39,4 +42,8 @@ export type Log = {
   assignment_id: string
   amount: number
   logged_at: string
+  /** Optional even when the assignment tracks makes. Null = "logged the reps,
+   *  didn't say how many went in" and is NOT the same as 0 = "made none" —
+   *  anything aggregating these must keep them distinct. */
+  makes: number | null
 }

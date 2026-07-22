@@ -24,6 +24,18 @@ export type Category = {
   exercises: Exercise[]
 }
 
+// Default for the "Track makes?" toggle: on for every preset category, and the
+// coach turns it off per assignment when a drill isn't scored that way. Custom
+// exercises (create-your-own and saved customs) have no category and stay off —
+// nothing to infer from, and the coach can switch them on at the count screen.
+//
+// Membership is tested against CATEGORIES rather than a separate list, so adding
+// a category can't accidentally opt out of makes, and a non-category slug (e.g.
+// "mine") resolves to false on its own.
+export function defaultTrackMakes(categoryKey?: string): boolean {
+  return categoryKey !== undefined && categoryKey in CATEGORIES;
+}
+
 // The count-screen preset buttons for a given exercise, found by matching the
 // exercise name to its category. Honours a per-exercise `quick` override before
 // falling back to the category's. Custom exercises (no category) return [] — the

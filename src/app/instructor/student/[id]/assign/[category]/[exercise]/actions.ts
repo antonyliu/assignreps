@@ -11,6 +11,7 @@ export async function saveAssignment(
   exerciseName: string,
   target: number,
   unit: Unit,
+  trackMakes = false,
 ): Promise<SaveAssignmentResult> {
   const supabase = await createClient();
 
@@ -32,6 +33,7 @@ export async function saveAssignment(
     target,
     unit,
     week_start: weekStart,
+    track_makes: trackMakes,
   });
 
   if (error) return { ok: false, error: error.message };

@@ -25,7 +25,7 @@ export default async function LogPage({
   // Fetch assignment (must belong to this player)
   const { data: assignment } = await supabase
     .from("assignments")
-    .select("id, exercise_name, target, unit")
+    .select("id, exercise_name, target, unit, track_makes")
     .eq("id", assignmentId)
     .eq("player_id", player.id)
     .single();
@@ -52,6 +52,7 @@ export default async function LogPage({
       unit={assignment.unit}
       alreadyLogged={Math.min(alreadyLogged, assignment.target)}
       coachName={coachName}
+      trackMakes={assignment.track_makes ?? false}
     />
   );
 }

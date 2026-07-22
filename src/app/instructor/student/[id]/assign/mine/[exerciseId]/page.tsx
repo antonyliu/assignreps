@@ -35,6 +35,9 @@ export default async function AssignCustomCountPage({
       defaultTarget={ex.default_amount}
       unit={unit}
       quickCounts={[]}
+      // Saved customs have no category to infer from — off unless the coach
+      // flips the toggle on this screen.
+      defaultTrackMakes={false}
     />
   );
 }

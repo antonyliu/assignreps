@@ -41,15 +41,23 @@ export default async function CoachPlayerPage({
 
   // Sum every log per assignment so each card can show real progress and a
   // completed (sum >= target) state.
+  // Makes are accumulated separately, and only from logs that actually recorded
+  // them: a log with makes null means "didn't say", so counting its amount as
+  // attempts would silently depress the percentage.
   const assignmentIds = assignmentList.map((a) => a.id);
   const loggedByAssignment: Record<string, number> = {};
+  const makesByAssignment: Record<string, { makes: number; attempts: number }> = {};
   if (assignmentIds.length > 0) {
     const { data: logs } = await supabase
       .from("logs")
-      .select("assignment_id, amount")
+      .select("assignment_id, amount, makes")
       .in("assignment_id", assignmentIds);
     for (const l of logs ?? []) {
       loggedByAssignment[l.assignment_id] = (loggedByAssignment[l.assignment_id] ?? 0) + l.amount;
+      if (l.makes === null || l.makes === undefined) continue;
+      const entry = (makesByAssignment[l.assignment_id] ??= { makes: 0, attempts: 0 });
+      entry.makes += l.makes;
+      entry.attempts += l.amount;
     }
   }
 
@@ -115,6 +123,14 @@ export default async function CoachPlayerPage({
               const logged = loggedByAssignment[a.id] ?? 0;
               const done = logged >= a.target;
               const pct = a.target > 0 ? Math.min(100, Math.round((logged / a.target) * 100)) : 0;
+              // Bad data (more makes than attempts) still shows the raw numbers —
+              // only the percentage, which would read over 100%, is suppressed.
+              const m = makesByAssignment[a.id];
+              const showMakes = m !== undefined && m.attempts > 0;
+              const makesPct =
+                showMakes && m.makes <= m.attempts
+                  ? Math.round((m.makes / m.attempts) * 100)
+                  : null;
               return (
                 <div
                   key={a.id}
@@ -137,6 +153,14 @@ export default async function CoachPlayerPage({
                         style={{ width: `${pct}%` }}
                       />
                     </div>
+                    {showMakes && (
+                      <div className="mt-2 text-[11px] text-reps-dim">
+                        made {m.makes}/{m.attempts}
+                        {makesPct !== null && (
+                          <span className="text-[var(--reps-label)]"> · {makesPct}%</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <AssignmentMenu
                     assignmentId={a.id}
