@@ -237,11 +237,32 @@ saved-custom exercises — off is opt-in, never locked out. Wired through
 `defaultTrackMakes()` in `src/lib/exercises.ts`, which tests membership against
 `CATEGORIES` so a new category can't accidentally opt out.
 
-**⚠️ Makes cannot be entered retroactively.** They are only capturable in the
-same submit that logs reps. Once an assignment reaches its target the quick-add
-buttons and "Log it" disable, so a student who logged reps and skipped the field
-can never supply it, and the coach sees no percentage for that assignment —
-permanently. Observed in testing on a real row. **Undecided; see Pending.**
+**⚠️ Makes cannot be entered retroactively — accepted limitation, July 22 2026.**
+They are only capturable in the same submit that logs reps. Once an assignment
+reaches its target the quick-add buttons and "Log it" disable, so a student who
+logged reps and skipped the field can never supply it, and the coach sees no
+percentage for that assignment. Observed on a real row during testing.
+
+A fix was attempted and reverted. Two things killed it, both worth knowing before
+anyone tries again:
+
+1. **`logs.amount` has a positivity CHECK — `logs_amount_check`.** It predates
+   this work, was created directly in the Supabase dashboard, and exists in **no
+   migration file in this repo**. A makes-only entry would need `amount = 0`, and
+   the insert is rejected: `new row for relation "logs" violates check constraint
+   "logs_amount_check"`. (It surfaced properly in the log screen's error banner —
+   that path works.)
+2. **The data model doesn't support it.** `makes` is per *log entry*, and a
+   retroactive entry has no log to attach to. Since the coach's percentage sums
+   makes across logs, a student typing "18" at 25/25 — meaning "of my 25 I made
+   18" — would be *added* to the earlier 14, giving 32 makes on 20 attempts and
+   suppressing the percentage as bad data. The student means replace; the schema
+   means append.
+
+A real fix is either an RLS policy letting the anon student role UPDATE the last
+log's `makes` (a loosening of an already-open table), or moving makes to a
+per-assignment total. Both are schema changes on the shared project — not a UI
+tweak.
 
 `send_to_parent` — boolean, default false. Determines whether the homework SMS goes to the student's phone or the parent's phone. ⚠️ The assignment SMS does **not** consult this yet — it always sends to `players.phone`. That's correct today because the recipient toggle governs whose number was typed into `phone` in the first place, but it means `parent_phone` is currently unused by the notify path.
 
@@ -719,7 +740,7 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 ## Pending / loose ends
 
 ### Unverified in production — check these first
-- **Retroactive makes — undecided, blocks the prod push.** Makes are only capturable in the same submit that logs reps; once an assignment hits its target the log screen freezes and any missing makes are locked out forever. Options discussed: (a) ship as-is and treat makes as a same-moment prompt, (b) keep the log screen usable at 100% so makes can still be added, (c) let the student edit the last log. Not yet chosen.
+- ~~**Retroactive makes — blocks the prod push**~~ — decided July 22 2026: ship as same-moment capture. A fix was attempted and reverted; see "Makes logging" under Database schema for the two blockers (an undocumented `logs_amount_check` constraint, and makes being per-log rather than per-assignment). Revisit only with a real schema decision.
 - **Coach card `made X/Y · Z%` never seen rendered.** Every other part of makes logging was verified against the real database, but this line was only ever checked by re-running its own logic. Antony has the data for it (20 reps / 14 makes → `made 14/20 · 70%`); open his detail screen to confirm. Note an earlier version of this line used `text-reps-label`, a Tailwind class that does not exist — `tsc` cannot catch that, so it needs eyes.
 
 - **⚠️ Assignment SMS is live but unverified end-to-end.** Shipped to prod July 21 2026 (`aaa3154`) and never confirmed by watching a real text arrive. The notify path swallows every failure by design, so a coach gets **no UI signal** when a send fails — "Sent to [name] 🏀" only means the assignment saved. If `TWILIO_*` env vars are wrong in Vercel production, students silently receive nothing and nobody finds out. **RJ will notice immediately if this is broken**, and the add-student copy now promises the text ("They'll get a text when you assign work"). Verify by assigning one exercise to a test student and checking Twilio Console → Monitor → Logs → Messaging.
