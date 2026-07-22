@@ -34,7 +34,7 @@ export default async function AssignCountPage({
       exerciseName={ex.name}
       defaultTarget={ex.default}
       unit={ex.unit ?? cat.unit}
-      quickCounts={cat.quick}
+      quickCounts={ex.quick ?? cat.quick}
     />
   );
 }
