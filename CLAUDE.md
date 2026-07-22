@@ -288,16 +288,54 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 
 ## Landing page copy (current)
 
-- **Eyebrow:** FOR COACHES & INSTRUCTORS
-- **Headline:** Practice homework for your students.
+Verified against the shipped page July 21 2026 — the previous version of this
+section had drifted on the headline, all three bullets, and both CTAs.
+
+- **Eyebrow:** FOR INSTRUCTORS & COACHES (uppercased in CSS)
+- **Headline:** Keep students working between sessions.
 - **Bullets:**
-  - Send work to any student in seconds
-  - Students log it on their phone
-  - You always know where they left off
-- **Primary CTA:** Get started
-- **Secondary CTA:** I'm a student →
-- **Hero:** Two overlapping circles — basketball and piano WebP images
-- **Background:** #ede9e3 (warm off-white)
+  - Assign work in seconds
+  - Students log it from anywhere
+  - The work doesn't stop
+- **Primary CTA:** Try Reps free
+- **Secondary CTA:** none — "I'm a student →" was removed July 21 2026. ⚠️ `/student/login` now has **zero inbound links anywhere in the app**; it works, but only by typing the URL. A student who deletes their SMS cannot get back in on their own — the coach must resend the link.
+- **Hero:** Two overlapping circles — basketball and piano WebP images. Content-height, not viewport-filling (`<main>` has no `flex: 1`), so the product loop breaks the fold.
+- **Background:** #ede9e3 (warm off-white). ⚠️ `/privacy` and `/terms` still use the older `#f8f7f5` — the three light pages do not currently share one background.
+- **Footer:** dark `#1a1d24` with a `1px solid #2a2d36` top border, muted `#8a8fa8` text, `#378add` links. Shares its background with the product loop section, so the border is the only thing separating them.
+
+### Product loop section (added July 21 2026, live on prod)
+
+A dark `#1a1d24` band directly under the hero: heading "Here's how it works."
+(24px mobile / 32px desktop — deliberately smaller than the 32px hero headline
+on mobile), subline "Students get a link. They log it. You see it.", then four
+miniature phone frames with captions — "They get a link / They see their work /
+They log it / You see it's done".
+
+The frames are simplified rebuilds of the real screens (SMS, student home, log
+counter, roster) using the shipped tokens from `globals.css`. Everything inside
+a frame is sized in `em` against the frame's own font-size, which is derived
+from its width (`font-size: calc(var(--pw) / 13)`) — one set of numbers renders
+correctly at both sizes with no second scale. Frames are `9/19`, 263px on
+desktop and 240px on mobile.
+
+Desktop is a centred row spanning the hero's 1100px container; mobile is a
+horizontal scroll-snap track (`scroll-padding-left: 22px` so snapped frames keep
+the 22px gutter) with the next frame peeking in.
+
+**⚠️ 100vw scrollbar caveat.** Desktop frame width is
+`calc((min(1100px, 100vw - 80px) - 48px) / 4)`. On platforms where scrollbars
+take layout space (Windows, most Linux), `100vw` is ~15px wider than the content
+area, so the row can overflow horizontally. Never reproduced in testing — the
+dev browser uses overlay scrollbars, where it measures exact. If it shows up,
+either subtract more (`100vw - 96px`, costing ~4px of edge alignment) or add
+`overflow-x: hidden` to `.loop-section`.
+
+**Frame clearance is tight.** Content is measured to fit, but the log frame
+clears its padding edge by only **1px** — its "Log it" button is `margin-top:
+auto` and pins to the bottom at any frame height. Anything added to that screen
+will clip. Note `scrollHeight` reports **zero** overflow inside these
+`overflow: hidden` flex columns — measure child bottoms against the padding
+edge instead.
 
 ---
 
@@ -568,10 +606,24 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - **Add-player SMS intentionally removed.** `addPlayer` no longer texts anyone; its `coaches` select narrowed to `id`, since it now serves only as the profile-completion gate. Adding a student is silent — **the student receives nothing until the coach assigns their first exercise.** This was the point: the old invite SMS said "assigned you homework" at a moment when nothing had been assigned. The message copy dropped the word "new" for the same reason — it's now a student's first touch as often as a repeat.
 - **Still the only student-facing SMS paths:** this assignment text, "resend link" (manual, coach-triggered), and the weekly parent digest.
 
+### Added July 21 2026
+- **Exercise library expanded** — Elbow jumpers + Short corner jumpers (Shooting); Euro-step, Hop-step, Spin (Finishing); Planks + Isometric squats (Conditioning); new **Spot shots** category (right/left corner-to-wing). 27 exercises across 6 categories.
+- **Fixed: count screens that opened with nothing selected.** Layups right/left default to 25 while Finishing's presets were `[20, 50, 100]`, so both screens opened with no preset highlighted and the number input hidden — the coach saw no sign of the 25 that "Send" would assign. Finishing is now `[20, 25, 50, 100]`. **Invariant to preserve: every exercise's `default` must appear in its category's `quick` array**, or that screen opens with an invisible target.
+- **Per-exercise unit override** — `Exercise` gained an optional `unit` that overrides its category's, resolved at the count screen as `ex.unit ?? cat.unit`. Used for the held drills in the reps-based Conditioning category: jump rope, planks, isometric squats are all **minutes**. Seven exercises are minutes-based in total (the four Ball-handling drills inherit it).
+- **"minutes" label on the count screen** — a 12px `#8a8fa8` line under the preset buttons, shown only when `unit === "minutes"`. The presets are bare numbers, so a coach picking "5" for a timed drill previously had nothing telling them it meant minutes. Rep-based screens are unchanged.
+- **Add-student copy fixed** — both helper strings said the student would get a text, which stopped being true when the invite SMS was removed July 20. They now name the real trigger: "They'll get a text when you assign work."
+- **Landing page: product loop section** (see "Landing page copy" above) — four phone mocks, dark footer, reworked bullets, hero no longer viewport-filling, "I'm a student" removed. Live on prod.
+- **Verified on staging:** Conditioning → Jump rope (minutes + label), Finishing → Layups right (opens with 25 selected), Shooting → Free throws (unchanged control). Confirmed in a browser against the deployed build.
+
 ---
 
 ## Pending / loose ends
 
+### Unverified in production — check these first
+- **⚠️ Assignment SMS is live but unverified end-to-end.** Shipped to prod July 21 2026 (`aaa3154`) and never confirmed by watching a real text arrive. The notify path swallows every failure by design, so a coach gets **no UI signal** when a send fails — "Sent to [name] 🏀" only means the assignment saved. If `TWILIO_*` env vars are wrong in Vercel production, students silently receive nothing and nobody finds out. **RJ will notice immediately if this is broken**, and the add-student copy now promises the text ("They'll get a text when you assign work"). Verify by assigning one exercise to a test student and checking Twilio Console → Monitor → Logs → Messaging.
+- **iOS line above the footer** — a horizontal rule was reported above the footer on mobile that could not be reproduced in devtools at 390px on either localhost or staging: no `<hr>` exists, no element sits between the phone row and the footer, and the scrollbar occupies 0px with `scrollbar-width: none` + `::-webkit-scrollbar { display: none }` already applied (so the webkit rule is **not** the fix — it was already deployed when the line was seen). A `1px solid #2a2d36` footer top border was added July 21 2026 and may mask or resolve it. **Unconfirmed on a real iPhone.** If a line still appears *above* the footer with a gap between it and the border, it is a separate artifact — capture a screenshot before changing anything.
+
+### Everything else
 - **Repoint SMS to the toll-free number** — toll-free (833) 892-5640 is APPROVED; update `TWILIO_FROM_NUMBER` to `+18338925640` in `.env.local` AND Vercel env vars (not yet switched over). Old 562 number released; support ticket resolved.
 - **Final legal review of /privacy + /terms** — SMS-consent copy is in place (added July 16–17 2026); a lawyer pass is still advisable before wider launch.
 - hello@assignreps.com Gmail "Send as" setup
@@ -583,7 +635,7 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - Re-engagement nudge (Monday email)
 - **Gate stranger signups** — signup is currently open to the public; a bot already attempted a signup July 14 2026 (see incident note below). Add invite code / waitlist before broader launch.
 - **Tighten logs RLS policy** — `logs` INSERT/SELECT is currently open. Before wider launch, tighten INSERT to verify the student token matches the player on the assignment.
-- **Roster row layout** — name + progress inline with a thin bar underneath ("X of X done", no taller row) — not yet built. (Assign flow polish itself is done — see July 17–18 changelog.)
+- **Progress bars on roster rows** — each student row on `/instructor/students` should show name + progress inline with a thin bar underneath ("X of X done", without making the row taller). Not yet built; the roster currently conveys progress only through the group pills (Done / In progress / Not started). Note the landing page's roster mock already depicts the *grouped pill* layout, not this. (Assign flow polish itself is done — see July 17–18 changelog.)
 - **Student/player side screens** not yet polished (welcome, log, celebrate — student home was polished July 16 2026).
 - **Parent digest screen** not yet polished.
 - **Sign in flow (returning coach)** not yet polished.

@@ -476,7 +476,7 @@ export default function LandingPage() {
                   }}
                   className="cta-primary hover:opacity-90 active:scale-[0.98] transition-all"
                 >
-                  Get started free
+                  Try Reps free
                 </Link>
               </div>
 
