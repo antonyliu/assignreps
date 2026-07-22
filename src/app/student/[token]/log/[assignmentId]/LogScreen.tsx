@@ -19,18 +19,16 @@ type Props = {
   categoryKey?: string;
 };
 
-// The screen's hero line. Phrased for the drill: shooting categories count shots,
-// finishing counts attempts at the rim, everything else is generic. Minutes win
-// over all of it — you don't take shots for ten minutes' worth of dribbling.
+// The screen's hero line. Kept short enough to hold one line on a 390px phone.
+// Only shooting-type drills get their own noun — finishing and plain rep work
+// share the generic wording, so neither needs a branch. Minutes win over all of
+// it: you don't take shots for ten minutes' worth of dribbling.
 function primaryQuestion(unit: string, trackMakes: boolean, categoryKey?: string): string {
-  if (unit === "minutes") return "How many minutes did you do today?";
-  if (trackMakes) {
-    if (categoryKey === "shooting" || categoryKey === "spot-shots") {
-      return "How many shots did you take today?";
-    }
-    if (categoryKey === "finishing") return "How many did you try today?";
+  if (unit === "minutes") return "How many minutes today?";
+  if (trackMakes && (categoryKey === "shooting" || categoryKey === "spot-shots")) {
+    return "How many shots today?";
   }
-  return "How many did you do today?";
+  return "How many today?";
 }
 
 export default function LogScreen({
@@ -71,6 +69,25 @@ export default function LogScreen({
   const done    = current >= target;
 
   const question = primaryQuestion(unit, trackMakes, categoryKey);
+
+  // Stepper. Clamps the stored value itself — not just what gets saved — so the
+  // number on screen is always the number that will be logged. Typing is left
+  // alone; only the buttons are bounded.
+  const stepCeiling = trackMakes ? Infinity : remainingToTarget;
+  function step(delta: number) {
+    // Functional update, not the closed-over value: taps fired faster than React
+    // re-renders would otherwise all read the same stale number and collapse into
+    // a single increment.
+    setAmountInput((prev) => {
+      const p = parseInt(prev, 10);
+      const base = Number.isNaN(p) ? 0 : Math.max(0, p);
+      return String(Math.min(Math.max(0, base + delta), stepCeiling));
+    });
+  }
+
+  // The whole control is inert only when there is genuinely nothing to log:
+  // a completed assignment that doesn't track makes.
+  const inputLocked = !trackMakes && done && added < 1;
 
   async function handleSave() {
     if (added < 1) return;
@@ -130,17 +147,44 @@ export default function LogScreen({
       >
         {question}
       </label>
-      <input
-        id="amount"
-        type="number"
-        inputMode="numeric"
-        min={0}
-        value={amountInput}
-        onChange={(e) => setAmountInput(e.target.value)}
-        onFocus={(e) => e.target.select()}
-        disabled={!trackMakes && done && added < 1}
-        className="w-full bg-reps-card border border-reps-line rounded-[12px] px-[14px] py-5 text-[38px] font-light text-center text-reps-ink outline-none focus:border-reps-orange transition-colors disabled:opacity-40"
-      />
+      {/* Stepper: tap to nudge, or tap the number to type it outright. */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          aria-label="Decrease"
+          onClick={() => step(-1)}
+          disabled={inputLocked || added < 1}
+          className="shrink-0 w-16 h-16 rounded-full bg-reps-card border border-reps-line text-reps-ink text-[30px] leading-none flex items-center justify-center hover:border-reps-line-hi active:scale-[0.94] active:bg-reps-orange/10 transition-all disabled:opacity-30 disabled:pointer-events-none"
+        >
+          −
+        </button>
+
+        <input
+          id="amount"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={amountInput}
+          onChange={(e) => setAmountInput(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          disabled={inputLocked}
+          // Dim "0" rather than a real value: a stepper with nothing between its
+          // buttons reads as broken, but the field stays empty so there is still
+          // no number to submit by accident.
+          placeholder="0"
+          className="flex-1 min-w-0 bg-transparent border-0 py-4 text-[52px] font-light leading-none text-center text-reps-ink tabular-nums outline-none disabled:opacity-40 placeholder:text-reps-dim placeholder:opacity-50"
+        />
+
+        <button
+          type="button"
+          aria-label="Increase"
+          onClick={() => step(1)}
+          disabled={inputLocked || added >= stepCeiling}
+          className="shrink-0 w-16 h-16 rounded-full bg-reps-orange/15 border border-reps-orange/40 text-reps-orange text-[30px] leading-none flex items-center justify-center hover:bg-reps-orange/25 active:scale-[0.94] transition-all disabled:opacity-30 disabled:pointer-events-none"
+        >
+          +
+        </button>
+      </div>
 
       {trackMakes && (
         <div className="mt-6">
