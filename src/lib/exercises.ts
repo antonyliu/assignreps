@@ -51,7 +51,6 @@ export const CATEGORIES: Record<string, Category> = {
       { name: "Elbow jumpers",      default: 25,  slug: "elbow-jumpers" },
       { name: "Short corner jumpers", default: 25, slug: "short-corner-jumpers" },
       { name: "Dribble pull-ups",   default: 25,  slug: "dribble-pull-ups" },
-      { name: "3pt totals",         default: 25,  slug: "3pt-totals" },
     ],
   },
   handling: {
