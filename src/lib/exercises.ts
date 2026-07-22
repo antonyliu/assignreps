@@ -36,6 +36,17 @@ export function defaultTrackMakes(categoryKey?: string): boolean {
   return categoryKey !== undefined && categoryKey in CATEGORIES;
 }
 
+// The category an exercise belongs to, matched by name — assignments store
+// `exercise_name` as free text, not a category key, so this is the only way back
+// to the category once work has been assigned. Custom exercises match nothing
+// and return undefined; callers must handle that.
+export function categoryKeyForExercise(exerciseName: string): string | undefined {
+  for (const [key, cat] of Object.entries(CATEGORIES)) {
+    if (cat.exercises.some((e) => e.name === exerciseName)) return key;
+  }
+  return undefined;
+}
+
 // The count-screen preset buttons for a given exercise, found by matching the
 // exercise name to its category. Honours a per-exercise `quick` override before
 // falling back to the category's. Custom exercises (no category) return [] — the

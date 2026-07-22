@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
+import { categoryKeyForExercise } from "@/lib/exercises";
 import LogScreen from "./LogScreen";
 
 export const metadata: Metadata = { title: "Log Reps — Reps" };
@@ -50,9 +51,15 @@ export default async function LogPage({
       exerciseName={assignment.exercise_name}
       target={assignment.target}
       unit={assignment.unit}
-      alreadyLogged={Math.min(alreadyLogged, assignment.target)}
+      // Makes assignments report the true total: attempts are the denominator of
+      // the coach's percentage, so a 55-attempt session against a 50 target has
+      // to read 55. Everything else still caps, per the no-inflating rule.
+      alreadyLogged={
+        assignment.track_makes ? alreadyLogged : Math.min(alreadyLogged, assignment.target)
+      }
       coachName={coachName}
       trackMakes={assignment.track_makes ?? false}
+      categoryKey={categoryKeyForExercise(assignment.exercise_name)}
     />
   );
 }

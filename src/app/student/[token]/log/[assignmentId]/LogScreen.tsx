@@ -15,7 +15,23 @@ type Props = {
   alreadyLogged: number;
   coachName: string;
   trackMakes: boolean;
+  /** Undefined for custom exercises, which belong to no category. */
+  categoryKey?: string;
 };
+
+// The screen's hero line. Phrased for the drill: shooting categories count shots,
+// finishing counts attempts at the rim, everything else is generic. Minutes win
+// over all of it — you don't take shots for ten minutes' worth of dribbling.
+function primaryQuestion(unit: string, trackMakes: boolean, categoryKey?: string): string {
+  if (unit === "minutes") return "How many minutes did you do today?";
+  if (trackMakes) {
+    if (categoryKey === "shooting" || categoryKey === "spot-shots") {
+      return "How many shots did you take today?";
+    }
+    if (categoryKey === "finishing") return "How many did you try today?";
+  }
+  return "How many did you do today?";
+}
 
 export default function LogScreen({
   token,
@@ -27,6 +43,7 @@ export default function LogScreen({
   alreadyLogged,
   coachName,
   trackMakes,
+  categoryKey,
 }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -53,10 +70,7 @@ export default function LogScreen({
   const pct     = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   const done    = current >= target;
 
-  // With makes being tracked, "reps" is ambiguous — the number the student is
-  // logging is attempts, and makes are the subset that went in. Minutes are
-  // never attempts, so they keep their own label.
-  const targetLabel = trackMakes && unit === "reps" ? "attempts" : unit;
+  const question = primaryQuestion(unit, trackMakes, categoryKey);
 
   async function handleSave() {
     if (added < 1) return;
@@ -97,16 +111,11 @@ export default function LogScreen({
         </div>
       )}
 
-      <div className="text-center mb-8">
-        <div className="text-[13px] text-reps-sub mb-2">{exerciseName}</div>
-        <div className={`text-[72px] font-light leading-none tracking-[-3px] tabular-nums transition-colors ${done ? "text-[#3dd68c]" : "text-[#f0b429]"}`}>
-          {current}
-        </div>
-        <div className="text-[13px] text-reps-dim mt-1.5">
-          of {target} {targetLabel}
-        </div>
+      {/* Reference, not hero: what's already banked, with the bar under it. */}
+      <div className="text-[13px] text-reps-sub mb-1">{exerciseName}</div>
+      <div className="text-[13px] text-reps-dim mb-2 tabular-nums">
+        {current} of {target} done
       </div>
-
       <div className="h-1.5 bg-reps-line rounded-full overflow-hidden mb-8">
         <div
           className={`h-full rounded-full transition-all duration-300 ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
@@ -114,27 +123,28 @@ export default function LogScreen({
         />
       </div>
 
-      <div>
-        <label htmlFor="amount" className="block text-[12px] text-reps-sub mb-1.5">
-          How many {targetLabel} did you do?
-        </label>
-        <input
-          id="amount"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={amountInput}
-          onChange={(e) => setAmountInput(e.target.value)}
-          onFocus={(e) => e.target.select()}
-          disabled={!trackMakes && done && added < 1}
-          placeholder="0"
-          className="w-full bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-4 text-[32px] font-light text-center text-reps-ink outline-none focus:border-reps-orange transition-colors placeholder:text-reps-dim disabled:opacity-40"
-        />
-      </div>
+      {/* The hero: one question, then the field that answers it. */}
+      <label
+        htmlFor="amount"
+        className="block text-[22px] font-semibold tracking-[-0.3px] leading-snug text-reps-ink mb-4"
+      >
+        {question}
+      </label>
+      <input
+        id="amount"
+        type="number"
+        inputMode="numeric"
+        min={0}
+        value={amountInput}
+        onChange={(e) => setAmountInput(e.target.value)}
+        onFocus={(e) => e.target.select()}
+        disabled={!trackMakes && done && added < 1}
+        className="w-full bg-reps-card border border-reps-line rounded-[12px] px-[14px] py-5 text-[38px] font-light text-center text-reps-ink outline-none focus:border-reps-orange transition-colors disabled:opacity-40"
+      />
 
       {trackMakes && (
-        <div className="mt-3">
-          <label htmlFor="makes" className="block text-[12px] text-reps-sub mb-1.5">
+        <div className="mt-6">
+          <label htmlFor="makes" className="block text-[14px] text-reps-sub mb-2">
             How many did you make? <span className="text-reps-dim">(optional)</span>
           </label>
           <input
@@ -145,7 +155,7 @@ export default function LogScreen({
             value={makesInput}
             onChange={(e) => setMakesInput(e.target.value)}
             placeholder="—"
-            className="w-full bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-3 text-base text-center text-reps-ink outline-none focus:border-reps-orange transition-colors placeholder:text-reps-dim"
+            className="w-full bg-reps-card border border-reps-line rounded-[12px] px-[14px] py-4 text-[24px] font-light text-center text-reps-ink outline-none focus:border-reps-orange transition-colors placeholder:text-reps-dim"
           />
         </div>
       )}
