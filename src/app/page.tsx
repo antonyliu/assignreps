@@ -43,6 +43,307 @@ const bullets = [
   { icon: Layers,      text: "Everything in one place" },
 ];
 
+/* ---------- The product-loop section ----------------------------------------
+   Four miniature phones showing the real screens. Everything inside a phone is
+   sized in `em` against the frame's own font-size, which is derived from its
+   width (see .loop-phone in the stylesheet) — so one set of numbers renders
+   correctly at 160px on desktop and at 80vw on mobile without a second scale.
+   Colours are the shipped tokens from globals.css, not approximations.        */
+
+const T = {
+  bg: "#111318",
+  card: "#1c1f26",
+  raised: "#22252e",
+  line: "#2a2d36",
+  ink: "#e8eaf0",
+  sub: "#8a8fa8",
+  label: "#c8cdd8",
+  blue: "#378add",
+  green: "#3dd68c",
+  yellow: "#f0b429",
+};
+
+function MiniLogo() {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3em" }}>
+      <span
+        style={{
+          width: "0.85em",
+          height: "0.85em",
+          borderRadius: "0.22em",
+          background: "#252830",
+          display: "inline-block",
+        }}
+      />
+      <span style={{ fontSize: "0.62em", fontWeight: 600, color: "#6a6a72" }}>Reps</span>
+    </span>
+  );
+}
+
+/* A progress bar. `pct` is 0-100, `color` a token. */
+function MiniBar({ pct, color }: { pct: number; color: string }) {
+  return (
+    <div style={{ height: "0.28em", borderRadius: "999px", background: T.line, overflow: "hidden" }}>
+      <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: "999px" }} />
+    </div>
+  );
+}
+
+/* Student-home assignment card — mirrors the real tappable card. */
+function MiniCard({
+  name,
+  right,
+  pct,
+  color,
+  done,
+}: {
+  name: string;
+  right: string;
+  pct: number;
+  color: string;
+  done?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        background: "#161a20",
+        border: `1px solid ${T.line}`,
+        borderRadius: "0.62em",
+        padding: "0.55em 0.62em",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.45em", gap: "0.4em" }}>
+        <span style={{ fontSize: "0.74em", fontWeight: 500, color: T.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {name}
+        </span>
+        <span style={{ fontSize: "0.64em", color: done ? T.green : T.label, whiteSpace: "nowrap", flexShrink: 0 }}>
+          {right}
+        </span>
+      </div>
+      <MiniBar pct={pct} color={color} />
+    </div>
+  );
+}
+
+/* Roster row — avatar initial, name, status subline. */
+function MiniRow({ initial, name, sub }: { initial: string; name: string; sub: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "0.45em", padding: "0.35em 0" }}>
+      <span
+        style={{
+          width: "1.35em",
+          height: "1.35em",
+          borderRadius: "999px",
+          background: T.raised,
+          color: T.label,
+          fontSize: "0.62em",
+          fontWeight: 600,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {initial}
+      </span>
+      <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span style={{ fontSize: "0.74em", fontWeight: 500, color: T.ink }}>{name}</span>
+        <span style={{ fontSize: "0.6em", color: T.label }}>{sub}</span>
+      </span>
+    </div>
+  );
+}
+
+function MiniPill({ text, color, bg }: { text: string; color: string; bg: string }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.3em",
+        background: bg,
+        color,
+        fontSize: "0.6em",
+        fontWeight: 600,
+        padding: "0.25em 0.55em",
+        borderRadius: "999px",
+      }}
+    >
+      <span style={{ width: "0.4em", height: "0.4em", borderRadius: "999px", background: color }} />
+      {text}
+    </span>
+  );
+}
+
+/* 1 — the SMS. Copy is the real body from src/lib/notify-assignment.ts. */
+function ScreenText() {
+  return (
+    <>
+      {/* Opens like a real thread: who it's from, when it landed, the message,
+          and a delivery receipt. Deliberately one-sided — Reps sends outbound
+          SMS only and processes no replies, so no outgoing bubble. */}
+      <div style={{ textAlign: "center", marginBottom: "1em" }}>
+        <div
+          style={{
+            width: "2em",
+            height: "2em",
+            borderRadius: "999px",
+            background: T.raised,
+            color: T.label,
+            fontSize: "0.7em",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 0.45em",
+          }}
+        >
+          RJ
+        </div>
+        <div style={{ fontSize: "0.66em", fontWeight: 500, color: T.ink }}>Coach RJ</div>
+      </div>
+      <div style={{ fontSize: "0.54em", color: T.sub, textAlign: "center", marginBottom: "0.9em" }}>
+        Today 4:12 PM
+      </div>
+      <div
+        style={{
+          alignSelf: "flex-start",
+          maxWidth: "96%",
+          background: T.raised,
+          borderRadius: "1.15em",
+          padding: "0.7em 0.85em",
+          fontSize: "0.82em",
+          lineHeight: 1.45,
+          color: T.ink,
+        }}
+      >
+        Hey Neo — Coach RJ assigned you basketball homework. Tap here:{" "}
+        <span style={{ color: T.blue }}>assignreps.com/student/…</span>
+      </div>
+      <div style={{ alignSelf: "flex-start", fontSize: "0.5em", color: T.sub, margin: "0.45em 0 0 0.4em" }}>
+        Delivered
+      </div>
+    </>
+  );
+}
+
+/* 2 — student home, mid-week. */
+function ScreenHome() {
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.4em" }}>
+        <MiniLogo />
+      </div>
+      <div style={{ marginBottom: "1.1em" }}>
+        <div style={{ fontSize: "1.4em", fontWeight: 600, letterSpacing: "-0.5px", color: T.ink }}>Neo</div>
+        <div style={{ fontSize: "0.64em", color: T.label, marginTop: "0.15em" }}>Coach RJ&apos;s assignments</div>
+      </div>
+      <div style={{ fontSize: "0.58em", fontWeight: 600, letterSpacing: "1px", color: T.sub, marginBottom: "0.7em" }}>
+        ASSIGNMENTS
+      </div>
+      {/* One of each state, top to bottom: finished, underway, untouched. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
+        <MiniCard name="Form shooting" right="✓ Done" pct={100} color={T.green} done />
+        <MiniCard name="Free throws"   right="30/50"  pct={60}  color={T.yellow} />
+        <MiniCard name="Corner 3s"     right="0/25"   pct={0}   color={T.line} />
+      </div>
+    </>
+  );
+}
+
+/* 3 — the counter. Presets are the real ones for a 50-rep target. */
+function ScreenLog() {
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1.6em" }}>
+        <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
+        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.sub }}>Log reps</span>
+      </div>
+      <div style={{ textAlign: "center", marginBottom: "1.4em" }}>
+        <div style={{ fontSize: "0.7em", color: T.label, marginBottom: "0.5em" }}>Form shooting</div>
+        <div style={{ fontSize: "3em", fontWeight: 600, letterSpacing: "-1px", lineHeight: 1, color: T.yellow }}>30</div>
+        <div style={{ fontSize: "0.64em", color: T.label, marginTop: "0.45em" }}>of 50 reps</div>
+      </div>
+      <div style={{ marginBottom: "1.4em" }}>
+        <MiniBar pct={60} color={T.yellow} />
+      </div>
+      <div style={{ display: "flex", gap: "0.4em" }}>
+        {["+10", "+25", "+50"].map((p) => (
+          <span
+            key={p}
+            style={{
+              flex: 1,
+              textAlign: "center",
+              background: T.card,
+              border: `1px solid ${T.line}`,
+              borderRadius: "0.5em",
+              padding: "0.45em 0",
+              fontSize: "0.66em",
+              fontWeight: 500,
+              color: T.ink,
+            }}
+          >
+            {p}
+          </span>
+        ))}
+      </div>
+      <div style={{ marginTop: "auto" }}>
+        <div
+          style={{
+            background: T.blue,
+            color: "#fff",
+            textAlign: "center",
+            borderRadius: "0.5em",
+            padding: "0.55em 0",
+            fontSize: "0.72em",
+            fontWeight: 600,
+          }}
+        >
+          Log it
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* 4 — the coach's roster, grouped by completion. */
+function ScreenRoster() {
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.1em" }}>
+        <MiniLogo />
+        <span style={{ fontSize: "0.62em", fontWeight: 500, color: T.sub }}>Coach RJ</span>
+      </div>
+      <div style={{ fontSize: "1.4em", fontWeight: 600, letterSpacing: "-0.5px", color: T.ink, marginBottom: "0.9em" }}>
+        Your players
+      </div>
+      {/* Weighted green — this frame is the payoff, so most of the roster is done. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.9em" }}>
+        <div>
+          <div style={{ marginBottom: "0.3em" }}>
+            <MiniPill text="Done" color={T.green} bg="rgba(61,214,140,0.12)" />
+          </div>
+          <MiniRow initial="N" name="Neo" sub="3 of 3 done" />
+          <MiniRow initial="M" name="Maya" sub="4 of 4 done" />
+        </div>
+        <div>
+          <div style={{ marginBottom: "0.3em" }}>
+            <MiniPill text="In progress" color={T.yellow} bg="rgba(240,180,41,0.1)" />
+          </div>
+          <MiniRow initial="J" name="Jordan" sub="1 of 3 done" />
+        </div>
+      </div>
+    </>
+  );
+}
+
+const loopSteps = [
+  { caption: "They get a link",     screen: <ScreenText /> },
+  { caption: "They see their work", screen: <ScreenHome /> },
+  { caption: "They log it",         screen: <ScreenLog /> },
+  { caption: "You see it's done",   screen: <ScreenRoster /> },
+];
+
 export default function LandingPage() {
   return (
     <div className="paper-grain" style={{ backgroundColor: "#ede9e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -67,7 +368,11 @@ export default function LandingPage() {
       </header>
 
       {/* Main */}
-      <main className="page-main" style={{ flex: 1, display: "flex", alignItems: "center" }}>
+      {/* No flex:1 — the hero is content-height now. minHeight:100vh stays on the
+          page wrapper so a short viewport still shows the warm background rather
+          than the dark body colour below the footer; it no longer stretches the
+          hero, because this element doesn't grow into that space. */}
+      <main className="page-main" style={{ display: "flex", alignItems: "center" }}>
         <div
           style={{ maxWidth: "1100px", margin: "0 auto", width: "100%" }}
           className="landing-inner"
@@ -170,26 +475,47 @@ export default function LandingPage() {
         </div>
       </main>
 
+      {/* Product loop — four miniature screens, dark band under the hero */}
+      <section className="loop-section">
+        <h2 className="loop-heading">Here&apos;s how it works.</h2>
+        <p className="loop-subline">Students get a link. They log it. You see it.</p>
+        <div className="loop-track">
+          {loopSteps.map(({ caption, screen }) => (
+            <div className="loop-item" key={caption}>
+              {/* The frames are illustration — the caption carries the meaning,
+                  so screen-readers get the caption and skip the duplicated UI. */}
+              <div className="loop-phone" aria-hidden="true">
+                {screen}
+              </div>
+              <p className="loop-caption">{caption}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer style={{ backgroundColor: "#e0dbd3", padding: "20px 28px 28px" }}>
+      {/* Same #1a1d24 as the loop section, so the band and the footer read as one
+          bottom zone with no seam. Greys and links are the dark-background set:
+          #555 / #2d7bc4 were tuned for cream and go muddy here. */}
+      <footer style={{ backgroundColor: "#1a1d24", padding: "20px 28px 28px" }}>
         {/* Desktop: single line */}
         <div className="footer-desktop">
-          <span style={{ color: "#555" }}>© 2026 Reps</span>
+          <span style={{ color: "#8a8fa8" }}>© 2026 Reps</span>
           <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
           <Link href="/terms"   style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
-          <span style={{ color: "#555" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
+          <span style={{ color: "#8a8fa8" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
         </div>
         {/* Mobile: two lines */}
         <div className="footer-mobile">
           <div className="footer-line">
             <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
-            <span style={{ color: "#8a857c" }}>·</span>
+            <span style={{ color: "#52576a" }}>·</span>
             <Link href="/terms" style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
           </div>
           <div className="footer-line">
-            <span style={{ color: "#555" }}>© 2026 Reps</span>
-            <span style={{ color: "#8a857c" }}>·</span>
-            <span style={{ color: "#555" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
+            <span style={{ color: "#8a8fa8" }}>© 2026 Reps</span>
+            <span style={{ color: "#52576a" }}>·</span>
+            <span style={{ color: "#8a8fa8" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
           </div>
         </div>
       </footer>
@@ -201,7 +527,7 @@ export default function LandingPage() {
       <style href="landing" precedence="default">{`
         .student-link, .student-link:visited { color: #378add; }
         .page-header { padding: 20px 22px 0; }
-        .page-main   { padding: 6px 22px 20px; }
+        .page-main   { padding: 48px 22px 40px; }
         .landing-layout {
           display: flex;
           flex-direction: column;
@@ -287,7 +613,7 @@ export default function LandingPage() {
 
         @media (min-width: 768px) {
           .page-header { padding: 24px 40px 0; }
-          .page-main   { padding: 24px 40px 48px; }
+          .page-main   { padding: 80px 40px 60px; }
           .landing-layout {
             flex-direction: row;
             gap: 80px;
@@ -313,6 +639,101 @@ export default function LandingPage() {
           .bullet-icon { width: 22px; height: 22px; }
           .bullet-text  { font-size: 20px; }
         }
+        /* ---- Product loop ---- */
+        .loop-section {
+          background: #1a1d24;
+          padding: 80px 0;
+        }
+        .loop-heading {
+          margin: 0 auto 10px;
+          padding: 0 22px;
+          text-align: center;
+          color: #ffffff;
+          font-size: 32px;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+          line-height: 1.2;
+        }
+        .loop-subline {
+          margin: 0 auto 40px;
+          padding: 0 22px;
+          text-align: center;
+          font-size: 18px;
+          line-height: 1.4;
+          color: #a8adc0;
+        }
+        .loop-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        /* One width drives everything: the frame, and — via font-size — every
+           type and spacing value inside it, which are all authored in em. */
+        .loop-phone {
+          --pw: 160px;
+          width: var(--pw);
+          font-size: calc(var(--pw) / 13);
+          aspect-ratio: 9 / 19;
+          flex-shrink: 0;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          padding: 1.1em 0.9em;
+          background: #111318;
+          border: 1px solid #2a2d36;
+          border-radius: 28px;
+          overflow: hidden;
+        }
+        .loop-caption {
+          margin: 14px 0 0;
+          text-align: center;
+          font-size: 15px;
+          font-weight: 500;
+          line-height: 1.4;
+          color: #c8cdd8;
+          white-space: nowrap;
+        }
+
+        /* Mobile: one phone per screen, snapped. */
+        .loop-track {
+          display: flex;
+          gap: 24px;
+          overflow-x: auto;
+          scroll-snap-type: x mandatory;
+          padding: 0 22px 4px;
+          /* Without this a snapped frame sits flush to the screen edge and
+             loses the 22px gutter the first one has. */
+          scroll-padding-left: 22px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .loop-track::-webkit-scrollbar { display: none; }
+        .loop-item { scroll-snap-align: start; flex: 0 0 auto; }
+        /* Capped so a frame doesn't swallow the viewport — at 390px this is
+           240px, leaving the next frame peeking in to signal the row scrolls. */
+        .loop-phone { --pw: min(80vw, 240px); }
+
+        /* Desktop: the row spans the hero's container exactly. Rather than
+           spreading four fixed frames apart (which would open ~100px gaps), the
+           frames themselves grow to absorb the width, so the row stays tight at
+           16px while its outer edges land on the hero's. The width has to be an
+           explicit length — not a flex basis — because each phone's em scale is
+           derived from it, hence the calc rather than flex: 1.
+             container = min(1100, 100vw - 80)   [hero content box]
+             frame     = (container - 3 * 16px gaps) / 4                      */
+        @media (min-width: 768px) {
+          .loop-track {
+            max-width: 1180px;
+            margin: 0 auto;
+            justify-content: center;
+            gap: 16px;
+            overflow-x: visible;
+            scroll-snap-type: none;
+            padding: 0 40px;
+          }
+          .loop-phone { --pw: calc((min(1100px, 100vw - 80px) - 48px) / 4); }
+        }
+
         .footer-desktop { display: none; }
         .footer-mobile {
           display: flex;
