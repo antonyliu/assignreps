@@ -108,3 +108,11 @@ body {
   0%   { transform: translateY(-10vh) rotate(0deg);   opacity: 1; }
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
+
+/* Log screen — makes stepper fading/sliding in when attempts first go positive.
+   Pure CSS on mount: no rAF, which the automated browser pane throttles. */
+@keyframes reps-reveal {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reps-reveal { animation: reps-reveal 300ms ease-out both; }

@@ -23,12 +23,65 @@ type Props = {
 // Only shooting-type drills get their own noun — finishing and plain rep work
 // share the generic wording, so neither needs a branch. Minutes win over all of
 // it: you don't take shots for ten minutes' worth of dribbling.
-function primaryQuestion(unit: string, trackMakes: boolean, categoryKey?: string): string {
-  if (unit === "minutes") return "How many minutes today?";
-  if (trackMakes && (categoryKey === "shooting" || categoryKey === "spot-shots")) {
-    return "How many shots today?";
-  }
-  return "How many today?";
+// One contained control: −, an editable number, +, all inside a single card so
+// the two steppers on this screen read as the same component at two weights.
+function StepperBox({
+  id,
+  value,
+  onValue,
+  onStep,
+  numberSize,
+  minusDisabled,
+  plusDisabled,
+  inputDisabled,
+  label,
+}: {
+  id: string;
+  value: string;
+  onValue: (v: string) => void;
+  onStep: (delta: number) => void;
+  numberSize: string;
+  minusDisabled: boolean;
+  plusDisabled: boolean;
+  inputDisabled: boolean;
+  label: string;
+}) {
+  const parsed = parseInt(value, 10);
+  const hasValue = !Number.isNaN(parsed) && parsed > 0;
+  const btn =
+    "shrink-0 w-9 h-9 rounded-full bg-[#2a2d36] text-reps-ink text-[20px] leading-none flex items-center justify-center active:scale-[0.92] transition-all disabled:opacity-25 disabled:pointer-events-none";
+
+  return (
+    <div className="flex items-center gap-3 bg-reps-card border border-reps-line rounded-[12px] px-3 py-3">
+      <button type="button" aria-label={`Decrease ${label}`} onClick={() => onStep(-1)} disabled={minusDisabled} className={btn}>
+        −
+      </button>
+      <input
+        id={id}
+        type="number"
+        inputMode="numeric"
+        min={0}
+        value={value}
+        onChange={(e) => onValue(e.target.value)}
+        onFocus={(e) => e.target.select()}
+        disabled={inputDisabled}
+        placeholder="0"
+        className={`flex-1 min-w-0 bg-transparent border-0 font-light leading-none text-center tabular-nums outline-none disabled:opacity-40 placeholder:text-reps-dim placeholder:opacity-50 ${numberSize} ${
+          hasValue ? "text-reps-ink" : "text-reps-dim"
+        }`}
+      />
+      <button type="button" aria-label={`Increase ${label}`} onClick={() => onStep(1)} disabled={plusDisabled} className={btn}>
+        +
+      </button>
+    </div>
+  );
+}
+
+// The hero line. Uniform across rep categories now — the makes stepper appearing
+// below is what tells a shooter this is attempts-and-makes, so the question
+// itself no longer needs to name shots. Minutes is the only variant.
+function primaryQuestion(unit: string): string {
+  return unit === "minutes" ? "How many minutes today?" : "How many today?";
 }
 
 export default function LogScreen({
@@ -68,7 +121,7 @@ export default function LogScreen({
   const pct     = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   const done    = current >= target;
 
-  const question = primaryQuestion(unit, trackMakes, categoryKey);
+  const question = primaryQuestion(unit);
 
   // Stepper. Clamps the stored value itself — not just what gets saved — so the
   // number on screen is always the number that will be logged. Typing is left
@@ -85,9 +138,30 @@ export default function LogScreen({
     });
   }
 
+  // Makes are never clamped against the amount — a mismatch is the coach's
+  // signal that something went wrong, not something to silently correct here.
+  const parsedMakes = parseInt(makesInput, 10);
+  const makesValue = Number.isNaN(parsedMakes) ? 0 : Math.max(0, parsedMakes);
+  function stepMakes(delta: number) {
+    setMakesInput((prev) => {
+      const p = parseInt(prev, 10);
+      const base = Number.isNaN(p) ? 0 : Math.max(0, p);
+      return String(Math.max(0, base + delta));
+    });
+  }
+
   // The whole control is inert only when there is genuinely nothing to log:
   // a completed assignment that doesn't track makes.
   const inputLocked = !trackMakes && done && added < 1;
+
+  // Makes stepper is revealed, not just enabled, once there's an attempt for the
+  // makes to be a subset of.
+  const showMakes = trackMakes && added > 0;
+
+  // Two-layer bar for makes drills: attempts fill in muted green, makes overlay
+  // in bright green, both against a near-black-green track. The single-colour bar
+  // (yellow in progress / green done) is untouched for everything else.
+  const makesPct = target > 0 ? Math.min(100, Math.round((makesValue / target) * 100)) : 0;
 
   async function handleSave() {
     if (added < 1) return;
@@ -133,12 +207,26 @@ export default function LogScreen({
       <div className="text-[13px] text-reps-dim mb-2 tabular-nums">
         {current} of {target} done
       </div>
-      <div className="h-1.5 bg-reps-line rounded-full overflow-hidden mb-8">
-        <div
-          className={`h-full rounded-full transition-all duration-300 ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+      {trackMakes ? (
+        // attempts (muted green) with makes (bright green) stacked on top.
+        <div className="relative h-1.5 rounded-full overflow-hidden mb-8" style={{ background: "#1a2e1a" }}>
+          <div
+            className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
+            style={{ width: `${pct}%`, background: "#27500a" }}
+          />
+          <div
+            className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
+            style={{ width: `${makesPct}%`, background: "#3dd68c" }}
+          />
+        </div>
+      ) : (
+        <div className="h-1.5 bg-reps-line rounded-full overflow-hidden mb-8">
+          <div
+            className={`h-full rounded-full transition-all duration-300 ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
 
       {/* The hero: one question, then the field that answers it. */}
       <label
@@ -147,59 +235,38 @@ export default function LogScreen({
       >
         {question}
       </label>
-      {/* Stepper: tap to nudge, or tap the number to type it outright. */}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          aria-label="Decrease"
-          onClick={() => step(-1)}
-          disabled={inputLocked || added < 1}
-          className="shrink-0 w-16 h-16 rounded-full bg-reps-card border border-reps-line text-reps-ink text-[30px] leading-none flex items-center justify-center hover:border-reps-line-hi active:scale-[0.94] active:bg-reps-orange/10 transition-all disabled:opacity-30 disabled:pointer-events-none"
-        >
-          −
-        </button>
+      {/* Tap to nudge, or tap the number to type it outright. */}
+      <StepperBox
+        id="amount"
+        label="amount"
+        value={amountInput}
+        onValue={setAmountInput}
+        onStep={step}
+        numberSize="text-[36px] py-2"
+        minusDisabled={inputLocked || added < 1}
+        plusDisabled={inputLocked || added >= stepCeiling}
+        inputDisabled={inputLocked}
+      />
 
-        <input
-          id="amount"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={amountInput}
-          onChange={(e) => setAmountInput(e.target.value)}
-          onFocus={(e) => e.target.select()}
-          disabled={inputLocked}
-          // Dim "0" rather than a real value: a stepper with nothing between its
-          // buttons reads as broken, but the field stays empty so there is still
-          // no number to submit by accident.
-          placeholder="0"
-          className="flex-1 min-w-0 bg-transparent border-0 py-4 text-[52px] font-light leading-none text-center text-reps-ink tabular-nums outline-none disabled:opacity-40 placeholder:text-reps-dim placeholder:opacity-50"
-        />
-
-        <button
-          type="button"
-          aria-label="Increase"
-          onClick={() => step(1)}
-          disabled={inputLocked || added >= stepCeiling}
-          className="shrink-0 w-16 h-16 rounded-full bg-reps-orange/15 border border-reps-orange/40 text-reps-orange text-[30px] leading-none flex items-center justify-center hover:bg-reps-orange/25 active:scale-[0.94] transition-all disabled:opacity-30 disabled:pointer-events-none"
-        >
-          +
-        </button>
-      </div>
-
-      {trackMakes && (
-        <div className="mt-6">
+      {/* Progressive disclosure: nothing here until there's an attempt, then this
+          mounts and the reps-reveal keyframe fades/slides it in (pure CSS — the
+          pane throttles rAF, so no JS-timed transition). */}
+      {showMakes && (
+        <div className="reps-reveal mt-6">
           <label htmlFor="makes" className="block text-[14px] text-reps-sub mb-2">
-            How many did you make? <span className="text-reps-dim">(optional)</span>
+            How many did you make?
           </label>
-          <input
+          {/* Secondary by weight, identical in mechanism. */}
+          <StepperBox
             id="makes"
-            type="number"
-            inputMode="numeric"
-            min={0}
+            label="makes"
             value={makesInput}
-            onChange={(e) => setMakesInput(e.target.value)}
-            placeholder="—"
-            className="w-full bg-reps-card border border-reps-line rounded-[12px] px-[14px] py-4 text-[24px] font-light text-center text-reps-ink outline-none focus:border-reps-orange transition-colors placeholder:text-reps-dim"
+            onValue={setMakesInput}
+            onStep={stepMakes}
+            numberSize="text-[24px] py-1"
+            minusDisabled={makesValue < 1}
+            plusDisabled={false}
+            inputDisabled={false}
           />
         </div>
       )}
