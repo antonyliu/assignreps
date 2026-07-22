@@ -42,15 +42,17 @@ export default async function PlayerHomePage({
   const assignmentList = assignments ?? [];
 
   const loggedByAssignment: Record<string, number> = {};
-  const makesByAssignment: Record<string, number> = {};
+  // Same shape and rule as the coach detail card: makes and their attempts
+  // accumulate only from logs that recorded makes (null = "didn't say"), so the
+  // "made X/Y · Z%" denominator matches the coach's exactly.
+  const makesByAssignment: Record<string, { makes: number; attempts: number }> = {};
   for (const log of logs ?? []) {
     loggedByAssignment[log.assignment_id] =
       (loggedByAssignment[log.assignment_id] ?? 0) + log.amount;
-    // Null makes are "didn't say", not zero — only sum recorded ones.
-    if (log.makes != null) {
-      makesByAssignment[log.assignment_id] =
-        (makesByAssignment[log.assignment_id] ?? 0) + log.makes;
-    }
+    if (log.makes == null) continue;
+    const entry = (makesByAssignment[log.assignment_id] ??= { makes: 0, attempts: 0 });
+    entry.makes += log.makes;
+    entry.attempts += log.amount;
   }
 
   const count = assignmentList.length;
@@ -103,13 +105,21 @@ export default async function PlayerHomePage({
               const pct = a.target > 0 ? Math.round((logged / a.target) * 100) : 0;
               const done = logged >= a.target;
 
-              // Two-tone only when this drill tracks makes and some were recorded:
-              // muted-green attempts with a bright-green makes overlay, mirroring
-              // the log screen. Otherwise the single bar below.
-              const makesTotal = makesByAssignment[a.id] ?? 0;
-              const twoTone = (a.track_makes ?? false) && makesTotal > 0;
+              // Makes summary — identical shape/logic/markup to the coach detail
+              // card. attempts is the makes-recorded subset, not the target.
+              const m = makesByAssignment[a.id];
+              const showMakes = m !== undefined && m.attempts > 0;
               const makesPct =
-                a.target > 0 ? Math.min(100, Math.round((makesTotal / a.target) * 100)) : 0;
+                showMakes && m.makes <= m.attempts
+                  ? Math.round((m.makes / m.attempts) * 100)
+                  : null;
+
+              // Two-tone bar when makes exist: muted-green attempts with a
+              // bright-green makes overlay (makes/target), mirroring the log
+              // screen. Otherwise the single bar below.
+              const twoTone = (a.track_makes ?? false) && showMakes;
+              const barMakesPct =
+                m && a.target > 0 ? Math.min(100, Math.round((m.makes / a.target) * 100)) : 0;
 
               return (
                 <Link
@@ -128,14 +138,14 @@ export default async function PlayerHomePage({
                     )}
                   </div>
                   {twoTone ? (
-                    <div className="relative h-1 rounded-full overflow-hidden" style={{ background: "#1a2e1a" }}>
+                    <div className="relative h-1 bg-reps-line rounded-full overflow-hidden">
                       <div
                         className="absolute inset-y-0 left-0 rounded-full transition-all"
                         style={{ width: `${pct}%`, background: "#27500a" }}
                       />
                       <div
                         className="absolute inset-y-0 left-0 rounded-full transition-all"
-                        style={{ width: `${makesPct}%`, background: "#3dd68c" }}
+                        style={{ width: `${barMakesPct}%`, background: "#3dd68c" }}
                       />
                     </div>
                   ) : (
@@ -144,6 +154,14 @@ export default async function PlayerHomePage({
                         className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-[#27500a]"}`}
                         style={{ width: `${pct}%` }}
                       />
+                    </div>
+                  )}
+                  {showMakes && (
+                    <div className="mt-2 text-[11px] text-reps-dim">
+                      made {m.makes}/{m.attempts}
+                      {makesPct !== null && (
+                        <span className="text-[var(--reps-label)]"> · {makesPct}%</span>
+                      )}
                     </div>
                   )}
                 </Link>

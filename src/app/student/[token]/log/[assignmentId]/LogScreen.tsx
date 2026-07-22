@@ -80,11 +80,16 @@ function StepperBox({
   );
 }
 
-// The hero line. Uniform across rep categories now — the makes stepper appearing
-// below is what tells a shooter this is attempts-and-makes, so the question
-// itself no longer needs to name shots. Minutes is the only variant.
-function primaryQuestion(unit: string): string {
-  return unit === "minutes" ? "How many minutes today?" : "How many today?";
+// The hero line. Shooting-type drills that track makes ask for "attempts" (the
+// number entered here is attempts; makes are the subset logged below). Other
+// categories, and anything not tracking makes, stay generic. Minutes always win.
+const ATTEMPTS_CATEGORIES = new Set(["shooting", "finishing", "spot-shots"]);
+function primaryQuestion(unit: string, trackMakes: boolean, categoryKey?: string): string {
+  if (unit === "minutes") return "How many minutes today?";
+  if (trackMakes && categoryKey !== undefined && ATTEMPTS_CATEGORIES.has(categoryKey)) {
+    return "How many attempts today?";
+  }
+  return "How many today?";
 }
 
 export default function LogScreen({
@@ -125,7 +130,7 @@ export default function LogScreen({
   const pct     = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   const done    = current >= target;
 
-  const question = primaryQuestion(unit);
+  const question = primaryQuestion(unit, trackMakes, categoryKey);
 
   // Stepper. Clamps the stored value itself — not just what gets saved — so the
   // number on screen is always the number that will be logged. Typing is left
@@ -216,7 +221,7 @@ export default function LogScreen({
       </div>
       {trackMakes ? (
         // attempts (muted green) with makes (bright green) stacked on top.
-        <div className="relative h-1.5 rounded-full overflow-hidden mb-8" style={{ background: "#1a2e1a" }}>
+        <div className="relative h-1.5 bg-reps-line rounded-full overflow-hidden mb-8">
           <div
             className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
             style={{ width: `${pct}%`, background: "#27500a" }}
