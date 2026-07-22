@@ -17,15 +17,6 @@ type Props = {
   trackMakes: boolean;
 };
 
-// Quick-add buttons tuned to a realistic range for the assignment: minutes get
-// small steps; reps scale with the target (small / medium / large).
-function logPresets(unit: string, target: number): number[] {
-  if (unit === "minutes") return [1, 5, 10, 15];
-  if (target >= 200) return [25, 50, 100];
-  if (target >= 50) return [10, 25, 50];
-  return [1, 5, 10];
-}
-
 export default function LogScreen({
   token,
   playerId,
@@ -38,20 +29,34 @@ export default function LogScreen({
   trackMakes,
 }: Props) {
   const router = useRouter();
-  const [added, setAdded]   = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState("");
-  // Kept as a string so an empty field stays empty — "" means "didn't say",
-  // which is not the same as 0.
-  const [makesInput, setMakesInput] = useState("");
+  // Both kept as strings so an empty field stays empty rather than reading as 0.
+  const [amountInput, setAmountInput] = useState("");
+  const [makesInput, setMakesInput]   = useState("");
 
-  const current = Math.min(alreadyLogged + added, target);
-  const pct     = target > 0 ? Math.round((current / target) * 100) : 0;
+  // What the student typed this session.
+  //
+  // Normal assignments clamp to what's outstanding — the "counter caps at the
+  // target, no inflating" rule. Makes assignments do NOT: attempts are the
+  // denominator of a shooting percentage, so a real 60-attempt session against a
+  // 50 target has to survive intact. Silently trimming it to 50 would distort
+  // the number the whole feature exists to produce.
+  const remainingToTarget = Math.max(0, target - alreadyLogged);
+  const parsedAmount = parseInt(amountInput, 10);
+  const typed = Number.isNaN(parsedAmount) ? 0 : Math.max(0, parsedAmount);
+  const added = trackMakes ? typed : Math.min(typed, remainingToTarget);
+
+  // Likewise the readout: capped for normal work, honest for makes, so a student
+  // logging 60 sees 60 rather than watching it silently become 50.
+  const current = trackMakes ? alreadyLogged + added : Math.min(alreadyLogged + added, target);
+  const pct     = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   const done    = current >= target;
 
-  function addReps(n: number) {
-    setAdded((prev) => Math.min(prev + n, target - alreadyLogged));
-  }
+  // With makes being tracked, "reps" is ambiguous — the number the student is
+  // logging is attempts, and makes are the subset that went in. Minutes are
+  // never attempts, so they keep their own label.
+  const targetLabel = trackMakes && unit === "reps" ? "attempts" : unit;
 
   async function handleSave() {
     if (added < 1) return;
@@ -98,7 +103,7 @@ export default function LogScreen({
           {current}
         </div>
         <div className="text-[13px] text-reps-dim mt-1.5">
-          of {target} {unit}
+          of {target} {targetLabel}
         </div>
       </div>
 
@@ -109,17 +114,22 @@ export default function LogScreen({
         />
       </div>
 
-      <div className="flex gap-2 mb-3">
-        {logPresets(unit, target).map((n) => (
-          <button
-            key={n}
-            onClick={() => addReps(n)}
-            disabled={done}
-            className="flex-1 bg-reps-card border border-reps-line text-reps-ink font-semibold text-base py-4 rounded-[10px] hover:border-reps-orange hover:text-reps-orange active:bg-reps-orange/10 active:scale-[0.97] transition-all disabled:opacity-30 disabled:pointer-events-none"
-          >
-            +{n}
-          </button>
-        ))}
+      <div>
+        <label htmlFor="amount" className="block text-[12px] text-reps-sub mb-1.5">
+          How many {targetLabel} did you do?
+        </label>
+        <input
+          id="amount"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={amountInput}
+          onChange={(e) => setAmountInput(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          disabled={!trackMakes && done && added < 1}
+          placeholder="0"
+          className="w-full bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-4 text-[32px] font-light text-center text-reps-ink outline-none focus:border-reps-orange transition-colors placeholder:text-reps-dim disabled:opacity-40"
+        />
       </div>
 
       {trackMakes && (
