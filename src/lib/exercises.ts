@@ -128,6 +128,7 @@ export const CATEGORIES: Record<string, Category> = {
     exercises: [
       { name: "Right corner-to-wing", default: 10, slug: "right-corner-to-wing" },
       { name: "Left corner-to-wing",  default: 10, slug: "left-corner-to-wing" },
+      { name: "STAR drill",           default: 5,  slug: "star-drill" },
     ],
   },
 };
