@@ -40,7 +40,7 @@ function TallyMark() {
 const bullets = [
   { icon: Send,        text: "Assign work in seconds" },
   { icon: CheckCircle, text: "Students log it from anywhere" },
-  { icon: Layers,      text: "Everything in one place" },
+  { icon: Layers,      text: "The work doesn't stop." },
 ];
 
 /* ---------- The product-loop section ----------------------------------------
@@ -478,13 +478,6 @@ export default function LandingPage() {
                 >
                   Get started free
                 </Link>
-                <Link
-                  href="/student/login"
-                  style={{ fontSize: "15px", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px" }}
-                  className="student-link hover:opacity-80 transition-opacity"
-                >
-                  I&apos;m a student →
-                </Link>
               </div>
 
             </div>
@@ -520,6 +513,9 @@ export default function LandingPage() {
           <span style={{ color: "#8a8fa8" }}>© 2026 Reps</span>
           <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
           <Link href="/terms"   style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
+          {/* The only route to /student/login now that the hero CTA is gone —
+              a student who deleted their SMS gets back in from here. */}
+          <Link href="/student/login" style={{ color: "#378add", textDecoration: "underline" }}>I&apos;m a student</Link>
           <span style={{ color: "#8a8fa8" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
         </div>
         {/* Mobile: two lines */}
@@ -528,6 +524,8 @@ export default function LandingPage() {
             <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
             <span style={{ color: "#52576a" }}>·</span>
             <Link href="/terms" style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
+            <span style={{ color: "#52576a" }}>·</span>
+            <Link href="/student/login" style={{ color: "#378add", textDecoration: "underline" }}>I&apos;m a student</Link>
           </div>
           <div className="footer-line">
             <span style={{ color: "#8a8fa8" }}>© 2026 Reps</span>
@@ -542,7 +540,6 @@ export default function LandingPage() {
           first paint (fixing Safari's unstyled flash) instead of loading late
           from the end of <body>. Rules are unchanged. */}
       <style href="landing" precedence="default">{`
-        .student-link, .student-link:visited { color: #378add; }
         .page-header { padding: 20px 22px 0; }
         .page-main   { padding: 48px 22px 24px; }
         .landing-layout {

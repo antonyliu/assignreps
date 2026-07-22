@@ -583,7 +583,6 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - Re-engagement nudge (Monday email)
 - **Gate stranger signups** — signup is currently open to the public; a bot already attempted a signup July 14 2026 (see incident note below). Add invite code / waitlist before broader launch.
 - **Tighten logs RLS policy** — `logs` INSERT/SELECT is currently open. Before wider launch, tighten INSERT to verify the student token matches the player on the assignment.
-- **Third landing page bullet** still needs updating: "Everything in one place" → "Always know where they left off".
 - **Roster row layout** — name + progress inline with a thin bar underneath ("X of X done", no taller row) — not yet built. (Assign flow polish itself is done — see July 17–18 changelog.)
 - **Student/player side screens** not yet polished (welcome, log, celebrate — student home was polished July 16 2026).
 - **Parent digest screen** not yet polished.
