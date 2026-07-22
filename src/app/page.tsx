@@ -40,7 +40,7 @@ function TallyMark() {
 const bullets = [
   { icon: Send,        text: "Assign work in seconds" },
   { icon: CheckCircle, text: "Students log it from anywhere" },
-  { icon: Layers,      text: "The work doesn't stop." },
+  { icon: Layers,      text: "The work doesn't stop" },
 ];
 
 /* ---------- The product-loop section ----------------------------------------
@@ -504,18 +504,16 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      {/* Same #1a1d24 as the loop section, so the band and the footer read as one
-          bottom zone with no seam. Greys and links are the dark-background set:
-          #555 / #2d7bc4 were tuned for cream and go muddy here. */}
-      <footer style={{ backgroundColor: "#1a1d24", padding: "20px 28px 28px" }}>
+      {/* Shares #1a1d24 with the loop section, so a 1px rule is what separates
+          them — without it the two bands merge and the footer reads as part of
+          the section. Greys and links are the dark-background set: #555 /
+          #2d7bc4 were tuned for cream and go muddy here. */}
+      <footer style={{ backgroundColor: "#1a1d24", borderTop: "1px solid #2a2d36", padding: "20px 28px 28px" }}>
         {/* Desktop: single line */}
         <div className="footer-desktop">
           <span style={{ color: "#8a8fa8" }}>© 2026 Reps</span>
           <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
           <Link href="/terms"   style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
-          {/* The only route to /student/login now that the hero CTA is gone —
-              a student who deleted their SMS gets back in from here. */}
-          <Link href="/student/login" style={{ color: "#378add", textDecoration: "underline" }}>I&apos;m a student</Link>
           <span style={{ color: "#8a8fa8" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
         </div>
         {/* Mobile: two lines */}
@@ -524,8 +522,6 @@ export default function LandingPage() {
             <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
             <span style={{ color: "#52576a" }}>·</span>
             <Link href="/terms" style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
-            <span style={{ color: "#52576a" }}>·</span>
-            <Link href="/student/login" style={{ color: "#378add", textDecoration: "underline" }}>I&apos;m a student</Link>
           </div>
           <div className="footer-line">
             <span style={{ color: "#8a8fa8" }}>© 2026 Reps</span>
@@ -665,7 +661,9 @@ export default function LandingPage() {
           padding: 0 22px;
           text-align: center;
           color: #ffffff;
-          font-size: 32px;
+          /* Stays under the hero headline (32px on mobile) so the hero keeps
+             the page's largest type; desktop reopens to 32px. */
+          font-size: 24px;
           font-weight: 700;
           letter-spacing: -0.5px;
           line-height: 1.2;
@@ -689,7 +687,7 @@ export default function LandingPage() {
           --pw: 160px;
           width: var(--pw);
           font-size: calc(var(--pw) / 13);
-          aspect-ratio: 9 / 16;
+          aspect-ratio: 9 / 19;
           flex-shrink: 0;
           box-sizing: border-box;
           display: flex;
@@ -739,6 +737,7 @@ export default function LandingPage() {
              frame     = (container - 3 * 16px gaps) / 4                      */
         @media (min-width: 768px) {
           .loop-section { padding: 80px 0; }
+          .loop-heading { font-size: 32px; }
           .loop-track {
             max-width: 1180px;
             margin: 0 auto;
@@ -748,10 +747,7 @@ export default function LandingPage() {
             scroll-snap-type: none;
             padding: 0 40px;
           }
-          .loop-phone {
-            --pw: calc((min(1100px, 100vw - 80px) - 48px) / 4);
-            aspect-ratio: 9 / 19;
-          }
+          .loop-phone { --pw: calc((min(1100px, 100vw - 80px) - 48px) / 4); }
         }
 
         .footer-desktop { display: none; }
