@@ -185,10 +185,10 @@ players
   id, coach_id, name, phone, parent_phone, send_to_parent, token (unique link key), last_texted_at, created_at
 
 assignments
-  id, coach_id, player_id, exercise_name, target, unit (reps/minutes/target), video_url, week_start, created_at
+  id, coach_id, player_id, exercise_name, target, unit (reps/minutes/target), video_url, week_start, track_makes, created_at
 
 logs
-  id, player_id, assignment_id, amount, logged_at
+  id, player_id, assignment_id, amount, makes, logged_at
 
 custom_exercises
   id, coach_id, name, unit (reps/minutes), default_amount, created_at
@@ -197,6 +197,51 @@ custom_exercises
 `custom_exercises` (added July 17 2026) — a coach's saved custom exercises, powering the "My exercises" category. RLS: coach reads/writes only their own rows (`coach_id = auth.uid()`, `to authenticated`). Saved (deduped by name) when a custom exercise is sent; assignments copy name/target as their own rows, so deleting a saved custom exercise does not touch existing assignments.
 
 Note: `instructor_type` field added now even though basketball is the only option at launch — enables content branching later without schema rework. `phone` on coaches is nullable since email OTP does not require it.
+
+### Makes logging (added July 22 2026 — on staging, NOT yet on prod)
+
+Lets a student optionally record how many they **made** out of the reps they
+logged, so the coach sees a percentage rather than raw volume. Comes straight
+from the RJ session: he runs drills on consistency ("5 in a row", 7/10 from the
+wing), so rep count alone was missing the point of the drill.
+
+**⚠️ Schema is live everywhere; the code is not.** The migration
+(`20260722175000_add_makes_logging.sql`) was applied to the shared Supabase
+project, so both columns exist in production while prod still runs code that
+never reads or writes them. Harmless in that direction — the columns sit at
+their defaults — but prod and staging currently disagree about what they mean.
+
+- `assignments.track_makes` — boolean, NOT NULL, default false. The **coach's**
+  decision, set once at assign time. Read by the student log screen (show the
+  input?) and the coach detail card.
+- `logs.makes` — integer, nullable, default null. The **student's** answer, per
+  log entry. Constraint `logs_makes_non_negative` rejects negatives.
+
+**Null is not zero.** The input stays optional even when `track_makes` is true,
+so null means *"logged the reps, didn't say how many went in"* while 0 means
+*"made none"*. Anything aggregating these must keep them distinct or blank
+entries will drag averages to zero.
+
+**The percentage counts only logs that reported makes.** Coach detail sums
+`makes` and the `amount` **of those same logs** — not every rep logged. Log 25
+with 20 makes then 25 more without, and the card reads 80%, not 40%. The
+denominator is "attempts you reported on", not "reps you did".
+
+**Bad data is kept, not rejected.** `makes > amount` is deliberately allowed by
+the DB: the card shows the raw numbers with the percentage suppressed. A CHECK
+would fail the insert and throw away the reps the student actually did.
+
+**Defaults.** The toggle appears on every count screen. It starts **on** for all
+six preset categories and **off** for timed (minutes) exercises and custom /
+saved-custom exercises — off is opt-in, never locked out. Wired through
+`defaultTrackMakes()` in `src/lib/exercises.ts`, which tests membership against
+`CATEGORIES` so a new category can't accidentally opt out.
+
+**⚠️ Makes cannot be entered retroactively.** They are only capturable in the
+same submit that logs reps. Once an assignment reaches its target the quick-add
+buttons and "Log it" disable, so a student who logged reps and skipped the field
+can never supply it, and the coach sees no percentage for that assignment —
+permanently. Observed in testing on a real row. **Undecided; see Pending.**
 
 `send_to_parent` — boolean, default false. Determines whether the homework SMS goes to the student's phone or the parent's phone. ⚠️ The assignment SMS does **not** consult this yet — it always sends to `players.phone`. That's correct today because the recipient toggle governs whose number was typed into `phone` in the first place, but it means `parent_phone` is currently unused by the notify path.
 
@@ -666,6 +711,7 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - **New:** Dribble series (Ball-handling, minutes 10), Dribble pull-ups (Shooting, 25), Pick-up basketball (Conditioning, minutes 30).
 - **Removed from Shooting:** Off the dribble, Midrange totals, 3pt totals — redundant; the planned makes-logging feature covers that use case. The first two never shipped; 3pt totals reached staging for minutes only.
 - **Ball-handling left alone.** Note its defaults are *not* uniform: Crossovers and Figure 8s are 5 while the rest are 10. Both are valid presets, so nothing breaks.
+- **Makes logging built** (see "Makes logging" under Database schema) — `assignments.track_makes` + `logs.makes`, a "Track makes?" toggle on the count screen, an optional "How many did you make?" input on the student log screen, and `made X/Y · Z%` on the coach's assignment card. On staging (`aa2cfc3`), not yet on prod. Verified against the real database: migration and backfill, the non-negative constraint rejecting −1 with no row written, the toggle persisting `track_makes=true`, the input rendering only when tracking is on, blank staying null, and a real UI log writing `makes 14` on 20 reps. The only piece never seen rendered is the coach card's percentage line.
 - **⚠️ Not verified in a browser.** Checked by `tsc` plus a scripted assertion over all 30 exercises (every `default` lands on a visible preset, no duplicate names or slugs) — but no screen was opened, unlike the July 21 batch. Worth confirming Conditioning → Planks (`1·2·3·5`, 2 selected, minutes label), Footwork → Defensive slides (now minutes), Finishing → Layups right (`10·20·50·100`, 20 selected), and the Edit-amount modal on a Planks assignment.
 
 ---
@@ -673,6 +719,9 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 ## Pending / loose ends
 
 ### Unverified in production — check these first
+- **Retroactive makes — undecided, blocks the prod push.** Makes are only capturable in the same submit that logs reps; once an assignment hits its target the log screen freezes and any missing makes are locked out forever. Options discussed: (a) ship as-is and treat makes as a same-moment prompt, (b) keep the log screen usable at 100% so makes can still be added, (c) let the student edit the last log. Not yet chosen.
+- **Coach card `made X/Y · Z%` never seen rendered.** Every other part of makes logging was verified against the real database, but this line was only ever checked by re-running its own logic. Antony has the data for it (20 reps / 14 makes → `made 14/20 · 70%`); open his detail screen to confirm. Note an earlier version of this line used `text-reps-label`, a Tailwind class that does not exist — `tsc` cannot catch that, so it needs eyes.
+
 - **⚠️ Assignment SMS is live but unverified end-to-end.** Shipped to prod July 21 2026 (`aaa3154`) and never confirmed by watching a real text arrive. The notify path swallows every failure by design, so a coach gets **no UI signal** when a send fails — "Sent to [name] 🏀" only means the assignment saved. If `TWILIO_*` env vars are wrong in Vercel production, students silently receive nothing and nobody finds out. **RJ will notice immediately if this is broken**, and the add-student copy now promises the text ("They'll get a text when you assign work"). Verify by assigning one exercise to a test student and checking Twilio Console → Monitor → Logs → Messaging.
 - **iOS line above the footer** — a horizontal rule was reported above the footer on mobile that could not be reproduced in devtools at 390px on either localhost or staging: no `<hr>` exists, no element sits between the phone row and the footer, and the scrollbar occupies 0px with `scrollbar-width: none` + `::-webkit-scrollbar { display: none }` already applied (so the webkit rule is **not** the fix — it was already deployed when the line was seen). A `1px solid #2a2d36` footer top border was added July 21 2026 and may mask or resolve it. **Unconfirmed on a real iPhone.** If a line still appears *above* the footer with a gap between it and the border, it is a separate artifact — capture a screenshot before changing anything.
 
@@ -755,6 +804,7 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - Account deletion ❌
 - Push notifications ❌
 - Remove (delete) assignment ✅ (per-card menu, July 16 2026) / Edit assignment ❌
+- Makes logging (optional made-count + coach percentage) ✅ on staging July 22 2026, not yet on prod
 - Multi-coach per roster ❌
 - Video playback in-app ❌
 - Historical weeks / season view ❌
