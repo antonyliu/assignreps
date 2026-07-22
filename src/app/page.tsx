@@ -60,7 +60,10 @@ const T = {
   label: "#c8cdd8",
   blue: "#378add",
   green: "#3dd68c",
-  yellow: "#f0b429",
+  // Was yellow; the app dropped yellow for in-progress, so the mock follows with
+  // muted green. Named `progress` now — it's a bar fill, not a text/number colour
+  // (the log counter, which needs legibility, uses `ink` instead).
+  progress: "#27500a",
 };
 
 function MiniLogo() {
@@ -255,7 +258,7 @@ function ScreenHome() {
       {/* One of each state, top to bottom: finished, underway, untouched. */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
         <MiniCard name="Form shooting" right="✓ Done"  pct={100} color={T.green} done />
-        <MiniCard name="Crossovers"    right="3/5 min" pct={60}  color={T.yellow} />
+        <MiniCard name="Crossovers"    right="3/5 min" pct={60}  color={T.progress} />
         <MiniCard name="Box-outs"      right="0/20"    pct={0}   color={T.line} />
       </div>
     </>
@@ -272,11 +275,11 @@ function ScreenLog() {
       </div>
       <div style={{ textAlign: "center", marginBottom: "1.4em" }}>
         <div style={{ fontSize: "0.7em", color: T.label, marginBottom: "0.5em" }}>Form shooting</div>
-        <div style={{ fontSize: "3em", fontWeight: 600, letterSpacing: "-1px", lineHeight: 1, color: T.yellow }}>30</div>
+        <div style={{ fontSize: "3em", fontWeight: 600, letterSpacing: "-1px", lineHeight: 1, color: T.ink }}>30</div>
         <div style={{ fontSize: "0.64em", color: T.label, marginTop: "0.45em" }}>of 50 reps</div>
       </div>
       <div style={{ marginBottom: "1.4em" }}>
-        <MiniBar pct={60} color={T.yellow} />
+        <MiniBar pct={60} color={T.progress} />
       </div>
       <div style={{ display: "flex", gap: "0.4em" }}>
         {["+10", "+25", "+50"].map((p) => (
@@ -339,7 +342,8 @@ function ScreenRoster() {
         </div>
         <div>
           <div style={{ marginBottom: "0.3em" }}>
-            <MiniPill text="In progress" color={T.yellow} bg="rgba(240,180,41,0.1)" />
+            {/* Readable mid-green, mirroring the real roster's in-progress pill. */}
+            <MiniPill text="In progress" color="#5aa22f" bg="rgba(39,80,10,0.18)" />
           </div>
           <MiniRow initial="J" name="Jordan" sub="1 of 3 done" />
         </div>

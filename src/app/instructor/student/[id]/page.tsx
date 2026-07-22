@@ -149,7 +149,7 @@ export default async function CoachPlayerPage({
                     </div>
                     <div className="h-1 bg-reps-line rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
+                        className={`h-full rounded-full ${done ? "bg-reps-green" : "bg-[#27500a]"}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>

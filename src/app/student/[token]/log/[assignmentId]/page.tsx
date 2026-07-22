@@ -37,11 +37,14 @@ export default async function LogPage({
   // same as the student home header. Fetch alongside already-logged reps.
   const [coachNameRes, { data: logs }] = await Promise.all([
     supabase.rpc("coach_name_for_token", { p_token: token }),
-    supabase.from("logs").select("amount").eq("assignment_id", assignmentId).eq("player_id", player.id),
+    supabase.from("logs").select("amount, makes").eq("assignment_id", assignmentId).eq("player_id", player.id),
   ]);
 
   const coachName = (coachNameRes.data as string | null)?.trim() || "Coach";
   const alreadyLogged = (logs ?? []).reduce((sum, l) => sum + l.amount, 0);
+  // Null makes are "didn't say", not zero — skip them so the bright bar reflects
+  // only makes that were actually recorded.
+  const alreadyMakes = (logs ?? []).reduce((sum, l) => sum + (l.makes ?? 0), 0);
 
   return (
     <LogScreen
@@ -57,6 +60,7 @@ export default async function LogPage({
       alreadyLogged={
         assignment.track_makes ? alreadyLogged : Math.min(alreadyLogged, assignment.target)
       }
+      alreadyMakes={alreadyMakes}
       coachName={coachName}
       trackMakes={assignment.track_makes ?? false}
       categoryKey={categoryKeyForExercise(assignment.exercise_name)}

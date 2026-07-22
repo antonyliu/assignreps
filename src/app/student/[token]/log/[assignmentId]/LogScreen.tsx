@@ -13,6 +13,9 @@ type Props = {
   target: number;
   unit: string;
   alreadyLogged: number;
+  /** Sum of makes across this assignment's prior logs. Seeds the bright bar layer
+   *  on return so it reflects banked makes, not just this session's. */
+  alreadyMakes: number;
   coachName: string;
   trackMakes: boolean;
   /** Undefined for custom exercises, which belong to no category. */
@@ -92,6 +95,7 @@ export default function LogScreen({
   target,
   unit,
   alreadyLogged,
+  alreadyMakes,
   coachName,
   trackMakes,
   categoryKey,
@@ -159,9 +163,12 @@ export default function LogScreen({
   const showMakes = trackMakes && added > 0;
 
   // Two-layer bar for makes drills: attempts fill in muted green, makes overlay
-  // in bright green, both against a near-black-green track. The single-colour bar
-  // (yellow in progress / green done) is untouched for everything else.
-  const makesPct = target > 0 ? Math.min(100, Math.round((makesValue / target) * 100)) : 0;
+  // in bright green, both against a near-black-green track. Both layers count
+  // banked totals plus this session — the attempts layer via `current` (which
+  // already folds in alreadyLogged), the makes layer via alreadyMakes here — so
+  // reopening a partly-logged assignment shows real progress, not an empty bar.
+  const makesTotal = alreadyMakes + makesValue;
+  const makesPct = target > 0 ? Math.min(100, Math.round((makesTotal / target) * 100)) : 0;
 
   async function handleSave() {
     if (added < 1) return;
@@ -222,7 +229,7 @@ export default function LogScreen({
       ) : (
         <div className="h-1.5 bg-reps-line rounded-full overflow-hidden mb-8">
           <div
-            className={`h-full rounded-full transition-all duration-300 ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
+            className={`h-full rounded-full transition-all duration-300 ${done ? "bg-reps-green" : "bg-[#27500a]"}`}
             style={{ width: `${pct}%` }}
           />
         </div>

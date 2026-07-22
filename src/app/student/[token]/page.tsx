@@ -28,12 +28,12 @@ export default async function PlayerHomePage({
     supabase.rpc("coach_name_for_token", { p_token: token }),
     supabase
       .from("assignments")
-      .select("id, exercise_name, target, unit")
+      .select("id, exercise_name, target, unit, track_makes")
       .eq("player_id", player.id)
       .order("created_at"),
     supabase
       .from("logs")
-      .select("assignment_id, amount")
+      .select("assignment_id, amount, makes")
       .eq("player_id", player.id),
   ]);
 
@@ -42,9 +42,15 @@ export default async function PlayerHomePage({
   const assignmentList = assignments ?? [];
 
   const loggedByAssignment: Record<string, number> = {};
+  const makesByAssignment: Record<string, number> = {};
   for (const log of logs ?? []) {
     loggedByAssignment[log.assignment_id] =
       (loggedByAssignment[log.assignment_id] ?? 0) + log.amount;
+    // Null makes are "didn't say", not zero — only sum recorded ones.
+    if (log.makes != null) {
+      makesByAssignment[log.assignment_id] =
+        (makesByAssignment[log.assignment_id] ?? 0) + log.makes;
+    }
   }
 
   const count = assignmentList.length;
@@ -97,6 +103,14 @@ export default async function PlayerHomePage({
               const pct = a.target > 0 ? Math.round((logged / a.target) * 100) : 0;
               const done = logged >= a.target;
 
+              // Two-tone only when this drill tracks makes and some were recorded:
+              // muted-green attempts with a bright-green makes overlay, mirroring
+              // the log screen. Otherwise the single bar below.
+              const makesTotal = makesByAssignment[a.id] ?? 0;
+              const twoTone = (a.track_makes ?? false) && makesTotal > 0;
+              const makesPct =
+                a.target > 0 ? Math.min(100, Math.round((makesTotal / a.target) * 100)) : 0;
+
               return (
                 <Link
                   key={a.id}
@@ -113,12 +127,25 @@ export default async function PlayerHomePage({
                       <span className="text-[12px] text-reps-dim">{logged}/{a.target} {a.unit}</span>
                     )}
                   </div>
-                  <div className="h-1 bg-reps-line rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-[#f0b429]"}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
+                  {twoTone ? (
+                    <div className="relative h-1 rounded-full overflow-hidden" style={{ background: "#1a2e1a" }}>
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full transition-all"
+                        style={{ width: `${pct}%`, background: "#27500a" }}
+                      />
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full transition-all"
+                        style={{ width: `${makesPct}%`, background: "#3dd68c" }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-1 bg-reps-line rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-[#27500a]"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  )}
                 </Link>
               );
             })}

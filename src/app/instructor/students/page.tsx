@@ -23,7 +23,9 @@ const GROUP_ORDER: Group[] = ["done", "progress", "notstarted", "unassigned"];
 // Pill styling per group (Nothing assigned mirrors Not started).
 const GROUP_STYLE: Record<Group, { title: string; bg: string; text: string; dot: string }> = {
   done:       { title: "Done",             bg: "rgba(61,214,140,0.12)", text: "#3dd68c", dot: "#3dd68c" },
-  progress:   { title: "In progress",      bg: "rgba(240,180,41,0.1)",  text: "#f0b429", dot: "#f0b429" },
+  // Text lifted to a readable mid-green — literal #27500a is unreadable on the
+  // dark bg — kept distinct from Done's #3dd68c; the dot stays muted.
+  progress:   { title: "In progress",      bg: "rgba(39,80,10,0.18)",   text: "#5aa22f", dot: "#27500a" },
   notstarted: { title: "Not started",      bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#5a5f72" },
   unassigned: { title: "Nothing assigned", bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#5a5f72" },
 };
