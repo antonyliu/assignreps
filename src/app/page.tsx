@@ -125,10 +125,21 @@ function MiniCard({
   );
 }
 
-/* Roster row — avatar initial, name, status subline. */
+/* Roster row — avatar initial, name, status subline. Sits on its own card
+   surface so the rows separate from the frame background. */
 function MiniRow({ initial, name, sub }: { initial: string; name: string; sub: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "0.45em", padding: "0.35em 0" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.45em",
+        padding: "0.4em 0.5em",
+        background: T.card,
+        border: `1px solid ${T.line}`,
+        borderRadius: "0.55em",
+      }}
+    >
       <span
         style={{
           width: "1.35em",
@@ -243,9 +254,9 @@ function ScreenHome() {
       </div>
       {/* One of each state, top to bottom: finished, underway, untouched. */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
-        <MiniCard name="Form shooting" right="✓ Done" pct={100} color={T.green} done />
-        <MiniCard name="Free throws"   right="30/50"  pct={60}  color={T.yellow} />
-        <MiniCard name="Corner 3s"     right="0/25"   pct={0}   color={T.line} />
+        <MiniCard name="Form shooting" right="✓ Done"  pct={100} color={T.green} done />
+        <MiniCard name="Crossovers"    right="3/5 min" pct={60}  color={T.yellow} />
+        <MiniCard name="Box-outs"      right="0/20"    pct={0}   color={T.line} />
       </div>
     </>
   );
@@ -310,27 +321,33 @@ function ScreenLog() {
 function ScreenRoster() {
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.1em" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.9em" }}>
         <MiniLogo />
         <span style={{ fontSize: "0.62em", fontWeight: 500, color: T.sub }}>Coach RJ</span>
       </div>
-      <div style={{ fontSize: "1.4em", fontWeight: 600, letterSpacing: "-0.5px", color: T.ink, marginBottom: "0.9em" }}>
+      <div style={{ fontSize: "1.4em", fontWeight: 600, letterSpacing: "-0.5px", color: T.ink, marginBottom: "0.65em" }}>
         Your players
       </div>
-      {/* Weighted green — this frame is the payoff, so most of the roster is done. */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.9em" }}>
+      {/* One student per state. Spacing is tight because three groups plus their
+          pills only just clear the 9/16 mobile frame. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.55em" }}>
         <div>
           <div style={{ marginBottom: "0.3em" }}>
             <MiniPill text="Done" color={T.green} bg="rgba(61,214,140,0.12)" />
           </div>
           <MiniRow initial="N" name="Neo" sub="3 of 3 done" />
-          <MiniRow initial="M" name="Maya" sub="4 of 4 done" />
         </div>
         <div>
           <div style={{ marginBottom: "0.3em" }}>
             <MiniPill text="In progress" color={T.yellow} bg="rgba(240,180,41,0.1)" />
           </div>
           <MiniRow initial="J" name="Jordan" sub="1 of 3 done" />
+        </div>
+        <div>
+          <div style={{ marginBottom: "0.3em" }}>
+            <MiniPill text="Not started" color={T.sub} bg="rgba(90,95,114,0.1)" />
+          </div>
+          <MiniRow initial="S" name="Sofia" sub="2 assignments waiting" />
         </div>
       </div>
     </>
@@ -527,7 +544,7 @@ export default function LandingPage() {
       <style href="landing" precedence="default">{`
         .student-link, .student-link:visited { color: #378add; }
         .page-header { padding: 20px 22px 0; }
-        .page-main   { padding: 48px 22px 40px; }
+        .page-main   { padding: 48px 22px 24px; }
         .landing-layout {
           display: flex;
           flex-direction: column;
@@ -640,9 +657,11 @@ export default function LandingPage() {
           .bullet-text  { font-size: 20px; }
         }
         /* ---- Product loop ---- */
+        /* Mobile runs tight — the hero, the heading and the row sit close
+           together; desktop reopens the spacing further down. */
         .loop-section {
           background: #1a1d24;
-          padding: 80px 0;
+          padding: 40px 0 44px;
         }
         .loop-heading {
           margin: 0 auto 10px;
@@ -673,7 +692,7 @@ export default function LandingPage() {
           --pw: 160px;
           width: var(--pw);
           font-size: calc(var(--pw) / 13);
-          aspect-ratio: 9 / 19;
+          aspect-ratio: 9 / 16;
           flex-shrink: 0;
           box-sizing: border-box;
           display: flex;
@@ -722,6 +741,7 @@ export default function LandingPage() {
              container = min(1100, 100vw - 80)   [hero content box]
              frame     = (container - 3 * 16px gaps) / 4                      */
         @media (min-width: 768px) {
+          .loop-section { padding: 80px 0; }
           .loop-track {
             max-width: 1180px;
             margin: 0 auto;
@@ -731,7 +751,10 @@ export default function LandingPage() {
             scroll-snap-type: none;
             padding: 0 40px;
           }
-          .loop-phone { --pw: calc((min(1100px, 100vw - 80px) - 48px) / 4); }
+          .loop-phone {
+            --pw: calc((min(1100px, 100vw - 80px) - 48px) / 4);
+            aspect-ratio: 9 / 19;
+          }
         }
 
         .footer-desktop { display: none; }
