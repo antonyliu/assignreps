@@ -126,13 +126,14 @@ export default function AddPlayerForm({ studentLabel }: Props) {
         {isParent ? (
           <>
             <p className="mt-2 text-[13px] text-[#5a5f72]">
-              They&apos;ll get the link to share with {firstName || "them"}.
+              They&apos;ll get a text when you assign work — to share with{" "}
+              {firstName || "them"}.
             </p>
             <p className="mt-0.5 text-[13px] text-[#5a5f72]">Great for younger students.</p>
           </>
         ) : (
           <p className="mt-2 text-[13px] text-[#5a5f72]">
-            They&apos;ll get a text with their homework link.
+            They&apos;ll get a text when you assign work.
           </p>
         )}
 

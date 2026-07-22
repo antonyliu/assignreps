@@ -8,7 +8,7 @@ A lightweight web app for coaches and instructors to assign practice homework to
 **Live domain:** assignreps.com
 **Staging:** staging.assignreps.com
 **Stack:** Next.js · Supabase · Vercel · Tailwind CSS · Twilio · Resend
-**Design:** Mobile-first, light/warm background (#f8f7f5) on landing; cool dark mode inside the app (#111318 bg, #1c1f26 surfaces, #2a2d36 borders); sky blue (#378add) as sole accent
+**Design:** Mobile-first, light/warm background (#ede9e3) on landing; cool dark mode inside the app (#111318 bg, #1c1f26 surfaces, #2a2d36 borders); sky blue (#378add) as sole accent
 
 ---
 
@@ -297,7 +297,7 @@ Custom exercise: name + track type (reps/time/target) + optional video URL
 - **Primary CTA:** Get started
 - **Secondary CTA:** I'm a student →
 - **Hero:** Two overlapping circles — basketball and piano WebP images
-- **Background:** #f8f7f5 (warm off-white)
+- **Background:** #ede9e3 (warm off-white)
 
 ---
 
@@ -599,7 +599,7 @@ These SMS-consent additions are A2P / toll-free compliance signals. Substantive 
 - Assign flow — needs review pass (student-detail view polished July 16–17 2026)
 - Student welcome, log, celebrate screens — needs review pass (student home polished July 16 2026)
 - Parent digest screen — needs review pass
-- 'Create your own' link on student detail → 404, needs fix
+- ~~'Create your own' link on student detail → 404~~ — not a bug. Verified July 20 2026: there is no such link on student detail. The two real entry points (the category list and the exercise list) both link to `/instructor/student/[id]/assign/custom`, which is a live route.
 - Tablet/responsive layout — deferred until a real tablet user requests it
 
 ---
