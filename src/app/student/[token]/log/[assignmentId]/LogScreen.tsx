@@ -26,9 +26,9 @@ type Props = {
 // Only shooting-type drills get their own noun — finishing and plain rep work
 // share the generic wording, so neither needs a branch. Minutes win over all of
 // it: you don't take shots for ten minutes' worth of dribbling.
-// One contained control: −, an editable number, +, all inside a single card so
-// the two steppers on this screen read as the same component at two weights.
-function StepperBox({
+// One stepper row: −, an editable number, +. Deliberately unstyled as a card —
+// both rows sit inside a single shared container, separated by a divider.
+function StepperRow({
   id,
   value,
   onValue,
@@ -55,7 +55,7 @@ function StepperBox({
     "shrink-0 w-9 h-9 rounded-full bg-[#2a2d36] text-reps-ink text-[20px] leading-none flex items-center justify-center active:scale-[0.92] transition-all disabled:opacity-25 disabled:pointer-events-none";
 
   return (
-    <div className="flex items-center gap-3 bg-reps-card border border-reps-line rounded-[12px] px-3 py-3">
+    <div className="flex items-center gap-3">
       <button type="button" aria-label={`Decrease ${label}`} onClick={() => onStep(-1)} disabled={minusDisabled} className={btn}>
         −
       </button>
@@ -82,16 +82,17 @@ function StepperBox({
   );
 }
 
-// The hero line. Shooting-type drills that track makes ask for "attempts" (the
-// number entered here is attempts; makes are the subset logged below). Other
-// categories, and anything not tracking makes, stay generic. Minutes always win.
+// Label for the first stepper. Shooting-type drills that track makes ask for
+// "attempts" (the number entered there is attempts; makes are the subset logged
+// below). Other categories, and anything not tracking makes, stay generic.
+// Minutes always win.
 const ATTEMPTS_CATEGORIES = new Set(["shooting", "finishing", "spot-shots"]);
 function primaryQuestion(unit: string, trackMakes: boolean, categoryKey?: string): string {
-  if (unit === "minutes") return "How many minutes today?";
+  if (unit === "minutes") return "How many minutes?";
   if (trackMakes && categoryKey !== undefined && ATTEMPTS_CATEGORIES.has(categoryKey)) {
-    return "How many attempts today?";
+    return "How many attempts?";
   }
-  return "How many today?";
+  return "How many?";
 }
 
 export default function LogScreen({
@@ -165,10 +166,6 @@ export default function LogScreen({
   // a completed assignment that doesn't track makes.
   const inputLocked = !trackMakes && done && added < 1;
 
-  // Makes stepper is revealed, not just enabled, once there's an attempt for the
-  // makes to be a subset of.
-  const showMakes = trackMakes && added > 0;
-
   // Two-layer bar for makes drills: attempts fill in muted green, makes overlay
   // in bright green, both against a near-black-green track. Both layers count
   // banked totals plus this session — the attempts layer via `current` (which
@@ -207,7 +204,7 @@ export default function LogScreen({
         >
           ←
         </Link>
-        <span className="text-[14px] font-medium text-reps-sub">Log reps</span>
+        <span className="text-[15px] font-medium text-reps-ink truncate">{exerciseName}</span>
       </div>
 
       {error && (
@@ -216,8 +213,7 @@ export default function LogScreen({
         </div>
       )}
 
-      {/* Reference, not hero: what's already banked, with the bar under it. */}
-      <div className="text-[13px] text-reps-sub mb-1">{exerciseName}</div>
+      {/* Reference: what's already banked, with the bar under it. */}
       <div className="text-[13px] text-reps-dim mb-2 tabular-nums">
         {current} of {target} done
       </div>
@@ -242,48 +238,49 @@ export default function LogScreen({
         </div>
       )}
 
-      {/* The hero: one question, then the field that answers it. */}
-      <label
-        htmlFor="amount"
-        className="block text-[22px] font-semibold tracking-[-0.3px] leading-snug text-reps-ink mb-4"
-      >
-        {question}
-      </label>
-      {/* Tap to nudge, or tap the number to type it outright. */}
-      <StepperBox
-        id="amount"
-        label="amount"
-        value={amountInput}
-        onValue={setAmountInput}
-        onStep={step}
-        numberSize="text-[36px] py-2"
-        minusDisabled={inputLocked || added < 1}
-        plusDisabled={inputLocked || added >= stepCeiling}
-        inputDisabled={inputLocked}
-      />
-
-      {/* Progressive disclosure: nothing here until there's an attempt, then this
-          mounts and the reps-reveal keyframe fades/slides it in (pure CSS — the
-          pane throttles rAF, so no JS-timed transition). */}
-      {showMakes && (
-        <div className="reps-reveal mt-6">
-          <label htmlFor="makes" className="block text-[14px] text-reps-sub mb-2">
-            How many did you make?
+      {/* Both steppers in one card, split by a divider. Same size on purpose —
+          the labels and the divider carry the hierarchy, not the type scale.
+          Tap to nudge, or tap the number to type it outright. */}
+      <div className="bg-reps-card border border-reps-line rounded-[12px]">
+        <div className="px-4 py-4">
+          <label htmlFor="amount" className="block text-[14px] text-reps-sub mb-2">
+            {question}
           </label>
-          {/* Secondary by weight, identical in mechanism. */}
-          <StepperBox
-            id="makes"
-            label="makes"
-            value={makesInput}
-            onValue={setMakesInput}
-            onStep={stepMakes}
-            numberSize="text-[24px] py-1"
-            minusDisabled={makesValue < 1}
-            plusDisabled={false}
-            inputDisabled={false}
+          <StepperRow
+            id="amount"
+            label="amount"
+            value={amountInput}
+            onValue={setAmountInput}
+            onStep={step}
+            numberSize="text-[36px] py-2"
+            minusDisabled={inputLocked || added < 1}
+            plusDisabled={inputLocked || added >= stepCeiling}
+            inputDisabled={inputLocked}
           />
         </div>
-      )}
+
+        {trackMakes && (
+          <>
+            <div className="border-t border-reps-line" />
+            <div className="px-4 py-4">
+              <label htmlFor="makes" className="block text-[14px] text-reps-sub mb-2">
+                How many did you make?
+              </label>
+              <StepperRow
+                id="makes"
+                label="makes"
+                value={makesInput}
+                onValue={setMakesInput}
+                onStep={stepMakes}
+                numberSize="text-[36px] py-2"
+                minusDisabled={makesValue < 1}
+                plusDisabled={false}
+                inputDisabled={false}
+              />
+            </div>
+          </>
+        )}
+      </div>
 
       <div
         className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
