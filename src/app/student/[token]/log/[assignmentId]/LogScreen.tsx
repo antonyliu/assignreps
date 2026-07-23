@@ -132,8 +132,16 @@ function primaryLabel(unit: string, trackMakes: boolean, categoryKey?: string): 
 // saturation 65% and lightness 54%.
 const BAR_TRACK = "#2a2d36";
 const BAR_ATTEMPTS = "#2d5a1b";
-const ATTEMPTS_GREEN = "#2d5a1b";
+const ATTEMPTS_GREEN = "#3d7a24";
 const MAKES_GREEN = "#6bd63d";
+
+// Written out in full rather than composed, so Tailwind sees each class literally.
+// A reps-only assignment has no second field to rank against, so it takes the
+// bright green outright instead of the muted attempts shade.
+const ATTEMPTS_NUMBER =
+  "text-[76px] font-semibold text-[#3d7a24] placeholder:text-[#3d7a24] placeholder:opacity-100";
+const SOLO_NUMBER =
+  "text-[76px] font-semibold text-[#6bd63d] placeholder:text-[#6bd63d] placeholder:opacity-100";
 
 export default function LogScreen({
   token,
@@ -151,54 +159,58 @@ export default function LogScreen({
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState("");
-  // Both kept as strings so an empty field stays empty rather than reading as 0.
-  const [amountInput, setAmountInput] = useState("");
-  const [makesInput, setMakesInput]   = useState("");
+  // The steppers show running TOTALS, seeded from what's already banked, so
+  // reopening a part-logged assignment picks up where the student left off
+  // instead of at zero — matching the bar, which already seeded this way.
+  const [amountInput, setAmountInput] = useState(String(alreadyLogged));
+  const [makesInput, setMakesInput]   = useState(String(alreadyMakes));
 
-  // What the student typed this session.
+  // ⚠️ `logs` rows are increments, not snapshots: each save appends one row and
+  // the totals are summed at read time. So what's persisted is the DELTA between
+  // the displayed total and what was already banked — writing the total itself
+  // would re-log every prior session.
   //
-  // Normal assignments clamp to what's outstanding — the "counter caps at the
-  // target, no inflating" rule. Makes assignments do NOT: attempts are the
-  // denominator of a shooting percentage, so a real 60-attempt session against a
-  // 50 target has to survive intact. Silently trimming it to 50 would distort
-  // the number the whole feature exists to produce.
-  const remainingToTarget = Math.max(0, target - alreadyLogged);
+  // A total can't fall below what's banked (there's no un-logging). Only
+  // non-makes work is capped at target: attempts are the denominator of a
+  // shooting percentage, so a real 60-attempt session against a 50 target has to
+  // survive intact rather than being trimmed to 50.
+  const amountCeiling = trackMakes ? Infinity : target;
   const parsedAmount = parseInt(amountInput, 10);
-  const typed = Number.isNaN(parsedAmount) ? 0 : Math.max(0, parsedAmount);
-  const added = trackMakes ? typed : Math.min(typed, remainingToTarget);
+  const current = Number.isNaN(parsedAmount)
+    ? alreadyLogged
+    : Math.min(Math.max(parsedAmount, alreadyLogged), amountCeiling);
+  const added = current - alreadyLogged;
 
-  // Likewise the readout: capped for normal work, honest for makes, so a student
-  // logging 60 sees 60 rather than watching it silently become 50.
-  const current = trackMakes ? alreadyLogged + added : Math.min(alreadyLogged + added, target);
-  const pct     = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
-  const done    = current >= target;
+  const parsedMakes = parseInt(makesInput, 10);
+  const makesTotal = Number.isNaN(parsedMakes)
+    ? alreadyMakes
+    : Math.max(parsedMakes, alreadyMakes);
+  const makesAdded = makesTotal - alreadyMakes;
+
+  const pct  = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  const done = current >= target;
 
   const label = primaryLabel(unit, trackMakes, categoryKey);
 
-  // Stepper. Clamps the stored value itself — not just what gets saved — so the
-  // number on screen is always the number that will be logged. Typing is left
-  // alone; only the buttons are bounded.
-  const stepCeiling = trackMakes ? Infinity : remainingToTarget;
+  // Steppers move the displayed total, floored at what's banked and ceilinged as
+  // above. Functional updates, not the closed-over value: taps fired faster than
+  // React re-renders would otherwise all read the same stale number and collapse
+  // into a single increment.
   function step(delta: number) {
-    // Functional update, not the closed-over value: taps fired faster than React
-    // re-renders would otherwise all read the same stale number and collapse into
-    // a single increment.
     setAmountInput((prev) => {
       const p = parseInt(prev, 10);
-      const base = Number.isNaN(p) ? 0 : Math.max(0, p);
-      return String(Math.min(Math.max(0, base + delta), stepCeiling));
+      const base = Number.isNaN(p) ? alreadyLogged : p;
+      return String(Math.min(Math.max(base + delta, alreadyLogged), amountCeiling));
     });
   }
 
-  // Makes are never clamped against the amount — a mismatch is the coach's
-  // signal that something went wrong, not something to silently correct here.
-  const parsedMakes = parseInt(makesInput, 10);
-  const makesValue = Number.isNaN(parsedMakes) ? 0 : Math.max(0, parsedMakes);
+  // Makes are never clamped against attempts — a mismatch is the coach's signal
+  // that something went wrong, not something to silently correct here.
   function stepMakes(delta: number) {
     setMakesInput((prev) => {
       const p = parseInt(prev, 10);
-      const base = Number.isNaN(p) ? 0 : Math.max(0, p);
-      return String(Math.max(0, base + delta));
+      const base = Number.isNaN(p) ? alreadyMakes : p;
+      return String(Math.max(base + delta, alreadyMakes));
     });
   }
 
@@ -206,20 +218,15 @@ export default function LogScreen({
   // a completed assignment that doesn't track makes.
   const inputLocked = !trackMakes && done && added < 1;
 
-  // Two-layer bar for makes drills: attempts fill in muted green, makes overlay
-  // in bright green, both against a near-black-green track. Both layers count
-  // banked totals plus this session — the attempts layer via `current` (which
-  // already folds in alreadyLogged), the makes layer via alreadyMakes here — so
-  // reopening a partly-logged assignment shows real progress, not an empty bar.
-  const makesTotal = alreadyMakes + makesValue;
+  // Bar layers read the same totals the steppers show.
   const makesPct = target > 0 ? Math.min(100, Math.round((makesTotal / target) * 100)) : 0;
 
   async function handleSave() {
     if (added < 1) return;
     setSaving(true);
-    const parsed = parseInt(makesInput, 10);
-    const makes =
-      !trackMakes || makesInput.trim() === "" || Number.isNaN(parsed) ? null : parsed;
+    // Both figures are deltas — this row records only what was added now. Makes
+    // left untouched stay null ("logged the reps, didn't say"), never 0.
+    const makes = !trackMakes || makesAdded < 1 ? null : makesAdded;
     const result = await saveLog(playerId, assignmentId, added, makes);
     setSaving(false);
     if (!result.ok) { setError(result.error); return; }
@@ -260,7 +267,7 @@ export default function LogScreen({
       {trackMakes ? (
         // attempts (muted green) with makes (bright green) stacked on top.
         <div
-          className="relative h-1.5 rounded-full overflow-hidden mb-[84px]"
+          className="relative h-2.5 rounded-full overflow-hidden mb-[84px]"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -274,7 +281,7 @@ export default function LogScreen({
         </div>
       ) : (
         <div
-          className="h-1.5 rounded-full overflow-hidden mb-[84px]"
+          className="h-2.5 rounded-full overflow-hidden mb-[84px]"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -288,7 +295,12 @@ export default function LogScreen({
           and the MAKES row share the same edges as the bar and title above —
           the page padding supplies the breathing room. */}
       <div className="mb-14">
-        <FieldLabel htmlFor="amount" text={label} color={ATTEMPTS_GREEN} sizeClass="text-[17px]" />
+        <FieldLabel
+          htmlFor="amount"
+          text={label}
+          color={trackMakes ? ATTEMPTS_GREEN : MAKES_GREEN}
+          sizeClass="text-[17px]"
+        />
         <div className="mt-5">
           <StepperRow
             id="amount"
@@ -298,13 +310,13 @@ export default function LogScreen({
             onStep={step}
             buttonClass="w-[67px] h-[67px] text-[38px]"
             // placeholder:opacity-100 defeats the browser default that renders
-            // placeholders dimmed — the empty "0" must be the same #5aa22f as
-            // the label, not a lighter shade of it.
-            numberClass="text-[76px] font-semibold text-[#2d5a1b] placeholder:text-[#2d5a1b] placeholder:opacity-100"
+            // placeholders dimmed — the seeded 0 must be the label's colour,
+            // not a lighter shade of it.
+            numberClass={trackMakes ? ATTEMPTS_NUMBER : SOLO_NUMBER}
             inputWidthClass="flex-1 min-w-0"
             gapClass="gap-5"
-            minusDisabled={inputLocked || added < 1}
-            plusDisabled={inputLocked || added >= stepCeiling}
+            minusDisabled={inputLocked || current <= alreadyLogged}
+            plusDisabled={inputLocked || current >= amountCeiling}
             inputDisabled={inputLocked}
           />
         </div>
@@ -328,7 +340,7 @@ export default function LogScreen({
                 numberClass="text-[31px] font-semibold text-[#6bd63d] placeholder:text-[#6bd63d] placeholder:opacity-100"
                 inputWidthClass="w-[60px] shrink-0"
                 gapClass="gap-2"
-                minusDisabled={makesValue < 1}
+                minusDisabled={makesTotal <= alreadyMakes}
                 plusDisabled={false}
                 inputDisabled={false}
               />
