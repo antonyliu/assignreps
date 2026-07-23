@@ -75,8 +75,8 @@ export default async function PlayerHomePage({
         <div
           className="text-center rounded-[10px] mb-6"
           style={{
-            background: "rgba(61,214,140,0.06)",
-            border: "0.5px solid rgba(61,214,140,0.15)",
+            background: "rgba(107,214,61,0.06)",
+            border: "0.5px solid rgba(107,214,61,0.15)",
             padding: "12px 14px",
           }}
         >

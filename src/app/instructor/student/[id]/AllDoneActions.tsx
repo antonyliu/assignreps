@@ -79,7 +79,7 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
               type="button"
               onClick={handleClear}
               disabled={isPending}
-              className="w-full text-center bg-[#3dd68c1a] border border-[#3dd68c] text-[#3dd68c] font-semibold text-[15px] py-[14px] rounded-[10px] disabled:opacity-50 transition-colors mb-2"
+              className="w-full text-center bg-[#6bd63d1a] border border-[#6bd63d] text-[#6bd63d] font-semibold text-[15px] py-[14px] rounded-[10px] disabled:opacity-50 transition-colors mb-2"
               style={{ WebkitTapHighlightColor: "transparent" }}
             >
               {isPending ? "Clearing…" : "Clear completed"}

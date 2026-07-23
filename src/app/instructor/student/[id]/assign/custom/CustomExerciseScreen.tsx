@@ -55,9 +55,9 @@ export default function CustomExerciseScreen({ playerId, playerName }: Props) {
           className={`w-[72px] h-[72px] rounded-full flex items-center justify-center transition-all duration-300 ease-out ${
             sentIn ? "opacity-100 scale-100" : "opacity-0 scale-90"
           }`}
-          style={{ background: "rgba(61,214,140,0.12)" }}
+          style={{ background: "rgba(107,214,61,0.12)" }}
         >
-          <Check size={34} color="#3dd68c" strokeWidth={2.5} />
+          <Check size={34} color="#6bd63d" strokeWidth={2.5} />
         </div>
         <p
           className={`text-[17px] font-semibold text-reps-ink mt-5 transition-opacity duration-300 ${

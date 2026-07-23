@@ -59,7 +59,7 @@ const T = {
   sub: "#8a8fa8",
   label: "#c8cdd8",
   blue: "#378add",
-  green: "#3dd68c",
+  green: "#6bd63d",
   // Was yellow; the app dropped yellow for in-progress, so the mock follows with
   // muted green. Named `progress` now — it's a bar fill, not a text/number colour
   // (the log counter, which needs legibility, uses `ink` instead).
@@ -336,7 +336,7 @@ function ScreenRoster() {
       <div style={{ display: "flex", flexDirection: "column", gap: "0.55em" }}>
         <div>
           <div style={{ marginBottom: "0.3em" }}>
-            <MiniPill text="Done" color={T.green} bg="rgba(61,214,140,0.12)" />
+            <MiniPill text="Done" color={T.green} bg="rgba(107,214,61,0.12)" />
           </div>
           <MiniRow initial="N" name="Neo" sub="3 of 3 done" />
         </div>

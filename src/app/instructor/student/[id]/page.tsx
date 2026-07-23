@@ -131,6 +131,11 @@ export default async function CoachPlayerPage({
                 showMakes && m.makes <= m.attempts
                   ? Math.round((m.makes / m.attempts) * 100)
                   : null;
+              // Two-tone bar, same rule as the student list: muted attempts fill
+              // with a bright makes overlay, but only once makes were recorded.
+              const twoTone = (a.track_makes ?? false) && showMakes;
+              const barMakesPct =
+                m && a.target > 0 ? Math.min(100, Math.round((m.makes / a.target) * 100)) : 0;
               return (
                 <div
                   key={a.id}
@@ -147,12 +152,31 @@ export default async function CoachPlayerPage({
                         <span className="shrink-0 text-[12px] text-reps-dim whitespace-nowrap">{logged}/{a.target} {unitLabel(a.unit)}</span>
                       )}
                     </div>
-                    <div className="h-1 bg-reps-line rounded-full overflow-hidden">
+                    {twoTone ? (
                       <div
-                        className={`h-full rounded-full ${done ? "bg-reps-green" : "bg-[#27500a]"}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
+                        className="relative h-1.5 rounded-full overflow-hidden"
+                        style={{ background: "#2a2d36" }}
+                      >
+                        <div
+                          className="absolute inset-y-0 left-0 rounded-full"
+                          style={{ width: `${pct}%`, background: "#3d7a24" }}
+                        />
+                        <div
+                          className="absolute inset-y-0 left-0 rounded-full"
+                          style={{ width: `${barMakesPct}%`, background: "#6bd63d" }}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="h-1.5 rounded-full overflow-hidden"
+                        style={{ background: "#2a2d36" }}
+                      >
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${pct}%`, background: done ? "#6bd63d" : "#3d7a24" }}
+                        />
+                      </div>
+                    )}
                     {showMakes && (
                       <div className="mt-2 text-[11px] text-reps-dim">
                         made {m.makes}/{m.attempts}
@@ -178,8 +202,8 @@ export default async function CoachPlayerPage({
             <div
               className="text-center rounded-[10px] mb-6"
               style={{
-                background: "rgba(61,214,140,0.06)",
-                border: "0.5px solid rgba(61,214,140,0.15)",
+                background: "rgba(107,214,61,0.06)",
+                border: "0.5px solid rgba(107,214,61,0.15)",
                 padding: "12px 14px",
               }}
             >
