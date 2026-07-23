@@ -27,11 +27,21 @@ type Props = {
 // share the generic wording, so neither needs a branch. Minutes win over all of
 // it: you don't take shots for ten minutes' worth of dribbling.
 // Small uppercase section label. Colour carries the attempts/makes distinction.
-function FieldLabel({ htmlFor, text, color }: { htmlFor: string; text: string; color: string }) {
+function FieldLabel({
+  htmlFor,
+  text,
+  color,
+  sizeClass,
+}: {
+  htmlFor: string;
+  text: string;
+  color: string;
+  sizeClass: string;
+}) {
   return (
     <label
       htmlFor={htmlFor}
-      className="block text-[12px] font-semibold uppercase tracking-[1.5px]"
+      className={`block font-semibold uppercase tracking-[1.5px] ${sizeClass}`}
       style={{ color }}
     >
       {text}
@@ -264,7 +274,7 @@ export default function LogScreen({
           and the MAKES row share the same edges as the bar and title above —
           the page padding supplies the breathing room. */}
       <div>
-        <FieldLabel htmlFor="amount" text={label} color={ATTEMPTS_GREEN} />
+        <FieldLabel htmlFor="amount" text={label} color={ATTEMPTS_GREEN} sizeClass="text-[17px]" />
         <div className="mt-5">
           <StepperRow
             id="amount"
@@ -272,8 +282,11 @@ export default function LogScreen({
             value={amountInput}
             onValue={setAmountInput}
             onStep={step}
-            buttonClass="w-12 h-12 text-[27px]"
-            numberClass="text-[54px] text-[#5aa22f] placeholder:text-[#5aa22f]"
+            buttonClass="w-[67px] h-[67px] text-[38px]"
+            // placeholder:opacity-100 defeats the browser default that renders
+            // placeholders dimmed — the empty "0" must be the same #5aa22f as
+            // the label, not a lighter shade of it.
+            numberClass="text-[76px] text-[#5aa22f] placeholder:text-[#5aa22f] placeholder:opacity-100"
             inputWidthClass="flex-1 min-w-0"
             gapClass="gap-5"
             minusDisabled={inputLocked || added < 1}
@@ -288,16 +301,16 @@ export default function LogScreen({
           <>
             <div className="mt-11 border-t border-reps-line-hi" />
             <div className="mt-9 flex items-center justify-between gap-4">
-              <FieldLabel htmlFor="makes" text="MAKES" color={MAKES_GREEN} />
+              <FieldLabel htmlFor="makes" text="MAKES" color={MAKES_GREEN} sizeClass="text-[15px]" />
               <StepperRow
                 id="makes"
                 label="makes"
                 value={makesInput}
                 onValue={setMakesInput}
                 onStep={stepMakes}
-                buttonClass="w-10 h-10 text-[22px]"
-                numberClass="text-[25px] text-[#7ed957] placeholder:text-[#7ed957]"
-                inputWidthClass="w-12 shrink-0"
+                buttonClass="w-[50px] h-[50px] text-[28px]"
+                numberClass="text-[31px] text-[#7ed957] placeholder:text-[#7ed957] placeholder:opacity-100"
+                inputWidthClass="w-[60px] shrink-0"
                 gapClass="gap-2"
                 minusDisabled={makesValue < 1}
                 plusDisabled={false}
