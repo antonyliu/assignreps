@@ -98,7 +98,7 @@ function StepperRow({
         onFocus={(e) => e.target.select()}
         disabled={inputDisabled}
         placeholder="0"
-        className={`bg-transparent border-0 font-light leading-none text-center tabular-nums outline-none disabled:opacity-40 ${inputWidthClass} ${numberClass}`}
+        className={`bg-transparent border-0 leading-none text-center tabular-nums outline-none disabled:opacity-40 ${inputWidthClass} ${numberClass}`}
       />
       <button type="button" aria-label={`Increase ${label}`} onClick={() => onStep(1)} disabled={plusDisabled} className={btn}>
         +
@@ -121,11 +121,20 @@ function primaryLabel(unit: string, trackMakes: boolean, categoryKey?: string): 
   return "REPS";
 }
 
-// Two shades of the same warm yellow-green: attempts muted, makes a brighter
-// version of it — same hue family, so makes reads as "more" rather than other.
-// (#3dd68c/#4ade80 sit toward emerald and read bluish next to #5aa22f.)
-const ATTEMPTS_GREEN = "#5aa22f";
-const MAKES_GREEN = "#7ed957";
+// One green family, four stops, all held near hue 100° so nothing shifts between
+// lime and teal: track #1a2e1a (120°) -> bar attempts #2d5a1b (103°) -> attempts
+// number #4a8a28 (99°) -> makes #6bd63d (102°).
+//
+// Makes was specified as #3dd68c, but that sits at hue 151° — emerald, a ~50°
+// jump off the rest. #6bd63d is the same colour rotated back into the family
+// (identical saturation 65% and lightness 54%, hue 151° -> 102°).
+//
+// The ATTEMPTS label deliberately takes the darker bar-attempts shade; the
+// brighter #4a8a28 is reserved for the number.
+const BAR_TRACK = "#1a2e1a";
+const BAR_ATTEMPTS = "#2d5a1b";
+const ATTEMPTS_GREEN = "#2d5a1b";
+const MAKES_GREEN = "#6bd63d";
 
 export default function LogScreen({
   token,
@@ -229,7 +238,7 @@ export default function LogScreen({
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex items-center gap-3 mb-12">
         <Link
           href={`/student/${token}`}
           className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
@@ -246,26 +255,32 @@ export default function LogScreen({
       )}
 
       {/* Reference: what's already banked, with the bar under it. */}
-      <div className="text-[13px] text-reps-dim mb-2 tabular-nums">
+      <div className="text-[14px] text-reps-dim mb-2 tabular-nums">
         {current} of {target} done
       </div>
       {trackMakes ? (
         // attempts (muted green) with makes (bright green) stacked on top.
-        <div className="relative h-1.5 bg-reps-line rounded-full overflow-hidden mb-12">
+        <div
+          className="relative h-1.5 rounded-full overflow-hidden mb-[68px]"
+          style={{ background: BAR_TRACK }}
+        >
           <div
             className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
-            style={{ width: `${pct}%`, background: "#27500a" }}
+            style={{ width: `${pct}%`, background: BAR_ATTEMPTS }}
           />
           <div
             className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
-            style={{ width: `${makesPct}%`, background: "#3dd68c" }}
+            style={{ width: `${makesPct}%`, background: MAKES_GREEN }}
           />
         </div>
       ) : (
-        <div className="h-1.5 bg-reps-line rounded-full overflow-hidden mb-12">
+        <div
+          className="h-1.5 rounded-full overflow-hidden mb-[68px]"
+          style={{ background: BAR_TRACK }}
+        >
           <div
-            className={`h-full rounded-full transition-all duration-300 ${done ? "bg-reps-green" : "bg-[#27500a]"}`}
-            style={{ width: `${pct}%` }}
+            className="h-full rounded-full transition-all duration-300"
+            style={{ width: `${pct}%`, background: done ? MAKES_GREEN : BAR_ATTEMPTS }}
           />
         </div>
       )}
@@ -286,7 +301,7 @@ export default function LogScreen({
             // placeholder:opacity-100 defeats the browser default that renders
             // placeholders dimmed — the empty "0" must be the same #5aa22f as
             // the label, not a lighter shade of it.
-            numberClass="text-[76px] text-[#5aa22f] placeholder:text-[#5aa22f] placeholder:opacity-100"
+            numberClass="text-[76px] font-semibold text-[#4a8a28] placeholder:text-[#4a8a28] placeholder:opacity-100"
             inputWidthClass="flex-1 min-w-0"
             gapClass="gap-5"
             minusDisabled={inputLocked || added < 1}
@@ -309,7 +324,7 @@ export default function LogScreen({
                 onValue={setMakesInput}
                 onStep={stepMakes}
                 buttonClass="w-[50px] h-[50px] text-[28px]"
-                numberClass="text-[31px] text-[#7ed957] placeholder:text-[#7ed957] placeholder:opacity-100"
+                numberClass="text-[31px] font-semibold text-[#6bd63d] placeholder:text-[#6bd63d] placeholder:opacity-100"
                 inputWidthClass="w-[60px] shrink-0"
                 gapClass="gap-2"
                 minusDisabled={makesValue < 1}

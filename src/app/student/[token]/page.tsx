@@ -137,22 +137,30 @@ export default async function PlayerHomePage({
                       <span className="text-[12px] text-reps-dim">{logged}/{a.target} {a.unit}</span>
                     )}
                   </div>
+                  {/* Same green family as the log screen: dark-green track,
+                      muted attempts fill, bright makes overlay. */}
                   {twoTone ? (
-                    <div className="relative h-1 bg-reps-line rounded-full overflow-hidden">
+                    <div
+                      className="relative h-1.5 rounded-full overflow-hidden"
+                      style={{ background: "#1a2e1a" }}
+                    >
                       <div
                         className="absolute inset-y-0 left-0 rounded-full transition-all"
-                        style={{ width: `${pct}%`, background: "#27500a" }}
+                        style={{ width: `${pct}%`, background: "#2d5a1b" }}
                       />
                       <div
                         className="absolute inset-y-0 left-0 rounded-full transition-all"
-                        style={{ width: `${barMakesPct}%`, background: "#3dd68c" }}
+                        style={{ width: `${barMakesPct}%`, background: "#6bd63d" }}
                       />
                     </div>
                   ) : (
-                    <div className="h-1 bg-reps-line rounded-full overflow-hidden">
+                    <div
+                      className="h-1.5 rounded-full overflow-hidden"
+                      style={{ background: "#1a2e1a" }}
+                    >
                       <div
-                        className={`h-full rounded-full transition-all ${done ? "bg-reps-green" : "bg-[#27500a]"}`}
-                        style={{ width: `${pct}%` }}
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${pct}%`, background: done ? "#6bd63d" : "#2d5a1b" }}
                       />
                     </div>
                   )}
