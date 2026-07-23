@@ -121,17 +121,16 @@ function primaryLabel(unit: string, trackMakes: boolean, categoryKey?: string): 
   return "REPS";
 }
 
-// One green family, four stops, all held near hue 100° so nothing shifts between
-// lime and teal: track #1a2e1a (120°) -> bar attempts #2d5a1b (103°) -> attempts
-// number #4a8a28 (99°) -> makes #6bd63d (102°).
+// Two greens on a grey track. Each measure owns exactly one shade — attempts is
+// #2d5a1b for its bar fill, label and number alike; makes is #6bd63d for the
+// same three — so label and number read as one colour unit rather than two
+// weights of the same idea. Both sit near hue 100° (103° / 102°), so nothing
+// slides between lime and teal.
 //
-// Makes was specified as #3dd68c, but that sits at hue 151° — emerald, a ~50°
-// jump off the rest. #6bd63d is the same colour rotated back into the family
-// (identical saturation 65% and lightness 54%, hue 151° -> 102°).
-//
-// The ATTEMPTS label deliberately takes the darker bar-attempts shade; the
-// brighter #4a8a28 is reserved for the number.
-const BAR_TRACK = "#1a2e1a";
+// Makes was specified as #3dd68c; that measures hue 151° (emerald), ~50° off
+// the rest. #6bd63d is the same colour rotated back into the family — identical
+// saturation 65% and lightness 54%.
+const BAR_TRACK = "#2a2d36";
 const BAR_ATTEMPTS = "#2d5a1b";
 const ATTEMPTS_GREEN = "#2d5a1b";
 const MAKES_GREEN = "#6bd63d";
@@ -261,7 +260,7 @@ export default function LogScreen({
       {trackMakes ? (
         // attempts (muted green) with makes (bright green) stacked on top.
         <div
-          className="relative h-1.5 rounded-full overflow-hidden mb-[68px]"
+          className="relative h-1.5 rounded-full overflow-hidden mb-[84px]"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -275,7 +274,7 @@ export default function LogScreen({
         </div>
       ) : (
         <div
-          className="h-1.5 rounded-full overflow-hidden mb-[68px]"
+          className="h-1.5 rounded-full overflow-hidden mb-[84px]"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -288,7 +287,7 @@ export default function LogScreen({
       {/* Full-content-width lockup: ATTEMPTS label, the big stepper, the divider
           and the MAKES row share the same edges as the bar and title above —
           the page padding supplies the breathing room. */}
-      <div>
+      <div className="mb-14">
         <FieldLabel htmlFor="amount" text={label} color={ATTEMPTS_GREEN} sizeClass="text-[17px]" />
         <div className="mt-5">
           <StepperRow
@@ -301,7 +300,7 @@ export default function LogScreen({
             // placeholder:opacity-100 defeats the browser default that renders
             // placeholders dimmed — the empty "0" must be the same #5aa22f as
             // the label, not a lighter shade of it.
-            numberClass="text-[76px] font-semibold text-[#4a8a28] placeholder:text-[#4a8a28] placeholder:opacity-100"
+            numberClass="text-[76px] font-semibold text-[#2d5a1b] placeholder:text-[#2d5a1b] placeholder:opacity-100"
             inputWidthClass="flex-1 min-w-0"
             gapClass="gap-5"
             minusDisabled={inputLocked || added < 1}
@@ -314,8 +313,10 @@ export default function LogScreen({
             stepper right, under a hairline, on the same edges as attempts. */}
         {trackMakes && (
           <>
-            <div className="mt-11 border-t border-reps-line-hi" />
-            <div className="mt-9 flex items-center justify-between gap-4">
+            {/* Tight around the rule so attempts + makes read as one counting
+                section; the air lives outside it, not between the two. */}
+            <div className="mt-6 border-t border-reps-line-hi" />
+            <div className="mt-5 flex items-center justify-between gap-4">
               <FieldLabel htmlFor="makes" text="MAKES" color={MAKES_GREEN} sizeClass="text-[15px]" />
               <StepperRow
                 id="makes"

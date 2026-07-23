@@ -137,12 +137,12 @@ export default async function PlayerHomePage({
                       <span className="text-[12px] text-reps-dim">{logged}/{a.target} {a.unit}</span>
                     )}
                   </div>
-                  {/* Same green family as the log screen: dark-green track,
-                      muted attempts fill, bright makes overlay. */}
+                  {/* Same palette as the log screen: grey track, muted attempts
+                      fill, bright makes overlay. */}
                   {twoTone ? (
                     <div
                       className="relative h-1.5 rounded-full overflow-hidden"
-                      style={{ background: "#1a2e1a" }}
+                      style={{ background: "#2a2d36" }}
                     >
                       <div
                         className="absolute inset-y-0 left-0 rounded-full transition-all"
@@ -156,7 +156,7 @@ export default async function PlayerHomePage({
                   ) : (
                     <div
                       className="h-1.5 rounded-full overflow-hidden"
-                      style={{ background: "#1a2e1a" }}
+                      style={{ background: "#2a2d36" }}
                     >
                       <div
                         className="h-full rounded-full transition-all"

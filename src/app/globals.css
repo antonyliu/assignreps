@@ -108,3 +108,19 @@ body {
   0%   { transform: translateY(-10vh) rotate(0deg);   opacity: 1; }
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
+
+/* Number inputs are stepped by our own −/+ buttons, so the native spinners are
+   redundant — and on the log screen they overlap the large centred number.
+   The Firefox rule is separate: it has no spin-button pseudo-element. */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  display: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
