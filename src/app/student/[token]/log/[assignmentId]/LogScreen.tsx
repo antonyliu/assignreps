@@ -69,7 +69,9 @@ function StepperBox({
         onFocus={(e) => e.target.select()}
         disabled={inputDisabled}
         placeholder="0"
-        className={`flex-1 min-w-0 bg-transparent border-0 font-light leading-none text-center tabular-nums outline-none disabled:opacity-40 placeholder:text-reps-dim placeholder:opacity-50 ${numberSize} ${
+        // Subtle rounded outline so the number reads as "tap to type", not just
+        // display — brightens to the accent while editing.
+        className={`flex-1 min-w-0 bg-transparent border border-reps-line-hi rounded-[10px] px-2 font-light leading-none text-center tabular-nums outline-none focus:border-reps-orange transition-colors disabled:opacity-40 placeholder:text-reps-dim placeholder:opacity-50 ${numberSize} ${
           hasValue ? "text-reps-ink" : "text-reps-dim"
         }`}
       />
