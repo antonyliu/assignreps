@@ -31,7 +31,7 @@ function FieldLabel({ htmlFor, text, color }: { htmlFor: string; text: string; c
   return (
     <label
       htmlFor={htmlFor}
-      className="block text-[11px] font-semibold uppercase tracking-[1.5px]"
+      className="block text-[12px] font-semibold uppercase tracking-[1.5px]"
       style={{ color }}
     >
       {text}
@@ -111,10 +111,11 @@ function primaryLabel(unit: string, trackMakes: boolean, categoryKey?: string): 
   return "REPS";
 }
 
-// Attempts read muted against the bright makes green — but light enough to hold
-// up in sunlight, which #3a6b14 did not.
+// Two shades of the same warm yellow-green: attempts muted, makes a brighter
+// version of it — same hue family, so makes reads as "more" rather than other.
+// (#3dd68c/#4ade80 sit toward emerald and read bluish next to #5aa22f.)
 const ATTEMPTS_GREEN = "#5aa22f";
-const MAKES_GREEN = "#3dd68c";
+const MAKES_GREEN = "#7ed957";
 
 export default function LogScreen({
   token,
@@ -259,21 +260,22 @@ export default function LogScreen({
         </div>
       )}
 
-      {/* One centred 80% lockup: ATTEMPTS label, the big stepper, the divider
-          and the MAKES row all share the same left and right edges. */}
-      <div className="mx-auto w-[80%]">
+      {/* Full-content-width lockup: ATTEMPTS label, the big stepper, the divider
+          and the MAKES row share the same edges as the bar and title above —
+          the page padding supplies the breathing room. */}
+      <div>
         <FieldLabel htmlFor="amount" text={label} color={ATTEMPTS_GREEN} />
-        <div className="mt-4">
+        <div className="mt-5">
           <StepperRow
             id="amount"
             label="amount"
             value={amountInput}
             onValue={setAmountInput}
             onStep={step}
-            buttonClass="w-12 h-12 text-[24px]"
-            numberClass="text-[44px] text-[#5aa22f] placeholder:text-[#5aa22f]"
+            buttonClass="w-12 h-12 text-[27px]"
+            numberClass="text-[54px] text-[#5aa22f] placeholder:text-[#5aa22f]"
             inputWidthClass="flex-1 min-w-0"
-            gapClass="gap-4"
+            gapClass="gap-5"
             minusDisabled={inputLocked || added < 1}
             plusDisabled={inputLocked || added >= stepCeiling}
             inputDisabled={inputLocked}
@@ -284,8 +286,8 @@ export default function LogScreen({
             stepper right, under a hairline, on the same edges as attempts. */}
         {trackMakes && (
           <>
-            <div className="mt-10 border-t border-reps-line-hi" />
-            <div className="mt-8 flex items-center justify-between gap-4">
+            <div className="mt-11 border-t border-reps-line-hi" />
+            <div className="mt-9 flex items-center justify-between gap-4">
               <FieldLabel htmlFor="makes" text="MAKES" color={MAKES_GREEN} />
               <StepperRow
                 id="makes"
@@ -293,8 +295,8 @@ export default function LogScreen({
                 value={makesInput}
                 onValue={setMakesInput}
                 onStep={stepMakes}
-                buttonClass="w-10 h-10 text-[20px]"
-                numberClass="text-[24px] text-[#3dd68c] placeholder:text-[#3dd68c]"
+                buttonClass="w-10 h-10 text-[22px]"
+                numberClass="text-[25px] text-[#7ed957] placeholder:text-[#7ed957]"
                 inputWidthClass="w-12 shrink-0"
                 gapClass="gap-2"
                 minusDisabled={makesValue < 1}
