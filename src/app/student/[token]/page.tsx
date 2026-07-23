@@ -141,7 +141,7 @@ export default async function PlayerHomePage({
                       fill, bright makes overlay. */}
                   {twoTone ? (
                     <div
-                      className="relative h-2.5 rounded-full overflow-hidden"
+                      className="relative h-1.5 rounded-full overflow-hidden"
                       style={{ background: "#2a2d36" }}
                     >
                       <div
@@ -155,7 +155,7 @@ export default async function PlayerHomePage({
                     </div>
                   ) : (
                     <div
-                      className="h-2.5 rounded-full overflow-hidden"
+                      className="h-1.5 rounded-full overflow-hidden"
                       style={{ background: "#2a2d36" }}
                     >
                       <div
