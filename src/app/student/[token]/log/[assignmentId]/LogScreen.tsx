@@ -121,17 +121,17 @@ function primaryLabel(unit: string, trackMakes: boolean, categoryKey?: string): 
   return "REPS";
 }
 
-// Two greens on a grey track. Each measure owns exactly one shade — attempts is
-// #2d5a1b for its bar fill, label and number alike; makes is #6bd63d for the
-// same three — so label and number read as one colour unit rather than two
-// weights of the same idea. Both sit near hue 100° (103° / 102°), so nothing
-// slides between lime and teal.
+// Two greens on a grey track, one standard pair app-wide. Each measure owns
+// exactly one shade — attempts is #3d7a24 for its bar fill, label and number
+// alike (and for the coach detail bars); makes is #6bd63d for the same three —
+// so label and number read as one colour unit rather than two weights of the
+// same idea. Both sit near hue 100°, so nothing slides between lime and teal.
 //
 // Makes was specified as #3dd68c; that measures hue 151° (emerald), ~50° off
 // the rest. #6bd63d is the same colour rotated back into the family — identical
 // saturation 65% and lightness 54%.
 const BAR_TRACK = "#2a2d36";
-const BAR_ATTEMPTS = "#2d5a1b";
+const BAR_ATTEMPTS = "#3d7a24";
 const ATTEMPTS_GREEN = "#3d7a24";
 const MAKES_GREEN = "#6bd63d";
 

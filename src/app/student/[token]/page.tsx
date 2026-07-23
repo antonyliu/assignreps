@@ -146,7 +146,7 @@ export default async function PlayerHomePage({
                     >
                       <div
                         className="absolute inset-y-0 left-0 rounded-full transition-all"
-                        style={{ width: `${pct}%`, background: "#2d5a1b" }}
+                        style={{ width: `${pct}%`, background: "#3d7a24" }}
                       />
                       <div
                         className="absolute inset-y-0 left-0 rounded-full transition-all"
@@ -160,7 +160,7 @@ export default async function PlayerHomePage({
                     >
                       <div
                         className="h-full rounded-full transition-all"
-                        style={{ width: `${pct}%`, background: done ? "#6bd63d" : "#2d5a1b" }}
+                        style={{ width: `${pct}%`, background: done ? "#6bd63d" : "#3d7a24" }}
                       />
                     </div>
                   )}
