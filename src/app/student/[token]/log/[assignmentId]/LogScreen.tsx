@@ -69,7 +69,9 @@ function StepperRow({
   inputDisabled: boolean;
   label: string;
 }) {
-  const btn = `shrink-0 rounded-full bg-[#2a2d36] text-reps-ink leading-none flex items-center justify-center active:scale-[0.92] transition-all disabled:opacity-25 disabled:pointer-events-none ${buttonClass}`;
+  // Disabled goes to a visible grey (#555) rather than near-invisible opacity, so
+  // an inactive − still reads in bright light.
+  const btn = `shrink-0 rounded-full bg-[#2a2d36] text-reps-ink leading-none flex items-center justify-center active:scale-[0.92] transition-all disabled:text-[#555] disabled:pointer-events-none ${buttonClass}`;
 
   return (
     <div className={`flex items-center ${gapClass}`}>
@@ -86,7 +88,7 @@ function StepperRow({
         onFocus={(e) => e.target.select()}
         disabled={inputDisabled}
         placeholder="0"
-        className={`bg-transparent border-0 font-light leading-none text-center tabular-nums outline-none disabled:opacity-40 placeholder:text-reps-dim placeholder:opacity-40 ${inputWidthClass} ${numberClass}`}
+        className={`bg-transparent border-0 font-light leading-none text-center tabular-nums outline-none disabled:opacity-40 ${inputWidthClass} ${numberClass}`}
       />
       <button type="button" aria-label={`Increase ${label}`} onClick={() => onStep(1)} disabled={plusDisabled} className={btn}>
         +
@@ -238,7 +240,7 @@ export default function LogScreen({
       </div>
       {trackMakes ? (
         // attempts (muted green) with makes (bright green) stacked on top.
-        <div className="relative h-1.5 bg-reps-line rounded-full overflow-hidden mb-8">
+        <div className="relative h-1.5 bg-reps-line rounded-full overflow-hidden mb-12">
           <div
             className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
             style={{ width: `${pct}%`, background: "#27500a" }}
@@ -249,7 +251,7 @@ export default function LogScreen({
           />
         </div>
       ) : (
-        <div className="h-1.5 bg-reps-line rounded-full overflow-hidden mb-8">
+        <div className="h-1.5 bg-reps-line rounded-full overflow-hidden mb-12">
           <div
             className={`h-full rounded-full transition-all duration-300 ${done ? "bg-reps-green" : "bg-[#27500a]"}`}
             style={{ width: `${pct}%` }}
@@ -257,49 +259,52 @@ export default function LogScreen({
         </div>
       )}
 
-      {/* Attempts is the hero: big buttons, a big bare number, full width. */}
-      <FieldLabel htmlFor="amount" text={label} color={ATTEMPTS_GREEN} />
-      <div className="mt-3">
-        <StepperRow
-          id="amount"
-          label="amount"
-          value={amountInput}
-          onValue={setAmountInput}
-          onStep={step}
-          buttonClass="w-12 h-12 text-[24px]"
-          numberClass="text-[44px] text-[#5aa22f]"
-          inputWidthClass="flex-1 min-w-0"
-          gapClass="gap-4"
-          minusDisabled={inputLocked || added < 1}
-          plusDisabled={inputLocked || added >= stepCeiling}
-          inputDisabled={inputLocked}
-        />
-      </div>
+      {/* One centred 80% lockup: ATTEMPTS label, the big stepper, the divider
+          and the MAKES row all share the same left and right edges. */}
+      <div className="mx-auto w-[80%]">
+        <FieldLabel htmlFor="amount" text={label} color={ATTEMPTS_GREEN} />
+        <div className="mt-4">
+          <StepperRow
+            id="amount"
+            label="amount"
+            value={amountInput}
+            onValue={setAmountInput}
+            onStep={step}
+            buttonClass="w-12 h-12 text-[24px]"
+            numberClass="text-[44px] text-[#5aa22f] placeholder:text-[#5aa22f]"
+            inputWidthClass="flex-1 min-w-0"
+            gapClass="gap-4"
+            minusDisabled={inputLocked || added < 1}
+            plusDisabled={inputLocked || added >= stepCeiling}
+            inputDisabled={inputLocked}
+          />
+        </div>
 
-      {/* Makes is the quiet counterpart — one inline row, label left, mini
-          stepper right, under a hairline. */}
-      {trackMakes && (
-        <>
-          <div className="mt-6 border-t border-reps-line" style={{ borderTopWidth: "0.5px" }} />
-          <div className="mt-4 flex items-center justify-between gap-4">
-            <FieldLabel htmlFor="makes" text="MAKES" color={MAKES_GREEN} />
-            <StepperRow
-              id="makes"
-              label="makes"
-              value={makesInput}
-              onValue={setMakesInput}
-              onStep={stepMakes}
-              buttonClass="w-8 h-8 text-[18px]"
-              numberClass="text-[24px] text-[#3dd68c]"
-              inputWidthClass="w-12 shrink-0"
-              gapClass="gap-2"
-              minusDisabled={makesValue < 1}
-              plusDisabled={false}
-              inputDisabled={false}
-            />
-          </div>
-        </>
-      )}
+        {/* Makes is the quiet counterpart — one inline row, label left, mini
+            stepper right, under a hairline, on the same edges as attempts. */}
+        {trackMakes && (
+          <>
+            <div className="mt-10 border-t border-reps-line-hi" />
+            <div className="mt-8 flex items-center justify-between gap-4">
+              <FieldLabel htmlFor="makes" text="MAKES" color={MAKES_GREEN} />
+              <StepperRow
+                id="makes"
+                label="makes"
+                value={makesInput}
+                onValue={setMakesInput}
+                onStep={stepMakes}
+                buttonClass="w-10 h-10 text-[20px]"
+                numberClass="text-[24px] text-[#3dd68c] placeholder:text-[#3dd68c]"
+                inputWidthClass="w-12 shrink-0"
+                gapClass="gap-2"
+                minusDisabled={makesValue < 1}
+                plusDisabled={false}
+                inputDisabled={false}
+              />
+            </div>
+          </>
+        )}
+      </div>
 
       <div
         className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
