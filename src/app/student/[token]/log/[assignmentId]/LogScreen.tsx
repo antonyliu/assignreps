@@ -26,14 +26,31 @@ type Props = {
 // Only shooting-type drills get their own noun — finishing and plain rep work
 // share the generic wording, so neither needs a branch. Minutes win over all of
 // it: you don't take shots for ten minutes' worth of dribbling.
-// One stepper row: −, an editable number, +. Deliberately unstyled as a card —
-// both rows sit inside a single shared container, separated by a divider.
+// Small uppercase section label. Colour carries the attempts/makes distinction.
+function FieldLabel({ htmlFor, text, color }: { htmlFor: string; text: string; color: string }) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className="block text-[11px] font-semibold uppercase tracking-[1.5px]"
+      style={{ color }}
+    >
+      {text}
+    </label>
+  );
+}
+
+// One stepper row: −, a bare editable number, +. The number carries no box —
+// it floats between the buttons. Sized by the caller so the same control can be
+// the hero (48px buttons, full width) or the inline mini row (32px, compact).
 function StepperRow({
   id,
   value,
   onValue,
   onStep,
-  numberSize,
+  buttonClass,
+  numberClass,
+  inputWidthClass,
+  gapClass,
   minusDisabled,
   plusDisabled,
   inputDisabled,
@@ -43,19 +60,19 @@ function StepperRow({
   value: string;
   onValue: (v: string) => void;
   onStep: (delta: number) => void;
-  numberSize: string;
+  buttonClass: string;
+  numberClass: string;
+  inputWidthClass: string;
+  gapClass: string;
   minusDisabled: boolean;
   plusDisabled: boolean;
   inputDisabled: boolean;
   label: string;
 }) {
-  const parsed = parseInt(value, 10);
-  const hasValue = !Number.isNaN(parsed) && parsed > 0;
-  const btn =
-    "shrink-0 w-9 h-9 rounded-full bg-[#2a2d36] text-reps-ink text-[20px] leading-none flex items-center justify-center active:scale-[0.92] transition-all disabled:opacity-25 disabled:pointer-events-none";
+  const btn = `shrink-0 rounded-full bg-[#2a2d36] text-reps-ink leading-none flex items-center justify-center active:scale-[0.92] transition-all disabled:opacity-25 disabled:pointer-events-none ${buttonClass}`;
 
   return (
-    <div className="flex items-center gap-3">
+    <div className={`flex items-center ${gapClass}`}>
       <button type="button" aria-label={`Decrease ${label}`} onClick={() => onStep(-1)} disabled={minusDisabled} className={btn}>
         −
       </button>
@@ -69,11 +86,7 @@ function StepperRow({
         onFocus={(e) => e.target.select()}
         disabled={inputDisabled}
         placeholder="0"
-        // Subtle rounded outline so the number reads as "tap to type", not just
-        // display — brightens to the accent while editing.
-        className={`flex-1 min-w-0 bg-transparent border border-reps-line-hi rounded-[10px] px-2 font-light leading-none text-center tabular-nums outline-none focus:border-reps-orange transition-colors disabled:opacity-40 placeholder:text-reps-dim placeholder:opacity-50 ${numberSize} ${
-          hasValue ? "text-reps-ink" : "text-reps-dim"
-        }`}
+        className={`bg-transparent border-0 font-light leading-none text-center tabular-nums outline-none disabled:opacity-40 placeholder:text-reps-dim placeholder:opacity-40 ${inputWidthClass} ${numberClass}`}
       />
       <button type="button" aria-label={`Increase ${label}`} onClick={() => onStep(1)} disabled={plusDisabled} className={btn}>
         +
@@ -82,18 +95,24 @@ function StepperRow({
   );
 }
 
-// Label for the first stepper. Shooting-type drills that track makes ask for
-// "attempts" (the number entered there is attempts; makes are the subset logged
-// below). Other categories, and anything not tracking makes, stay generic.
-// Minutes always win.
+// Label for the hero stepper. Shooting-type drills that track makes are counting
+// attempts — the number logged there is what went up, makes are the subset that
+// went in. Every other rep drill is just reps; timed drills count minutes.
+// A shooting drill with makes turned off is plain reps too: without a makes
+// field, "attempts" has nothing to contrast against.
 const ATTEMPTS_CATEGORIES = new Set(["shooting", "finishing", "spot-shots"]);
-function primaryQuestion(unit: string, trackMakes: boolean, categoryKey?: string): string {
-  if (unit === "minutes") return "How many minutes?";
+function primaryLabel(unit: string, trackMakes: boolean, categoryKey?: string): string {
+  if (unit === "minutes") return "MINUTES";
   if (trackMakes && categoryKey !== undefined && ATTEMPTS_CATEGORIES.has(categoryKey)) {
-    return "How many attempts?";
+    return "ATTEMPTS";
   }
-  return "How many?";
+  return "REPS";
 }
+
+// Attempts read muted against the bright makes green — but light enough to hold
+// up in sunlight, which #3a6b14 did not.
+const ATTEMPTS_GREEN = "#5aa22f";
+const MAKES_GREEN = "#3dd68c";
 
 export default function LogScreen({
   token,
@@ -133,7 +152,7 @@ export default function LogScreen({
   const pct     = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   const done    = current >= target;
 
-  const question = primaryQuestion(unit, trackMakes, categoryKey);
+  const label = primaryLabel(unit, trackMakes, categoryKey);
 
   // Stepper. Clamps the stored value itself — not just what gets saved — so the
   // number on screen is always the number that will be logged. Typing is left
@@ -238,49 +257,49 @@ export default function LogScreen({
         </div>
       )}
 
-      {/* Both steppers in one card, split by a divider. Same size on purpose —
-          the labels and the divider carry the hierarchy, not the type scale.
-          Tap to nudge, or tap the number to type it outright. */}
-      <div className="bg-reps-card border border-reps-line rounded-[12px]">
-        <div className="px-4 py-4">
-          <label htmlFor="amount" className="block text-[14px] text-reps-sub mb-2">
-            {question}
-          </label>
-          <StepperRow
-            id="amount"
-            label="amount"
-            value={amountInput}
-            onValue={setAmountInput}
-            onStep={step}
-            numberSize="text-[36px] py-2"
-            minusDisabled={inputLocked || added < 1}
-            plusDisabled={inputLocked || added >= stepCeiling}
-            inputDisabled={inputLocked}
-          />
-        </div>
-
-        {trackMakes && (
-          <>
-            <div className="border-t border-reps-line" />
-            <div className="px-4 py-4">
-              <label htmlFor="makes" className="block text-[14px] text-reps-sub mb-2">
-                How many did you make?
-              </label>
-              <StepperRow
-                id="makes"
-                label="makes"
-                value={makesInput}
-                onValue={setMakesInput}
-                onStep={stepMakes}
-                numberSize="text-[36px] py-2"
-                minusDisabled={makesValue < 1}
-                plusDisabled={false}
-                inputDisabled={false}
-              />
-            </div>
-          </>
-        )}
+      {/* Attempts is the hero: big buttons, a big bare number, full width. */}
+      <FieldLabel htmlFor="amount" text={label} color={ATTEMPTS_GREEN} />
+      <div className="mt-3">
+        <StepperRow
+          id="amount"
+          label="amount"
+          value={amountInput}
+          onValue={setAmountInput}
+          onStep={step}
+          buttonClass="w-12 h-12 text-[24px]"
+          numberClass="text-[44px] text-[#5aa22f]"
+          inputWidthClass="flex-1 min-w-0"
+          gapClass="gap-4"
+          minusDisabled={inputLocked || added < 1}
+          plusDisabled={inputLocked || added >= stepCeiling}
+          inputDisabled={inputLocked}
+        />
       </div>
+
+      {/* Makes is the quiet counterpart — one inline row, label left, mini
+          stepper right, under a hairline. */}
+      {trackMakes && (
+        <>
+          <div className="mt-6 border-t border-reps-line" style={{ borderTopWidth: "0.5px" }} />
+          <div className="mt-4 flex items-center justify-between gap-4">
+            <FieldLabel htmlFor="makes" text="MAKES" color={MAKES_GREEN} />
+            <StepperRow
+              id="makes"
+              label="makes"
+              value={makesInput}
+              onValue={setMakesInput}
+              onStep={stepMakes}
+              buttonClass="w-8 h-8 text-[18px]"
+              numberClass="text-[24px] text-[#3dd68c]"
+              inputWidthClass="w-12 shrink-0"
+              gapClass="gap-2"
+              minusDisabled={makesValue < 1}
+              plusDisabled={false}
+              inputDisabled={false}
+            />
+          </div>
+        </>
+      )}
 
       <div
         className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
