@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import type { GoalType, Side, Unit } from "@/lib/exercises";
-import { GOAL_PRESETS, supportsSide, supportsGoalTypes } from "@/lib/exercises";
+import { GOAL_PRESETS, supportsSide, supportsGoalTypes, supportsMakes } from "@/lib/exercises";
 import { saveAssignment } from "./actions";
 
 type Props = {
@@ -77,6 +77,10 @@ export default function CountScreen({
   // inside a shooting category (a 10-minute drill has no rep to make).
   const goalPickable = unit !== "minutes" && supportsGoalTypes(categorySlug);
   const sidePickable = supportsSide(exerciseName);
+  // Broader than goalPickable: ball-handling can't take a makes GOAL (its work is
+  // timed) but a coach may still want makes recorded on it, so it keeps the
+  // toggle. Only conditioning and footwork have nothing to make at all.
+  const makesPickable = supportsMakes(categorySlug);
 
   // Each goal counts a different thing, so it brings its own preset row and its
   // own sensible starting target rather than carrying the previous goal's number
@@ -237,8 +241,9 @@ export default function CountScreen({
       )}
 
       {/* Makes are the measure under the other two goals, so the toggle would be
-          asking a question already answered. Attempts keeps it. */}
-      {(!goalPickable || goalType === "reps") && (
+          asking a question already answered. Attempts keeps it — but only where
+          the category has makes at all: conditioning and footwork never do. */}
+      {makesPickable && (!goalPickable || goalType === "reps") && (
         <div className="flex items-start justify-between gap-4 mb-8">
           <div className="min-w-0">
             <div className="text-[14px] font-medium text-reps-ink">Track makes?</div>

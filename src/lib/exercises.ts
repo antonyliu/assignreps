@@ -114,16 +114,40 @@ export type Category = {
   exercises: Exercise[]
 }
 
-// Default for the "Track makes?" toggle: on for every preset category, and the
-// coach turns it off per assignment when a drill isn't scored that way. Custom
-// exercises (create-your-own and saved customs) have no category and stay off —
-// nothing to infer from, and the coach can switch them on at the count screen.
+// Categories with no notion of a "make" at all. A suicide, a sprint, a plank, a
+// pivot or a jump stop is either done or not — there is nothing to go in or miss
+// — so the "Track makes?" toggle is meaningless for them and never renders.
 //
-// Membership is tested against CATEGORIES rather than a separate list, so adding
-// a category can't accidentally opt out of makes, and a non-category slug (e.g.
-// "mine") resolves to false on its own.
+// Distinct from GOAL_CATEGORIES above, and deliberately not its complement:
+// ball-handling sits in neither, because a coach may reasonably score a timed
+// dribbling drill by makes even though a makes GOAL doesn't parse for it.
+const MAKELESS_CATEGORIES = new Set(["conditioning", "footwork"]);
+
+// Whether to OFFER the "Track makes?" toggle. Only the two makeless categories
+// withhold it. A custom exercise ("mine" or undefined) belongs to no category, so
+// nothing is known about it — it keeps the toggle, which is the coach's only way
+// to enable makes on their own drill.
+//
+// Note this is NOT `in CATEGORIES`: that test answers the default question below,
+// not the visibility one, and using it here would silently strip the toggle from
+// every custom exercise.
+export function supportsMakes(categoryKey?: string): boolean {
+  return categoryKey === undefined || !MAKELESS_CATEGORIES.has(categoryKey);
+}
+
+// Default for the "Track makes?" toggle: on for the preset categories where makes
+// mean something, and the coach turns it off per assignment when a drill isn't
+// scored that way. Custom exercises have no category to infer from and stay off,
+// so the coach opts in explicitly via the toggle above.
+//
+// Conditioning and footwork default OFF because they can't be scored on makes;
+// the toggle they'd default for isn't rendered for them either.
 export function defaultTrackMakes(categoryKey?: string): boolean {
-  return categoryKey !== undefined && categoryKey in CATEGORIES;
+  return (
+    categoryKey !== undefined &&
+    categoryKey in CATEGORIES &&
+    !MAKELESS_CATEGORIES.has(categoryKey)
+  );
 }
 
 // The category an exercise belongs to, matched by name — assignments store
