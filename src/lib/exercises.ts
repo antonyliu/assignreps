@@ -115,13 +115,14 @@ export type Category = {
 }
 
 // Categories with no notion of a "make" at all. A suicide, a sprint, a plank, a
-// pivot or a jump stop is either done or not — there is nothing to go in or miss
-// — so the "Track makes?" toggle is meaningless for them and never renders.
+// pivot, a jump stop, a crossover — each is either done or not, with nothing to
+// go in or miss — so the "Track makes?" toggle is meaningless for them and never
+// renders.
 //
-// Distinct from GOAL_CATEGORIES above, and deliberately not its complement:
-// ball-handling sits in neither, because a coach may reasonably score a timed
-// dribbling drill by makes even though a makes GOAL doesn't parse for it.
-const MAKELESS_CATEGORIES = new Set(["conditioning", "footwork"]);
+// This is now the exact complement of GOAL_CATEGORIES: ball-handling was briefly
+// kept out of it on the theory that a coach might score a timed dribbling drill
+// by makes, but there is nothing to make in a dribble, so it joins the list.
+const MAKELESS_CATEGORIES = new Set(["conditioning", "footwork", "handling"]);
 
 // Whether to OFFER the "Track makes?" toggle. Only the two makeless categories
 // withhold it. A custom exercise ("mine" or undefined) belongs to no category, so

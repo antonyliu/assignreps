@@ -51,7 +51,10 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
         <button
           type="button"
           onClick={openModal}
-          className="text-[13px] text-[#454a5b] hover:text-reps-sub transition-colors py-1"
+          // Was #454a5b — barely above the background and easy to miss entirely.
+          // --reps-label is a clear step up while staying plain text, so it reads
+          // as a secondary action rather than competing with the primary CTA.
+          className="text-[13px] text-[var(--reps-label)] hover:text-reps-ink transition-colors py-1"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
           Clear completed

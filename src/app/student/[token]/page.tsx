@@ -107,7 +107,20 @@ export default async function PlayerHomePage({
         </div>
       ) : (
         <>
-          <div className="text-[11px] text-reps-dim uppercase tracking-[1.5px] mb-3">Assignments</div>
+          {/* Sticky section label — the cards scroll underneath it, so a student
+              partway down a long list still knows what they are looking at. Only
+              this label sticks; the logo and name block above scroll away.
+              -mx/px cancels the page gutter so the background and the fade span
+              the full width rather than stopping at the content edge. The fade
+              hangs below the label (translate-y-full) so rows dissolve into it
+              instead of meeting a hard edge — same treatment as the pinned
+              buttons elsewhere, mirrored top-to-bottom. */}
+          <div className="sticky top-0 z-10 -mx-[1.25rem] px-[1.25rem] pt-2 bg-reps-bg">
+            <div className="text-[11px] text-reps-dim uppercase tracking-[1.5px] pb-3">
+              Assignments
+            </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 translate-y-full bg-gradient-to-b from-[#111318] to-transparent" />
+          </div>
 
           <div className="flex flex-col gap-2.5">
             {assignmentList.map((a) => {
