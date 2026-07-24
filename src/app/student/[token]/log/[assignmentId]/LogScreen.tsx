@@ -57,6 +57,7 @@ function StepperRow({
   value,
   onValue,
   onStep,
+  onBlur,
   buttonClass,
   numberClass,
   inputWidthClass,
@@ -70,6 +71,9 @@ function StepperRow({
   value: string;
   onValue: (v: string) => void;
   onStep: (delta: number) => void;
+  /** Settle a typed value once the field is left. Optional — the attempts
+   *  stepper needs no correction, since its own ceiling already bounds it. */
+  onBlur?: () => void;
   buttonClass: string;
   numberClass: string;
   inputWidthClass: string;
@@ -96,6 +100,7 @@ function StepperRow({
         value={value}
         onChange={(e) => onValue(e.target.value)}
         onFocus={(e) => e.target.select()}
+        onBlur={onBlur}
         disabled={inputDisabled}
         placeholder="0"
         className={`bg-transparent border-0 leading-none text-center tabular-nums outline-none disabled:opacity-40 ${inputWidthClass} ${numberClass}`}
@@ -204,8 +209,11 @@ export default function LogScreen({
     });
   }
 
-  // Makes are never clamped against attempts — a mismatch is the coach's signal
-  // that something went wrong, not something to silently correct here.
+  // Makes are never clamped against attempts in the DATA — a mismatch that is
+  // already banked is the coach's signal that something went wrong, not something
+  // to silently rewrite here. The guard lives on the controls instead (see
+  // makesLocked and the makes plusDisabled below), which stops a new mismatch
+  // being entered without correcting an old one.
   function stepMakes(delta: number) {
     setMakesInput((prev) => {
       const p = parseInt(prev, 10);
@@ -214,9 +222,29 @@ export default function LogScreen({
     });
   }
 
+  // The + stops at parity, but nothing stops a student typing straight past it.
+  // Settle the field on blur rather than while they type: clamping mid-keystroke
+  // makes "50" unreachable via "5" -> "50" on an assignment with 40 attempts.
+  // Snaps silently — an over-count is a slip, not something worth an error.
+  // The banked floor still wins over the cap, so a legacy row whose makes already
+  // exceed its attempts is left alone rather than being retroactively trimmed.
+  function settleMakes() {
+    setMakesInput((prev) => {
+      const p = parseInt(prev, 10);
+      if (Number.isNaN(p)) return String(alreadyMakes);
+      return String(Math.max(Math.min(p, current), alreadyMakes));
+    });
+  }
+
   // The whole control is inert only when there is genuinely nothing to log:
   // a completed assignment that doesn't track makes.
   const inputLocked = !trackMakes && done && added < 1;
+
+  // Makes need an attempt to be a subset of. At zero attempts there is nothing
+  // for them to belong to — and nothing saveable either, since "Log it" already
+  // requires added >= 1 — so the whole makes row goes inert rather than inviting
+  // a number that could never be recorded.
+  const makesLocked = current < 1;
 
   // Bar layers read the same totals the steppers show.
   const makesPct = target > 0 ? Math.min(100, Math.round((makesTotal / target) * 100)) : 0;
@@ -268,14 +296,19 @@ export default function LogScreen({
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      <div className="flex items-center gap-3 mb-12">
+      {/* 44px tap target on the arrow — the old 18px glyph with 4px of padding
+          was well under the comfortable minimum for a thumb. The negative margin
+          keeps the glyph optically on the same left edge as the content below it
+          while the target itself extends toward the screen edge. */}
+      <div className="flex items-center gap-2 mb-14">
         <Link
           href={`/student/${token}`}
-          className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
+          aria-label="Back"
+          className="-ml-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg text-reps-sub hover:text-reps-ink transition-colors"
         >
           ←
         </Link>
-        <span className="text-[15px] font-medium text-reps-ink truncate">{exerciseName}</span>
+        <span className="text-[17px] font-medium text-reps-ink truncate">{exerciseName}</span>
       </div>
 
       {error && (
@@ -285,13 +318,13 @@ export default function LogScreen({
       )}
 
       {/* Reference: what's already banked, with the bar under it. */}
-      <div className="text-[14px] text-reps-dim mb-2 tabular-nums">
+      <div className="text-[14px] text-reps-dim mb-3 tabular-nums">
         {current} of {target} done
       </div>
       {trackMakes ? (
         // attempts (muted green) with makes (bright green) stacked on top.
         <div
-          className="relative h-2.5 rounded-full overflow-hidden mb-[84px]"
+          className="relative h-1.5 rounded-full overflow-hidden mb-[96px]"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -305,7 +338,7 @@ export default function LogScreen({
         </div>
       ) : (
         <div
-          className="h-2.5 rounded-full overflow-hidden mb-[84px]"
+          className="h-1.5 rounded-full overflow-hidden mb-[96px]"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -360,13 +393,18 @@ export default function LogScreen({
                 value={makesInput}
                 onValue={setMakesInput}
                 onStep={stepMakes}
+                onBlur={settleMakes}
                 buttonClass="w-[50px] h-[50px] text-[28px]"
                 numberClass="text-[31px] font-semibold text-[#6bd63d] placeholder:text-[#6bd63d] placeholder:opacity-100"
                 inputWidthClass="w-[60px] shrink-0"
                 gapClass="gap-2"
-                minusDisabled={makesTotal <= alreadyMakes}
-                plusDisabled={false}
-                inputDisabled={false}
+                minusDisabled={makesLocked || makesTotal <= alreadyMakes}
+                // You can't make more than you took. Purely a control guard —
+                // stepMakes still does no clamping, so an assignment whose banked
+                // makes already exceed its attempts just freezes here instead of
+                // having its history quietly rewritten.
+                plusDisabled={makesLocked || makesTotal >= current}
+                inputDisabled={makesLocked}
               />
             </div>
           </>
