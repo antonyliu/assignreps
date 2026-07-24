@@ -139,6 +139,10 @@ const BAR_TRACK = "#2a2d36";
 const BAR_ATTEMPTS = "#3d7a24";
 const ATTEMPTS_GREEN = "#3d7a24";
 const MAKES_GREEN = "#6bd63d";
+// Locked makes row. Green at any weight still reads as live, so the label and
+// number drop out of the family entirely rather than just fading — matching the
+// buttons, which already grey out via their own disabled variant.
+const MUTED_GREY = "#8a8fa8";
 
 // Written out in full rather than composed, so Tailwind sees each class literally.
 // A reps-only assignment has no second field to rank against, so it takes the
@@ -147,6 +151,10 @@ const ATTEMPTS_NUMBER =
   "text-[76px] font-semibold text-[#3d7a24] placeholder:text-[#3d7a24] placeholder:opacity-100";
 const SOLO_NUMBER =
   "text-[76px] font-semibold text-[#6bd63d] placeholder:text-[#6bd63d] placeholder:opacity-100";
+const MAKES_NUMBER =
+  "text-[31px] font-semibold text-[#6bd63d] placeholder:text-[#6bd63d] placeholder:opacity-100";
+const MAKES_NUMBER_MUTED =
+  "text-[31px] font-semibold text-[#8a8fa8] placeholder:text-[#8a8fa8] placeholder:opacity-100";
 
 export default function LogScreen({
   token,
@@ -300,7 +308,12 @@ export default function LogScreen({
           was well under the comfortable minimum for a thumb. The negative margin
           keeps the glyph optically on the same left edge as the content below it
           while the target itself extends toward the screen edge. */}
-      <div className="flex items-center gap-2 mb-14">
+      {/* The arrow's 44px box centres an ~11px glyph, so ~16px of it is empty
+          space to the right of the glyph. The title reclaims that instead of
+          adding a flex gap on top of it — no gap, and a negative margin that
+          pulls the text back over the dead half of the box, so arrow and title
+          read as one unit. The glyph itself does not move. */}
+      <div className="flex items-center mb-14">
         <Link
           href={`/student/${token}`}
           aria-label="Back"
@@ -308,7 +321,7 @@ export default function LogScreen({
         >
           ←
         </Link>
-        <span className="text-[17px] font-medium text-reps-ink truncate">{exerciseName}</span>
+        <span className="-ml-2 text-[17px] font-medium text-reps-ink truncate">{exerciseName}</span>
       </div>
 
       {error && (
@@ -386,7 +399,12 @@ export default function LogScreen({
                 section; the air lives outside it, not between the two. */}
             <div className="mt-6 border-t border-reps-line-hi" />
             <div className="mt-5 flex items-center justify-between gap-4">
-              <FieldLabel htmlFor="makes" text="MAKES" color={MAKES_GREEN} sizeClass="text-[15px]" />
+              <FieldLabel
+                htmlFor="makes"
+                text="MAKES"
+                color={makesLocked ? MUTED_GREY : MAKES_GREEN}
+                sizeClass="text-[15px]"
+              />
               <StepperRow
                 id="makes"
                 label="makes"
@@ -395,7 +413,7 @@ export default function LogScreen({
                 onStep={stepMakes}
                 onBlur={settleMakes}
                 buttonClass="w-[50px] h-[50px] text-[28px]"
-                numberClass="text-[31px] font-semibold text-[#6bd63d] placeholder:text-[#6bd63d] placeholder:opacity-100"
+                numberClass={makesLocked ? MAKES_NUMBER_MUTED : MAKES_NUMBER}
                 inputWidthClass="w-[60px] shrink-0"
                 gapClass="gap-2"
                 minusDisabled={makesLocked || makesTotal <= alreadyMakes}
