@@ -240,11 +240,13 @@ export default function LogScreen({
       ? "MAKES"
       : primaryLabel(unit, trackMakes, categoryKey);
 
-  // Attempts stay available under a makes goal, but only as optional context —
-  // makes is the hero there, so the two swap roles.
-  const showSecondaryAttempts = isMakesGoal;
   // The original inline makes row belongs to a reps goal alone. A makes goal has
   // promoted makes to the hero; a streak has no makes at all.
+  //
+  // A makes goal shows the makes stepper and nothing else: the coach asked for
+  // makes, so attempts are neither the score nor something the student needs to
+  // report. handleSave still records an amount for the DB's amount > 0 check,
+  // derived from the makes delta rather than from a field.
   const showMakesRow = trackMakes && goalType === "reps";
 
   // Steppers move the displayed total, floored at what's banked and ceilinged as
@@ -504,37 +506,6 @@ export default function LogScreen({
             />
           )}
         </div>
-
-        {/* Under a makes goal, attempts become the optional context — same quiet
-            inline row the makes field occupies on a reps assignment, so the
-            hierarchy reads the same way round whichever measure is the goal. */}
-        {showSecondaryAttempts && (
-          <>
-            <div className="mt-6 border-t border-reps-line-hi" />
-            <div className="mt-5 flex items-center justify-between gap-4">
-              <FieldLabel
-                htmlFor="amount"
-                text="ATTEMPTS"
-                color={ATTEMPTS_GREEN}
-                sizeClass="text-[15px]"
-              />
-              <StepperRow
-                id="amount"
-                label="amount"
-                value={amountInput}
-                onValue={setAmountInput}
-                onStep={step}
-                buttonClass="w-[50px] h-[50px] text-[28px]"
-                numberClass="text-[31px] font-semibold text-[#3d7a24] placeholder:text-[#3d7a24] placeholder:opacity-100"
-                inputWidthClass="w-[60px] shrink-0"
-                gapClass="gap-2"
-                minusDisabled={current <= alreadyLogged}
-                plusDisabled={false}
-                inputDisabled={false}
-              />
-            </div>
-          </>
-        )}
 
         {/* Makes is the quiet counterpart — one inline row, label left, mini
             stepper right, under a hairline, on the same edges as attempts. */}

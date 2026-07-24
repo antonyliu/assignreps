@@ -148,6 +148,11 @@ export default async function PlayerHomePage({
                   : goalType === "makes"
                     ? `${logged}/${a.target} makes`
                     : `${logged}/${a.target} ${a.unit}`;
+              // "made 21/21 · 100%" restates what "21/25 makes" already says on a
+              // makes goal, and the percentage is over attempts rather than the
+              // target, so the two numbers read as contradicting each other.
+              // Same rule as the coach detail card.
+              const showMakesLine = showMakes && goalType !== "makes";
 
               return (
                 <Link
@@ -192,7 +197,7 @@ export default async function PlayerHomePage({
                       />
                     </div>
                   )}
-                  {showMakes && (
+                  {showMakesLine && (
                     <div className="mt-2 text-[11px] text-reps-dim">
                       made {m.makes}/{m.attempts}
                       {makesPct !== null && (

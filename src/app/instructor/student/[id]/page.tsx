@@ -151,13 +151,18 @@ export default async function CoachPlayerPage({
               const twoTone = goalType === "reps" && (a.track_makes ?? false) && showMakes;
               const barMakesPct =
                 m && a.target > 0 ? Math.min(100, Math.round((m.makes / a.target) * 100)) : 0;
-              // Counts read in the goal's own measure.
+              // Counts read in the goal's own measure. A streak carries its
+              // length too — "0/1 set" alone doesn't say what the set was.
               const countLabel =
                 goalType === "consecutive"
-                  ? `${shown}/1 set`
+                  ? `${shown}/1 set · ${a.target} in a row`
                   : goalType === "makes"
                     ? `${shown}/${a.target} makes`
                     : `${logged}/${a.target} ${unitLabel(a.unit)}`;
+              // "made 21/21 · 100%" restates what "21/25 makes" already says on a
+              // makes goal, and the percentage is over attempts rather than the
+              // target, so the two numbers read as contradicting each other.
+              const showMakesLine = showMakes && goalType !== "makes";
               return (
                 <div
                   key={a.id}
@@ -171,9 +176,12 @@ export default async function CoachPlayerPage({
                           hand was asked for — the part the coach can't infer. */}
                       <span className="flex-1 min-w-0 flex items-baseline">
                         <span className="truncate text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
+                        {/* ml-1 rather than a leading space in the text: these are
+                            flex items, and a flex item's leading whitespace is
+                            trimmed, running the name into the dot. */}
                         {a.side && (
-                          <span className="shrink-0 text-[15px] font-medium text-reps-sub">
-                            {" · "}{a.side === "left" ? "Left" : "Right"}
+                          <span className="ml-1 shrink-0 text-[15px] font-medium text-reps-sub">
+                            · {a.side === "left" ? "Left" : "Right"}
                           </span>
                         )}
                       </span>
@@ -210,7 +218,7 @@ export default async function CoachPlayerPage({
                         />
                       </div>
                     )}
-                    {showMakes && (
+                    {showMakesLine && (
                       <div className="mt-2 text-[11px] text-reps-dim">
                         made {m.makes}/{m.attempts}
                         {makesPct !== null && (
