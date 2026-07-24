@@ -234,10 +234,34 @@ export default function LogScreen({
     // Hand the celebration details to the next screen via sessionStorage, not
     // the URL — this keeps the instructor's name (and everything else) out of
     // the address bar and browser history.
-    sessionStorage.setItem(
-      "reps:celebrate",
-      JSON.stringify({ coachName, done, added, remaining, unit, allDone: result.allDone })
-    );
+    //
+    // ⚠️ The log is ALREADY committed by this point. Storage is best-effort from
+    // here on: Safari private browsing throws on setItem, and an uncaught throw
+    // here would skip the navigation below and strand the student on this screen
+    // with a live "Log it" button — inviting a second tap and a duplicate row for
+    // reps they already banked. So swallow it and navigate regardless; celebrate
+    // reads a missing payload as "unknown" and shows its neutral fallback rather
+    // than claiming anything about completion.
+    try {
+      sessionStorage.setItem(
+        "reps:celebrate",
+        JSON.stringify({
+          coachName,
+          done,
+          added,
+          remaining,
+          unit,
+          // The noun celebrate counts in ("12 attempts to go"). Derived from the
+          // same label the stepper above shows, so the two screens can't drift —
+          // `unit` alone would say "reps" on an ATTEMPTS assignment. `unit` stays
+          // in the payload as celebrate's fallback for a stale write.
+          noun: label.toLowerCase(),
+          allDone: result.allDone,
+        })
+      );
+    } catch {
+      // Storage unavailable — proceed to celebrate without the details.
+    }
     router.push(`/student/${token}/celebrate`);
   }
 
