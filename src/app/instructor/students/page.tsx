@@ -17,6 +17,18 @@ function firstName(name: string) {
   return trimmed.split(/\s+/)[0] || trimmed;
 }
 
+// Relative "last logged" label. `recent` is true under 24h — the row shows it in
+// accent blue then, muted grey once a day or more has passed. Coarse buckets
+// (m / h / d) match how much precision a coach glancing at the roster needs.
+function timeAgo(iso: string): { text: string; recent: boolean } {
+  const diffMs = Math.max(0, Date.now() - new Date(iso).getTime());
+  const min = Math.floor(diffMs / 60000);
+  const hr = Math.floor(diffMs / 3600000);
+  const day = Math.floor(diffMs / 86400000);
+  const text = min < 1 ? "just now" : hr < 1 ? `${min}m ago` : day < 1 ? `${hr}h ago` : `${day}d ago`;
+  return { text, recent: diffMs < 86400000 };
+}
+
 // Completion-based roster groups, in display order.
 type Group = "done" | "progress" | "notstarted" | "unassigned";
 
@@ -55,12 +67,30 @@ export default async function RosterPage() {
   // amount alone would mark a student done the moment their ATTEMPTS reached the
   // target, regardless of how many actually went in.
   const assignmentIds = (assignments ?? []).map((a) => a.id);
-  const { data: logs } = assignmentIds.length
-    ? await supabase
-        .from("logs")
-        .select("assignment_id, amount, makes")
-        .in("assignment_id", assignmentIds)
-    : { data: [] };
+  const playerIds = (players ?? []).map((p) => p.id);
+
+  // Two log reads, filtered differently on purpose. Completion is scoped to the
+  // current assignments (and needs amount/makes). Last-activity is scoped to the
+  // PLAYER (and needs only logged_at) — a log must still count as activity after
+  // its assignment was cleared, when logs.assignment_id has gone to NULL, which
+  // the assignment-scoped read would drop.
+  const [{ data: logs }, { data: activityLogs }] = await Promise.all([
+    assignmentIds.length
+      ? supabase.from("logs").select("assignment_id, amount, makes").in("assignment_id", assignmentIds)
+      : Promise.resolve({ data: [] as { assignment_id: string | null; amount: number; makes: number | null }[] }),
+    playerIds.length
+      ? supabase.from("logs").select("player_id, logged_at").in("player_id", playerIds)
+      : Promise.resolve({ data: [] as { player_id: string; logged_at: string }[] }),
+  ]);
+
+  // MAX(logged_at) per player — computed in JS, since PostgREST has no GROUP BY
+  // without an RPC. This is when the student last LOGGED work, not signed in.
+  const lastLoggedByPlayer: Record<string, string> = {};
+  for (const l of activityLogs ?? []) {
+    if (!l.player_id || !l.logged_at) continue;
+    const prev = lastLoggedByPlayer[l.player_id];
+    if (!prev || l.logged_at > prev) lastLoggedByPlayer[l.player_id] = l.logged_at;
+  }
 
   const coachName = coach?.name?.trim() || "Coach";
   const labels = getActivityLabels(coach?.instructor_type ?? null);
@@ -201,7 +231,13 @@ export default async function RosterPage() {
                     </span>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    {group.map((player) => (
+                    {group.map((player) => {
+                      // Only shown when the student has logged at least once —
+                      // no dash or placeholder otherwise.
+                      const last = lastLoggedByPlayer[player.id]
+                        ? timeAgo(lastLoggedByPlayer[player.id])
+                        : null;
+                      return (
                       <Link
                         key={player.id}
                         href={`/instructor/student/${player.id}`}
@@ -228,9 +264,18 @@ export default async function RosterPage() {
                             {subline(player.id, g)}
                           </div>
                         </div>
+                        {last && (
+                          <span
+                            className="text-[12px] shrink-0 tabular-nums"
+                            style={{ color: last.recent ? "#378add" : "#555a6e" }}
+                          >
+                            {last.text}
+                          </span>
+                        )}
                         <span className="text-[18px]" style={{ color: "#5a5f72" }}>›</span>
                       </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
