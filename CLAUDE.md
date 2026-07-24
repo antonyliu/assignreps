@@ -1,5 +1,5 @@
 # Reps — CLAUDE.md
-*Last updated: July 23 2026 · Prod commit: `193ce48`*
+*Last updated: July 24 2026 · Prod commit: `1109eb4` · local, staging and prod all in sync*
 
 ---
 
@@ -27,6 +27,7 @@ The instructor is the customer — not the student. Students never choose this t
 - Signup flow (per-step URLs): name → instructor type → email + 6-digit code → students list
 - Adds students by name + phone number; optional parent phone per student
 - Assigns exercises from a default library or creates custom ones
+- Picks a **goal type** (attempts / makes / consecutive) and an optional **side** (left / right)
 - Views each student's progress and shooting percentage (makes/attempts)
 - Roster grouped: Done / In progress / Not started / Nothing assigned
 
@@ -34,7 +35,7 @@ The instructor is the customer — not the student. Students never choose this t
 - Gets a text with a unique link — no signup required
 - Can also log in from any device at assignreps.com via phone OTP
 - Taps link → sees their assignments (persist until instructor clears them)
-- Logs attempts (and optionally makes) using a stepper counter
+- Logs with a stepper counter; what the stepper counts depends on the goal type
 - Sees a celebration when done: 🔥 + "[Coach] will see this."
 
 ### Parent
@@ -70,7 +71,9 @@ The instructor is the customer — not the student. Students never choose this t
 
 **Workflow:** Local → staging (iPhone test) → prod. Never commit directly to staging. Default Claude Code target is local only — always state "push to staging" or "push to prod" explicitly.
 
-⚠️ Local, staging, and prod all share the same Supabase project. Schema migrations hit all environments at once.
+Staging is deployed by pushing local `main` to the remote `staging` branch (`git push origin main:staging`); prod is `git push origin main:main`. Both should always be fast-forwards.
+
+⚠️ Local, staging, and prod all share the same Supabase project. Schema migrations hit all environments at once — there is no local-only schema change.
 
 ---
 
@@ -84,7 +87,9 @@ players
   id, coach_id, name, phone, parent_phone, send_to_parent, token, last_texted_at, created_at
 
 assignments
-  id, coach_id, player_id, exercise_name, target, unit (reps/minutes), video_url, week_start, created_at, track_makes (boolean, default false)
+  id, coach_id, player_id, exercise_name, target, unit (reps/minutes), video_url,
+  week_start, created_at, track_makes (boolean, default false),
+  goal_type (text, NOT NULL, default 'reps'), side (text, nullable)
 
 logs
   id, player_id, assignment_id, amount, makes (integer, nullable), logged_at
@@ -93,11 +98,15 @@ custom_exercises
   id, coach_id, name, unit (reps/minutes), default_amount, created_at
 ```
 
+Migrations live in `supabase/migrations/`. There is **no base schema migration** — the original tables were created in the Supabase dashboard, so only later changes are captured as files.
+
 ### Key schema notes
 
-- `track_makes` on assignments — when true, the student log screen shows the makes stepper. Default false for custom exercises; defaults based on exercise category for presets (all rep-based categories default true, minutes-based default false but toggleable).
+- `goal_type` — what `target` measures. `'reps'` (attempts), `'makes'`, or `'consecutive'`. Checked by `assignments_goal_type_check`. Defaults to `'reps'`, which backfills every pre-existing row to exactly its prior behavior.
+- `side` — `'left'`, `'right'`, or NULL. Checked by `assignments_side_check`. NULL means **unspecified**, not "both". (NULL passes a Postgres CHECK natively, so no explicit allowance is needed.)
+- `track_makes` — when true, the log screen offers a makes entry. Forced true by the assign action when `goal_type` is `'makes'` or `'consecutive'`, where makes are the point. Kept as its own column rather than derived, so the stored row states the coach's intent outright.
 - `logs.makes` — nullable integer. `null` means "didn't report makes"; `0` means "made none." Never conflate these — they mean different things for percentage calculations.
-- `logs_amount_check` — a constraint requiring `amount > 0` exists on `logs` but is NOT in any migration file (was created directly in Supabase dashboard). Don't try to insert `amount: 0`.
+- `logs_amount_check` — a constraint requiring `amount > 0` exists on `logs` but is NOT in any migration file (created directly in the dashboard). Don't try to insert `amount: 0`.
 - `logs_makes_non_negative` — `makes IS NULL OR makes >= 0`.
 - Assignments are not time-bounded — they persist until the instructor clears them.
 - `logs.assignment_id → assignments.id` is **ON DELETE SET NULL** — clearing assignments never deletes log history.
@@ -111,40 +120,98 @@ custom_exercises
 
 ---
 
-## Makes logging system
+## Goal type system
 
-Built and live on prod as of July 22 2026.
+Live on prod July 24 2026. Three shapes an assignment's `target` can take.
 
-**How it works:**
-- Coach toggles "Track makes?" at assign time (per-assignment, not per-exercise)
-- Student sees "ATTEMPTS" stepper + "MAKES" stepper on log screen when enabled
-- Log screen seeds both steppers from already-logged totals on return
-- Delta save — only the new amount is inserted, not the running total
-- Coach sees `made X/Y · Z%` on the student detail card and student list rows
-- Percentage is computed only over logs that recorded makes (null logs don't drag down the average)
-- If makes > attempts in a single log row, the percentage is suppressed (bad data guard)
+| Goal | Target means | Completion rule | Log screen |
+|------|--------------|-----------------|------------|
+| `reps` | attempts | `SUM(amount) >= target` | attempts stepper, optional makes row |
+| `makes` | makes | `SUM(makes) >= target` | **makes stepper only** |
+| `consecutive` | **streak length** | `SUM(amount) >= 1` | single "sets completed" stepper |
 
-**Known limitation:** If a student logs attempts without makes and the assignment completes, they cannot retroactively add makes. `logs_amount_check` blocks `amount: 0` inserts, and a makes-only update would need an RLS UPDATE policy that doesn't currently exist. Documented in CLAUDE.md as a known gap.
+### ⚠️ Consecutive does not follow the target
+
+`consecutive` stores the streak the coach asked for ("hit 5 in a row" → `target = 5`) but the student logs **sets completed** — one row, `amount = 1`, once they manage it. Completion is therefore **one set**, not `>= target`. Summing amount against target would demand hitting the streak five separate times.
+
+There is no schema-level way to express "this target means something different", so every completion site special-cases it. That is the cost of folding three shapes into one column.
+
+### One completion rule, six call sites
+
+`isComplete(goalType, target, logged, makes)` in `src/lib/exercises.ts` is the single source of truth. Six places ask "is this done?" and all route through it:
+
+1. `src/app/student/[token]/page.tsx` — card state + all-done banner
+2. `src/app/instructor/student/[id]/page.tsx` — card state + all-done banner
+3. `src/app/instructor/students/page.tsx` — roster grouping and counts
+4. `src/app/student/[token]/log/[assignmentId]/actions.ts` — `allDone` for confetti
+5. `LogScreen.tsx` — client `done` state
+6. `src/app/student/[token]/log/[assignmentId]/page.tsx` — the `alreadyLogged` cap
+
+⚠️ Miss one and it reports completion **too early**: on a "make 50" assignment a student who attempts 50 and makes 20 satisfies `amount >= target`. The roster was the most exposed — it fetched neither `makes` nor `goal_type`.
+
+Companions: `progressValue()` (what fills the bar) and `progressTarget()` (the denominator; consecutive collapses to 1).
+
+### Which categories offer what
+
+Two independent gates in `src/lib/exercises.ts`:
+
+- `supportsGoalTypes(categoryKey)` — **shooting, finishing, spot-shots**. A makes or streak goal only means something where a rep is a shot that can go in or miss. Also requires `unit !== 'minutes'`.
+- `supportsMakes(categoryKey)` — everything **except conditioning, footwork, handling**. Those three have nothing to make, so the "Track makes?" toggle never renders.
+
+`MAKELESS_CATEGORIES` is currently the exact complement of `GOAL_CATEGORIES`, but they stay separate functions because custom exercises resolve differently in each: a custom keeps the makes toggle (defaulting off) but gets **no** goal selector.
+
+### Side
+
+`supportsSide(exerciseName)` — every exercise except **Free throws, Jump rope, Planks, Isometric squats, Pick-up basketball, Suicides, Sprints (baseline to baseline)**. Matched by exact library name; customs match nothing and therefore offer it.
+
+Nothing is selected by default. Tapping the active option clears it back to NULL.
+
+Displayed as `Corner 3s · Left` on both the coach detail card and the student home card, and as "Left hand" / "Right hand" under the title on the log screen.
+
+⚠️ **Known duplicate, intentional hold:** Finishing still ships `Layups (right hand)` and `Layups (left hand)` as two separate library entries, so a coach can now assign "Layups (right hand) · Left". Collapsing them into one `Layups` entry is the clean fix, but `exercise_name` is free text and is the only link back to a category (`categoryKeyForExercise`), so renaming is a data migration across existing assignments. Deliberately not done yet.
 
 ---
 
-## Color system (current, as of July 23 2026)
+## Makes logging system
+
+Built July 22 2026, extended by the goal type system July 24.
+
+**How it works:**
+- Coach toggles "Track makes?" at assign time (per-assignment, not per-exercise) — where the category supports it
+- Log screen seeds every stepper from already-logged totals on return
+- Delta save — only the new increment is inserted, never the running total
+- Coach sees `made X/Y · Z%` on the student detail card and student home card
+- Percentage is computed only over logs that recorded makes (null logs don't drag down the average)
+- If makes > attempts, the percentage is suppressed but the raw numbers still show (bad data guard)
+- The `made X/Y · Z%` line is **hidden entirely on a makes goal** — `21/25 makes` already says it, and the percentage is over attempts rather than the target, so the two read as contradicting each other
+
+**Makes ≤ attempts is a control guard, never a data clamp.** On a `reps` goal the makes `+` stops at parity, a typed value settles down on blur, and reducing attempts drags makes down with it. None of this rewrites already-banked history — a legacy row whose makes exceed its attempts simply freezes. On a `makes` goal the guard is off entirely, since attempts aren't collected.
+
+⚠️ **`logs_amount_check` workaround:** on a makes goal the student can record makes without any attempts field on screen, which would send `amount: 0` and lose the row. The makes delta stands in as the amount. It's the honest floor — you can't make a shot without taking it — but it means attempts are *inferred* there, not measured.
+
+**Known limitation:** a student who logs attempts without makes and completes the assignment cannot retroactively add makes. `logs_amount_check` blocks `amount: 0`, and a makes-only update would need an RLS UPDATE policy that doesn't exist.
+
+---
+
+## Color system
 
 ### One green family — three shades, five roles (lime, not emerald)
 | Stop | Hex | Usage |
 |------|-----|-------|
 | Bar track (empty) | `#2a2d36` | Gray — empty progress track everywhere |
 | Bar attempts fill | `#3d7a24` | Muted lime green — attempts progress |
-| Attempts label + number | `#3d7a24` | Same as bar attempts — one unified color. **Only when `track_makes` is true.** |
+| Attempts label + number | `#3d7a24` | Same as bar attempts — one unified color. **Only when `track_makes` is true on a `reps` goal.** |
 | Reps/Minutes label + number (no makes) | `#6bd63d` | Bright lime — a solo counter takes the bright green outright |
 | Makes label + number | `#6bd63d` | Bright lime green — same as bar makes fill |
 | Done state | `#6bd63d` | Completion everywhere (bars, pills, checkmarks) |
 
-⚠️ The muted `#3d7a24` on a **label or number** exists only to subordinate attempts to makes. With no makes row on screen there's nothing to rank against, so a reps-only or minutes assignment renders its label and number in bright `#6bd63d` instead. The muted shade is never the "default" text color — it's the *paired* one. (`ATTEMPTS_NUMBER` vs `SOLO_NUMBER` in `LogScreen.tsx`.)
+⚠️ The muted `#3d7a24` on a **label or number** exists only to subordinate attempts to makes. With no makes row on screen there's nothing to rank against, so a reps-only, minutes, makes-goal or streak assignment renders its label and number in bright `#6bd63d` instead. The muted shade is never the "default" text color — it's the *paired* one. (`ATTEMPTS_NUMBER` vs `SOLO_NUMBER` in `LogScreen.tsx`.)
 
-This applies to text only. **Bar fills are unaffected** — an in-progress bar is `#3d7a24` whether or not makes are tracked (see Bar behavior below).
+This applies to text only. **Bar fills are unaffected** — an in-progress bar is `#3d7a24` whether or not makes are tracked.
 
-⚠️ The old emerald `#3dd68c` was replaced app-wide with `#6bd63d` to eliminate the hue shift between lime and teal. The only remaining emerald is the celebrate screen confetti (decorative, intentionally left alone).
+⚠️ The old emerald `#3dd68c` was replaced app-wide with `#6bd63d`. The only remaining emerald is the celebrate screen confetti (decorative, intentionally left alone).
+
+**Disabled controls** go to `#555` — a visible grey rather than near-invisible opacity, so an inactive `−` still reads in bright sunlight on a court. The locked MAKES label uses the same `#555`; its number renders `#8a8fa8` through `disabled:opacity-40`, landing around `#414552`.
 
 ### Other colors
 - **Background:** `#111318`
@@ -156,50 +223,68 @@ This applies to text only. **Bar fills are unaffected** — an in-progress bar i
 - **Helper text:** `#8a8fa8`
 
 ### Bar behavior
-- Log screen bar: **10px** height
-- Student list rows: **6px** height
-- Coach detail card: **6px** height
-- Two-tone: attempts fill (`#3d7a24`) + makes fill (`#6bd63d`) overlaid, both update live as student types
+- Log screen bar: **6px** (`h-1.5`)
+- Student home cards: **3px** (`h-[3px]`)
+- Coach detail cards: **3px** (`h-[3px]`)
+- Two-tone: attempts fill (`#3d7a24`) + makes fill (`#6bd63d`) overlaid — **`reps` goal only**. On a makes goal the single bar is already measuring makes, so stacking would draw the same figure twice.
 - Single-tone (no makes): single `#3d7a24` fill
 - Complete: full `#6bd63d`
 
 ---
 
-## Student log screen (rebuilt July 22–23 2026)
+## Student log screen
 
-Replaced the old preset-button counter with a stepper-based design.
+Stepper-based; the hero stepper is whatever the assignment is scored on.
 
 **Layout (top to bottom):**
-1. `← [Exercise name]` header (white, no "Log reps" title)
-2. `X of Y done` progress text (muted)
-3. Two-tone progress bar (10px)
-4. Primary label — `#3d7a24` when `track_makes` is true, `#6bd63d` when it isn't
-5. Large stepper — `−` button / big number / `+` button, number matches the label's color
-6. Divider line
-7. `MAKES` label (inline left) + mini stepper (inline right), all in `#6bd63d` — only when `track_makes` is true
-8. `Log it` button pinned to bottom
+1. `← [Exercise name]` header — 44px back tap target, 17px title
+2. `Left hand` / `Right hand` context line (only when `side` is set)
+3. `X of Y done` progress text — or `X of 1 set · N in a row` for a streak
+4. Progress bar (6px)
+5. Primary label + large stepper
+6. Divider + inline `MAKES` row — **only on a `reps` goal with `track_makes`**
+7. `Log it` button pinned to bottom (`env(safe-area-inset-bottom, 16px) + 2rem`)
 
-**Copy by context:**
-- Minutes: `MINUTES` label (wins over everything — you don't take shots for ten minutes' worth of dribbling)
-- Shooting / Finishing / Spot shots + track_makes: `ATTEMPTS` label
-- Every other rep case, including a shooting drill with makes off: `REPS` label
-- Makes row: `MAKES` label
+**Label resolution, in order:**
+- `consecutive` → `SETS COMPLETED`
+- `makes` goal → `MAKES` (hero)
+- `unit === 'minutes'` → `MINUTES` (wins over everything else)
+- Shooting / Finishing / Spot shots **with** `track_makes` → `ATTEMPTS`
+- Everything else, including a shooting drill with makes off → `REPS`
 
-All four render uppercase. There is no question-form copy on this screen.
+All render uppercase. There is no question-form copy on this screen.
 
 **Stepper behavior:**
 - Numbers seed from already-logged totals on return (not 0)
 - Delta save — only the new increment is written to `logs`
-- `−` button floored at the banked total (can't un-log)
-- For makes assignments: no upper clamp (student can log more attempts than the target)
-- For non-makes assignments: clamped at target
+- `−` floored at the banked total (can't un-log)
+- Attempts capped at target only on a `reps` goal with no makes; a makes or streak goal never caps them
+- Makes row is fully inert (label, number and both buttons greyed) until attempts ≥ 1 — on a `reps` goal only
 - Native browser number spinner hidden via CSS
+
+---
+
+## Celebrate screen
+
+Reads a `sessionStorage` payload written by the log screen immediately before navigating. Nothing sensitive travels in the URL.
+
+Three states, not two: **loading → ready | missing**. The payload is read once and deleted, so "haven't looked yet" and "looked, found nothing" are genuinely different situations.
+
+- **loading** renders no headline at all — the defaults used to double as the loading state, so every visit asserted "Done." for a frame
+- **missing** (refresh, direct visit, or storage that refused the write) shows `Logged.` / "Your progress is saved." — modest by default, because a missing payload means the outcome is unknown. Previously a student who logged 10 of 50 and refreshed was told they had finished.
+- **ready** shows `Done.` (40px) or `Logged.` (26px) with the remaining count
+
+The payload carries `noun` (derived from the same label the stepper shows, so "12 attempts to go" can't say "reps") and `goalType`. `unit` stays as a fallback for payloads written by an older bundle mid-deploy.
+
+⚠️ Both the write and the read are wrapped in try/catch. Safari private browsing throws on `sessionStorage`, and an uncaught throw on the write would skip the navigation and strand the student on the log screen with a live "Log it" button — inviting a second tap and a duplicate row.
+
+Confetti fires only when the **last** open assignment closes (`allDone`).
 
 ---
 
 ## Exercise library (Basketball) — 31 exercises, 6 categories
 
-Source of truth: `src/lib/exercises.ts`
+Source of truth: `src/lib/exercises.ts`. Category keys: `shooting`, `handling`, `finishing`, `footwork`, `conditioning`, `spot-shots`.
 
 **⚠️ INVARIANT:** Every exercise's `default` must appear in its `quick` preset array. If it doesn't, the count screen opens with no preset selected and the number input hidden. Re-check after any edit.
 
@@ -221,12 +306,34 @@ Suicides 10, Sprints (baseline to baseline) 10, Jump rope 10 `[minutes, 5/10/15]
 **Spot shots** (reps · 5/10/15/20)  
 Right corner-to-wing 10, Left corner-to-wing 10, STAR drill 5
 
+**Goal presets** (`GOAL_PRESETS`) — used instead of the category row when the goal isn't `reps`:
+- `makes` → 10 / 25 / 50 / 100
+- `consecutive` → 3 / 5 / 10
+
+---
+
+## Assign count screen
+
+`CountScreen.tsx`, shared by the preset flow and by re-assigning a saved custom.
+
+Order matters: **Goal first**, because it decides what the number below it means. Switching goals swaps the preset row and resets the target — "50" makes sense as attempts and not as a streak.
+
+1. **Goal** — Attempts / Makes / Consecutive. Only for `supportsGoalTypes` categories on rep-based units.
+2. **How many?** — label changes per goal (`How many makes?`, `Hit how many in a row?`)
+3. `minutes` caption under the presets for timed exercises only
+4. Consecutive note: "Student shoots until they hit the goal, then logs 1 completion."
+5. **Track makes?** — only on an attempts goal, and only where `supportsMakes`
+6. **Side** — Left / Right, nothing selected by default, tap again to clear
+7. `Send to [Player]`
+
+**Edit modal** (`AssignmentMenu.tsx`) uses the same `GOAL_PRESETS` rule so assigning and editing can't drift. Gated on `hasProgress` — "Edit amount" disappears once anything is logged. It edits **quantity only**; `goal_type` and `side` cannot be changed after assigning.
+
 ---
 
 ## Twilio status
 
 - ✅ Toll-free (833) 892-5640 — registered and approved
-- ✅ SMS confirmed working end-to-end (July 22 2026 — delivered, lands in spam for some carriers until registration fully propagates)
+- ✅ SMS confirmed working end-to-end (July 22 2026)
 - Messaging Service SID: `MGe3a0a18bf618d102aae9cb26943cd239`
 - Use `MessagingServiceSid` parameter, not `From`
 - SMS fires on first assignment of the day per student (once-per-day gate, LA timezone)
@@ -267,14 +374,14 @@ Adding a new activity type is a content change — no engineering rework needed.
 
 ## RJ feedback captured (July 22 2026)
 
-RJ is the first real user and primary product validator. Key insights from today:
+RJ is the first real user and primary product validator.
 
-- **Makes-first coaching philosophy:** RJ assigns by makes ("make 50 free throws"), not attempts. The app now supports both via the track_makes toggle.
+- **Makes-first coaching philosophy:** RJ assigns by makes ("make 50 free throws"), not attempts. Now a first-class goal type, not just a toggle.
 - **"Harder to cheat the system"** — makes-first is more accountable. A student can't just tap +50 and call it done if the coach wants makes.
 - **Efficiency emphasis increases with player age/level** — younger kids need volume, advanced players track percentage.
-- **STAR Drill** — should track attempts + shooting percentage; now in Spot shots. Track_makes handles the percentage.
-- **Heel/Toe Hinge** — RJ's personal terminology, not universal. Not added as a preset; coach can create custom.
-- **3min/5min Shooting** — student uses shot count estimates for percentage; minutes unit + makes covers it.
+- **STAR Drill** — attempts + shooting percentage; in Spot shots, so it can take a makes or consecutive goal.
+- **Heel/Toe Hinge** — RJ's personal terminology, not universal. Not a preset; coach can create custom.
+- **3min/5min Shooting** — minutes unit + makes covers it.
 - **RJ's reaction to the redesigned log screen:** "It's perfect... almost has that same appeal as PrizePicks... The way the bar loads up and shows completion."
 
 ---
@@ -283,13 +390,14 @@ RJ is the first real user and primary product validator. Key insights from today
 
 - **Instructor is the customer.** All design decisions flow from instructor pain points.
 - **Default exercise libraries are the product experience.** Custom creation is the escape hatch.
-- **Makes logging is always optional for students** — never blocks logging. Student can skip makes and just log attempts.
-- **Track_makes defaults:** true for all rep-based exercises, false for minutes-based (toggleable by coach).
+- **Makes logging is always optional for students on a reps goal** — never blocks logging.
+- **Track_makes defaults:** true for shooting/finishing/spot-shots, false for minutes-based and for the three makeless categories, false for customs.
 - **Percentage formula:** makes / attempts, only over logs that recorded makes. Null logs excluded from denominator.
 - **Bar language:** muted lime = attempts/in-progress, bright lime = makes/complete, gray = empty.
-- **No yellow** — removed platform-wide July 23 2026. One green family replaces the yellow/green two-tone.
+- **No yellow** — removed platform-wide July 23 2026.
 - **Assignments are not time-bounded** — they persist until manually cleared.
 - **Log history is never deleted** — `ON DELETE SET NULL` preserves logs forever.
+- **A banked mismatch is never silently rewritten.** Guards live on the controls, not on stored data.
 
 ### What was killed and why
 - Leaderboard — privacy (minors), breaks 1:1 dynamic
@@ -298,43 +406,47 @@ RJ is the first real user and primary product validator. Key insights from today
 - Slider input — too much friction
 - Single "Done" button — assignments span multiple sessions
 - Parent signup — read-only magic link only
-- Yellow progress color — inconsistent with green family, replaced July 23 2026
+- Yellow progress color — replaced July 23 2026
 - Progressive disclosure on makes input — caused students to miss the makes field
 - Full-width stepper — buttons felt too far apart; now centered/compact
+- Attempts row on a makes goal — the coach asked for makes; attempts were neither the score nor worth reporting
+- Gradient fade under the sticky ASSIGNMENTS header — the card list starts flush with the label, so any overhanging gradient dimmed the first card. Solid background, hard edge.
 
 ---
 
 ## Pending / loose ends
 
 ### High priority
+- **Device-test the goal type feature** — shipped to prod July 24 with no real-iPhone pass. Never observed on device: the count screen and coach detail (auth-gated locally), and the incomplete-consecutive label `0/1 set · N in a row` (every consecutive row in the DB is already complete).
 - **Update `TWILIO_FROM_NUMBER`** to `+18338925640` in `.env.local` AND Vercel env vars
-- **Retroactive makes gap** — student who completes an assignment without logging makes cannot add them later. `logs_amount_check` blocks `amount: 0`. Needs RLS UPDATE policy + data model decision (replace vs append). Documented, not yet built.
-- **Makes-only log when assignment is complete** — related to above. If student has prior logged attempts and wants to add makes only, there's no path. Bank for next makes-logging pass.
-- **Left/right hand option** — some exercises (layups, floaters) should allow specifying which hand/side. Belongs in the logging detail layer, not as separate exercises.
-- **"Or type a number" hint** on stepper — students don't know the center number is tappable for direct input.
-- **Hold to accelerate** on stepper buttons — hold + button, number climbs faster. Standard mobile UX.
-- **Honesty nudge** — when student logs 0 or very low attempts, show a quiet human message. E.g. "Honest reps are the only ones that count." Adds character without being preachy.
-- **Progress bars on roster rows** — each student row on `/instructor/students` should show a thin progress bar. Not yet built; roster currently conveys progress only through group pills.
+- **Consecutive stepper overshoots its own progress line** — reads `1 of 1 set` while the stepper sits at 2. `progressValue` caps at 1 by design, but the two numbers visibly disagree.
+- **Edit `goal_type` / `side` after assigning** — currently quantity only, so a wrong hand means delete and re-assign. `goal_type` should stay behind the `hasProgress` gate (switching a logged reps assignment to makes reinterprets history); `side` is metadata and could be looser.
+- **Custom exercises get no goal selector** — they keep the makes toggle but can't take a makes or consecutive goal, since they belong to no category.
+- **Retroactive makes gap** — a student who completes an assignment without logging makes cannot add them later. Needs an RLS UPDATE policy + a replace-vs-append decision.
+- **"Or type a number" hint** on stepper — students don't know the centre number is tappable. ⚠️ Shipping this makes a latent bug real: typing attempts clamps makes on each intermediate keystroke (retyping "60" passes through "6" and drags makes to ≤6).
+- **Hold to accelerate** on stepper buttons
+- **Honesty nudge** — when a student logs 0 or very low attempts, a quiet human message
+- **Progress bars on roster rows** — also the prerequisite for showing side on the roster, which today has no per-assignment surface at all
 
 ### Medium priority
-- **Gate stranger signups** — currently open; add invite code or waitlist before broader launch
+- **Collapse the layups pair** into one `Layups` entry now that `side` exists — needs a data migration, `exercise_name` is free text
+- **Gate stranger signups** — currently open; invite code or waitlist before broader launch
 - **Stripe infrastructure** — free tier 3 students, paywall at 4th, ~$5/month, promo code `COACHRJ` = lifetime free
-- **Tighten logs RLS policy** — INSERT currently open; tighten to verify student token matches player on assignment
+- **Tighten logs RLS policy** — INSERT currently open
 - **Demo mode** — "Try as Coach" seeded database with context overlay
 - **Account deletion flow** — required by privacy policy
 - **hello@assignreps.com Gmail Send as setup**
 - **Final legal review of /privacy + /terms**
 - **Re-engagement nudge** — Monday email to coaches who haven't assigned anything
+- **Landing page product-loop mocks are stale** — `src/app/page.tsx` draws four miniature phones by hand; frame 3 still shows the killed preset-button counter and uses `#27500a` rather than `#3d7a24`
 
 ### Low priority / future
 - **Light mode** — after dark mode is validated with RJ
-- **STAR Drill logging** — currently just reps + makes. RJ said: log attempts + shooting %. Makes-logging covers this now.
-- **Activate more activity types** — 10 identified (piano, guitar, golf, martial arts, soccer, gymnastics, swimming, tennis, voice). Content problem, not engineering.
+- **Activate more activity types** — content problem, not engineering
 - **WhatsApp via Twilio** — international student SMS
-- **One-tap coach reaction** — preselected SMS reaction to student's log ("💪 Nice work"), no open text field
-- **One-tap nudge to quiet students** — preselected "Don't forget your reps" SMS
-- **Performance history** — show prior assignment metrics when reassigning ("Antony shot 30% last time on corner 3s")
-- **iOS line above footer** — unconfirmed on real iPhone; may be resolved by existing border
+- **One-tap coach reaction** — preselected SMS reaction to a student's log
+- **One-tap nudge to quiet students**
+- **Performance history** — prior metrics when reassigning ("Antony shot 30% last time on corner 3s")
 
 ---
 
@@ -343,11 +455,13 @@ RJ is the first real user and primary product validator. Key insights from today
 - Coach signup (email OTP) ✅
 - Add student (name + phone, optional parent phone) ✅
 - Assign exercise (default library or custom) ✅
-- Student log screen — stepper with attempts + makes ✅ (rebuilt July 22–23 2026)
-- Makes logging — track_makes toggle, coach sees percentage ✅ (July 22 2026, live on prod)
+- Student log screen — stepper ✅
+- Makes logging — track_makes toggle, coach sees percentage ✅
+- Goal types — attempts / makes / consecutive ✅ (July 24 2026)
+- Left/right side on assignments ✅ (July 24 2026)
 - Celebration screen ✅
 - Coach player detail view + two-tone makes bars ✅
-- Coach Monday roster view ✅
+- Coach roster view ✅
 - Parent weekly digest (read-only magic link) ✅
 - Landing page + product loop section ✅
 - Staging environment ✅
@@ -357,24 +471,27 @@ RJ is the first real user and primary product validator. Key insights from today
 - Account deletion ❌
 - Stripe billing ❌
 - Progress bars on roster rows ❌
-- Left/right hand per-exercise option ❌
 - Retroactive makes editing ❌
+- Editing goal_type / side after assigning ❌
 
 ---
 
-## Priority build list (July 23 2026)
+## Priority build list (July 24 2026)
 
-1. **Get RJ using it for real** — he has access, SMS works, makes logging is live
-2. Honesty nudge on 0 attempts
-3. "Or type a number" hint on stepper
-4. Hold to accelerate on stepper buttons
-5. Left/right hand option on applicable exercises
-6. Progress bars on roster rows
-7. Retroactive makes gap — solve data model, build RLS UPDATE policy
-8. Gate signups — invite code or waitlist
-9. Stripe infrastructure
-10. Activate additional activity types (piano, guitar, etc.)
-11. Light mode
+1. **Device-test the goal type feature on a real iPhone** — it is on prod untested
+2. **Get RJ using it for real** — makes-first is now a first-class goal
+3. Consecutive stepper overshoot (`1 of 1 set` vs stepper at 2)
+4. Edit `goal_type` / `side` after assigning
+5. Honesty nudge on 0 attempts
+6. "Or type a number" hint — fix the keystroke clamp first
+7. Hold to accelerate on stepper buttons
+8. Progress bars on roster rows
+9. Retroactive makes gap — data model + RLS UPDATE policy
+10. Collapse the layups pair
+11. Gate signups — invite code or waitlist
+12. Stripe infrastructure
+13. Activate additional activity types
+14. Light mode
 
 ---
 
@@ -386,6 +503,14 @@ RJ is the first real user and primary product validator. Key insights from today
 - **Product loop:** "Here's how it works." — four phone mocks (link, student home, log counter, roster)
 - **Footer:** dark `#1a1d24` with `1px solid #2a2d36` top border
 - **Background:** `#ede9e3` (warm off-white hero) / dark band for product loop + footer
+
+⚠️ The four loop mocks are hand-drawn React, not screenshots — a second surface that has to track the design system by hand. They are currently out of date (see Pending).
+
+---
+
+## Screen inventory
+
+`mocks-2026-07-23-1607.html` in the project root — a static gallery of every screen and meaningful state, rebuilt from the page code. Opens standalone; image paths are relative, so it must stay at the project root. Predates the goal type system.
 
 ---
 
