@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { requireCoach } from "@/lib/require-coach";
 import { getActivityLabels } from "@/config/activityTypes";
-import { presetsForExercise } from "@/lib/exercises";
+import { presetsForExercise, isComplete, progressTarget, progressValue } from "@/lib/exercises";
+import type { GoalType } from "@/lib/exercises";
 import type { Assignment } from "@/types/database";
 import PlayerManage from "./PlayerManage";
 import AssignmentMenu from "./AssignmentMenu";
@@ -66,7 +67,14 @@ export default async function CoachPlayerPage({
   const firstName = player.name.trim().split(/\s+/)[0] || player.name.trim();
   const allDone =
     assignmentList.length > 0 &&
-    assignmentList.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target);
+    assignmentList.every((a) =>
+      isComplete(
+        (a.goal_type ?? "reps") as GoalType,
+        a.target,
+        loggedByAssignment[a.id] ?? 0,
+        makesByAssignment[a.id]?.makes ?? 0,
+      ),
+    );
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
@@ -120,9 +128,14 @@ export default async function CoachPlayerPage({
 
           <div className="flex flex-col gap-2.5 mb-6">
             {assignmentList.map((a) => {
+              const goalType = (a.goal_type ?? "reps") as GoalType;
               const logged = loggedByAssignment[a.id] ?? 0;
-              const done = logged >= a.target;
-              const pct = a.target > 0 ? Math.min(100, Math.round((logged / a.target) * 100)) : 0;
+              const rawMakes = makesByAssignment[a.id]?.makes ?? 0;
+              const done = isComplete(goalType, a.target, logged, rawMakes);
+              // Bar and count read in whatever the goal is scored on.
+              const cardTarget = progressTarget(goalType, a.target);
+              const shown = Math.min(progressValue(goalType, logged, rawMakes), cardTarget);
+              const pct = cardTarget > 0 ? Math.min(100, Math.round((shown / cardTarget) * 100)) : 0;
               // Bad data (more makes than attempts) still shows the raw numbers —
               // only the percentage, which would read over 100%, is suppressed.
               const m = makesByAssignment[a.id];
@@ -133,9 +146,18 @@ export default async function CoachPlayerPage({
                   : null;
               // Two-tone bar, same rule as the student list: muted attempts fill
               // with a bright makes overlay, but only once makes were recorded.
-              const twoTone = (a.track_makes ?? false) && showMakes;
+              // Reps goal only — under a makes goal the single bar is already
+              // drawing makes, so stacking would render the same figure twice.
+              const twoTone = goalType === "reps" && (a.track_makes ?? false) && showMakes;
               const barMakesPct =
                 m && a.target > 0 ? Math.min(100, Math.round((m.makes / a.target) * 100)) : 0;
+              // Counts read in the goal's own measure.
+              const countLabel =
+                goalType === "consecutive"
+                  ? `${shown}/1 set`
+                  : goalType === "makes"
+                    ? `${shown}/${a.target} makes`
+                    : `${logged}/${a.target} ${unitLabel(a.unit)}`;
               return (
                 <div
                   key={a.id}
@@ -143,13 +165,24 @@ export default async function CoachPlayerPage({
                 >
                   <div className="flex-1 min-w-0 px-4 py-[14px]">
                     <div className="flex items-baseline gap-2 mb-2">
-                      <span className="flex-1 min-w-0 truncate text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
+                      {/* The side sits in its own shrink-0 span rather than inside
+                          the truncating name, so "Short corner jumpers · Left"
+                          drops characters from the name and still shows which
+                          hand was asked for — the part the coach can't infer. */}
+                      <span className="flex-1 min-w-0 flex items-baseline">
+                        <span className="truncate text-[15px] font-medium text-reps-ink">{a.exercise_name}</span>
+                        {a.side && (
+                          <span className="shrink-0 text-[15px] font-medium text-reps-sub">
+                            {" · "}{a.side === "left" ? "Left" : "Right"}
+                          </span>
+                        )}
+                      </span>
                       {done ? (
                         <span className="shrink-0 text-[12px] font-medium text-reps-green whitespace-nowrap">
-                          ✓ {Math.min(logged, a.target)}/{a.target} {unitLabel(a.unit)}
+                          ✓ {goalType === "reps" ? `${Math.min(logged, a.target)}/${a.target} ${unitLabel(a.unit)}` : countLabel}
                         </span>
                       ) : (
-                        <span className="shrink-0 text-[12px] text-reps-dim whitespace-nowrap">{logged}/{a.target} {unitLabel(a.unit)}</span>
+                        <span className="shrink-0 text-[12px] text-reps-dim whitespace-nowrap">{countLabel}</span>
                       )}
                     </div>
                     {twoTone ? (
@@ -190,7 +223,10 @@ export default async function CoachPlayerPage({
                     assignmentId={a.id}
                     exerciseName={a.exercise_name}
                     target={a.target}
+                    // The exercise's attempt presets. AssignmentMenu swaps in the
+                    // goal's own row when this isn't a 'reps' assignment.
                     presets={presetsForExercise(a.exercise_name)}
+                    goalType={goalType}
                     hasProgress={logged > 0}
                   />
                 </div>

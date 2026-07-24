@@ -13,6 +13,8 @@ type Celebration = {
    *  own label, so a makes-tracked drill doesn't get counted in "reps" here.
    *  Absent from payloads written before this field existed; `unit` covers those. */
   noun?: string;
+  /** Absent on payloads written before goal types existed; `noun` covers those. */
+  goalType?: "reps" | "makes" | "consecutive";
   allDone: boolean;
 };
 
@@ -34,7 +36,10 @@ function unitWord(count: number, unit: string): string {
     if (unit === "reps") return "rep";
     if (unit === "minutes") return "minute";
     if (unit === "attempts") return "attempt";
+    if (unit === "makes") return "make";
+    if (unit === "sets completed") return "set";
   }
+  if (unit === "sets completed") return "sets";
   return unit;
 }
 

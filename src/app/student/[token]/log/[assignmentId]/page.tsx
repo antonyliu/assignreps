@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { categoryKeyForExercise } from "@/lib/exercises";
+import type { GoalType, Side } from "@/lib/exercises";
 import LogScreen from "./LogScreen";
 
 export const metadata: Metadata = { title: "Log Reps — Reps" };
@@ -26,7 +27,7 @@ export default async function LogPage({
   // Fetch assignment (must belong to this player)
   const { data: assignment } = await supabase
     .from("assignments")
-    .select("id, exercise_name, target, unit, track_makes")
+    .select("id, exercise_name, target, unit, track_makes, goal_type, side")
     .eq("id", assignmentId)
     .eq("player_id", player.id)
     .single();
@@ -46,6 +47,11 @@ export default async function LogPage({
   // only makes that were actually recorded.
   const alreadyMakes = (logs ?? []).reduce((sum, l) => sum + (l.makes ?? 0), 0);
 
+  // Pre-existing rows have no goal_type until the migration's default lands, and
+  // a null from an out-of-date cache must still read as the original behaviour.
+  const goalType = (assignment.goal_type ?? "reps") as GoalType;
+  const trackMakes = assignment.track_makes ?? false;
+
   return (
     <LogScreen
       token={token}
@@ -57,12 +63,17 @@ export default async function LogPage({
       // Makes assignments report the true total: attempts are the denominator of
       // the coach's percentage, so a 55-attempt session against a 50 target has
       // to read 55. Everything else still caps, per the no-inflating rule.
+      // A makes goal counts in makes, so its attempts are never capped either.
       alreadyLogged={
-        assignment.track_makes ? alreadyLogged : Math.min(alreadyLogged, assignment.target)
+        trackMakes || goalType !== "reps"
+          ? alreadyLogged
+          : Math.min(alreadyLogged, assignment.target)
       }
       alreadyMakes={alreadyMakes}
       coachName={coachName}
-      trackMakes={assignment.track_makes ?? false}
+      trackMakes={trackMakes}
+      goalType={goalType}
+      side={(assignment.side ?? null) as Side | null}
       categoryKey={categoryKeyForExercise(assignment.exercise_name)}
     />
   );

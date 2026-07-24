@@ -3,21 +3,35 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { MoreVertical } from "lucide-react";
+import { GOAL_PRESETS } from "@/lib/exercises";
+import type { GoalType } from "@/lib/exercises";
 import { deleteAssignment, updateAssignmentTarget } from "./actions";
 
 type Props = {
   assignmentId: string;
   exerciseName: string;
   target: number;
+  /** The exercise's own category presets — the row for a 'reps' goal. The other
+   *  goals count something else and bring their own scale, see GOAL_PRESETS. */
   presets: number[];
+  goalType: GoalType;
   hasProgress: boolean;
+};
+
+// What the target means, per goal. "Edit amount" is only honest for attempts —
+// on a makes or streak assignment it left the coach guessing which number the
+// row was asking for.
+const EDIT_SUBTITLE: Record<GoalType, string> = {
+  reps: "Edit amount",
+  makes: "Edit target makes",
+  consecutive: "Edit streak goal",
 };
 
 // Per-card overflow menu: a vertical three-dot trigger sitting in its own
 // column. "Remove assignment" is always available (gated behind a confirm
 // dialog). "Edit amount" appears only when the assignment has no logged
 // progress yet, and updates the target silently (no SMS).
-export default function AssignmentMenu({ assignmentId, exerciseName, target, presets, hasProgress }: Props) {
+export default function AssignmentMenu({ assignmentId, exerciseName, target, presets, goalType, hasProgress }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,12 +40,17 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
   const [editTarget, setEditTarget] = useState(target);
   const [editCustom, setEditCustom] = useState(false);
 
+  // Same rule as the count screen, so assigning and editing offer the identical
+  // row: a makes goal counts in makes and a streak in consecutive hits, neither
+  // of which is scaled like the exercise's attempt presets (25/50/100/200).
+  const goalPresets = goalType === "reps" ? presets : GOAL_PRESETS[goalType];
+
   function openEdit() {
     setMenuOpen(false);
     setEditTarget(target);
     // If the current target isn't a preset, reveal the input pre-filled;
     // otherwise show the presets with the current one selected.
-    setEditCustom(!presets.includes(target));
+    setEditCustom(!goalPresets.includes(target));
     setEditOpen(true);
   }
 
@@ -161,11 +180,11 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
             <h2 id="edit-amount-title" className="text-[16px] font-semibold text-reps-ink mb-1">
               {exerciseName}
             </h2>
-            <p className="text-[13px] text-reps-sub mb-5">Edit amount</p>
+            <p className="text-[13px] text-reps-sub mb-5">{EDIT_SUBTITLE[goalType]}</p>
 
-            {presets.length > 0 && (
+            {goalPresets.length > 0 && (
               <div className="flex gap-2 mb-3 flex-wrap">
-                {presets.map((n) => {
+                {goalPresets.map((n) => {
                   const active = !editCustom && editTarget === n;
                   return (
                     <button
@@ -195,7 +214,7 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
                 className="w-full bg-reps-bg border border-reps-line rounded-[10px] px-[14px] py-3 text-lg text-center text-reps-ink outline-none focus:border-[#378add] transition-colors"
               />
             ) : (
-              presets.length > 0 && (
+              goalPresets.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setEditCustom(true)}

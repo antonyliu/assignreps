@@ -3,6 +3,8 @@ import { requireCoach } from "@/lib/require-coach";
 import { LogoMini } from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import { getActivityLabels } from "@/config/activityTypes";
+import { isComplete } from "@/lib/exercises";
+import type { GoalType } from "@/lib/exercises";
 import type { Metadata } from "next";
 import type { Player } from "@/types/database";
 
@@ -44,35 +46,57 @@ export default async function RosterPage() {
     // roster's computed Monday, forcing all students into "Nothing assigned".
     supabase
       .from("assignments")
-      .select("id, player_id, target")
+      .select("id, player_id, target, goal_type")
       .eq("coach_id", user.id),
   ]);
 
   // Sum all logs for those assignments (no date filter), same as student detail.
+  // `makes` is fetched because a makes-goal assignment is scored on it: summing
+  // amount alone would mark a student done the moment their ATTEMPTS reached the
+  // target, regardless of how many actually went in.
   const assignmentIds = (assignments ?? []).map((a) => a.id);
   const { data: logs } = assignmentIds.length
-    ? await supabase.from("logs").select("assignment_id, amount").in("assignment_id", assignmentIds)
+    ? await supabase
+        .from("logs")
+        .select("assignment_id, amount, makes")
+        .in("assignment_id", assignmentIds)
     : { data: [] };
 
   const coachName = coach?.name?.trim() || "Coach";
   const labels = getActivityLabels(coach?.instructor_type ?? null);
   const playerList: Player[] = players ?? [];
 
-  // Sum logged reps per assignment (same sum >= target logic used elsewhere).
+  // Sum logged reps per assignment (same completion rule used elsewhere).
   const loggedByAssignment: Record<string, number> = {};
+  const makesByAssignment: Record<string, number> = {};
   for (const log of logs ?? []) {
     if (!log.assignment_id) continue;
     loggedByAssignment[log.assignment_id] = (loggedByAssignment[log.assignment_id] ?? 0) + log.amount;
+    if (log.makes == null) continue;
+    makesByAssignment[log.assignment_id] = (makesByAssignment[log.assignment_id] ?? 0) + log.makes;
   }
 
-  const assignmentsByPlayer: Record<string, { id: string; target: number }[]> = {};
+  const assignmentsByPlayer: Record<string, { id: string; target: number; goalType: GoalType }[]> = {};
   for (const a of assignments ?? []) {
-    (assignmentsByPlayer[a.player_id] ??= []).push({ id: a.id, target: a.target });
+    (assignmentsByPlayer[a.player_id] ??= []).push({
+      id: a.id,
+      target: a.target,
+      goalType: (a.goal_type ?? "reps") as GoalType,
+    });
+  }
+
+  function assignmentDone(a: { id: string; target: number; goalType: GoalType }): boolean {
+    return isComplete(
+      a.goalType,
+      a.target,
+      loggedByAssignment[a.id] ?? 0,
+      makesByAssignment[a.id] ?? 0,
+    );
   }
 
   function doneCount(playerId: string): number {
     const list = assignmentsByPlayer[playerId] ?? [];
-    return list.filter((a) => (loggedByAssignment[a.id] ?? 0) >= a.target).length;
+    return list.filter(assignmentDone).length;
   }
 
   // Group by completion: all assignments complete → Done; some logged but not
@@ -81,7 +105,10 @@ export default async function RosterPage() {
   function playerGroup(playerId: string): Group {
     const list = assignmentsByPlayer[playerId] ?? [];
     if (list.length === 0) return "unassigned";
-    if (list.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target)) return "done";
+    if (list.every(assignmentDone)) return "done";
+    // "Started" is still any logged activity, whatever the goal is scored on —
+    // a student who has taken attempts toward a makes goal is underway even
+    // though none have gone in yet.
     if (list.some((a) => (loggedByAssignment[a.id] ?? 0) > 0)) return "progress";
     return "notstarted";
   }

@@ -1,5 +1,79 @@
 export type Unit = "reps" | "minutes" | "target";
 
+// What an assignment's `target` measures.
+//
+//   reps        target = attempts. The original shape; every pre-existing
+//               assignment reads as this.
+//   makes       target = makes. "Make 50 free throws" — attempts may still be
+//               recorded, but completion is counted in makes.
+//   consecutive target = STREAK LENGTH, not a quantity. "Hit 5 in a row" stores
+//               5, and the student logs sets completed (one row, amount 1) once
+//               they manage it. ⚠️ Completion is therefore `>= 1 set`, NOT
+//               `>= target` — summing against target would mean hitting the
+//               streak five separate times. Every completion site special-cases
+//               this; see isComplete().
+export type GoalType = "reps" | "makes" | "consecutive";
+
+export type Side = "left" | "right";
+
+// Preset rows for the two non-default goals. A makes goal counts in makes, so
+// the attempt-scaled category presets (25/50/100/200) are far too high to be
+// useful; a streak is smaller still.
+export const GOAL_PRESETS: Record<Exclude<GoalType, "reps">, number[]> = {
+  makes: [10, 25, 50, 100],
+  consecutive: [3, 5, 10],
+};
+
+// Exercises where a left/right choice is meaningless, by exact library name.
+// Everything else — including custom exercises, which match nothing here —
+// offers the Side row.
+//
+// Two groups: whole-body conditioning that has no side at all (suicides,
+// sprints, jump rope, planks, isometric squats, pick-up ball), and free throws,
+// which are taken from one fixed spot with the shooting hand.
+const SIDELESS_EXERCISES = new Set([
+  "Free throws",
+  "Jump rope",
+  "Planks",
+  "Isometric squats",
+  "Pick-up basketball",
+  "Suicides",
+  // The library name carries the qualifier; the spec's "Sprints" refers to this.
+  "Sprints (baseline to baseline)",
+]);
+
+export function supportsSide(exerciseName: string): boolean {
+  return !SIDELESS_EXERCISES.has(exerciseName);
+}
+
+// One completion rule for the whole app, so the six places that ask "is this
+// done?" can't drift apart. `logged` is SUM(amount), `makes` is SUM(makes).
+//
+// ⚠️ consecutive ignores `target` deliberately — target holds the streak length,
+// and one completed set finishes the assignment.
+export function isComplete(
+  goalType: GoalType,
+  target: number,
+  logged: number,
+  makes: number,
+): boolean {
+  if (goalType === "consecutive") return logged >= 1;
+  if (goalType === "makes") return makes >= target;
+  return logged >= target;
+}
+
+// The measure that fills the progress bar, matching isComplete's denominator.
+export function progressValue(goalType: GoalType, logged: number, makes: number): number {
+  if (goalType === "consecutive") return Math.min(logged, 1);
+  if (goalType === "makes") return makes;
+  return logged;
+}
+
+// The denominator to show and divide by. Consecutive collapses to a single set.
+export function progressTarget(goalType: GoalType, target: number): number {
+  return goalType === "consecutive" ? 1 : target;
+}
+
 export type Exercise = {
   name: string
   default: number

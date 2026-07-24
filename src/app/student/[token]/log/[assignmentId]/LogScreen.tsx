@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import type { GoalType, Side } from "@/lib/exercises";
+import { isComplete } from "@/lib/exercises";
 import { saveLog } from "./actions";
 
 type Props = {
@@ -18,6 +20,10 @@ type Props = {
   alreadyMakes: number;
   coachName: string;
   trackMakes: boolean;
+  /** What `target` measures. 'consecutive' reads target as a streak length and
+   *  completes at one logged set — see isComplete(). */
+  goalType: GoalType;
+  side: Side | null;
   /** Undefined for custom exercises, which belong to no category. */
   categoryKey?: string;
 };
@@ -170,6 +176,8 @@ export default function LogScreen({
   alreadyMakes,
   coachName,
   trackMakes,
+  goalType,
+  side,
   categoryKey,
 }: Props) {
   const router = useRouter();
@@ -190,7 +198,15 @@ export default function LogScreen({
   // non-makes work is capped at target: attempts are the denominator of a
   // shooting percentage, so a real 60-attempt session against a 50 target has to
   // survive intact rather than being trimmed to 50.
-  const amountCeiling = trackMakes ? Infinity : target;
+  // Which measure the assignment is actually scored on. Only 'reps' keeps the
+  // original attempts-are-everything shape; the other two rearrange the screen.
+  const isMakesGoal = goalType === "makes";
+  const isStreakGoal = goalType === "consecutive";
+
+  // Attempts are capped at target only when they ARE the goal and no makes are
+  // recorded. Under a makes or streak goal attempts are context, not the score,
+  // so trimming them would corrupt the coach's percentage.
+  const amountCeiling = trackMakes || goalType !== "reps" ? Infinity : target;
   const parsedAmount = parseInt(amountInput, 10);
   const current = Number.isNaN(parsedAmount)
     ? alreadyLogged
@@ -203,10 +219,33 @@ export default function LogScreen({
     : Math.max(parsedMakes, alreadyMakes);
   const makesAdded = makesTotal - alreadyMakes;
 
-  const pct  = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
-  const done = current >= target;
+  // One rule for completion across the whole app, so this screen can't disagree
+  // with the roster about whether the work is finished.
+  const done = isComplete(goalType, target, current, makesTotal);
 
-  const label = primaryLabel(unit, trackMakes, categoryKey);
+  // The bar tracks whatever the goal is scored on. A streak collapses to a
+  // single set: one completion fills it.
+  const shownTarget = isStreakGoal ? 1 : target;
+  const shownCurrent = isStreakGoal
+    ? Math.min(current, 1)
+    : isMakesGoal
+      ? makesTotal
+      : current;
+  const pct =
+    shownTarget > 0 ? Math.min(100, Math.round((shownCurrent / shownTarget) * 100)) : 0;
+
+  const label = isStreakGoal
+    ? "SETS COMPLETED"
+    : isMakesGoal
+      ? "MAKES"
+      : primaryLabel(unit, trackMakes, categoryKey);
+
+  // Attempts stay available under a makes goal, but only as optional context —
+  // makes is the hero there, so the two swap roles.
+  const showSecondaryAttempts = isMakesGoal;
+  // The original inline makes row belongs to a reps goal alone. A makes goal has
+  // promoted makes to the hero; a streak has no makes at all.
+  const showMakesRow = trackMakes && goalType === "reps";
 
   // Steppers move the displayed total, floored at what's banked and ceilinged as
   // above. Functional updates, not the closed-over value: taps fired faster than
@@ -239,11 +278,16 @@ export default function LogScreen({
   // Snaps silently — an over-count is a slip, not something worth an error.
   // The banked floor still wins over the cap, so a legacy row whose makes already
   // exceed its attempts is left alone rather than being retroactively trimmed.
+  //
+  // Only meaningful when attempts are the goal. Under a makes goal attempts are
+  // optional context and may legitimately be left at zero while makes climb, so
+  // capping makes to them would make the field unusable.
   function settleMakes() {
     setMakesInput((prev) => {
       const p = parseInt(prev, 10);
       if (Number.isNaN(p)) return String(alreadyMakes);
-      return String(Math.max(Math.min(p, current), alreadyMakes));
+      const capped = goalType === "reps" ? Math.min(p, current) : p;
+      return String(Math.max(capped, alreadyMakes));
     });
   }
 
@@ -258,13 +302,14 @@ export default function LogScreen({
   // nothing needs clamping stops it looping. The banked floor still wins, so a
   // legacy row whose makes already exceed its attempts is left alone.
   useEffect(() => {
+    if (goalType !== "reps") return;
     setMakesInput((prev) => {
       const p = parseInt(prev, 10);
       if (Number.isNaN(p)) return prev;
       const capped = Math.max(Math.min(p, current), alreadyMakes);
       return capped === p ? prev : String(capped);
     });
-  }, [current, alreadyMakes]);
+  }, [current, alreadyMakes, goalType]);
 
   // The whole control is inert only when there is genuinely nothing to log:
   // a completed assignment that doesn't track makes.
@@ -274,21 +319,35 @@ export default function LogScreen({
   // for them to belong to — and nothing saveable either, since "Log it" already
   // requires added >= 1 — so the whole makes row goes inert rather than inviting
   // a number that could never be recorded.
-  const makesLocked = current < 1;
+  //
+  // Under a makes goal that dependency runs the other way: makes ARE the entry,
+  // and attempts are the optional extra, so the field is never locked.
+  const makesLocked = goalType === "reps" && current < 1;
 
-  // Bar layers read the same totals the steppers show.
+  // Bar layers read the same totals the steppers show. Only the reps goal stacks
+  // two measures; the others fill a single bar from `shownCurrent`.
   const makesPct = target > 0 ? Math.min(100, Math.round((makesTotal / target) * 100)) : 0;
 
+  // What this save actually adds. A makes goal is satisfied by new makes even
+  // when attempts weren't touched; everything else counts attempts.
+  const primaryAdded = isMakesGoal ? makesAdded : added;
+
   async function handleSave() {
-    if (added < 1) return;
+    if (primaryAdded < 1) return;
     setSaving(true);
     // Both figures are deltas — this row records only what was added now. Makes
-    // left untouched stay null ("logged the reps, didn't say"), never 0.
-    const makes = !trackMakes || makesAdded < 1 ? null : makesAdded;
-    const result = await saveLog(playerId, assignmentId, added, makes);
+    // left untouched stay null ("logged the reps, didn't say"), never 0. A streak
+    // logs sets, which aren't makes, so it stays null there too.
+    const makes = isStreakGoal || !trackMakes || makesAdded < 1 ? null : makesAdded;
+    // ⚠️ `logs_amount_check` requires amount > 0. Under a makes goal the student
+    // can legitimately record makes without touching attempts, which would send
+    // 0 and lose the whole row — so the makes delta stands in as the attempt
+    // count. It is the honest floor: you cannot make a shot without taking it.
+    const amount = isMakesGoal && added < 1 ? makesAdded : added;
+    const result = await saveLog(playerId, assignmentId, amount, makes);
     setSaving(false);
     if (!result.ok) { setError(result.error); return; }
-    const remaining = Math.max(0, target - current);
+    const remaining = Math.max(0, shownTarget - shownCurrent);
     // Hand the celebration details to the next screen via sessionStorage, not
     // the URL — this keeps the instructor's name (and everything else) out of
     // the address bar and browser history.
@@ -306,7 +365,7 @@ export default function LogScreen({
         JSON.stringify({
           coachName,
           done,
-          added,
+          added: primaryAdded,
           remaining,
           unit,
           // The noun celebrate counts in ("12 attempts to go"). Derived from the
@@ -314,6 +373,7 @@ export default function LogScreen({
           // `unit` alone would say "reps" on an ATTEMPTS assignment. `unit` stays
           // in the payload as celebrate's fallback for a stale write.
           noun: label.toLowerCase(),
+          goalType,
           allDone: result.allDone,
         })
       );
@@ -346,17 +406,28 @@ export default function LogScreen({
         <span className="-ml-2 text-[17px] font-medium text-reps-ink truncate">{exerciseName}</span>
       </div>
 
+      {/* Which hand the coach asked for. Quiet context under the title rather
+          than part of it, so a long exercise name still truncates cleanly. */}
+      {side && (
+        <div className="text-[13px] text-reps-sub -mt-12 mb-12">
+          {side === "left" ? "Left hand" : "Right hand"}
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-900/20 border border-red-500/30 text-red-400 rounded-[10px] px-4 py-3 text-sm mb-4">
           {error}
         </div>
       )}
 
-      {/* Reference: what's already banked, with the bar under it. */}
+      {/* Reference: what's already banked, with the bar under it. A streak reads
+          as sets rather than a bare count, since "0 of 1" says nothing. */}
       <div className="text-[14px] text-reps-dim mb-3 tabular-nums">
-        {current} of {target} done
+        {isStreakGoal
+          ? `${shownCurrent} of 1 set · ${target} in a row`
+          : `${shownCurrent} of ${shownTarget} done`}
       </div>
-      {trackMakes ? (
+      {showMakesRow ? (
         // attempts (muted green) with makes (bright green) stacked on top.
         <div
           className="relative h-1.5 rounded-full overflow-hidden mb-[96px]"
@@ -387,35 +458,87 @@ export default function LogScreen({
           and the MAKES row share the same edges as the bar and title above —
           the page padding supplies the breathing room. */}
       <div className="mb-14">
+        {/* The hero stepper is whatever the assignment is scored on. Under a
+            makes goal that is MAKES, so it takes the large control and the
+            bright green, and attempts drop to the quiet row below. */}
         <FieldLabel
-          htmlFor="amount"
+          htmlFor={isMakesGoal ? "makes" : "amount"}
           text={label}
-          color={trackMakes ? ATTEMPTS_GREEN : MAKES_GREEN}
+          color={trackMakes && goalType === "reps" ? ATTEMPTS_GREEN : MAKES_GREEN}
           sizeClass="text-[17px]"
         />
         <div className="mt-5">
-          <StepperRow
-            id="amount"
-            label="amount"
-            value={amountInput}
-            onValue={setAmountInput}
-            onStep={step}
-            buttonClass="w-[67px] h-[67px] text-[38px]"
-            // placeholder:opacity-100 defeats the browser default that renders
-            // placeholders dimmed — the seeded 0 must be the label's colour,
-            // not a lighter shade of it.
-            numberClass={trackMakes ? ATTEMPTS_NUMBER : SOLO_NUMBER}
-            inputWidthClass="flex-1 min-w-0"
-            gapClass="gap-5"
-            minusDisabled={inputLocked || current <= alreadyLogged}
-            plusDisabled={inputLocked || current >= amountCeiling}
-            inputDisabled={inputLocked}
-          />
+          {isMakesGoal ? (
+            <StepperRow
+              id="makes"
+              label="makes"
+              value={makesInput}
+              onValue={setMakesInput}
+              onStep={stepMakes}
+              onBlur={settleMakes}
+              buttonClass="w-[67px] h-[67px] text-[38px]"
+              numberClass={SOLO_NUMBER}
+              inputWidthClass="flex-1 min-w-0"
+              gapClass="gap-5"
+              minusDisabled={makesTotal <= alreadyMakes}
+              plusDisabled={false}
+              inputDisabled={false}
+            />
+          ) : (
+            <StepperRow
+              id="amount"
+              label="amount"
+              value={amountInput}
+              onValue={setAmountInput}
+              onStep={step}
+              buttonClass="w-[67px] h-[67px] text-[38px]"
+              // placeholder:opacity-100 defeats the browser default that renders
+              // placeholders dimmed — the seeded 0 must be the label's colour,
+              // not a lighter shade of it.
+              numberClass={trackMakes && goalType === "reps" ? ATTEMPTS_NUMBER : SOLO_NUMBER}
+              inputWidthClass="flex-1 min-w-0"
+              gapClass="gap-5"
+              minusDisabled={inputLocked || current <= alreadyLogged}
+              plusDisabled={inputLocked || current >= amountCeiling}
+              inputDisabled={inputLocked}
+            />
+          )}
         </div>
+
+        {/* Under a makes goal, attempts become the optional context — same quiet
+            inline row the makes field occupies on a reps assignment, so the
+            hierarchy reads the same way round whichever measure is the goal. */}
+        {showSecondaryAttempts && (
+          <>
+            <div className="mt-6 border-t border-reps-line-hi" />
+            <div className="mt-5 flex items-center justify-between gap-4">
+              <FieldLabel
+                htmlFor="amount"
+                text="ATTEMPTS"
+                color={ATTEMPTS_GREEN}
+                sizeClass="text-[15px]"
+              />
+              <StepperRow
+                id="amount"
+                label="amount"
+                value={amountInput}
+                onValue={setAmountInput}
+                onStep={step}
+                buttonClass="w-[50px] h-[50px] text-[28px]"
+                numberClass="text-[31px] font-semibold text-[#3d7a24] placeholder:text-[#3d7a24] placeholder:opacity-100"
+                inputWidthClass="w-[60px] shrink-0"
+                gapClass="gap-2"
+                minusDisabled={current <= alreadyLogged}
+                plusDisabled={false}
+                inputDisabled={false}
+              />
+            </div>
+          </>
+        )}
 
         {/* Makes is the quiet counterpart — one inline row, label left, mini
             stepper right, under a hairline, on the same edges as attempts. */}
-        {trackMakes && (
+        {showMakesRow && (
           <>
             {/* Tight around the rule so attempts + makes read as one counting
                 section; the air lives outside it, not between the two. */}
@@ -462,7 +585,7 @@ export default function LogScreen({
         <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
         <button
           onClick={handleSave}
-          disabled={added < 1 || saving}
+          disabled={primaryAdded < 1 || saving}
           className="w-full bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
         >
           {saving ? "Logging…" : "Log it"}

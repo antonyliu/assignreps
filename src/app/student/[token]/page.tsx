@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { LogoMini } from "@/components/Logo";
+import { isComplete, progressTarget, progressValue } from "@/lib/exercises";
+import type { GoalType } from "@/lib/exercises";
 
 export const metadata: Metadata = { title: "Your homework — Reps" };
 
@@ -28,7 +30,7 @@ export default async function PlayerHomePage({
     supabase.rpc("coach_name_for_token", { p_token: token }),
     supabase
       .from("assignments")
-      .select("id, exercise_name, target, unit, track_makes")
+      .select("id, exercise_name, target, unit, track_makes, goal_type, side")
       .eq("player_id", player.id)
       .order("created_at"),
     supabase
@@ -57,7 +59,15 @@ export default async function PlayerHomePage({
 
   const count = assignmentList.length;
   const allDone =
-    count > 0 && assignmentList.every((a) => (loggedByAssignment[a.id] ?? 0) >= a.target);
+    count > 0 &&
+    assignmentList.every((a) =>
+      isComplete(
+        (a.goal_type ?? "reps") as GoalType,
+        a.target,
+        loggedByAssignment[a.id] ?? 0,
+        makesByAssignment[a.id]?.makes ?? 0,
+      ),
+    );
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
@@ -101,9 +111,15 @@ export default async function PlayerHomePage({
 
           <div className="flex flex-col gap-2.5">
             {assignmentList.map((a) => {
-              const logged = Math.min(loggedByAssignment[a.id] ?? 0, a.target);
-              const pct = a.target > 0 ? Math.round((logged / a.target) * 100) : 0;
-              const done = logged >= a.target;
+              const goalType = (a.goal_type ?? "reps") as GoalType;
+              const rawLogged = loggedByAssignment[a.id] ?? 0;
+              const rawMakes = makesByAssignment[a.id]?.makes ?? 0;
+              const done = isComplete(goalType, a.target, rawLogged, rawMakes);
+              // The bar measures whatever the goal is scored on, capped for
+              // display so an overshoot doesn't render past the end.
+              const cardTarget = progressTarget(goalType, a.target);
+              const logged = Math.min(progressValue(goalType, rawLogged, rawMakes), cardTarget);
+              const pct = cardTarget > 0 ? Math.round((logged / cardTarget) * 100) : 0;
 
               // Makes summary — identical shape/logic/markup to the coach detail
               // card. attempts is the makes-recorded subset, not the target.
@@ -117,9 +133,21 @@ export default async function PlayerHomePage({
               // Two-tone bar when makes exist: muted-green attempts with a
               // bright-green makes overlay (makes/target), mirroring the log
               // screen. Otherwise the single bar below.
-              const twoTone = (a.track_makes ?? false) && showMakes;
+              //
+              // Only a reps goal stacks the two: under a makes goal the single
+              // bar is ALREADY measuring makes, so overlaying them again would
+              // draw the same figure twice.
+              const twoTone = goalType === "reps" && (a.track_makes ?? false) && showMakes;
               const barMakesPct =
                 m && a.target > 0 ? Math.min(100, Math.round((m.makes / a.target) * 100)) : 0;
+              // The count reads in whatever the goal is scored on — "12/50 reps"
+              // is wrong on an assignment measured in makes or sets.
+              const countLabel =
+                goalType === "consecutive"
+                  ? `${logged}/1 set`
+                  : goalType === "makes"
+                    ? `${logged}/${a.target} makes`
+                    : `${logged}/${a.target} ${a.unit}`;
 
               return (
                 <Link
@@ -134,7 +162,7 @@ export default async function PlayerHomePage({
                     {done ? (
                       <span className="text-[12px] font-medium text-reps-green">✓ Done</span>
                     ) : (
-                      <span className="text-[12px] text-reps-dim">{logged}/{a.target} {a.unit}</span>
+                      <span className="text-[12px] text-reps-dim">{countLabel}</span>
                     )}
                   </div>
                   {/* Same palette as the log screen: grey track, muted attempts

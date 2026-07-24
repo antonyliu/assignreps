@@ -21,6 +21,13 @@ export type Player = {
   last_texted_at: string | null
 }
 
+/** What `target` measures. 'reps' = attempts, 'makes' = makes, 'consecutive' =
+ *  a streak length — see GoalType notes in src/lib/exercises.ts. */
+export type GoalType = "reps" | "makes" | "consecutive"
+
+/** Which hand/side the drill is for. Null = unspecified (not "both"). */
+export type Side = "left" | "right"
+
 export type Assignment = {
   id: string
   coach_id: string
@@ -32,8 +39,12 @@ export type Assignment = {
   week_start: string
   created_at: string
   /** Coach's choice at assign time: may the student record makes for this drill?
-   *  Defaults on for shooting-type categories, off everywhere else. */
+   *  Defaults on for shooting-type categories, off everywhere else. Forced true
+   *  when goal_type is 'makes' or 'consecutive', where makes are the point. */
   track_makes: boolean
+  /** What `target` counts. Defaults to 'reps' for every pre-existing row. */
+  goal_type: GoalType
+  side: Side | null
 }
 
 export type Log = {
