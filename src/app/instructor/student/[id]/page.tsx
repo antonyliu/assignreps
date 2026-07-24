@@ -154,7 +154,7 @@ export default async function CoachPlayerPage({
                     </div>
                     {twoTone ? (
                       <div
-                        className="relative h-1.5 rounded-full overflow-hidden"
+                        className="relative h-[3px] rounded-full overflow-hidden"
                         style={{ background: "#2a2d36" }}
                       >
                         <div
@@ -168,7 +168,7 @@ export default async function CoachPlayerPage({
                       </div>
                     ) : (
                       <div
-                        className="h-1.5 rounded-full overflow-hidden"
+                        className="h-[3px] rounded-full overflow-hidden"
                         style={{ background: "#2a2d36" }}
                       >
                         <div
