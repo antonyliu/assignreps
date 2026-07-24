@@ -142,9 +142,11 @@ export default async function PlayerHomePage({
                 m && a.target > 0 ? Math.min(100, Math.round((m.makes / a.target) * 100)) : 0;
               // The count reads in whatever the goal is scored on — "12/50 reps"
               // is wrong on an assignment measured in makes or sets.
+              // Matches the coach detail card exactly. A streak carries its
+              // length too — "0/1 set" alone doesn't say what the set was.
               const countLabel =
                 goalType === "consecutive"
-                  ? `${logged}/1 set`
+                  ? `${logged}/1 set · ${a.target} in a row`
                   : goalType === "makes"
                     ? `${logged}/${a.target} makes`
                     : `${logged}/${a.target} ${a.unit}`;
@@ -160,14 +162,26 @@ export default async function PlayerHomePage({
                   href={`/student/${token}/log/${a.id}`}
                   className="bg-[#161a20] border border-reps-line rounded-[10px] px-4 py-[14px] hover:border-reps-line-hi transition-colors cursor-pointer"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-[15px] font-medium text-reps-ink">
-                      {a.exercise_name}
+                  <div className="flex justify-between items-start gap-2 mb-2">
+                    {/* Same structure as the coach detail card: the side sits in
+                        its own shrink-0 span beside the truncating name, so a long
+                        exercise name gives up characters rather than hiding which
+                        hand was asked for. ml-1 because a flex item's leading
+                        whitespace is trimmed. */}
+                    <span className="flex-1 min-w-0 flex items-baseline">
+                      <span className="truncate text-[15px] font-medium text-reps-ink">
+                        {a.exercise_name}
+                      </span>
+                      {a.side && (
+                        <span className="ml-1 shrink-0 text-[15px] font-medium text-reps-sub">
+                          · {a.side === "left" ? "Left" : "Right"}
+                        </span>
+                      )}
                     </span>
                     {done ? (
-                      <span className="text-[12px] font-medium text-reps-green">✓ Done</span>
+                      <span className="shrink-0 text-[12px] font-medium text-reps-green whitespace-nowrap">✓ Done</span>
                     ) : (
-                      <span className="text-[12px] text-reps-dim">{countLabel}</span>
+                      <span className="shrink-0 text-[12px] text-reps-dim whitespace-nowrap">{countLabel}</span>
                     )}
                   </div>
                   {/* Same palette as the log screen: grey track, muted attempts

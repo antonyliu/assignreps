@@ -46,6 +46,22 @@ export function supportsSide(exerciseName: string): boolean {
   return !SIDELESS_EXERCISES.has(exerciseName);
 }
 
+// Categories where a makes or streak goal is meaningful — the shooting-type
+// drills, where a rep is an attempt at a basket and can therefore go in or miss.
+// Ball-handling, footwork and conditioning have no notion of a "make", so they
+// keep the original attempts-only flow and never show the Goal selector.
+//
+// Same three keys LogScreen uses to decide the ATTEMPTS label, for the same
+// underlying reason: a rep here is a shot.
+const GOAL_CATEGORIES = new Set(["shooting", "finishing", "spot-shots"]);
+
+// `categoryKey` is undefined for custom exercises and "mine" for saved ones —
+// neither belongs to a category, so neither can be known to be a shooting drill
+// and both fall through to attempts-only, matching defaultTrackMakes().
+export function supportsGoalTypes(categoryKey?: string): boolean {
+  return categoryKey !== undefined && GOAL_CATEGORIES.has(categoryKey);
+}
+
 // One completion rule for the whole app, so the six places that ask "is this
 // done?" can't drift apart. `logged` is SUM(amount), `makes` is SUM(makes).
 //

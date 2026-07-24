@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import type { GoalType, Side, Unit } from "@/lib/exercises";
-import { GOAL_PRESETS, supportsSide } from "@/lib/exercises";
+import { GOAL_PRESETS, supportsSide, supportsGoalTypes } from "@/lib/exercises";
 import { saveAssignment } from "./actions";
 
 type Props = {
@@ -72,7 +72,10 @@ export default function CountScreen({
   const [sent, setSent]     = useState(false);
   const [sentIn, setSentIn] = useState(false);
 
-  const goalPickable = unit !== "minutes";
+  // Two independent gates. The category decides whether "makes" and "in a row"
+  // mean anything for this drill at all; the unit rules out timed work even
+  // inside a shooting category (a 10-minute drill has no rep to make).
+  const goalPickable = unit !== "minutes" && supportsGoalTypes(categorySlug);
   const sidePickable = supportsSide(exerciseName);
 
   // Each goal counts a different thing, so it brings its own preset row and its
