@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { saveLog } from "./actions";
@@ -140,9 +140,12 @@ const BAR_ATTEMPTS = "#3d7a24";
 const ATTEMPTS_GREEN = "#3d7a24";
 const MAKES_GREEN = "#6bd63d";
 // Locked makes row. Green at any weight still reads as live, so the label and
-// number drop out of the family entirely rather than just fading — matching the
-// buttons, which already grey out via their own disabled variant.
-const MUTED_GREY = "#8a8fa8";
+// number drop out of the family entirely rather than just fading. This is the
+// same #555 the disabled stepper buttons use: --reps-sub at full strength sat
+// brighter than both them and the number — which the input's disabled:opacity-40
+// lands at roughly #414552 — leaving the label the one part of an inert row that
+// still looked available.
+const MUTED_GREY = "#555";
 
 // Written out in full rather than composed, so Tailwind sees each class literally.
 // A reps-only assignment has no second field to rank against, so it takes the
@@ -243,6 +246,25 @@ export default function LogScreen({
       return String(Math.max(Math.min(p, current), alreadyMakes));
     });
   }
+
+  // The + stopping at parity only holds the ceiling still; it does nothing when
+  // the ceiling itself drops. Tapping − on attempts past the makes total has to
+  // drag makes down with it, live, or the row is left showing more makes than
+  // attempts — the exact state the + guard exists to prevent.
+  //
+  // Keyed on `current` alone, so it fires only when attempts actually move: it
+  // never runs while the makes field is being edited, and so can't fight a number
+  // mid-typing or pre-empt the blur settle above. Returning `prev` untouched when
+  // nothing needs clamping stops it looping. The banked floor still wins, so a
+  // legacy row whose makes already exceed its attempts is left alone.
+  useEffect(() => {
+    setMakesInput((prev) => {
+      const p = parseInt(prev, 10);
+      if (Number.isNaN(p)) return prev;
+      const capped = Math.max(Math.min(p, current), alreadyMakes);
+      return capped === p ? prev : String(capped);
+    });
+  }, [current, alreadyMakes]);
 
   // The whole control is inert only when there is genuinely nothing to log:
   // a completed assignment that doesn't track makes.
