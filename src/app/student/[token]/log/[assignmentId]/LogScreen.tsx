@@ -453,7 +453,11 @@ export default function LogScreen({
 
       <div
         className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
+        // env()'s second argument is used when the inset can't be resolved (a
+        // browser without safe-area support), so the button keeps a 16px floor
+        // instead of collapsing to the 2rem base alone. On iOS Safari, where
+        // env is supported, the real inset still drives the clearance.
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 16px) + 2rem)" }}
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
         <button
