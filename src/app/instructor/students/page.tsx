@@ -164,35 +164,43 @@ export default async function RosterPage() {
 
       {/* Logo row and heading row travel together as one sticky unit, so the
           roster's identity and its primary action stay on screen however far
-          the list scrolls. Bled to the full page width (-mx / px) and filled
-          with the page background so rows vanish cleanly underneath instead of
-          showing through the gutters — solid fill, hard edge, no gradient, the
-          same call made for the student ASSIGNMENTS header. The block carries
-          the page's top padding itself (main no longer has any), otherwise that
-          padding would scroll away and leave the logo against the status bar. */}
-      {/* The block bleeds once, at this level only, and carries NO horizontal
-          padding — each row below supplies its own. The divider previously had
-          to bleed a second time (-mx inside this element's px) to escape that
-          padding, and that nested negative margin did not reach the screen edge
-          on iOS. Both browsers it was reported in are WebKit on iPhone, so it
-          reproduced on one engine and not on Blink. With the padding pushed down
-          to the rows, the rule is a plain full-width child of a full-width box
-          and needs no bleed math of its own. */}
+          the list scrolls. The -mx here bleeds the block past main's gutters so
+          its background fills the screen edge to edge and rows vanish cleanly
+          underneath instead of showing through at the sides — solid fill, hard
+          edge, no gradient, the same call made for the student ASSIGNMENTS
+          header. It carries the page's top padding itself (main no longer has
+          any), otherwise that padding would scroll away and leave the logo
+          against the status bar. Horizontal padding lives on the rows below,
+          not here. */}
       <div className="sticky top-0 z-30 -mx-[1.25rem] pt-3 bg-reps-bg">
         {/* items-center keeps the left lockup and the right profile control on
             the same centerline across Chrome and Safari iOS. The control's 44px
             tap target is taller than the 23px logo, so centering — not baseline
-            alignment — is what holds the two ends of the row level. */}
-        <div className="flex items-center justify-between px-[1.25rem] pb-3">
+            alignment — is what holds the two ends of the row level.
+
+            `relative` exists to anchor the divider below. */}
+        <div className="relative flex items-center justify-between px-[1.25rem] pb-3">
           <LogoMini />
           <ProfileMenu coachName={coach?.name?.trim() || ""} />
-        </div>
 
-        {/* Separates app chrome (logo, account) from the page itself, so the
-            title reads as the top of the content rather than the bottom of the
-            toolbar. No margins, no padding, no border shorthand — a 1px box
-            that inherits the block's full width. */}
-        <div aria-hidden="true" style={{ height: 1, background: "#2a2d36" }} />
+          {/* Separates app chrome (logo, account) from the page itself, so the
+              title reads as the top of the content rather than the bottom of
+              the toolbar.
+
+              Positioned rather than in flow: left/right on an absolute box
+              resolve against the parent's PADDING box, so this row's own
+              px-[1.25rem] cannot inset the line — it pins to the row's edges no
+              matter what padding the row carries. That removes the margin
+              arithmetic the earlier in-flow versions depended on, which is what
+              failed to reach the screen edge on iOS. Out of flow, so it adds no
+              height; bottom-0 sits it on the row's bottom edge, below the
+              padding, exactly where the in-flow rule sat. */}
+          <span
+            aria-hidden="true"
+            className="absolute bottom-0 left-0 right-0"
+            style={{ height: 1, background: "#2a2d36" }}
+          />
+        </div>
 
         {/* Add lives inline with the heading rather than pinned to the bottom, so
             it stays reachable without the list having to scroll to its end. White
@@ -200,7 +208,7 @@ export default async function RosterPage() {
             subtle so the button reads as an affordance, not a filled CTA competing
             with the heading. Suppressed on the empty state, where the full-width
             bottom CTA is the whole point. */}
-        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[10px] pb-1.5">
+        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[20px] pb-1.5">
           <h1 className="text-xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
           {playerList.length > 0 && (
             <Link
