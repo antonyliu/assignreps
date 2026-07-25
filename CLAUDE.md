@@ -1,5 +1,5 @@
 # Reps — CLAUDE.md
-*Last updated: July 24 2026 · Prod commit: `1109eb4` · local, staging and prod all in sync*
+*Last updated: July 25 2026 · Prod commit: `9c62f1c` · local, staging and prod all in sync*
 
 ---
 
@@ -214,7 +214,7 @@ This applies to text only. **Bar fills are unaffected** — an in-progress bar i
 **Disabled controls** go to `#555` — a visible grey rather than near-invisible opacity, so an inactive `−` still reads in bright sunlight on a court. The locked MAKES label uses the same `#555`; its number renders `#8a8fa8` through `disabled:opacity-40`, landing around `#414552`.
 
 ### Other colors
-- **Background:** `#111318`
+- **Background:** `#080b0f` (`--reps-bg`)
 - **Surfaces:** `#1c1f26`
 - **Borders:** `#2a2d36`
 - **Accent (interactive):** `#378add` (sky blue)
