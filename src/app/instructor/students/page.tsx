@@ -167,7 +167,22 @@ export default async function RosterPage() {
         </div>
       </div>
 
-      <h1 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Your {labels.studentsLabel}</h1>
+      {/* Add lives inline with the heading rather than pinned to the bottom, so
+          it stays reachable without the list having to scroll to its end. Ghost
+          treatment keeps it secondary to the roster itself. Suppressed on the
+          empty state, where the full-width bottom CTA is the whole point. */}
+      <div className="flex items-baseline justify-between gap-3 mb-1">
+        <h1 className="text-2xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
+        {playerList.length > 0 && (
+          <Link
+            href="/instructor/add-student"
+            className="shrink-0 text-[13px] font-medium text-[#8a8fa8] px-2.5 py-1.5 rounded-[8px] hover:text-[#c8cdd8] transition-colors"
+            style={{ border: "1px solid #2a2d36", WebkitTapHighlightColor: "transparent" }}
+          >
+            + Add
+          </Link>
+        )}
+      </div>
 
       {playerList.length === 0 ? (
         <>
@@ -280,22 +295,6 @@ export default async function RosterPage() {
                 </div>
               );
             })}
-          </div>
-
-          {/* Pinned secondary add button. A gradient fade above it lets list
-              rows dissolve into the page background as they scroll underneath. */}
-          <div
-            className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
-          >
-            <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#080b0f]" />
-            <Link
-              href="/instructor/add-student"
-              className="block text-center bg-[#1c1f26] text-[#c8cdd8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"
-              style={{ WebkitTapHighlightColor: "transparent", borderTop: "0.5px solid #2a2d36" }}
-            >
-              + Add {labels.studentLabel}
-            </Link>
           </div>
         </>
       )}
