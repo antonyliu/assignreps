@@ -1,25 +1,25 @@
-// The in-app header lockup: 23px contained mark + 13px wordmark. Scaled down
-// so the logo reads quieter than the coach name / profile icon on the right.
+// The in-app header lockup: 23px contained mark + 13px wordmark.
 // One size for every platform screen (signup, roster, student home, parent
 // digest) — the header must not change size as you move between them. Marketing
 // pages do not use this; the landing page draws its own mark, and the student
 // sign-in screen uses LogoLarge.
 export function LogoMini() {
   return (
-    <div className="flex items-center gap-1.5 text-[13px] font-semibold text-reps-ink">
-      {/* Full contained lockup: cool blue-gray rounded square (#1c1f26) with a
-          dimmed tally (#6a6f82) that recedes behind the wordmark, sized for
-          the header. The filled box reaches
+    <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#378add]">
+      {/* Full contained lockup: cool blue-gray rounded square (#1c1f26) holding
+          a #378add tally, with the wordmark in the same blue. Mark and wordmark
+          share one color so the lockup reads as brand rather than as more UI
+          text — the same register LogoLarge already uses. The filled box reaches
           the container's left edge (no internal stroke inset), which keeps the
           header flush-left. `block` removes the inline baseline gap so it
           centers cleanly on Safari iOS as well as Chrome. */}
       <svg width={23} height={23} viewBox="0 0 32 32" fill="none" className="block shrink-0" xmlns="http://www.w3.org/2000/svg">
         <rect width="32" height="32" rx="8" fill="#1c1f26" />
-        <line x1="9"  y1="8" x2="9"  y2="24" stroke="#6a6f82" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="14" y1="8" x2="14" y2="24" stroke="#6a6f82" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="19" y1="8" x2="19" y2="24" stroke="#6a6f82" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="24" y1="8" x2="24" y2="24" stroke="#6a6f82" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="6"  y1="23" x2="27" y2="9"  stroke="#6a6f82" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="9"  y1="8" x2="9"  y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="14" y1="8" x2="14" y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="19" y1="8" x2="19" y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="24" y1="8" x2="24" y2="24" stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
+        <line x1="6"  y1="23" x2="27" y2="9"  stroke="#378add" strokeWidth="2.4" strokeLinecap="round" />
       </svg>
       <span>Reps</span>
     </div>

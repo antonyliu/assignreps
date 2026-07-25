@@ -5,19 +5,85 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { User } from "lucide-react";
 
-// Profile control: a person silhouette icon on the right of the header (the
-// coach's name is shown separately on the left, display-only). Tapping the
-// icon opens a compact dropdown whose "Sign out" is gated behind a
+// The display name is what students and parents see — "[Coach] assigned you
+// basketball homework" in the SMS, "[Coach] will see this" on the celebrate
+// screen, and the header of the parent digest. The roster itself no longer
+// prints it, so this menu is the only place it is visible to the coach.
+
+// Profile control: a person silhouette on the right of the header, in the same
+// contained circle the roster uses for student avatars (34px, #252830 on a
+// hairline #2a2d36) so the header's right end matches the rows below it. It is
+// the only thing on that side — the coach's name used to sit beside it and was
+// removed. Tapping opens a compact dropdown whose "Sign out" is gated behind a
 // confirmation dialog so an accidental tap can't end the session.
-export default function ProfileMenu() {
+export default function ProfileMenu({ coachName }: { coachName: string }) {
   const router = useRouter();
   const supabase = createClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState(coachName);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.push("/");
+  }
+
+  function openEdit() {
+    setMenuOpen(false);
+    setDraft(coachName);
+    setError("");
+    setEditOpen(true);
+  }
+
+  async function handleSaveName(e: React.FormEvent) {
+    e.preventDefault();
+    const next = draft.trim();
+    if (!next) {
+      setError("Enter a name.");
+      return;
+    }
+    if (next === coachName.trim()) {
+      setEditOpen(false);
+      return;
+    }
+    setSaving(true);
+    setError("");
+
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) {
+      setSaving(false);
+      setError("You're signed out. Sign in again to change your name.");
+      return;
+    }
+
+    // .select() is load-bearing, not decoration. An UPDATE that no RLS policy
+    // permits comes back 200 with zero rows rather than as an error, so without
+    // asking for the row back this would report success while saving nothing.
+    const { data, error: updateError } = await supabase
+      .from("coaches")
+      .update({ name: next })
+      .eq("id", auth.user.id)
+      .select("name");
+
+    setSaving(false);
+
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    if (!data || data.length === 0) {
+      setError("Couldn't save that name. Your account may not have permission to change it.");
+      return;
+    }
+
+    setEditOpen(false);
+    // The name is server-rendered on the screens that show it, so re-fetch
+    // rather than trusting local state to match what students will see.
+    router.refresh();
   }
 
   return (
@@ -25,12 +91,19 @@ export default function ProfileMenu() {
       <div className="relative">
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="flex items-center justify-center w-9 h-9 -mr-1 rounded-full hover:bg-reps-card active:scale-[0.95] transition-all"
+          className="flex items-center justify-center shrink-0 rounded-full active:scale-[0.95] transition-all"
+          style={{
+            width: 34,
+            height: 34,
+            background: "#252830",
+            border: "0.5px solid #2a2d36",
+            WebkitTapHighlightColor: "transparent",
+          }}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           aria-label="Profile menu"
         >
-          <User size={20} color="#378add" strokeWidth={2} />
+          <User size={18} color="#8a8fa8" strokeWidth={2} />
         </button>
 
         {menuOpen && (
@@ -50,6 +123,13 @@ export default function ProfileMenu() {
             >
               <button
                 role="menuitem"
+                onClick={openEdit}
+                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
+              >
+                Edit name
+              </button>
+              <button
+                role="menuitem"
                 onClick={() => {
                   setMenuOpen(false);
                   setConfirmOpen(true);
@@ -62,6 +142,59 @@ export default function ProfileMenu() {
           </>
         )}
       </div>
+
+      {editOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70"
+          onClick={() => !saving && setEditOpen(false)}
+        >
+          <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="editname-title"
+            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={handleSaveName}
+          >
+            <h2 id="editname-title" className="text-[16px] font-semibold text-reps-ink mb-2">
+              Edit name
+            </h2>
+            {/* Mirrors the signup question, so the field means the same thing in
+                both places rather than reading as an account/legal name here. */}
+            <p className="text-[13px] text-reps-sub mb-5">
+              What should students call you?
+            </p>
+            <input
+              type="text"
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="e.g. Coach RJ"
+              className="w-full bg-reps-bg border border-reps-line rounded-[10px] px-[14px] py-3 text-[15px] text-reps-ink placeholder:text-[#5a5f72] outline-none focus:border-[#378add] transition-colors mb-2"
+            />
+            <p className="text-[12px] text-reps-sub mb-6 min-h-[16px]">
+              {error ? <span className="text-red-400">{error}</span> : "Students and parents see this name."}
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setEditOpen(false)}
+                disabled={saving}
+                className="flex-1 min-h-[44px] rounded-[10px] border border-reps-line text-reps-ink font-medium text-[15px] hover:bg-reps-raised transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving || !draft.trim()}
+                className="flex-1 min-h-[44px] rounded-[10px] bg-reps-orange text-white font-semibold text-[15px] hover:bg-reps-orange-hi transition-colors disabled:opacity-50 disabled:pointer-events-none"
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {confirmOpen && (
         <div

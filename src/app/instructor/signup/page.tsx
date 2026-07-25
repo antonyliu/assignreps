@@ -23,12 +23,12 @@ export default function NameStep() {
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
       <ScreenHeader stepNum={1} total={3} />
-      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6 text-reps-ink">What&apos;s your name?</h2>
+      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6 text-reps-ink">What should students call you?</h2>
       <ErrorBanner error={error} />
       <form onSubmit={submit}>
         <input
           type="text"
-          placeholder="Coach RJ, Mrs. Tai"
+          placeholder="e.g. Coach RJ"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className={`${INPUT} mb-6 placeholder:italic`}

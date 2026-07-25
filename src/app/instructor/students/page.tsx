@@ -92,7 +92,6 @@ export default async function RosterPage() {
     if (!prev || l.logged_at > prev) lastLoggedByPlayer[l.player_id] = l.logged_at;
   }
 
-  const coachName = coach?.name?.trim() || "Coach";
   const labels = getActivityLabels(coach?.instructor_type ?? null);
   const playerList: Player[] = players ?? [];
 
@@ -154,34 +153,42 @@ export default async function RosterPage() {
   for (const p of playerList) grouped[playerGroup(p.id)].push(p);
 
   return (
-    <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
+    <main className="flex flex-col min-h-screen p-[0_1.25rem_1.75rem]">
 
-      {/* items-center keeps the left lockup and right name/icon group on the
-          same centerline across Chrome and Safari iOS. */}
-      <div className="flex items-center justify-between mb-6">
-        <LogoMini />
-        <div className="flex items-center gap-1">
-          {/* One step dimmer than before, still ~4.7:1 on #111318 → WCAG AA. */}
-          <span className="text-[14px] font-medium text-[#8a8fa8] text-right">{coachName}</span>
-          <ProfileMenu />
+      {/* Logo row and heading row travel together as one sticky unit, so the
+          roster's identity and its primary action stay on screen however far
+          the list scrolls. Bled to the full page width (-mx / px) and filled
+          with the page background so rows vanish cleanly underneath instead of
+          showing through the gutters — solid fill, hard edge, no gradient, the
+          same call made for the student ASSIGNMENTS header. The block carries
+          the page's top padding itself (main no longer has any), otherwise that
+          padding would scroll away and leave the logo against the status bar. */}
+      <div className="sticky top-0 z-30 -mx-[1.25rem] px-[1.25rem] pt-[1.75rem] pb-2 bg-reps-bg">
+        {/* items-center keeps the left lockup and the right profile circle on
+            the same centerline across Chrome and Safari iOS. */}
+        <div className="flex items-center justify-between mb-6">
+          <LogoMini />
+          <ProfileMenu coachName={coach?.name?.trim() || ""} />
         </div>
-      </div>
 
-      {/* Add lives inline with the heading rather than pinned to the bottom, so
-          it stays reachable without the list having to scroll to its end. Ghost
-          treatment keeps it secondary to the roster itself. Suppressed on the
-          empty state, where the full-width bottom CTA is the whole point. */}
-      <div className="flex items-baseline justify-between gap-3 mb-1">
-        <h1 className="text-2xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
-        {playerList.length > 0 && (
-          <Link
-            href="/instructor/add-student"
-            className="shrink-0 text-[13px] font-medium text-[#8a8fa8] px-2.5 py-1.5 rounded-[8px] hover:text-[#c8cdd8] transition-colors"
-            style={{ border: "1px solid #2a2d36", WebkitTapHighlightColor: "transparent" }}
-          >
-            + Add
-          </Link>
-        )}
+        {/* Add lives inline with the heading rather than pinned to the bottom, so
+            it stays reachable without the list having to scroll to its end. White
+            label because this is the screen's primary action; the border stays
+            subtle so the button reads as an affordance, not a filled CTA competing
+            with the heading. Suppressed on the empty state, where the full-width
+            bottom CTA is the whole point. */}
+        <div className="flex items-baseline justify-between gap-3">
+          <h1 className="text-2xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
+          {playerList.length > 0 && (
+            <Link
+              href="/instructor/add-student"
+              className="shrink-0 text-[13px] font-medium text-[#ffffff] px-2.5 py-1.5 rounded-[8px] hover:bg-reps-card transition-colors"
+              style={{ border: "1px solid #2a2d36", WebkitTapHighlightColor: "transparent" }}
+            >
+              + Add
+            </Link>
+          )}
+        </div>
       </div>
 
       {playerList.length === 0 ? (
@@ -275,7 +282,10 @@ export default async function RosterPage() {
                           <div className="text-[15px] font-medium truncate" style={{ color: "#ffffff" }}>
                             {firstName(player.name)}
                           </div>
-                          <div className="text-[12px] truncate" style={{ color: "#6b7080" }}>
+                          {/* One step up from the #6b7080 used for the chevron
+                              and the group dots — enough to read at a glance
+                              without rivalling the white name above it. */}
+                          <div className="text-[12px] truncate" style={{ color: "#7d8494" }}>
                             {subline(player.id, g)}
                           </div>
                         </div>
