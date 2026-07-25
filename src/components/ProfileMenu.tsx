@@ -10,11 +10,12 @@ import { User } from "lucide-react";
 // screen, and the header of the parent digest. The roster itself no longer
 // prints it, so this menu is the only place it is visible to the coach.
 
-// Profile control: a person silhouette on the right of the header, in the same
-// contained circle the roster uses for student avatars (34px, #252830 on a
+// Profile control: a person silhouette on the right of the header, in a
+// contained circle echoing the roster's student avatars (30px, #252830 on a
 // hairline #2a2d36) so the header's right end matches the rows below it. It is
-// the only thing on that side — the coach's name used to sit beside it and was
-// removed. Tapping opens a compact dropdown whose "Sign out" is gated behind a
+// the only thing on that side — the coach's name used to sit beside it in the
+// header, and now appears at the top of the dropdown instead, where it labels
+// the account the actions below belong to. "Sign out" is gated behind a
 // confirmation dialog so an accidental tap can't end the session.
 export default function ProfileMenu({ coachName }: { coachName: string }) {
   const router = useRouter();
@@ -129,11 +130,46 @@ export default function ProfileMenu({ coachName }: { coachName: string }) {
               onClick={() => setMenuOpen(false)}
             />
             {/* Sizes to its widest item (no fixed width) with equal p-1 padding
-                on all sides — the pattern future menu items should follow. */}
+                on all sides — the pattern future menu items should follow. The
+                max-width is what makes the name below truncatable: under w-max
+                alone the box would simply grow to fit any name and the ellipsis
+                would never appear. Names are expected to be short ("Coach RJ",
+                "Debbie", "Mr. Chen"), which leaves the two menu items setting
+                the width at ~98px. The cap is deliberately close to that rather
+                than generous — at 200px a name like "RJW Skills & Development"
+                still fitted and simply stretched the menu to 183px, which is the
+                oversized shape this is meant to avoid; at 160px it truncates
+                instead and the menu stays compact. */}
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1.5 z-50 w-max bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
+              className="absolute right-0 top-full mt-1.5 z-50 w-max max-w-[160px] bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
             >
+              {/* Identity, not an action: a plain div, so it is neither tappable
+                  nor focusable, and role="presentation" keeps it out of the
+                  menu's item list for screen readers. Guarded because the roster
+                  passes "" when the coach row has no name — an empty string here
+                  would render a blank line above a stray divider. `title` keeps
+                  the full name reachable on hover once it truncates. */}
+              {coachName && (
+                <>
+                  <div
+                    role="presentation"
+                    title={coachName}
+                    className="px-3 pt-1.5 pb-2 text-[12px] text-[#8a8fa8] truncate"
+                  >
+                    {coachName}
+                  </div>
+                  {/* Inset by the menu's own p-1 rather than bled to the edges
+                      with a negative margin — the bleed pattern is what has been
+                      failing on iOS elsewhere in this header, and 4px of inset
+                      reads as deliberate in a rounded card. */}
+                  <div
+                    role="presentation"
+                    className="h-px mb-1"
+                    style={{ background: "#2a2d36" }}
+                  />
+                </>
+              )}
               <button
                 role="menuitem"
                 onClick={openEdit}
