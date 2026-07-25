@@ -758,27 +758,28 @@
           <div class="flex col" style="gap:20px;">
             <div>
               <div style="margin-bottom:8px;"><span class="pill" style="background:rgba(107,214,61,0.12);color:#6bd63d;"><i style="background:#6bd63d;"></i>Done</span></div>
-              <div class="flex col" style="gap:6px;">%ROW(N,Neo,3 of 3 done)%</div>
+              <div class="flex col" style="gap:6px;">%ROW(N,Neo,3 of 3 done,20m ago,r)%</div>
             </div>
             <div>
               <div style="margin-bottom:8px;"><span class="pill" style="background:rgba(39,80,10,0.18);color:#5aa22f;"><i style="background:#27500a;"></i>In progress</span></div>
               <div class="flex col" style="gap:6px;">
-                %ROW(A,Adam,1 of 3 done)%
-                %ROW(M,Maya,2 of 4 done)%
+                %ROW(A,Adam,1 of 3 done,1h ago,r)%
+                %ROW(M,Maya,2 of 4 done,1d ago,o)%
+                %ROW(T,Theo,1 of 5 done,4d ago,o)%
               </div>
             </div>
             <div>
               <div style="margin-bottom:8px;"><span class="pill" style="background:rgba(90,95,114,0.1);color:#8a8fa8;"><i style="background:#5a5f72;"></i>Not started</span></div>
-              <div class="flex col" style="gap:6px;">%ROW(J,Jordan,2 assignments waiting)%</div>
+              <div class="flex col" style="gap:6px;">%ROW(J,Jordan,2 assignments waiting,-,-)%</div>
             </div>
             <div>
               <div style="margin-bottom:8px;"><span class="pill" style="background:rgba(90,95,114,0.1);color:#8a8fa8;"><i style="background:#5a5f72;"></i>Nothing assigned</span></div>
-              <div class="flex col" style="gap:6px;">%ROW(S,Sofia,No assignments yet)%</div>
+              <div class="flex col" style="gap:6px;">%ROW(S,Sofia,No assignments yet,-,-)%</div>
             </div>
           </div>
           <div class="mt-auto" style="padding-top:14px;"><a class="btn btn-soft">+ Add player</a></div>
         </div></div></div>
-        <p class="note">The “In progress” pill is the one place where the dot and the label differ: the dot is the literal in-progress fill <code>#27500a</code>, the label lifts to <code>#5aa22f</code> because the fill is unreadable as text. Rows still carry no progress bar — that is an open item on the build list.</p>
+        <p class="note">Rows now carry the <strong>last-activity timestamp</strong> on the right — when the student last <em>logged</em> work, not when they signed in. Under 24h it reads accent blue <code>#378add</code> (Neo 20m, Adam 1h); a day or more is muted <code>#555a6e</code> (Maya 1d, Theo 4d). A student who has never logged shows nothing — no dash — so <strong>Not started</strong> and <strong>Nothing assigned</strong> rows stay blank on the right. It's backed by a <code>MAX(logged_at)</code> read keyed on <code>player_id</code>, so a log still counts after its assignment was cleared. The “In progress” pill is still the one place the dot and label differ: dot is the literal fill <code>#27500a</code>, label lifts to <code>#5aa22f</code>. Rows carry no progress bar yet.</p>
       </div>
 
       <!-- Add student -->
@@ -1912,11 +1913,18 @@
       '<span style="font-size:18px;color:var(--reps-ink);">›</span></div>';
   }
 
-  function row(initial, name, sub) {
+  // Roster row. `time` is the last-activity label ('-' for a student who has
+  // never logged — nothing renders then, no dash), `recent` is 'r' (under 24h →
+  // accent blue) or 'o' (a day or more → muted grey). The timestamp sits
+  // shrink-0 between the name block and the chevron.
+  function row(initial, name, sub, time, recent) {
+    const ts = (!time || time === '-') ? ''
+      : '<span style="flex-shrink:0;font-size:12px;color:' + (recent === 'r' ? '#378add' : '#555a6e') + ';">' + time + '</span>';
     return '<a class="row-card">' +
       '<div class="avatar" style="width:34px;height:34px;font-size:13px;">' + initial + '</div>' +
       '<div class="grow" style="min-width:0;"><div class="trunc" style="font-size:15px;font-weight:500;color:#e8eaf0;">' + name + '</div>' +
       '<div class="trunc" style="font-size:12px;color:#5a5f72;">' + sub + '</div></div>' +
+      ts +
       '<span style="font-size:18px;color:#5a5f72;">›</span></a>';
   }
 
@@ -2059,7 +2067,7 @@
   html = html.replace(/%PARENTHEAD\(([\s\S]*?)\)%/g, (_, a) => parenthead(a.trim()));
   html = html.replace(/%PARENTFOOT\(([\s\S]*?)\)%/g, (_, a) => parentfoot(a.trim()));
   html = html.replace(/%GHOST\(([\s\S]*?)\)%/g, (_, op) => ghost(op.trim()));
-  html = html.replace(/%ROW\(([\s\S]*?)\)%/g, (_, a) => { const p = a.split(','); return row(p[0].trim(), p[1].trim(), p.slice(2).join(',').trim()); });
+  html = html.replace(/%ROW\(([\s\S]*?)\)%/g, (_, a) => { const p = a.split(',').map((s) => s.trim()); return row(p[0], p[1], p[2], p[3], p[4]); });
   html = html.replace(/%SDHEAD\(([\s\S]*?)\)%/g, (_, a) => { const p = a.split(','); return sdhead(p[0].trim(), p[1].trim(), p.slice(2).join(',').trim()); });
   html = html.replace(/%ACARD\(([\s\S]*?)\)%/g, (_, a) => acard.apply(null, split(a)));
   html = html.replace(/%SCARD\(([\s\S]*?)\)%/g, (_, a) => scard.apply(null, split(a)));
