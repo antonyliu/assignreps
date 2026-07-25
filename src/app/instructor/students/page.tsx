@@ -40,8 +40,8 @@ const GROUP_STYLE: Record<Group, { title: string; bg: string; text: string; dot:
   // Text lifted to a readable mid-green — literal #27500a is unreadable on the
   // dark bg — kept distinct from Done's #6bd63d; the dot stays muted.
   progress:   { title: "In progress",      bg: "rgba(39,80,10,0.18)",   text: "#5aa22f", dot: "#27500a" },
-  notstarted: { title: "Not started",      bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#5a5f72" },
-  unassigned: { title: "Nothing assigned", bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#5a5f72" },
+  notstarted: { title: "Not started",      bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#6b7080" },
+  unassigned: { title: "Nothing assigned", bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#6b7080" },
 };
 
 export const metadata: Metadata = { title: "Students — Reps" };
@@ -241,7 +241,7 @@ export default async function RosterPage() {
                       <Link
                         key={player.id}
                         href={`/instructor/student/${player.id}`}
-                        className="flex items-center gap-3 px-[14px] py-2 rounded-[10px] bg-[#161a20] hover:bg-[#1c1f26] active:scale-[0.99] transition-colors"
+                        className="flex items-center gap-3 px-[14px] py-2 rounded-[10px] bg-[#131720] hover:bg-[#1c1f26] active:scale-[0.99] transition-colors"
                         style={{ WebkitTapHighlightColor: "transparent" }}
                       >
                         <div
@@ -257,10 +257,10 @@ export default async function RosterPage() {
                           {initials(player.name)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[15px] font-medium truncate" style={{ color: "#e8eaf0" }}>
+                          <div className="text-[15px] font-medium truncate" style={{ color: "#ffffff" }}>
                             {firstName(player.name)}
                           </div>
-                          <div className="text-[12px] truncate" style={{ color: "#5a5f72" }}>
+                          <div className="text-[12px] truncate" style={{ color: "#6b7080" }}>
                             {subline(player.id, g)}
                           </div>
                         </div>
@@ -272,7 +272,7 @@ export default async function RosterPage() {
                             {last.text}
                           </span>
                         )}
-                        <span className="text-[18px]" style={{ color: "#5a5f72" }}>›</span>
+                        <span className="text-[18px]" style={{ color: "#6b7080" }}>›</span>
                       </Link>
                       );
                     })}
@@ -288,7 +288,7 @@ export default async function RosterPage() {
             className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
           >
-            <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#080b0f]" />
             <Link
               href="/instructor/add-student"
               className="block text-center bg-[#1c1f26] text-[#c8cdd8] font-medium text-[15px] py-[14px] rounded-[10px] hover:bg-[#22252e] transition-colors"

@@ -9,12 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "reps-bg":        "#111318",
+        "reps-bg":        "#080b0f",
         "reps-card":      "#1c1f26",
         "reps-raised":    "#22252e",
         "reps-line":      "#2a2d36",
         "reps-line-hi":   "#3a3d46",
-        "reps-ink":       "#e8eaf0",
+        "reps-ink":       "#ffffff",
         "reps-sub":       "#8a8fa8",
         "reps-dim":       "#8a8fa8",
         "reps-orange":    "#378add",

@@ -57,7 +57,7 @@ export default function AddPlayerForm({ studentLabel }: Props) {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-[#111318] px-6 pb-10 pt-9">
+    <main className="flex min-h-screen flex-col bg-[#080b0f] px-6 pb-10 pt-9">
 
       {/* Header */}
       <div className="mb-10 flex items-center gap-3">

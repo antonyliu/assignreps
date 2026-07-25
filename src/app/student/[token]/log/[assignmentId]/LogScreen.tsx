@@ -553,7 +553,7 @@ export default function LogScreen({
         // env is supported, the real inset still drives the clearance.
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 16px) + 2rem)" }}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#111318]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#080b0f]" />
         <button
           onClick={handleSave}
           disabled={primaryAdded < 1 || saving}
