@@ -89,21 +89,32 @@ export default function ProfileMenu({ coachName }: { coachName: string }) {
   return (
     <>
       <div className="relative">
+        {/* The tap target and the visible circle are deliberately different
+            sizes: 44px is the minimum a thumb should have to find on a court,
+            but a 44px disc reads as a button competing with the logo. So the
+            button stays 44px and transparent while the mark inside is 30px.
+            The -7px right margin (half the 14px difference) pulls the visible
+            circle back onto the page gutter, so it lines up with the logo and
+            the rows rather than sitting inset by its own padding. */}
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="flex items-center justify-center shrink-0 rounded-full active:scale-[0.95] transition-all"
-          style={{
-            width: 34,
-            height: 34,
-            background: "#252830",
-            border: "0.5px solid #2a2d36",
-            WebkitTapHighlightColor: "transparent",
-          }}
+          className="group flex items-center justify-center shrink-0 -mr-[7px]"
+          style={{ width: 44, height: 44, WebkitTapHighlightColor: "transparent" }}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           aria-label="Profile menu"
         >
-          <User size={18} color="#8a8fa8" strokeWidth={2} />
+          <span
+            className="flex items-center justify-center rounded-full transition-transform group-active:scale-[0.95]"
+            style={{
+              width: 30,
+              height: 30,
+              background: "#252830",
+              border: "0.5px solid #2a2d36",
+            }}
+          >
+            <User size={16} color="#8a8fa8" strokeWidth={2} />
+          </span>
         </button>
 
         {menuOpen && (

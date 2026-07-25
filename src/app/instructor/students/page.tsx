@@ -34,14 +34,17 @@ type Group = "done" | "progress" | "notstarted" | "unassigned";
 
 const GROUP_ORDER: Group[] = ["done", "progress", "notstarted", "unassigned"];
 
-// Pill styling per group (Nothing assigned mirrors Not started).
-const GROUP_STYLE: Record<Group, { title: string; bg: string; text: string; dot: string }> = {
-  done:       { title: "Done",             bg: "rgba(107,214,61,0.12)",  text: "#6bd63d", dot: "#6bd63d" },
-  // Text lifted to a readable mid-green — literal #27500a is unreadable on the
-  // dark bg — kept distinct from Done's #6bd63d; the dot stays muted.
-  progress:   { title: "In progress",      bg: "rgba(39,80,10,0.18)",   text: "#5aa22f", dot: "#27500a" },
-  notstarted: { title: "Not started",      bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#6b7080" },
-  unassigned: { title: "Nothing assigned", bg: "rgba(90,95,114,0.1)",   text: "#8a8fa8", dot: "#6b7080" },
+// Group label styling — a dot plus its label, no pill background. Dot and text
+// always share one color, so each group reads as a single mark rather than as a
+// tinted chip competing with the rows beneath it. Green is reserved for Done,
+// where it is earned; In progress is neutral light gray (active, but colour
+// would imply an outcome it hasn't reached), and the two idle groups share one
+// quiet gray.
+const GROUP_STYLE: Record<Group, { title: string; text: string; dot: string }> = {
+  done:       { title: "Done",             text: "#6bd63d", dot: "#6bd63d" },
+  progress:   { title: "In progress",      text: "#c8cdd8", dot: "#c8cdd8" },
+  notstarted: { title: "Not started",      text: "#555a6e", dot: "#555a6e" },
+  unassigned: { title: "Nothing assigned", text: "#555a6e", dot: "#555a6e" },
 };
 
 export const metadata: Metadata = { title: "Students — Reps" };
@@ -142,10 +145,13 @@ export default async function RosterPage() {
     return "notstarted";
   }
 
+  // The two idle groups say less than the active ones on purpose: the group
+  // label above already supplies the noun, so the row only has to carry the
+  // count. Done and In progress keep the fuller "X of Y done".
   function subline(playerId: string, g: Group): string {
     const total = (assignmentsByPlayer[playerId] ?? []).length;
-    if (g === "unassigned") return "No assignments yet";
-    if (g === "notstarted") return `${total} assignment${total === 1 ? "" : "s"} waiting`;
+    if (g === "unassigned") return "no assignments";
+    if (g === "notstarted") return `${total} waiting`;
     return `${doneCount(playerId)} of ${total} done`;
   }
 
@@ -163,10 +169,15 @@ export default async function RosterPage() {
           same call made for the student ASSIGNMENTS header. The block carries
           the page's top padding itself (main no longer has any), otherwise that
           padding would scroll away and leave the logo against the status bar. */}
-      <div className="sticky top-0 z-30 -mx-[1.25rem] px-[1.25rem] pt-[1.75rem] pb-2 bg-reps-bg">
-        {/* items-center keeps the left lockup and the right profile circle on
-            the same centerline across Chrome and Safari iOS. */}
-        <div className="flex items-center justify-between mb-6">
+      <div
+        className="sticky top-0 z-30 -mx-[1.25rem] px-[1.25rem] pt-4 pb-3 bg-reps-bg"
+        style={{ borderBottom: "1px solid #2a2d36" }}
+      >
+        {/* items-center keeps the left lockup and the right profile control on
+            the same centerline across Chrome and Safari iOS. The control's 44px
+            tap target is taller than the 23px logo, so centering — not baseline
+            alignment — is what holds the two ends of the row level. */}
+        <div className="flex items-center justify-between mb-5">
           <LogoMini />
           <ProfileMenu coachName={coach?.name?.trim() || ""} />
         </div>
@@ -178,7 +189,7 @@ export default async function RosterPage() {
             with the heading. Suppressed on the empty state, where the full-width
             bottom CTA is the whole point. */}
         <div className="flex items-baseline justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
+          <h1 className="text-xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
           {playerList.length > 0 && (
             <Link
               href="/instructor/add-student"
@@ -241,9 +252,12 @@ export default async function RosterPage() {
               return (
                 <div key={g}>
                   <div className="mb-2">
+                    {/* No horizontal padding now that the pill background is
+                        gone — the dot sits flush with the left edge of the row
+                        cards below, so the group and its rows share one margin. */}
                     <span
-                      className="inline-flex items-center gap-1.5 rounded-[20px] text-[11px] font-semibold"
-                      style={{ padding: "3px 8px", background: style.bg, color: style.text }}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-semibold"
+                      style={{ color: style.text }}
                     >
                       <span
                         className="rounded-full shrink-0"
@@ -292,7 +306,7 @@ export default async function RosterPage() {
                         {last && (
                           <span
                             className="text-[12px] shrink-0 tabular-nums"
-                            style={{ color: last.recent ? "#378add" : "#555a6e" }}
+                            style={{ color: last.recent ? "#378add" : "#7d8494" }}
                           >
                             {last.text}
                           </span>
