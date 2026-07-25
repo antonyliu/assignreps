@@ -11,7 +11,7 @@ import { User } from "lucide-react";
 // prints it, so this menu is the only place it is visible to the coach.
 
 // Profile control: a person silhouette on the right of the header, in a
-// contained circle echoing the roster's student avatars (30px, #252830 on a
+// contained circle echoing the roster's student avatars (26px, #252830 on a
 // hairline #2a2d36) so the header's right end matches the rows below it. It is
 // the only thing on that side — the coach's name used to sit beside it in the
 // header, and now appears at the top of the dropdown instead, where it labels
@@ -93,15 +93,20 @@ export default function ProfileMenu({ coachName }: { coachName: string }) {
         {/* The tap target and the visible circle are deliberately different
             sizes: 44px is the minimum a thumb should have to find on a court,
             but a 44px disc reads as a button competing with the logo. So the
-            button stays 44px and transparent while the mark inside is 30px.
-            The -7px margins (half the 14px difference) pull the visible circle
-            back onto the page gutter horizontally, and vertically collapse the
-            row to the 30px circle instead of the 44px target — otherwise the
-            invisible padding would set the height of the whole top bar. The
-            target keeps its full 44px for the thumb either way. */}
+            button stays 44px and transparent while the mark inside is 26px.
+            The -9px margins pull the visible circle back onto the page gutter
+            horizontally, and vertically collapse the row to the 26px circle
+            instead of the 44px target — otherwise the invisible padding would
+            set the height of the whole top bar. The target keeps its full 44px
+            for the thumb either way.
+
+            The margin is half the difference between the two sizes, so it is
+            derived from the circle and has to move with it: at 26px that is
+            (44-26)/2 = 9. Leaving it at the old 7 would inset the circle 2px
+            from the gutter and leave the row 2px taller than the circle. */}
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="group flex items-center justify-center shrink-0 -mr-[7px] -my-[7px]"
+          className="group flex items-center justify-center shrink-0 -mr-[9px] -my-[9px]"
           style={{ width: 44, height: 44, WebkitTapHighlightColor: "transparent" }}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
@@ -110,8 +115,8 @@ export default function ProfileMenu({ coachName }: { coachName: string }) {
           <span
             className="flex items-center justify-center rounded-full transition-transform group-active:scale-[0.95]"
             style={{
-              width: 30,
-              height: 30,
+              width: 26,
+              height: 26,
               background: "#252830",
               border: "0.5px solid #2a2d36",
             }}

@@ -172,14 +172,14 @@ export default async function RosterPage() {
           any), otherwise that padding would scroll away and leave the logo
           against the status bar. Horizontal padding lives on the rows below,
           not here. */}
-      <div className="sticky top-0 z-30 -mx-[1.25rem] pt-3 bg-reps-bg">
+      <div className="sticky top-0 z-30 -mx-[1.25rem] pt-4 bg-reps-bg">
         {/* items-center keeps the left lockup and the right profile control on
             the same centerline across Chrome and Safari iOS. The control's 44px
             tap target is taller than the 23px logo, so centering — not baseline
             alignment — is what holds the two ends of the row level.
 
             `relative` exists to anchor the divider below. */}
-        <div className="relative flex items-center justify-between px-[1.25rem] pb-3">
+        <div className="relative flex items-center justify-between px-[1.25rem] pb-4">
           <LogoMini />
           <ProfileMenu coachName={coach?.name?.trim() || ""} />
 
