@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireCoach } from "@/lib/require-coach";
 import { LogoMini } from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
+import ScrollToTop from "./ScrollToTop";
 import { getActivityLabels } from "@/config/activityTypes";
 import { isComplete } from "@/lib/exercises";
 import type { GoalType } from "@/lib/exercises";
@@ -161,6 +162,10 @@ export default async function RosterPage() {
 
   return (
     <main className="flex flex-col min-h-screen p-[0_1.25rem_1.75rem]">
+
+      {/* Renders nothing — resets scroll so the sticky header is never already
+          covering the first group on arrival. */}
+      <ScrollToTop />
 
       {/* Logo row and heading row travel together as one sticky unit, so the
           roster's identity and its primary action stay on screen however far
