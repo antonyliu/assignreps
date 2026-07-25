@@ -241,7 +241,7 @@ export default async function RosterPage() {
                       <Link
                         key={player.id}
                         href={`/instructor/student/${player.id}`}
-                        className="flex items-center gap-3 px-[14px] py-2 rounded-[10px] bg-[#131720] hover:bg-[#1c1f26] active:scale-[0.99] transition-colors"
+                        className="flex items-center gap-3 px-[14px] py-2 rounded-[10px] bg-[#111620] active:scale-[0.99]"
                         style={{ WebkitTapHighlightColor: "transparent" }}
                       >
                         <div
