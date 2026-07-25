@@ -37,14 +37,15 @@ const GROUP_ORDER: Group[] = ["done", "progress", "notstarted", "unassigned"];
 // Group label styling — a dot plus its label, no pill background. Dot and text
 // always share one color, so each group reads as a single mark rather than as a
 // tinted chip competing with the rows beneath it. Green is reserved for Done,
-// where it is earned; In progress is neutral light gray (active, but colour
-// would imply an outcome it hasn't reached), and the two idle groups share one
-// quiet gray.
+// where it is earned; In progress is neutral gray (active, but colour would
+// imply an outcome it hasn't reached), and the two idle groups share one quieter
+// gray. The three grays sit a step apart from each other rather than at the
+// extremes, so the four groups read as one ramp down from Done.
 const GROUP_STYLE: Record<Group, { title: string; text: string; dot: string }> = {
   done:       { title: "Done",             text: "#6bd63d", dot: "#6bd63d" },
-  progress:   { title: "In progress",      text: "#c8cdd8", dot: "#c8cdd8" },
-  notstarted: { title: "Not started",      text: "#555a6e", dot: "#555a6e" },
-  unassigned: { title: "Nothing assigned", text: "#555a6e", dot: "#555a6e" },
+  progress:   { title: "In progress",      text: "#8a8fa8", dot: "#8a8fa8" },
+  notstarted: { title: "Not started",      text: "#6b7080", dot: "#6b7080" },
+  unassigned: { title: "Nothing assigned", text: "#6b7080", dot: "#6b7080" },
 };
 
 export const metadata: Metadata = { title: "Students — Reps" };
@@ -169,15 +170,21 @@ export default async function RosterPage() {
           same call made for the student ASSIGNMENTS header. The block carries
           the page's top padding itself (main no longer has any), otherwise that
           padding would scroll away and leave the logo against the status bar. */}
-      <div
-        className="sticky top-0 z-30 -mx-[1.25rem] px-[1.25rem] pt-4 pb-3 bg-reps-bg"
-        style={{ borderBottom: "1px solid #2a2d36" }}
-      >
+      <div className="sticky top-0 z-30 -mx-[1.25rem] px-[1.25rem] pt-4 pb-3 bg-reps-bg">
         {/* items-center keeps the left lockup and the right profile control on
             the same centerline across Chrome and Safari iOS. The control's 44px
             tap target is taller than the 23px logo, so centering — not baseline
-            alignment — is what holds the two ends of the row level. */}
-        <div className="flex items-center justify-between mb-5">
+            alignment — is what holds the two ends of the row level.
+
+            The rule sits here rather than under the whole block: it separates
+            app chrome (logo, account) from the page itself, so the title reads
+            as the top of the content instead of the bottom of the toolbar. It
+            carries its own -mx/px bleed so the line runs edge to edge like the
+            block's background, not inset to the text gutter. */}
+        <div
+          className="flex items-center justify-between -mx-[1.25rem] px-[1.25rem] pb-3 mb-4"
+          style={{ borderBottom: "1px solid #2a2d36" }}
+        >
           <LogoMini />
           <ProfileMenu coachName={coach?.name?.trim() || ""} />
         </div>
@@ -256,7 +263,7 @@ export default async function RosterPage() {
                         gone — the dot sits flush with the left edge of the row
                         cards below, so the group and its rows share one margin. */}
                     <span
-                      className="inline-flex items-center gap-1.5 text-[11px] font-semibold"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold"
                       style={{ color: style.text }}
                     >
                       <span
