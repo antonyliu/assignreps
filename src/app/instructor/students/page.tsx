@@ -170,24 +170,29 @@ export default async function RosterPage() {
           same call made for the student ASSIGNMENTS header. The block carries
           the page's top padding itself (main no longer has any), otherwise that
           padding would scroll away and leave the logo against the status bar. */}
-      <div className="sticky top-0 z-30 -mx-[1.25rem] px-[1.25rem] pt-3 pb-2 bg-reps-bg">
+      {/* The block bleeds once, at this level only, and carries NO horizontal
+          padding — each row below supplies its own. The divider previously had
+          to bleed a second time (-mx inside this element's px) to escape that
+          padding, and that nested negative margin did not reach the screen edge
+          on iOS. Both browsers it was reported in are WebKit on iPhone, so it
+          reproduced on one engine and not on Blink. With the padding pushed down
+          to the rows, the rule is a plain full-width child of a full-width box
+          and needs no bleed math of its own. */}
+      <div className="sticky top-0 z-30 -mx-[1.25rem] pt-3 bg-reps-bg">
         {/* items-center keeps the left lockup and the right profile control on
             the same centerline across Chrome and Safari iOS. The control's 44px
             tap target is taller than the 23px logo, so centering — not baseline
-            alignment — is what holds the two ends of the row level.
-
-            The rule sits here rather than under the whole block: it separates
-            app chrome (logo, account) from the page itself, so the title reads
-            as the top of the content instead of the bottom of the toolbar. It
-            carries its own -mx/px bleed so the line runs edge to edge like the
-            block's background, not inset to the text gutter. */}
-        <div
-          className="flex items-center justify-between -mx-[1.25rem] px-[1.25rem] pb-2 mb-4"
-          style={{ borderBottom: "1px solid #2a2d36" }}
-        >
+            alignment — is what holds the two ends of the row level. */}
+        <div className="flex items-center justify-between px-[1.25rem] pb-3">
           <LogoMini />
           <ProfileMenu coachName={coach?.name?.trim() || ""} />
         </div>
+
+        {/* Separates app chrome (logo, account) from the page itself, so the
+            title reads as the top of the content rather than the bottom of the
+            toolbar. No margins, no padding, no border shorthand — a 1px box
+            that inherits the block's full width. */}
+        <div aria-hidden="true" style={{ height: 1, background: "#2a2d36" }} />
 
         {/* Add lives inline with the heading rather than pinned to the bottom, so
             it stays reachable without the list having to scroll to its end. White
@@ -195,7 +200,7 @@ export default async function RosterPage() {
             subtle so the button reads as an affordance, not a filled CTA competing
             with the heading. Suppressed on the empty state, where the full-width
             bottom CTA is the whole point. */}
-        <div className="flex items-baseline justify-between gap-3">
+        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[10px] pb-1.5">
           <h1 className="text-xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
           {playerList.length > 0 && (
             <Link
@@ -251,10 +256,10 @@ export default async function RosterPage() {
       ) : (
         <>
           {/* Tight but distinct spacing between completion groups. The top
-              margin is small because the sticky block's own bottom padding
+              margin is small because the heading row's own bottom padding
               already sits above it — together they set the heading-to-first-
               group gap, so both have to stay small to keep it tight. */}
-          <div className="flex flex-col gap-5 mt-1 mb-8">
+          <div className="flex flex-col gap-5 mt-0.5 mb-8">
             {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;
