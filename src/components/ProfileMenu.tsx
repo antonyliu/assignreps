@@ -93,12 +93,14 @@ export default function ProfileMenu({ coachName }: { coachName: string }) {
             sizes: 44px is the minimum a thumb should have to find on a court,
             but a 44px disc reads as a button competing with the logo. So the
             button stays 44px and transparent while the mark inside is 30px.
-            The -7px right margin (half the 14px difference) pulls the visible
-            circle back onto the page gutter, so it lines up with the logo and
-            the rows rather than sitting inset by its own padding. */}
+            The -7px margins (half the 14px difference) pull the visible circle
+            back onto the page gutter horizontally, and vertically collapse the
+            row to the 30px circle instead of the 44px target — otherwise the
+            invisible padding would set the height of the whole top bar. The
+            target keeps its full 44px for the thumb either way. */}
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="group flex items-center justify-center shrink-0 -mr-[7px]"
+          className="group flex items-center justify-center shrink-0 -mr-[7px] -my-[7px]"
           style={{ width: 44, height: 44, WebkitTapHighlightColor: "transparent" }}
           aria-haspopup="menu"
           aria-expanded={menuOpen}

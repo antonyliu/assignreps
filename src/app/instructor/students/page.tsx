@@ -170,7 +170,7 @@ export default async function RosterPage() {
           same call made for the student ASSIGNMENTS header. The block carries
           the page's top padding itself (main no longer has any), otherwise that
           padding would scroll away and leave the logo against the status bar. */}
-      <div className="sticky top-0 z-30 -mx-[1.25rem] px-[1.25rem] pt-4 pb-3 bg-reps-bg">
+      <div className="sticky top-0 z-30 -mx-[1.25rem] px-[1.25rem] pt-3 pb-2 bg-reps-bg">
         {/* items-center keeps the left lockup and the right profile control on
             the same centerline across Chrome and Safari iOS. The control's 44px
             tap target is taller than the 23px logo, so centering — not baseline
@@ -182,7 +182,7 @@ export default async function RosterPage() {
             carries its own -mx/px bleed so the line runs edge to edge like the
             block's background, not inset to the text gutter. */}
         <div
-          className="flex items-center justify-between -mx-[1.25rem] px-[1.25rem] pb-3 mb-4"
+          className="flex items-center justify-between -mx-[1.25rem] px-[1.25rem] pb-2 mb-4"
           style={{ borderBottom: "1px solid #2a2d36" }}
         >
           <LogoMini />
@@ -250,8 +250,11 @@ export default async function RosterPage() {
         </>
       ) : (
         <>
-          {/* Tight but distinct spacing between completion groups. */}
-          <div className="flex flex-col gap-5 mt-3 mb-8">
+          {/* Tight but distinct spacing between completion groups. The top
+              margin is small because the sticky block's own bottom padding
+              already sits above it — together they set the heading-to-first-
+              group gap, so both have to stay small to keep it tight. */}
+          <div className="flex flex-col gap-5 mt-1 mb-8">
             {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;
