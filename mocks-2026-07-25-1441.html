@@ -981,14 +981,14 @@
           </div>
           <div class="backdrop sheet">
             <div class="sheet-panel">
-              <h3>Clear Neo's assignments?</h3>
-              <p>Their progress is saved. This just clears the current list so you can start fresh.</p>
+              <h3>Clear Neo's completed work?</h3>
+              <p>This clears the assignments they've finished. Logged progress is kept.</p>
               <button class="btn btn-green-outline" style="margin-bottom:8px;">Clear completed</button>
               <div class="tcenter"><span style="font-size:15px;font-weight:500;color:var(--reps-sub);padding:12px 0;display:block;">Cancel</span></div>
             </div>
           </div>
         </div></div>
-        <p class="note">Not in the previous mocks — the old file showed only the “Clear completed” text link. Confirming deletes the assignment rows; the logs survive because <code>logs.assignment_id</code> is <code>ON DELETE SET NULL</code>, which is exactly what “their progress is saved” means.</p>
+        <p class="note">Confirming deletes only the assignment rows that are <strong>complete</strong> — the action runs each one through <code>isComplete()</code> and deletes just those ids, rather than the whole list as it did before. The logs survive either way because <code>logs.assignment_id</code> is <code>ON DELETE SET NULL</code>, which is what “logged progress is kept” means. The text link that opens this sheet is gated on <code>allDone</code>, so in the normal flow every assignment is already complete and the two sets coincide; they diverge on a stale page, where new work assigned elsewhere would otherwise have been swept up too.</p>
       </div>
 
       <!-- Header menu open -->
