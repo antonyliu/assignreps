@@ -57,7 +57,7 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
           className="text-[13px] text-[var(--reps-label)] hover:text-reps-ink transition-colors py-1"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
-          Clear completed
+          Clear finished
         </button>
       </div>
 
@@ -71,15 +71,27 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Says what the action does, not what it spares. The old copy
-                ("clears the current list so you can start fresh") described the
-                unfiltered delete this action used to perform. */}
-            <h2 className="text-[17px] font-semibold text-reps-ink mb-2">
-              Clear {firstName}&apos;s completed work?
+            {/* One word for one concept: the banner above says "finished
+                everything", so the link, header and button all say "finished"
+                too. The old copy ran three synonyms across one screen
+                (completed / completed work / they've finished).
+                text-balance on the heading — it is short and evens out to two
+                tidy lines when a long first name pushes it over. */}
+            <h2 className="text-[17px] font-semibold text-reps-ink mb-2 text-balance">
+              Clear {firstName}&apos;s finished work?
             </h2>
-            <p className="text-[14px] text-reps-sub mb-6">
-              This clears the assignments they&apos;ve finished. Logged progress is kept.
-            </p>
+            {/* Two block-level sentences, not one wrapped paragraph: the break
+                is structural so it holds at every width without a <br>. The
+                second line is the one answering "will I lose their history?",
+                so it gets a line of its own and the plainest words on screen.
+                text-pretty rather than balance here — these are body sentences
+                and the risk is a one-word last line, which is exactly what
+                pretty prevents; balance would even out the lines instead and
+                leave both looking oddly narrow. */}
+            <div className="text-[14px] text-reps-sub mb-6">
+              <p className="text-pretty">Finished assignments come off the list.</p>
+              <p className="text-pretty">Their progress is saved.</p>
+            </div>
             {error && <p className="text-[12px] text-red-400 mb-3">{error}</p>}
             <button
               type="button"
@@ -88,7 +100,7 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
               className="w-full text-center bg-[#6bd63d1a] border border-[#6bd63d] text-[#6bd63d] font-semibold text-[15px] py-[14px] rounded-[10px] disabled:opacity-50 transition-colors mb-2"
               style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              {isPending ? "Clearing…" : "Clear completed"}
+              {isPending ? "Clearing…" : "Clear finished"}
             </button>
             <button
               type="button"

@@ -146,11 +146,11 @@ There is no schema-level way to express "this target means something different",
 4. `src/app/student/[token]/log/[assignmentId]/actions.ts` — `allDone` for confetti
 5. `LogScreen.tsx` — client `done` state
 6. `src/app/student/[token]/log/[assignmentId]/page.tsx` — the `alreadyLogged` cap
-7. `src/app/instructor/student/[id]/actions.ts` — which rows "Clear completed" deletes
+7. `src/app/instructor/student/[id]/actions.ts` — which rows "Clear finished" deletes
 
 ⚠️ Miss one and it reports completion **too early**: on a "make 50" assignment a student who attempts 50 and makes 20 satisfies `amount >= target`. The roster was the most exposed — it fetched neither `makes` nor `goal_type`.
 
-⚠️ **A render-time gate is not a correctness guarantee.** Site 7 exists because `clearCompletedAssignments` used to delete the player's whole assignment list unfiltered. That was invisible in the normal flow: the "Clear completed" control only renders under `allDone`, so "everything" and "everything complete" were the same set. They diverge on a **stale page** — the coach loads an all-done student, assigns new work from another tab or device, then clicks the still-rendered button — and under direct invocation of the server action, which no UI gate reaches at all. An action has to establish its own preconditions; it cannot borrow them from whatever rendered its button.
+⚠️ **A render-time gate is not a correctness guarantee.** Site 7 exists because `clearCompletedAssignments` used to delete the player's whole assignment list unfiltered. That was invisible in the normal flow: the "Clear finished" control only renders under `allDone`, so "everything" and "everything complete" were the same set. They diverge on a **stale page** — the coach loads an all-done student, assigns new work from another tab or device, then clicks the still-rendered button — and under direct invocation of the server action, which no UI gate reaches at all. An action has to establish its own preconditions; it cannot borrow them from whatever rendered its button.
 
 Companions: `progressValue()` (what fills the bar) and `progressTarget()` (the denominator; consecutive collapses to 1).
 

@@ -54,7 +54,7 @@ export async function clearCompletedAssignments(playerId: string): Promise<Clear
 
   // Clears only the assignments this player has actually FINISHED. This used to
   // delete the whole list unfiltered, which was invisible in the normal flow —
-  // the "Clear completed" control only renders when every assignment is already
+  // the "Clear finished" control only renders when every assignment is already
   // complete, so the two sets matched. It diverged on a stale page (assign new
   // work elsewhere, then click the still-rendered button) and under direct
   // invocation of this action, where no such gate applies.
