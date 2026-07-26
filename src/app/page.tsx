@@ -626,6 +626,17 @@ export default function LandingPage() {
       {/* Product loop — four miniature screens, dark band under the hero */}
       <section className="loop-section">
         <h2 className="loop-heading">Here&apos;s how it works.</h2>
+        {/* The rest of the page is activity-agnostic — the hero photographs span
+            a court and a piano, and the SMS says "homework" with no sport — but
+            these four frames are unavoidably basketball: real exercise names,
+            real shooting percentages. This says so, rather than letting the
+            section quietly narrow the product to one sport.
+
+            Deliberately no claim about other activities. `activityTypes.ts` has
+            Basketball as the only ACTIVE entry; the other nine are listed but
+            not selectable, so "works for any sport" would break at the signup
+            picker one screen later. */}
+        <p className="loop-example">Example: basketball</p>
         <div className="loop-track">
           {loopSteps.map(({ caption, screen }, i) => (
             <div className="loop-item" key={caption}>
@@ -809,10 +820,9 @@ export default function LandingPage() {
           flex: 1 0 auto;
         }
         .loop-heading {
-          /* Was 10px with the subline carrying the other 40px below it. With the
-             subline gone the heading owns the whole gap down to the frames, and
-             40px read as cramped once the subline was no longer filling it. */
-          margin: 0 auto 56px;
+          /* The example caption below now carries the bulk of the gap down to
+             the frames; this is just the tight lead into it. */
+          margin: 0 auto 8px;
           padding: 0 22px;
           text-align: center;
           color: #ffffff;
@@ -823,10 +833,23 @@ export default function LandingPage() {
           letter-spacing: -0.5px;
           line-height: 1.2;
         }
-        /* The subline is gone — it restated the four captions word for word, so
-           the section said the same thing twice and the captions had nothing
-           left to add. The heading now leads straight into the frames, and the
-           spacing that lived on the subline moved to the heading's margin. */
+        /* The old subline is gone — it restated the four captions word for word,
+           so the section said the same thing twice. What sits here now is a
+           different thing: a caption naming what the frames depict, not a
+           restatement of them. */
+        /* A caption, not a subhead: --reps-sub (#8a8fa8), the app's muted-text
+           token, at 13px against the heading's 24px. It sits tight under the
+           heading and owns the remaining space down to the frames, so the total
+           heading-to-frames distance stays where it was before the line existed. */
+        .loop-example {
+          margin: 0 auto 30px;
+          padding: 0 22px;
+          text-align: center;
+          font-size: 13px;
+          font-weight: 500;
+          line-height: 1.4;
+          color: #8a8fa8;
+        }
         .loop-item {
           display: flex;
           flex-direction: column;
@@ -897,7 +920,8 @@ export default function LandingPage() {
           .loop-section { padding: 80px 0; }
           .loop-heading { font-size: 32px; }
           .loop-caption { font-size: 19px; }
-          .loop-heading { margin: 0 auto 64px; }
+          .loop-heading { margin: 0 auto 10px; }
+          .loop-example { margin: 0 auto 34px; font-size: 14px; }
           .loop-track {
             max-width: 1180px;
             margin: 0 auto;
