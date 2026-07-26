@@ -441,7 +441,8 @@ RJ is the first real user and primary product validator.
 - **hello@assignreps.com Gmail Send as setup**
 - **Final legal review of /privacy + /terms**
 - **Re-engagement nudge** — Monday email to coaches who haven't assigned anything
-- **Landing page product-loop mocks are stale** — `src/app/page.tsx` draws four miniature phones by hand; frame 3 still shows the killed preset-button counter and uses `#27500a` rather than `#3d7a24`
+- **Landing page product-loop frames are hand-drawn** — `src/app/page.tsx` redraws four miniature phones in JSX, so every design change has to be re-applied here by hand and can silently drift from the real screens. Redrawn July 25 2026 (assign → text → log → student detail); the specific staleness previously listed — retired preset buttons and `#27500a` — is fixed, but the maintenance burden is structural
+- **"Consecutive" goal label vs "In a row"** — known drift, not a bug. The landing page's assign frame labels the third goal **In a row**, which is how instructors actually speak; the app's `CountScreen` still shows **Consecutive**. The stored `goal_type` value is `'consecutive'` either way, so this is display copy only — but the app and the marketing page currently name the same goal differently. Renaming the app label is the likely fix; it touches `GOALS` in `CountScreen.tsx` and the `SETS COMPLETED` / streak wording on the log screen
 
 ### Low priority / future
 - **Light mode** — after dark mode is validated with RJ

@@ -59,29 +59,15 @@ const T = {
   sub: "#8a8fa8",
   label: "#c8cdd8",
   blue: "#378add",
+  // The app's two greens, and they are not interchangeable. `attempts` fills the
+  // muted layer of a two-tone bar and colours the ATTEMPTS label and number;
+  // `green` (makes/done) fills the bright layer and every completion state.
+  // These were a single #27500a, which the app retired — see the colour system
+  // in CLAUDE.md. Matching them matters because the two-tone bar is the whole
+  // point of frames 3 and 4: two shades stacked, meaning two different figures.
+  attempts: "#3d7a24",
   green: "#6bd63d",
-  // Was yellow; the app dropped yellow for in-progress, so the mock follows with
-  // muted green. Named `progress` now — it's a bar fill, not a text/number colour
-  // (the log counter, which needs legibility, uses `ink` instead).
-  progress: "#27500a",
 };
-
-function MiniLogo() {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3em" }}>
-      <span
-        style={{
-          width: "0.85em",
-          height: "0.85em",
-          borderRadius: "0.22em",
-          background: "#252830",
-          display: "inline-block",
-        }}
-      />
-      <span style={{ fontSize: "0.62em", fontWeight: 600, color: "#6a6a72" }}>Reps</span>
-    </span>
-  );
-}
 
 /* A progress bar. `pct` is 0-100, `color` a token. */
 function MiniBar({ pct, color }: { pct: number; color: string }) {
@@ -92,18 +78,134 @@ function MiniBar({ pct, color }: { pct: number; color: string }) {
   );
 }
 
-/* Student-home assignment card — mirrors the real tappable card. */
+/* The two-tone bar, and the reason this section exists: muted attempts
+   underneath, bright makes on top, so one bar carries two figures. The app
+   stacks these as absolutely-positioned layers on a `reps` goal with makes
+   tracked; here they are nested, which renders identically at this size.
+   `makesPct` is always <= `pct` — you cannot make more than you take. */
+function MiniBar2({ pct, makesPct }: { pct: number; makesPct: number }) {
+  return (
+    <div style={{ height: "0.28em", borderRadius: "999px", background: T.line, overflow: "hidden" }}>
+      <div style={{ width: `${pct}%`, height: "100%", background: T.attempts, borderRadius: "999px" }}>
+        <div
+          style={{
+            width: pct > 0 ? `${(makesPct / pct) * 100}%` : "0%",
+            height: "100%",
+            background: T.green,
+            borderRadius: "999px",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* One stepper control: the round −/+ buttons flanking a number, as on the log
+   screen. `numberColor` carries the label/number pairing rule — attempts go
+   muted only when a MAKES row shares the screen. */
+function MiniStepper({
+  label,
+  value,
+  size,
+  numberColor,
+}: {
+  label: string;
+  value: string;
+  size: string;
+  numberColor: string;
+}) {
+  const btn = {
+    width: "1.5em",
+    height: "1.5em",
+    borderRadius: "999px",
+    background: T.line,
+    color: T.ink,
+    fontSize: "0.7em",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  } as const;
+  return (
+    <div>
+      <div style={{ fontSize: "0.56em", fontWeight: 600, letterSpacing: "1px", color: numberColor, marginBottom: "0.3em" }}>
+        {label}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.6em" }}>
+        <span style={btn}>−</span>
+        <span style={{ fontSize: size, fontWeight: 600, lineHeight: 1, color: numberColor, minWidth: "1.6em", textAlign: "center" }}>
+          {value}
+        </span>
+        <span style={btn}>+</span>
+      </div>
+    </div>
+  );
+}
+
+/* The "Track makes?" switch. Its own control because it is the one thing on the
+   assign screen that decides whether frame 4 ever gets a percentage. */
+function MiniToggle({ on }: { on?: boolean }) {
+  return (
+    <span
+      style={{
+        width: "1.7em",
+        height: "1em",
+        borderRadius: "999px",
+        background: on ? T.blue : T.line,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: on ? "flex-end" : "flex-start",
+        padding: "0.11em",
+        flexShrink: 0,
+      }}
+    >
+      <span style={{ width: "0.78em", height: "0.78em", borderRadius: "999px", background: "#fff" }} />
+    </span>
+  );
+}
+
+/* A selectable chip — the goal selector and the preset row on the assign
+   screen. Selected takes the blue accent; the rest stay on the card surface. */
+function MiniChip({ text, on }: { text: string; on?: boolean }) {
+  return (
+    <span
+      style={{
+        flex: 1,
+        textAlign: "center",
+        background: on ? "rgba(55,138,221,0.14)" : T.card,
+        border: `1px solid ${on ? T.blue : T.line}`,
+        borderRadius: "0.5em",
+        padding: "0.4em 0",
+        fontSize: "0.6em",
+        fontWeight: on ? 600 : 500,
+        color: on ? T.blue : T.label,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {text}
+    </span>
+  );
+}
+
+/* Assignment card — the same shape on the coach's student detail and the
+   student's home. `made` renders the "made X/Y · Z%" line the coach reads as
+   the receipt; supplying it also switches the bar to two-tone, because the two
+   always travel together in the app. */
 function MiniCard({
   name,
   right,
   pct,
   color,
+  made,
+  makesPct,
   done,
 }: {
   name: string;
   right: string;
   pct: number;
-  color: string;
+  color?: string;
+  made?: string;
+  makesPct?: number;
   done?: boolean;
 }) {
   return (
@@ -115,7 +217,7 @@ function MiniCard({
         padding: "0.55em 0.62em",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.45em", gap: "0.4em" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: made ? "0.25em" : "0.45em", gap: "0.4em" }}>
         <span style={{ fontSize: "0.74em", fontWeight: 500, color: T.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {name}
         </span>
@@ -123,80 +225,117 @@ function MiniCard({
           {right}
         </span>
       </div>
-      <MiniBar pct={pct} color={color} />
+      {made && (
+        <div style={{ fontSize: "0.58em", color: T.green, marginBottom: "0.4em" }}>{made}</div>
+      )}
+      {makesPct === undefined ? (
+        <MiniBar pct={pct} color={color ?? T.attempts} />
+      ) : (
+        <MiniBar2 pct={pct} makesPct={makesPct} />
+      )}
     </div>
   );
 }
 
-/* Roster row — avatar initial, name, status subline. Sits on its own card
-   surface so the rows separate from the frame background. */
-function MiniRow({ initial, name, sub }: { initial: string; name: string; sub: string }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.45em",
-        padding: "0.4em 0.5em",
-        background: T.card,
-        border: `1px solid ${T.line}`,
-        borderRadius: "0.55em",
-      }}
-    >
-      <span
-        style={{
-          width: "1.35em",
-          height: "1.35em",
-          borderRadius: "999px",
-          background: T.raised,
-          color: T.label,
-          fontSize: "0.62em",
-          fontWeight: 600,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        {initial}
-      </span>
-      <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "0.74em", fontWeight: 500, color: T.ink }}>{name}</span>
-        <span style={{ fontSize: "0.6em", color: T.label }}>{sub}</span>
-      </span>
-    </div>
-  );
-}
-
-function MiniPill({ text, color, bg }: { text: string; color: string; bg: string }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "0.3em",
-        background: bg,
-        color,
-        fontSize: "0.6em",
-        fontWeight: 600,
-        padding: "0.25em 0.55em",
-        borderRadius: "999px",
-      }}
-    >
-      <span style={{ width: "0.4em", height: "0.4em", borderRadius: "999px", background: color }} />
-      {text}
-    </span>
-  );
-}
-
-/* 1 — the SMS. Copy is the real body from src/lib/notify-assignment.ts. */
-function ScreenText() {
+/* 1 — the coach assigning, with a MAKES goal. Mirrors CountScreen: goal first,
+   because it decides what the number under it means. "How many makes?" is the
+   real label for that goal; the presets are the real GOAL_PRESETS for makes
+   (10/25/50/100), not the category's rep counts. */
+function ScreenAssign() {
   return (
     <>
-      {/* Opens like a real thread: who it's from, when it landed, the message,
-          and a delivery receipt. Deliberately one-sided — Reps sends outbound
-          SMS only and processes no replies, so no outgoing bubble. */}
-      <div style={{ textAlign: "center", marginBottom: "1em" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1.1em" }}>
+        <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
+        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.ink }}>Corner 3s</span>
+      </div>
+
+      <div style={{ fontSize: "0.6em", fontWeight: 500, color: T.label, marginBottom: "0.4em" }}>Goal</div>
+      <div style={{ display: "flex", gap: "0.35em", marginBottom: "0.95em" }}>
+        <MiniChip text="Attempts" on />
+        <MiniChip text="Makes" />
+        <MiniChip text="In a row" />
+      </div>
+
+      <div style={{ fontSize: "0.6em", fontWeight: 500, color: T.label, marginBottom: "0.4em" }}>How many?</div>
+      <div style={{ display: "flex", gap: "0.35em", marginBottom: "0.95em" }}>
+        <MiniChip text="25" />
+        <MiniChip text="50" on />
+        <MiniChip text="100" />
+        <MiniChip text="200" />
+      </div>
+
+      {/* The toggle only renders on an attempts goal, and only where the
+          category has something to make — shooting qualifies. It is what makes
+          frame 4's percentage possible. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "0.5em",
+          marginBottom: "0.95em",
+        }}
+      >
+        <span style={{ fontSize: "0.6em", fontWeight: 500, color: T.ink }}>Track makes?</span>
+        <MiniToggle on />
+      </div>
+
+      {/* Side is offered for every library exercise except a short list — Corner
+          3s qualifies, Free throws would not. Nothing is selected by default. */}
+      <div style={{ fontSize: "0.6em", fontWeight: 500, color: T.label, marginBottom: "0.4em" }}>Side</div>
+      <div style={{ display: "flex", gap: "0.35em" }}>
+        <MiniChip text="Left" />
+        <MiniChip text="Right" />
+      </div>
+
+      <div style={{ marginTop: "auto" }}>
+        <div
+          style={{
+            background: T.blue,
+            color: "#fff",
+            textAlign: "center",
+            borderRadius: "0.5em",
+            padding: "0.55em 0",
+            fontSize: "0.72em",
+            fontWeight: 600,
+          }}
+        >
+          Send to Jalen
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* 2 — the SMS thread. Both bodies are real, verbatim from the code:
+     yesterday  src/app/instructor/student/[id]/actions.ts  (Resend link)
+     today      src/lib/notify-assignment.ts                (assignment sent)
+   The null-instructor_type branch is used for today's, so no sport is named.
+
+   ⚠️ The two differ by one word — "work" vs "homework" — because NEITHER
+   template names the exercise. There is no body in this codebase that says what
+   was assigned, so a thread cannot show "Free throws yesterday, Corner 3s
+   today" without inventing a message the app never sends. If the frame needs
+   visibly distinct messages, the fix is upstream: put the exercise in the SMS.
+
+   The thread fills from the bottom, the way a messages app stacks off its input
+   bar, and there is no inbound bubble — Reps sends outbound SMS only, with no
+   webhook or handler for replies anywhere in the codebase. */
+function ScreenText() {
+  const bubble = {
+    maxWidth: "96%",
+    background: T.raised,
+    borderRadius: "1.15em",
+    padding: "0.62em 0.8em",
+    fontSize: "0.72em",
+    lineHeight: 1.45,
+    color: T.ink,
+  } as const;
+  const receipt = { fontSize: "0.48em", color: T.sub, margin: "0.35em 0 0 0.4em" } as const;
+  const stamp = { fontSize: "0.52em", color: T.sub, textAlign: "center", marginBottom: "0.7em" } as const;
+  return (
+    <>
+      <div style={{ textAlign: "center" }}>
         <div
           style={{
             width: "2em",
@@ -212,95 +351,59 @@ function ScreenText() {
             margin: "0 auto 0.45em",
           }}
         >
-          RJ
+          CM
         </div>
-        <div style={{ fontSize: "0.66em", fontWeight: 500, color: T.ink }}>Coach RJ</div>
+        <div style={{ fontSize: "0.66em", fontWeight: 500, color: T.ink }}>Coach Mike</div>
       </div>
-      <div style={{ fontSize: "0.54em", color: T.sub, textAlign: "center", marginBottom: "0.9em" }}>
-        Today 4:12 PM
-      </div>
-      <div
-        style={{
-          alignSelf: "flex-start",
-          maxWidth: "96%",
-          background: T.raised,
-          borderRadius: "1.15em",
-          padding: "0.7em 0.85em",
-          fontSize: "0.82em",
-          lineHeight: 1.45,
-          color: T.ink,
-        }}
-      >
-        Hey Neo — Coach RJ assigned you basketball homework. Tap here:{" "}
-        <span style={{ color: T.blue }}>assignreps.com/student/…</span>
-      </div>
-      <div style={{ alignSelf: "flex-start", fontSize: "0.5em", color: T.sub, margin: "0.45em 0 0 0.4em" }}>
-        Delivered
+
+      {/* Top-aligned, not pushed to the foot. These frames draw no compose
+          bar, so bottom-anchored bubbles sit against a bare edge with nothing
+          to rest on and read as unmoored — the stack needs the header above it
+          to anchor to instead. */}
+      <div>
+        <div style={{ ...stamp, marginTop: "1em" }}>Yesterday 5:02 PM</div>
+        <div style={bubble}>
+          Hey Jalen — Coach Mike assigned you work. Tap here:{" "}
+          <span style={{ color: T.blue }}>assignreps.com/student/…</span>
+        </div>
+        <div style={receipt}>Delivered</div>
+
+        <div style={{ ...stamp, marginTop: "0.9em" }}>Today 4:12 PM</div>
+        <div style={bubble}>
+          Hey Jalen — Coach Mike assigned you homework. Tap here:{" "}
+          <span style={{ color: T.blue }}>assignreps.com/student/…</span>
+        </div>
+        <div style={receipt}>Delivered</div>
       </div>
     </>
   );
 }
 
-/* 2 — student home, mid-week. */
-function ScreenHome() {
-  return (
-    <>
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.4em" }}>
-        <MiniLogo />
-      </div>
-      <div style={{ marginBottom: "1.1em" }}>
-        <div style={{ fontSize: "1.4em", fontWeight: 600, letterSpacing: "-0.5px", color: T.ink }}>Neo</div>
-        <div style={{ fontSize: "0.64em", color: T.label, marginTop: "0.15em" }}>Coach RJ&apos;s assignments</div>
-      </div>
-      <div style={{ fontSize: "0.58em", fontWeight: 600, letterSpacing: "1px", color: T.sub, marginBottom: "0.7em" }}>
-        ASSIGNMENTS
-      </div>
-      {/* One of each state, top to bottom: finished, underway, untouched. */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
-        <MiniCard name="Form shooting" right="✓ Done"  pct={100} color={T.green} done />
-        <MiniCard name="Crossovers"    right="3/5 min" pct={60}  color={T.progress} />
-        <MiniCard name="Box-outs"      right="0/20"    pct={0}   color={T.line} />
-      </div>
-    </>
-  );
-}
-
-/* 3 — the counter. Presets are the real ones for a 50-rep target. */
+/* 3 — the log screen as it ships today: a stepper, not the +10/+25/+50 presets
+   that were retired. ATTEMPTS is muted #3d7a24 precisely because a MAKES row is
+   on screen with it — a solo counter would take the bright green outright. */
 function ScreenLog() {
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1.6em" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1em" }}>
         <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
-        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.sub }}>Log reps</span>
+        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.ink }}>Corner 3s</span>
       </div>
-      <div style={{ textAlign: "center", marginBottom: "1.4em" }}>
-        <div style={{ fontSize: "0.7em", color: T.label, marginBottom: "0.5em" }}>Form shooting</div>
-        <div style={{ fontSize: "3em", fontWeight: 600, letterSpacing: "-1px", lineHeight: 1, color: T.ink }}>30</div>
-        <div style={{ fontSize: "0.64em", color: T.label, marginTop: "0.45em" }}>of 50 reps</div>
+
+      <div style={{ fontSize: "0.58em", color: T.label, marginBottom: "0.45em" }}>50 of 50 done</div>
+      <div style={{ marginBottom: "1.5em" }}>
+        <MiniBar2 pct={100} makesPct={56} />
       </div>
-      <div style={{ marginBottom: "1.4em" }}>
-        <MiniBar pct={60} color={T.progress} />
+
+      <div style={{ textAlign: "center", marginBottom: "1em" }}>
+        <MiniStepper label="ATTEMPTS" value="50" size="2.1em" numberColor={T.attempts} />
       </div>
-      <div style={{ display: "flex", gap: "0.4em" }}>
-        {["+10", "+25", "+50"].map((p) => (
-          <span
-            key={p}
-            style={{
-              flex: 1,
-              textAlign: "center",
-              background: T.card,
-              border: `1px solid ${T.line}`,
-              borderRadius: "0.5em",
-              padding: "0.45em 0",
-              fontSize: "0.66em",
-              fontWeight: 500,
-              color: T.ink,
-            }}
-          >
-            {p}
-          </span>
-        ))}
+
+      <div style={{ height: "1px", background: T.line, marginBottom: "0.8em" }} />
+      <div style={{ textAlign: "center" }}>
+        <MiniStepper label="MAKES" value="28" size="1.1em" numberColor={T.green} />
       </div>
+
       <div style={{ marginTop: "auto" }}>
         <div
           style={{
@@ -320,38 +423,69 @@ function ScreenLog() {
   );
 }
 
-/* 4 — the coach's roster, grouped by completion. */
-function ScreenRoster() {
+/* 4 — the coach's student detail, which is where "made X/Y · Z%" actually
+   lives. The roster shows status groups but carries no percentage and no bar
+   (progress bars on roster rows are still unbuilt), so this is the only screen
+   that can honestly show the coach receiving the makes figure. */
+function ScreenDetail() {
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.9em" }}>
-        <MiniLogo />
-        <span style={{ fontSize: "0.62em", fontWeight: 500, color: T.sub }}>Coach RJ</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1.1em" }}>
+        <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
+        <span style={{ fontSize: "0.62em", fontWeight: 500, color: T.sub }}>Players</span>
       </div>
-      <div style={{ fontSize: "1.4em", fontWeight: 600, letterSpacing: "-0.5px", color: T.ink, marginBottom: "0.65em" }}>
-        Your players
+
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1.2em" }}>
+        <span
+          style={{
+            width: "1.9em",
+            height: "1.9em",
+            borderRadius: "999px",
+            background: T.raised,
+            color: T.label,
+            fontSize: "0.7em",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          J
+        </span>
+        <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <span style={{ fontSize: "1.05em", fontWeight: 600, letterSpacing: "-0.3px", color: T.ink }}>Jalen</span>
+          <span style={{ fontSize: "0.56em", color: T.sub }}>Joined 1 month ago</span>
+        </span>
       </div>
-      {/* One student per state. Spacing is tight because three groups plus their
-          pills only just clear the 9/16 mobile frame. */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.55em" }}>
-        <div>
-          <div style={{ marginBottom: "0.3em" }}>
-            <MiniPill text="Done" color={T.green} bg="rgba(107,214,61,0.12)" />
-          </div>
-          <MiniRow initial="N" name="Neo" sub="3 of 3 done" />
-        </div>
-        <div>
-          <div style={{ marginBottom: "0.3em" }}>
-            {/* Readable mid-green, mirroring the real roster's in-progress pill. */}
-            <MiniPill text="In progress" color="#5aa22f" bg="rgba(39,80,10,0.18)" />
-          </div>
-          <MiniRow initial="J" name="Jordan" sub="1 of 3 done" />
-        </div>
-        <div>
-          <div style={{ marginBottom: "0.3em" }}>
-            <MiniPill text="Not started" color={T.sub} bg="rgba(90,95,114,0.1)" />
-          </div>
-          <MiniRow initial="S" name="Sofia" sub="2 assignments waiting" />
+
+      <div style={{ fontSize: "0.58em", fontWeight: 600, letterSpacing: "1px", color: T.sub, marginBottom: "0.7em" }}>
+        ASSIGNMENTS
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
+        {/* The receipt: attempts full, makes at 90%, and the line that names it. */}
+        <MiniCard name="Corner 3s" right="✓ Done" made="made 28/50 · 56%" pct={100} makesPct={56} done />
+        <MiniCard name="Mid-range jumpers" right="18/50" pct={36} />
+        <MiniCard name="Free throws" right="0/50" pct={0} />
+      </div>
+
+      {/* The real screen pins this to the bottom and swaps the label on state:
+          filled "+ Assign new work" once everything is done, outlined
+          "+ Assign more" while anything is outstanding — which is the case here,
+          with two of the three unfinished. */}
+      <div style={{ marginTop: "auto" }}>
+        <div
+          style={{
+            border: `1px solid ${T.blue}`,
+            color: T.blue,
+            textAlign: "center",
+            borderRadius: "0.5em",
+            padding: "0.5em 0",
+            fontSize: "0.68em",
+            fontWeight: 600,
+          }}
+        >
+          + Assign more
         </div>
       </div>
     </>
@@ -359,10 +493,10 @@ function ScreenRoster() {
 }
 
 const loopSteps = [
-  { caption: "They get a link",     screen: <ScreenText /> },
-  { caption: "They see their work", screen: <ScreenHome /> },
-  { caption: "They log it",         screen: <ScreenLog /> },
-  { caption: "You see it's done",   screen: <ScreenRoster /> },
+  { caption: "You assign it",   screen: <ScreenAssign /> },
+  { caption: "They get a text", screen: <ScreenText /> },
+  { caption: "They log it",     screen: <ScreenLog /> },
+  { caption: "You see it",      screen: <ScreenDetail /> },
 ];
 
 export default function LandingPage() {
@@ -492,26 +626,28 @@ export default function LandingPage() {
       {/* Product loop — four miniature screens, dark band under the hero */}
       <section className="loop-section">
         <h2 className="loop-heading">Here&apos;s how it works.</h2>
-        <p className="loop-subline">Students get a link. They log it. You see it.</p>
         <div className="loop-track">
-          {loopSteps.map(({ caption, screen }) => (
+          {loopSteps.map(({ caption, screen }, i) => (
             <div className="loop-item" key={caption}>
               {/* The frames are illustration — the caption carries the meaning,
                   so screen-readers get the caption and skip the duplicated UI. */}
               <div className="loop-phone" aria-hidden="true">
                 {screen}
               </div>
-              <p className="loop-caption">{caption}</p>
+              <p className="loop-caption">{i + 1}. {caption}</p>
             </div>
           ))}
         </div>
+
       </section>
 
       {/* Footer */}
-      {/* Shares #1a1d24 with the loop section, so a 1px rule is what separates
-          them — without it the two bands merge and the footer reads as part of
-          the section. Greys and links are the dark-background set: #555 /
-          #2d7bc4 were tuned for cream and go muddy here. */}
+      {/* Its own band now: #1a1d24 sits a step lighter than the loop section's
+          #111318, with a 1px rule on top. The two used to share one colour, so
+          the rule was carrying the separation alone and the footer read as the
+          tail of the section. Lighter-on-darker separates without a hard edge.
+          Greys and links are the dark-background set: #555 / #2d7bc4 were tuned
+          for cream and go muddy here. */}
       <footer style={{ backgroundColor: "#1a1d24", borderTop: "1px solid #2a2d36", padding: "20px 28px 28px" }}>
         {/* Desktop: single line */}
         <div className="footer-desktop">
@@ -657,11 +793,26 @@ export default function LandingPage() {
         /* Mobile runs tight — the hero, the heading and the row sit close
            together; desktop reopens the spacing further down. */
         .loop-section {
-          background: #1a1d24;
+          /* --reps-card (#1c1f26), the app's surface token — the colour cards
+             sit ON in the product. Used here for the same reason: the band is
+             the surface, the phones are the objects on it, so the surface has to
+             be the lighter of the two. It previously matched the frames' own
+             #111318 exactly, which left a 1px border doing all the separating
+             and made the frames sink into the band. Inverting it mirrors the
+             hero, where dark photographs sit on cream. */
+          background: #1c1f26;
           padding: 40px 0 44px;
+          /* The page is a 100vh flex column. When the content is shorter than the
+             viewport the slack used to fall through to the cream body colour
+             below the footer; growing this band absorbs it, so the dark runs to
+             the bottom edge. No effect once the content is taller than 100vh. */
+          flex: 1 0 auto;
         }
         .loop-heading {
-          margin: 0 auto 10px;
+          /* Was 10px with the subline carrying the other 40px below it. With the
+             subline gone the heading owns the whole gap down to the frames, and
+             40px read as cramped once the subline was no longer filling it. */
+          margin: 0 auto 56px;
           padding: 0 22px;
           text-align: center;
           color: #ffffff;
@@ -672,14 +823,10 @@ export default function LandingPage() {
           letter-spacing: -0.5px;
           line-height: 1.2;
         }
-        .loop-subline {
-          margin: 0 auto 40px;
-          padding: 0 22px;
-          text-align: center;
-          font-size: 18px;
-          line-height: 1.4;
-          color: #a8adc0;
-        }
+        /* The subline is gone — it restated the four captions word for word, so
+           the section said the same thing twice and the captions had nothing
+           left to add. The heading now leads straight into the frames, and the
+           spacing that lived on the subline moved to the heading's margin. */
         .loop-item {
           display: flex;
           flex-direction: column;
@@ -702,13 +849,20 @@ export default function LandingPage() {
           border-radius: 28px;
           overflow: hidden;
         }
+        /* The captions carry the section's meaning now that the subline is gone,
+           so they read as labels rather than footnotes: white instead of the
+           muted #c8cdd8, 17px instead of 15px (19px on desktop, below the 32px
+           heading so the hierarchy still holds), and numbered so the four frames
+           read as an ordered sequence rather than four unrelated screens.
+           There is no type scale in this file — every size here is a literal px
+           with a desktop bump — so these follow the same pattern. */
         .loop-caption {
           margin: 14px 0 0;
           text-align: center;
-          font-size: 15px;
-          font-weight: 500;
+          font-size: 17px;
+          font-weight: 600;
           line-height: 1.4;
-          color: #c8cdd8;
+          color: #ffffff;
           white-space: nowrap;
         }
 
@@ -742,6 +896,8 @@ export default function LandingPage() {
         @media (min-width: 768px) {
           .loop-section { padding: 80px 0; }
           .loop-heading { font-size: 32px; }
+          .loop-caption { font-size: 19px; }
+          .loop-heading { margin: 0 auto 64px; }
           .loop-track {
             max-width: 1180px;
             margin: 0 auto;
