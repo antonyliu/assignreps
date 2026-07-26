@@ -332,7 +332,8 @@
      inside a frame is sized in em against the frame's own font-size, exactly as
      the shipped section does it. */
   .loop-band { background: #1c1f26; padding: 34px 0 30px; }  /* --reps-card: the surface the phones sit ON, one step lighter than the frames */
-  .loop-band h3 { margin: 0 0 30px; text-align: center; color: #fff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .loop-band h3 { margin: 0 0 8px; text-align: center; color: #fff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .loop-example { margin: 0 0 22px; text-align: center; font-size: 12px; font-weight: 500; color: #8a8fa8; }  /* --reps-sub: a caption, not a subhead */
   .loop-track { display: flex; gap: 14px; justify-content: center; padding: 0 18px; }
   .loop-item { display: flex; flex-direction: column; align-items: center; }
   .loop-phone {
@@ -551,6 +552,7 @@
         <div style="border-radius:16px;overflow:hidden;border:1px solid var(--reps-line);">
           <div class="loop-band">
             <h3>Here's how it works.</h3>
+            <p class="loop-example">Example: basketball</p>
             <div class="loop-track">
 
               <!-- 1 — the coach assigning -->
@@ -627,7 +629,7 @@
             </div>
           </div>
         </div>
-        <p class="note">Redrawn July 25 2026. The loop now opens with the <strong>instructor acting</strong> — the section never showed that before, it began at the student receiving a link. Frame 1 is the real assign screen (goal first, because it decides what the number under it means), frame 3 is the current stepper rather than the retired +10/+25/+50 presets, and frame 4 is the coach's <strong>student detail</strong>, not the roster: <code>made 28/50 · 56%</code> renders there and nowhere else, since roster rows carry no percentage and no bar. Numbers are self-consistent across 3 and 4 — 50 of 50 attempted, 28 made, 56% — and 56% is a believable corner-3 session rather than a career-best. In-progress fills are <code>#3d7a24</code> with makes at <code>#6bd63d</code>; <code>#27500a</code> is gone. The band is <code>#1c1f26</code> so the phones read as objects <em>on</em> a surface rather than sinking into it. The subhead was removed — it restated the four captions word for word — and the captions are numbered, white and larger because they now carry the section on their own. <strong>Two caveats:</strong> the SMS body never names the exercise, so the two messages differ only by “work” vs “homework” (both real strings, from Resend link and from the assignment send); and the goal chip reads <strong>In a row</strong> while the app still says <strong>Consecutive</strong> — logged as known drift in CLAUDE.md.</p>
+        <p class="note">Redrawn July 25 2026. The loop now opens with the <strong>instructor acting</strong> — the section never showed that before, it began at the student receiving a link. Frame 1 is the real assign screen (goal first, because it decides what the number under it means), frame 3 is the current stepper rather than the retired +10/+25/+50 presets, and frame 4 is the coach's <strong>student detail</strong>, not the roster: <code>made 28/50 · 56%</code> renders there and nowhere else, since roster rows carry no percentage and no bar. Numbers are self-consistent across 3 and 4 — 50 of 50 attempted, 28 made, 56% — and 56% is a believable corner-3 session rather than a career-best. In-progress fills are <code>#3d7a24</code> with makes at <code>#6bd63d</code>; <code>#27500a</code> is gone. The band is <code>#1c1f26</code> so the phones read as objects <em>on</em> a surface rather than sinking into it. The subhead was removed — it restated the four captions word for word — and the captions are numbered, white and larger because they now carry the section on their own. The <strong>Example: basketball</strong> caption exists because the rest of the page is activity-agnostic — the hero photographs span a court and a piano, the SMS says “homework” with no sport — while these four frames are unavoidably basketball, down to the exercise names and the shooting percentage. It makes no claim about other activities on purpose: <code>activityTypes.ts</code> has Basketball as the only ACTIVE entry, so “works for any sport” would break at the signup picker one screen later. <strong>Two caveats:</strong> the SMS body never names the exercise, so the two messages differ only by “work” vs “homework” (both real strings, from Resend link and from the assignment send); and the goal chip reads <strong>In a row</strong> while the app still says <strong>Consecutive</strong> — logged as known drift in CLAUDE.md.</p>
       </div>
 
     </div><!-- /grid marketing -->
