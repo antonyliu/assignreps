@@ -430,7 +430,7 @@
       <a href="#assignment-menu-progress">Assignment menu · logged <span class="new">NEW</span></a>
       <a href="#edit-amount">Edit amount modal</a>
       <a href="#remove-assignment">Remove assignment modal</a>
-      <a href="#clear-completed">Clear completed sheet <span class="new">NEW</span></a>
+      <a href="#clear-completed">Clear finished sheet <span class="new">NEW</span></a>
     </nav>
 
     <nav class="nav-group">
@@ -964,15 +964,15 @@
             <div style="font-size:22px;line-height:1;margin-bottom:6px;">🎉</div>
             <div style="font-size:14px;font-weight:500;color:var(--reps-ink);">Neo finished everything.</div>
           </div>
-          <div class="tcenter" style="margin-bottom:24px;"><span style="font-size:13px;color:#454a5b;">Clear completed</span></div>
+          <div class="tcenter" style="margin-bottom:24px;"><span style="font-size:13px;color:#454a5b;">Clear finished</span></div>
           <div class="mt-auto" style="padding-top:14px;"><a class="btn btn-blue">+ Assign new work</a></div>
         </div></div></div>
         <p class="note">The bottom CTA changes with state: filled blue “+ Assign new work” when everything is done, outlined “+ Assign more” otherwise.</p>
       </div>
 
-      <!-- Clear completed sheet -->
+      <!-- Clear finished sheet -->
       <div class="cell" id="clear-completed">
-        <div class="caption"><span class="cap-name">Clear completed</span> <span class="cap-state">bottom sheet, slides up</span></div>
+        <div class="caption"><span class="cap-name">Clear finished</span> <span class="cap-state">bottom sheet, slides up</span></div>
         <div class="phone"><div class="screen">
           <div class="pad" style="filter:brightness(.5);">
             %SDHEAD(N,Neo,Joined 1 month ago)%
@@ -981,14 +981,15 @@
           </div>
           <div class="backdrop sheet">
             <div class="sheet-panel">
-              <h3>Clear Neo's completed work?</h3>
-              <p>This clears the assignments they've finished. Logged progress is kept.</p>
-              <button class="btn btn-green-outline" style="margin-bottom:8px;">Clear completed</button>
+              <h3 style="text-wrap:balance;">Clear Neo's finished work?</h3>
+              <p style="text-wrap:pretty;margin-bottom:0;">Finished assignments come off the list.</p>
+              <p style="text-wrap:pretty;">Their progress is saved.</p>
+              <button class="btn btn-green-outline" style="margin-bottom:8px;">Clear finished</button>
               <div class="tcenter"><span style="font-size:15px;font-weight:500;color:var(--reps-sub);padding:12px 0;display:block;">Cancel</span></div>
             </div>
           </div>
         </div></div>
-        <p class="note">Confirming deletes only the assignment rows that are <strong>complete</strong> — the action runs each one through <code>isComplete()</code> and deletes just those ids, rather than the whole list as it did before. The logs survive either way because <code>logs.assignment_id</code> is <code>ON DELETE SET NULL</code>, which is what “logged progress is kept” means. The text link that opens this sheet is gated on <code>allDone</code>, so in the normal flow every assignment is already complete and the two sets coincide; they diverge on a stale page, where new work assigned elsewhere would otherwise have been swept up too.</p>
+        <p class="note">Confirming deletes only the assignment rows that are <strong>finished</strong> — the action runs each one through <code>isComplete()</code> and deletes just those ids, rather than the whole list as it did before. The logs survive either way because <code>logs.assignment_id</code> is <code>ON DELETE SET NULL</code>, which is what “their progress is saved” means. The text link that opens this sheet is gated on <code>allDone</code>, so in the normal flow every assignment is already finished and the two sets coincide; they diverge on a stale page, where new work assigned elsewhere would otherwise have been swept up too. <strong>One word for one concept:</strong> the banner above reads “Neo finished everything”, so the link, header and button all say <em>finished</em> — the previous copy ran three synonyms (completed / completed work / they’ve finished) across a single screen. The two body sentences are separate block elements rather than one wrapped paragraph, so the break holds at every width without a <code>&lt;br&gt;</code>, and the line about progress being saved — the one answering the coach’s actual fear — gets a line to itself.</p>
       </div>
 
       <!-- Header menu open -->
