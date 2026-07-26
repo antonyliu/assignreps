@@ -38,9 +38,9 @@ function TallyMark() {
 }
 
 const bullets = [
-  { icon: Send,        text: "Assign work in seconds" },
+  { icon: Send,        text: "Assign in seconds" },
   { icon: CheckCircle, text: "Students log it from anywhere" },
-  { icon: Layers,      text: "The work doesn't stop" },
+  { icon: Layers,      text: "You see it as it happens" },
 ];
 
 /* ---------- The product-loop section ----------------------------------------
@@ -438,7 +438,7 @@ export default function LandingPage() {
                 textTransform: "uppercase",
                 color: "#2d7bc4",
               }}>
-                For instructors &amp; coaches
+                For instructors
               </p>
 
               {/* Headline */}
@@ -447,7 +447,7 @@ export default function LandingPage() {
                 letterSpacing: "-0.5px",
                 color: "#0f0f10",
               }}>
-                Keep students working<br />between sessions.
+                Help students work<br />between sessions.
               </h1>
 
               {/* Bullets */}

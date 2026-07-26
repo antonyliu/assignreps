@@ -500,8 +500,9 @@ RJ is the first real user and primary product validator.
 
 ## Landing page (current)
 
-- **Headline:** Keep students working between sessions.
-- **Bullets:** Assign work in seconds / Students log it from anywhere / The work doesn't stop
+- **Eyebrow:** For instructors
+- **Headline:** Help students work between sessions. (breaks after "work" via a literal `<br />`)
+- **Bullets:** Assign in seconds / Students log it from anywhere / You see it as it happens
 - **Primary CTA:** Try Reps free
 - **Product loop:** "Here's how it works." — four phone mocks (link, student home, log counter, roster)
 - **Footer:** dark `#1a1d24` with `1px solid #2a2d36` top border

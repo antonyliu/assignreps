@@ -6,7 +6,10 @@ import type { Metadata, Viewport } from "next";
 import { LogoLarge } from "@/components/Logo";
 
 export const metadata: Metadata = {
-  title: "Reps — The work continues between sessions.",
+  // Mirrors the title in src/app/page.tsx. This one is only ever the fallback
+  // for routes that set no title of their own, so if the two drift the app can
+  // present two different names for itself depending on where you land.
+  title: "Reps — Practice Homework App for Coaches & Instructors",
   description: "Reps keeps the work going between training sessions.",
 };
 
