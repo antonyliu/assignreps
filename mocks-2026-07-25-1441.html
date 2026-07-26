@@ -331,18 +331,17 @@
   /* Landing product-loop band — four miniature phones on #1a1d24. Everything
      inside a frame is sized in em against the frame's own font-size, exactly as
      the shipped section does it. */
-  .loop-band { background: #1a1d24; padding: 34px 0 30px; }
-  .loop-band h3 { margin: 0 0 8px; text-align: center; color: #fff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
-  .loop-band .subline { margin: 0 0 26px; text-align: center; font-size: 14px; color: #a8adc0; }
+  .loop-band { background: #1c1f26; padding: 34px 0 30px; }  /* --reps-card: the surface the phones sit ON, one step lighter than the frames */
+  .loop-band h3 { margin: 0 0 30px; text-align: center; color: #fff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
   .loop-track { display: flex; gap: 14px; justify-content: center; padding: 0 18px; }
   .loop-item { display: flex; flex-direction: column; align-items: center; }
   .loop-phone {
     --pw: 150px; width: var(--pw); font-size: calc(var(--pw) / 13);
     aspect-ratio: 9 / 19; flex-shrink: 0; display: flex; flex-direction: column;
-    padding: 1.1em 0.9em; background: #080b0f; border: 1px solid #2a2d36;
+    padding: 1.1em 0.9em; background: #111318; border: 1px solid #2a2d36;
     border-radius: 22px; overflow: hidden;
   }
-  .loop-caption { margin: 10px 0 0; text-align: center; font-size: 12px; font-weight: 500; color: #c8cdd8; white-space: nowrap; }
+  .loop-caption { margin: 12px 0 0; text-align: center; font-size: 14px; font-weight: 600; color: #ffffff; white-space: nowrap; }
   .mini-bar { height: 0.28em; border-radius: 999px; background: #2a2d36; overflow: hidden; }
   .mini-bar > i { display: block; height: 100%; border-radius: 999px; }
   .mini-card { background: #161a20; border: 1px solid #2a2d36; border-radius: 0.62em; padding: 0.55em 0.62em; }
@@ -552,95 +551,83 @@
         <div style="border-radius:16px;overflow:hidden;border:1px solid var(--reps-line);">
           <div class="loop-band">
             <h3>Here's how it works.</h3>
-            <p class="subline">Students get a link. They log it. You see it.</p>
             <div class="loop-track">
 
-              <!-- 1 — the SMS -->
+              <!-- 1 — the coach assigning -->
               <div class="loop-item">
                 <div class="loop-phone">
-                  <div style="text-align:center;margin-bottom:1em;">
-                    <div style="width:2em;height:2em;border-radius:999px;background:#22252e;color:#c8cdd8;font-size:0.7em;font-weight:600;display:flex;align-items:center;justify-content:center;margin:0 auto 0.45em;">RJ</div>
-                    <div style="font-size:0.66em;font-weight:500;color:#ffffff;">Coach RJ</div>
+                  <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1.1em;"><span style="font-size:0.8em;color:#8a8fa8;">←</span><span style="font-size:0.64em;font-weight:500;color:#ffffff;">Corner 3s</span></div>
+                  <div style="font-size:0.6em;font-weight:500;color:#c8cdd8;margin-bottom:0.4em;">Goal</div>
+                  <div style="display:flex;gap:0.35em;margin-bottom:0.95em;"><span style="flex:1;text-align:center;background:rgba(55,138,221,0.14);border:1px solid #378add;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:600;color:#378add;white-space:nowrap;">Attempts</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">Makes</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">In a row</span></div>
+                  <div style="font-size:0.6em;font-weight:500;color:#c8cdd8;margin-bottom:0.4em;">How many?</div>
+                  <div style="display:flex;gap:0.35em;margin-bottom:0.95em;"><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">25</span><span style="flex:1;text-align:center;background:rgba(55,138,221,0.14);border:1px solid #378add;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:600;color:#378add;white-space:nowrap;">50</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">100</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">200</span></div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5em;margin-bottom:0.95em;">
+                    <span style="font-size:0.6em;font-weight:500;color:#ffffff;">Track makes?</span>
+                    <span style="width:1.7em;height:1em;border-radius:999px;background:#378add;display:inline-flex;align-items:center;justify-content:flex-end;padding:0.11em;flex-shrink:0;"><span style="width:0.78em;height:0.78em;border-radius:999px;background:#fff;"></span></span>
                   </div>
-                  <div style="font-size:0.54em;color:#8a8fa8;text-align:center;margin-bottom:0.9em;">Today 4:12 PM</div>
-                  <div style="align-self:flex-start;max-width:96%;background:#22252e;border-radius:1.15em;padding:0.7em 0.85em;font-size:0.82em;line-height:1.45;color:#ffffff;">
-                    Hey Neo — Coach RJ assigned you basketball homework. Tap here: <span style="color:#378add;">assignreps.com/student/…</span>
-                  </div>
-                  <div style="align-self:flex-start;font-size:0.5em;color:#8a8fa8;margin:0.45em 0 0 0.4em;">Delivered</div>
+                  <div style="font-size:0.6em;font-weight:500;color:#c8cdd8;margin-bottom:0.4em;">Side</div>
+                  <div style="display:flex;gap:0.35em;"><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">Left</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">Right</span></div>
+                  <div style="margin-top:auto;"><div style="background:#378add;color:#fff;text-align:center;border-radius:0.5em;padding:0.55em 0;font-size:0.72em;font-weight:600;">Send to Jalen</div></div>
                 </div>
-                <p class="loop-caption">They get a link</p>
+                <p class="loop-caption">1. You assign it</p>
               </div>
 
-              <!-- 2 — student home -->
+              <!-- 2 — the SMS thread -->
               <div class="loop-item">
                 <div class="loop-phone">
-                  <div style="display:flex;justify-content:center;margin-bottom:1.4em;">%MINILOGO%</div>
-                  <div style="margin-bottom:1.1em;">
-                    <div style="font-size:1.4em;font-weight:600;letter-spacing:-0.5px;color:#ffffff;">Neo</div>
-                    <div style="font-size:0.64em;color:#c8cdd8;margin-top:0.15em;">Coach RJ's assignments</div>
+                  <div style="text-align:center;">
+                    <div style="width:2em;height:2em;border-radius:999px;background:#22252e;color:#c8cdd8;font-size:0.7em;font-weight:600;display:flex;align-items:center;justify-content:center;margin:0 auto 0.45em;">CM</div>
+                    <div style="font-size:0.66em;font-weight:500;color:#ffffff;">Coach Mike</div>
+                  </div>
+                  <div>
+                    <div style="font-size:0.52em;color:#8a8fa8;text-align:center;margin-top:1em;margin-bottom:0.7em;">Yesterday 5:02 PM</div>
+                    <div style="max-width:96%;background:#22252e;border-radius:1.15em;padding:0.62em 0.8em;font-size:0.72em;line-height:1.45;color:#ffffff;">Hey Jalen — Coach Mike assigned you work. Tap here: <span style="color:#378add;">assignreps.com/student/…</span></div>
+                    <div style="font-size:0.48em;color:#8a8fa8;margin:0.35em 0 0 0.4em;">Delivered</div>
+                    <div style="font-size:0.52em;color:#8a8fa8;text-align:center;margin-top:0.9em;margin-bottom:0.7em;">Today 4:12 PM</div>
+                    <div style="max-width:96%;background:#22252e;border-radius:1.15em;padding:0.62em 0.8em;font-size:0.72em;line-height:1.45;color:#ffffff;">Hey Jalen — Coach Mike assigned you homework. Tap here: <span style="color:#378add;">assignreps.com/student/…</span></div>
+                    <div style="font-size:0.48em;color:#8a8fa8;margin:0.35em 0 0 0.4em;">Delivered</div>
+                  </div>
+                </div>
+                <p class="loop-caption">2. They get a text</p>
+              </div>
+
+              <!-- 3 — the log screen -->
+              <div class="loop-item">
+                <div class="loop-phone">
+                  <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1em;"><span style="font-size:0.8em;color:#8a8fa8;">←</span><span style="font-size:0.64em;font-weight:500;color:#ffffff;">Corner 3s</span></div>
+                  <div style="font-size:0.58em;color:#c8cdd8;margin-bottom:0.45em;">50 of 50 done</div>
+                  <div style="margin-bottom:1.5em;"><div class="mini-bar"><i style="width:100%;background:#3d7a24;"><i style="display:block;height:100%;width:56%;background:#6bd63d;border-radius:999px;"></i></i></div></div>
+                  <div style="text-align:center;margin-bottom:1em;"><div><div style="font-size:0.56em;font-weight:600;letter-spacing:1px;color:#3d7a24;margin-bottom:0.3em;">ATTEMPTS</div><div style="display:flex;align-items:center;justify-content:center;gap:0.6em;"><span style="width:1.5em;height:1.5em;border-radius:999px;background:#2a2d36;color:#fff;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0;">−</span><span style="font-size:2.1em;font-weight:600;line-height:1;color:#3d7a24;min-width:1.6em;text-align:center;">50</span><span style="width:1.5em;height:1.5em;border-radius:999px;background:#2a2d36;color:#fff;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0;">+</span></div></div></div>
+                  <div style="height:1px;background:#2a2d36;margin-bottom:0.8em;"></div>
+                  <div style="text-align:center;"><div><div style="font-size:0.56em;font-weight:600;letter-spacing:1px;color:#6bd63d;margin-bottom:0.3em;">MAKES</div><div style="display:flex;align-items:center;justify-content:center;gap:0.6em;"><span style="width:1.5em;height:1.5em;border-radius:999px;background:#2a2d36;color:#fff;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0;">−</span><span style="font-size:1.1em;font-weight:600;line-height:1;color:#6bd63d;min-width:1.6em;text-align:center;">28</span><span style="width:1.5em;height:1.5em;border-radius:999px;background:#2a2d36;color:#fff;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0;">+</span></div></div></div>
+                  <div style="margin-top:auto;"><div style="background:#378add;color:#fff;text-align:center;border-radius:0.5em;padding:0.55em 0;font-size:0.72em;font-weight:600;">Log it</div></div>
+                </div>
+                <p class="loop-caption">3. They log it</p>
+              </div>
+
+              <!-- 4 — the coach's student detail -->
+              <div class="loop-item">
+                <div class="loop-phone">
+                  <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1.1em;"><span style="font-size:0.8em;color:#8a8fa8;">←</span><span style="font-size:0.62em;font-weight:500;color:#8a8fa8;">Players</span></div>
+                  <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1.2em;">
+                    <span style="width:1.9em;height:1.9em;border-radius:999px;background:#22252e;color:#c8cdd8;font-size:0.7em;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;">J</span>
+                    <span style="display:flex;flex-direction:column;min-width:0;"><span style="font-size:1.05em;font-weight:600;letter-spacing:-0.3px;color:#ffffff;">Jalen</span><span style="font-size:0.56em;color:#8a8fa8;">Joined 1 month ago</span></span>
                   </div>
                   <div style="font-size:0.58em;font-weight:600;letter-spacing:1px;color:#8a8fa8;margin-bottom:0.7em;">ASSIGNMENTS</div>
                   <div style="display:flex;flex-direction:column;gap:0.45em;">
-                    <div class="mini-card"><div class="top"><span class="nm">Form shooting</span><span class="rt" style="color:#6bd63d;">✓ Done</span></div><div class="mini-bar"><i style="width:100%;background:#6bd63d;"></i></div></div>
-                    <div class="mini-card"><div class="top"><span class="nm">Crossovers</span><span class="rt">3/5 min</span></div><div class="mini-bar"><i style="width:60%;background:#27500a;"></i></div></div>
-                    <div class="mini-card"><div class="top"><span class="nm">Box-outs</span><span class="rt">0/20</span></div><div class="mini-bar"><i style="width:0%;background:#2a2d36;"></i></div></div>
+                    <div class="mini-card"><div class="top" style="margin-bottom:0.25em;"><span class="nm">Corner 3s</span><span class="rt" style="color:#6bd63d;">✓ Done</span></div><div style="font-size:0.58em;color:#6bd63d;margin-bottom:0.4em;">made 28/50 · 56%</div><div class="mini-bar"><i style="width:100%;background:#3d7a24;"><i style="display:block;height:100%;width:56%;background:#6bd63d;border-radius:999px;"></i></i></div></div>
+                    <div class="mini-card"><div class="top"><span class="nm">Mid-range jumpers</span><span class="rt">18/50</span></div><div class="mini-bar"><i style="width:36%;background:#3d7a24;"></i></div></div>
+                    <div class="mini-card"><div class="top"><span class="nm">Free throws</span><span class="rt">0/50</span></div><div class="mini-bar"><i style="width:0%;background:#3d7a24;"></i></div></div>
                   </div>
+                  <div style="margin-top:auto;"><div style="border:1px solid #378add;color:#378add;text-align:center;border-radius:0.5em;padding:0.5em 0;font-size:0.68em;font-weight:600;">+ Assign more</div></div>
                 </div>
-                <p class="loop-caption">They see their work</p>
-              </div>
-
-              <!-- 3 — the counter -->
-              <div class="loop-item">
-                <div class="loop-phone">
-                  <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1.6em;">
-                    <span style="font-size:0.8em;color:#8a8fa8;">←</span>
-                    <span style="font-size:0.64em;font-weight:500;color:#8a8fa8;">Log reps</span>
-                  </div>
-                  <div style="text-align:center;margin-bottom:1.4em;">
-                    <div style="font-size:0.7em;color:#c8cdd8;margin-bottom:0.5em;">Form shooting</div>
-                    <div style="font-size:3em;font-weight:600;letter-spacing:-1px;line-height:1;color:#ffffff;">30</div>
-                    <div style="font-size:0.64em;color:#c8cdd8;margin-top:0.45em;">of 50 reps</div>
-                  </div>
-                  <div style="margin-bottom:1.4em;"><div class="mini-bar"><i style="width:60%;background:#27500a;"></i></div></div>
-                  <div style="display:flex;gap:0.4em;">
-                    <span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.45em 0;font-size:0.66em;font-weight:500;color:#ffffff;">+10</span>
-                    <span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.45em 0;font-size:0.66em;font-weight:500;color:#ffffff;">+25</span>
-                    <span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.45em 0;font-size:0.66em;font-weight:500;color:#ffffff;">+50</span>
-                  </div>
-                  <div style="margin-top:auto;">
-                    <div style="background:#378add;color:#fff;text-align:center;border-radius:0.5em;padding:0.55em 0;font-size:0.72em;font-weight:600;">Log it</div>
-                  </div>
-                </div>
-                <p class="loop-caption">They log it</p>
-              </div>
-
-              <!-- 4 — the roster -->
-              <div class="loop-item">
-                <div class="loop-phone">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.9em;">%MINILOGO%<span style="font-size:0.62em;font-weight:500;color:#8a8fa8;">Coach RJ</span></div>
-                  <div style="font-size:1.4em;font-weight:600;letter-spacing:-0.5px;color:#ffffff;margin-bottom:0.65em;">Your players</div>
-                  <div style="display:flex;flex-direction:column;gap:0.55em;">
-                    <div>
-                      <div style="margin-bottom:0.3em;"><span class="mini-pill" style="background:rgba(107,214,61,0.12);color:#6bd63d;"><i style="background:#6bd63d;"></i>Done</span></div>
-                      <div class="mini-row"><span class="av">N</span><span style="display:flex;flex-direction:column;min-width:0;"><span style="font-size:0.74em;font-weight:500;color:#ffffff;">Neo</span><span style="font-size:0.6em;color:#c8cdd8;">3 of 3 done</span></span></div>
-                    </div>
-                    <div>
-                      <div style="margin-bottom:0.3em;"><span class="mini-pill" style="background:rgba(39,80,10,0.18);color:#5aa22f;"><i style="background:#5aa22f;"></i>In progress</span></div>
-                      <div class="mini-row"><span class="av">J</span><span style="display:flex;flex-direction:column;min-width:0;"><span style="font-size:0.74em;font-weight:500;color:#ffffff;">Jordan</span><span style="font-size:0.6em;color:#c8cdd8;">1 of 3 done</span></span></div>
-                    </div>
-                    <div>
-                      <div style="margin-bottom:0.3em;"><span class="mini-pill" style="background:rgba(90,95,114,0.1);color:#8a8fa8;"><i style="background:#8a8fa8;"></i>Not started</span></div>
-                      <div class="mini-row"><span class="av">S</span><span style="display:flex;flex-direction:column;min-width:0;"><span style="font-size:0.74em;font-weight:500;color:#ffffff;">Sofia</span><span style="font-size:0.6em;color:#c8cdd8;">2 assignments waiting</span></span></div>
-                    </div>
-                  </div>
-                </div>
-                <p class="loop-caption">You see it's done</p>
+                <p class="loop-caption">4. You see it</p>
               </div>
 
             </div>
           </div>
         </div>
-        <p class="note">Not in the previous mocks. These four frames are drawn by <code>src/app/page.tsx</code> itself, not screenshots — so they are a second, independent surface that has to track the design system. Note they still show the <em>old</em> preset-button counter (frame 3) and use <code>#27500a</code> rather than <code>#3d7a24</code> for in-progress fills: the landing mocks were not updated alongside the log-screen rebuild.</p>
+        <p class="note">Redrawn July 25 2026. The loop now opens with the <strong>instructor acting</strong> — the section never showed that before, it began at the student receiving a link. Frame 1 is the real assign screen (goal first, because it decides what the number under it means), frame 3 is the current stepper rather than the retired +10/+25/+50 presets, and frame 4 is the coach's <strong>student detail</strong>, not the roster: <code>made 28/50 · 56%</code> renders there and nowhere else, since roster rows carry no percentage and no bar. Numbers are self-consistent across 3 and 4 — 50 of 50 attempted, 28 made, 56% — and 56% is a believable corner-3 session rather than a career-best. In-progress fills are <code>#3d7a24</code> with makes at <code>#6bd63d</code>; <code>#27500a</code> is gone. The band is <code>#1c1f26</code> so the phones read as objects <em>on</em> a surface rather than sinking into it. The subhead was removed — it restated the four captions word for word — and the captions are numbered, white and larger because they now carry the section on their own. <strong>Two caveats:</strong> the SMS body never names the exercise, so the two messages differ only by “work” vs “homework” (both real strings, from Resend link and from the assignment send); and the goal chip reads <strong>In a row</strong> while the app still says <strong>Consecutive</strong> — logged as known drift in CLAUDE.md.</p>
       </div>
 
     </div><!-- /grid marketing -->
