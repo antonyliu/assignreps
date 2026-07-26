@@ -136,9 +136,9 @@ Live on prod July 24 2026. Three shapes an assignment's `target` can take.
 
 There is no schema-level way to express "this target means something different", so every completion site special-cases it. That is the cost of folding three shapes into one column.
 
-### One completion rule, six call sites
+### One completion rule, seven call sites
 
-`isComplete(goalType, target, logged, makes)` in `src/lib/exercises.ts` is the single source of truth. Six places ask "is this done?" and all route through it:
+`isComplete(goalType, target, logged, makes)` in `src/lib/exercises.ts` is the single source of truth. Seven places ask "is this done?" and all route through it:
 
 1. `src/app/student/[token]/page.tsx` — card state + all-done banner
 2. `src/app/instructor/student/[id]/page.tsx` — card state + all-done banner
@@ -146,8 +146,11 @@ There is no schema-level way to express "this target means something different",
 4. `src/app/student/[token]/log/[assignmentId]/actions.ts` — `allDone` for confetti
 5. `LogScreen.tsx` — client `done` state
 6. `src/app/student/[token]/log/[assignmentId]/page.tsx` — the `alreadyLogged` cap
+7. `src/app/instructor/student/[id]/actions.ts` — which rows "Clear completed" deletes
 
 ⚠️ Miss one and it reports completion **too early**: on a "make 50" assignment a student who attempts 50 and makes 20 satisfies `amount >= target`. The roster was the most exposed — it fetched neither `makes` nor `goal_type`.
+
+⚠️ **A render-time gate is not a correctness guarantee.** Site 7 exists because `clearCompletedAssignments` used to delete the player's whole assignment list unfiltered. That was invisible in the normal flow: the "Clear completed" control only renders under `allDone`, so "everything" and "everything complete" were the same set. They diverge on a **stale page** — the coach loads an all-done student, assigns new work from another tab or device, then clicks the still-rendered button — and under direct invocation of the server action, which no UI gate reaches at all. An action has to establish its own preconditions; it cannot borrow them from whatever rendered its button.
 
 Companions: `progressValue()` (what fills the bar) and `progressTarget()` (the denominator; consecutive collapses to 1).
 
@@ -510,7 +513,7 @@ RJ is the first real user and primary product validator.
 
 ## Screen inventory
 
-`mocks-2026-07-23-1607.html` in the project root — a static gallery of every screen and meaningful state, rebuilt from the page code. Opens standalone; image paths are relative, so it must stay at the project root. Predates the goal type system.
+`mocks-2026-07-25-1441.html` in the project root — a static gallery of every screen and meaningful state, rebuilt from the page code. Opens standalone; image paths are relative, so it must stay at the project root. Current as of prod `9c62f1c`; the older `2026-07-24-1330` and `2026-07-23-1607` snapshots sit beside it as history.
 
 ---
 

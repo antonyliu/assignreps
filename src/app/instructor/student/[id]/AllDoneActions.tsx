@@ -71,11 +71,14 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Says what the action does, not what it spares. The old copy
+                ("clears the current list so you can start fresh") described the
+                unfiltered delete this action used to perform. */}
             <h2 className="text-[17px] font-semibold text-reps-ink mb-2">
-              Clear {firstName}&apos;s assignments?
+              Clear {firstName}&apos;s completed work?
             </h2>
             <p className="text-[14px] text-reps-sub mb-6">
-              Their progress is saved. This just clears the current list so you can start fresh.
+              This clears the assignments they&apos;ve finished. Logged progress is kept.
             </p>
             {error && <p className="text-[12px] text-red-400 mb-3">{error}</p>}
             <button

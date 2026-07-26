@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
+import { isComplete } from "@/lib/exercises";
+import type { GoalType } from "@/lib/exercises";
 
 export async function deletePlayer(playerId: string): Promise<void> {
   const supabase = await createClient();
@@ -50,12 +52,66 @@ export async function clearCompletedAssignments(playerId: string): Promise<Clear
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not authenticated." };
 
-  // Clears the player's entire assignment list, scoped to this coach's own
-  // player. logs.assignment_id is ON DELETE SET NULL, so the logs (progress)
-  // are preserved — only the assignment rows are removed.
+  // Clears only the assignments this player has actually FINISHED. This used to
+  // delete the whole list unfiltered, which was invisible in the normal flow —
+  // the "Clear completed" control only renders when every assignment is already
+  // complete, so the two sets matched. It diverged on a stale page (assign new
+  // work elsewhere, then click the still-rendered button) and under direct
+  // invocation of this action, where no such gate applies.
+  //
+  // Completeness is computed, not stored: `target` means different things per
+  // goal_type and consecutive ignores it entirely, so there is no WHERE clause
+  // that expresses this. It has to come back into TypeScript and through
+  // isComplete() — the same rule the other six call sites use.
+  //
+  // logs.assignment_id is ON DELETE SET NULL, so the logs (progress) survive
+  // here exactly as before; only the assignment rows go.
+  const { data: assignments } = await supabase
+    .from("assignments")
+    .select("id, target, goal_type")
+    .eq("player_id", playerId)
+    .eq("coach_id", user.id);
+
+  const list = assignments ?? [];
+  if (list.length === 0) return { ok: true };
+
+  const { data: logs } = await supabase
+    .from("logs")
+    .select("assignment_id, amount, makes")
+    .in("assignment_id", list.map((a) => a.id));
+
+  // Same aggregation as the roster and saveLog: a null assignment_id is an
+  // orphaned log from an already-cleared assignment and belongs to nothing, and
+  // a null `makes` is "didn't say" — counting it as 0 would hold a makes goal
+  // permanently incomplete.
+  const loggedByAssignment: Record<string, number> = {};
+  const makesByAssignment: Record<string, number> = {};
+  for (const l of logs ?? []) {
+    if (!l.assignment_id) continue;
+    loggedByAssignment[l.assignment_id] = (loggedByAssignment[l.assignment_id] ?? 0) + l.amount;
+    if (l.makes == null) continue;
+    makesByAssignment[l.assignment_id] = (makesByAssignment[l.assignment_id] ?? 0) + l.makes;
+  }
+
+  const completeIds = list
+    .filter((a) =>
+      isComplete(
+        (a.goal_type ?? "reps") as GoalType,
+        a.target,
+        loggedByAssignment[a.id] ?? 0,
+        makesByAssignment[a.id] ?? 0,
+      ),
+    )
+    .map((a) => a.id);
+
+  // Nothing finished — issue no delete at all. `.in("id", [])` would be a
+  // no-op round trip, but an empty list is a real state worth naming.
+  if (completeIds.length === 0) return { ok: true };
+
   const { error } = await supabase
     .from("assignments")
     .delete()
+    .in("id", completeIds)
     .eq("player_id", playerId)
     .eq("coach_id", user.id);
 
