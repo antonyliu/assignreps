@@ -1,5 +1,5 @@
 # Reps — CLAUDE.md
-*Last updated: July 26 2026 · Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+*Last updated: July 27 2026 · Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
 
 ---
 
@@ -92,7 +92,9 @@ assignments
   goal_type (text, NOT NULL, default 'reps'), side (text, nullable)
 
 logs
-  id, player_id, assignment_id, amount, makes (integer, nullable), logged_at
+  id, player_id, assignment_id, amount, makes (integer, nullable), logged_at,
+  exercise_name (text, nullable), unit (text, nullable), goal_type (text, nullable),
+  target (int4, nullable), side (text, nullable)   -- snapshot, written at insert
 
 custom_exercises
   id, coach_id, name, unit (reps/minutes), default_amount, created_at
@@ -106,6 +108,7 @@ Migrations live in `supabase/migrations/`. There is **no base schema migration**
 - `side` — `'left'`, `'right'`, or NULL. Checked by `assignments_side_check`. NULL means **unspecified**, not "both". (NULL passes a Postgres CHECK natively, so no explicit allowance is needed.)
 - `track_makes` — when true, the log screen offers a makes entry. Forced true by the assign action when `goal_type` is `'makes'` or `'consecutive'`, where makes are the point. Kept as its own column rather than derived, so the stored row states the coach's intent outright.
 - `logs.makes` — nullable integer. `null` means "didn't report makes"; `0` means "made none." Never conflate these — they mean different things for percentage calculations.
+- **Log snapshot columns** — `exercise_name`, `unit`, `goal_type`, `target`, `side` on `logs`. The log's own copy of the assignment as it stood when the row was written. Set once by `saveLog` from a server-side read, never updated after — a later edit to the assignment must not rewrite what the student actually did. They exist because `logs.assignment_id` is `ON DELETE SET NULL`: without them a cleared assignment leaves a log with no record of what it was. Nullable with **no backfill** — null means "written before July 27 2026." No CHECK constraints, unlike their `assignments` counterparts: these are copies of already-validated values, and a constraint that rejected an unexpected legacy value would fail the student's insert and lose reps they actually did. See the NARROWED entry in Pending.
 - `logs_amount_check` — a constraint requiring `amount > 0` exists on `logs` but is NOT in any migration file (created directly in the dashboard). Don't try to insert `amount: 0`.
 - `logs_makes_non_negative` — `makes IS NULL OR makes >= 0`.
 - Assignments are not time-bounded — they persist until the instructor clears them.
@@ -388,7 +391,7 @@ Requests, in his words:
 - **Move "Assign more" button to the top** — currently pinned to the bottom of the student detail screen.
 - **A notes section for players** — somewhere to ask questions or write down what they understood that day. ❓ *Awaiting clarification:* whose note is it — the coach writing to the student, the student writing back, or both? That decides whether it is a new column, a new table, or a two-way thread, and whether the student page needs a write path it does not currently have.
 - **"Can timeframe be minutes & hours for weekly breakdown"** — verbatim. ❓ *Awaiting clarification:* unclear whether this means a new `hours` unit alongside `minutes`, or a time-spent total rolled up per week on a view that does not exist yet.
-- **A repeat-schedule function for when a set is finished** — reassign automatically once a student completes something. ⚠️ Ships the orphaned-log problem from a one-off into a weekly loss — see the KNOWN RISK entry in Pending.
+- **A repeat-schedule function for when a set is finished** — reassign automatically once a student completes something. ✅ *Unblocked July 27 2026* — this was the sharpest reason to fix orphaned logs first, since a weekly reassign cycle would have turned a one-off loss into a recurring one. New logs now carry their own snapshot, so the cycle is safe to build. See the NARROWED entry in Pending.
 - **Add exercises to the library without being in the middle of assigning** — custom exercise creation is currently only reachable inside the assign flow for a specific player.
 
 ### July 22 2026
@@ -434,11 +437,15 @@ Requests, in his words:
 ## Pending / loose ends
 
 ### High priority
-- **⚠️ KNOWN RISK — a log loses its meaning when its assignment is deleted.** `logs` stores only `assignment_id`; `exercise_name`, `unit`, `goal_type`, `target` and `side` all live on the assignment. "Clear finished" and "Remove assignment" delete assignment rows, and `logs.assignment_id` is `ON DELETE SET NULL`, so the log row survives with an amount and a date and **no record of what it was**. Every reader keys on `assignment_id` and skips nulls, so orphans are invisible rather than visibly broken — the damage is silent.
+- **⚠️ NARROWED — new logs are safe; every log written before July 27 2026 is not, and cannot be.** Fixed going forward as of **July 27 2026**: `saveLog` now copies `exercise_name`, `unit`, `goal_type`, `target` and `side` onto each log row at insert time, so a log written from that date survives its assignment being cleared or deleted. Verified on staging against live assignments — all five columns populate correctly on new logs.
 
-  *Not currently losing real data:* RJ has cleared nothing yet. But it blocks any future progress or insights view, and it becomes a **weekly** loss the moment a repeat-assignment feature ships (see RJ's July 26 ask for exactly that).
+  *What remains:* a log written **before** July 27 2026 still carries only `assignment_id`. When "Clear finished" or "Remove assignment" deletes the assignment, `ON DELETE SET NULL` leaves that row with an amount and a date and **no record of what it was**. Every reader keys on `assignment_id` and skips nulls, so those orphans stay invisible rather than visibly broken — the damage is silent, exactly as before.
 
-  *Fix when ready:* snapshot `exercise_name`, `unit`, `goal_type`, `target`, `side` onto the log row at write time. Audited — there is exactly **one** INSERT site, `saveLog` in `src/app/student/[token]/log/[assignmentId]/actions.ts`, and it already re-queries the player's assignments immediately *after* the insert for the confetti check. Moving that query above the insert and widening its select gives the snapshot with **no extra round trip**. Server-side only: never accept these values as arguments from the client, because the student log page is public and token-addressed, so a crafted request could write any exercise name it liked into permanent history.
+  *There is no honest backfill, and this is permanent.* Copying today's assignment values onto an old log would invent a past that may not be true: the target may have been changed since via "Edit amount", and a deleted assignment is gone outright. Null is the truthful answer, so the columns are nullable and no backfill was run. The only mitigation is that RJ has cleared nothing yet — the pre-fix rows are still readable *because* their assignments happen to survive. Nothing guarantees that, and the first "Clear finished" tap starts losing them.
+
+  *Implementation:* exactly **one** INSERT site, `saveLog` in `src/app/student/[token]/log/[assignmentId]/actions.ts` (audited repo-wide — no other insert, upsert, route handler or DB trigger writes `logs`). The assignments query the confetti check already needed moved *above* the insert and was widened, so the snapshot costs **no extra round trip**; the logs read stays below it, since the completion check has to see the row just written. Server-side only — the five values come from that DB read and `saveLog` accepts no snapshot parameters at all, because the student log page is public and token-addressed and a crafted request could otherwise write any exercise name it liked into permanent history. That read is scoped to the player, which also establishes that the assignment *belongs* to them: the insert previously leaned on the foreign key alone, which proves an assignment exists but not whose it is. Migration `20260727120000_add_log_snapshot_columns.sql` (applied via the dashboard; the file is committed so the repo matches the deployed schema).
+
+  *Readers are unchanged.* Every screen still joins live to `assignments`. The snapshot is the fallback for an orphan, not the primary source — nothing reads it yet, and a future progress/insights view is what would first consume it.
 - **Device-test the goal type feature** — shipped to prod July 24 with no real-iPhone pass. Never observed on device: the count screen and coach detail (auth-gated locally), and the incomplete-consecutive label `0/1 set · N in a row` (every consecutive row in the DB is already complete).
 - **Update `TWILIO_FROM_NUMBER`** to `+18338925640` in `.env.local` AND Vercel env vars
 - **Consecutive stepper overshoots its own progress line** — reads `1 of 1 set` while the stepper sits at 2. `progressValue` caps at 1 by design, but the two numbers visibly disagree.
@@ -490,6 +497,7 @@ Requests, in his words:
 - Staging environment ✅
 - Resend email delivery ✅
 - SMS on assignment ✅
+- Log snapshot — new logs survive their assignment being deleted ✅ (July 27 2026, new rows only)
 - Demo mode ❌
 - Account deletion ❌
 - Stripe billing ❌
