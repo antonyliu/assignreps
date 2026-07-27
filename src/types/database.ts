@@ -57,4 +57,19 @@ export type Log = {
    *  didn't say how many went in" and is NOT the same as 0 = "made none" —
    *  anything aggregating these must keep them distinct. */
   makes: number | null
+  /** Snapshot of the assignment as it was WHEN THIS ROW WAS LOGGED, copied by
+   *  saveLog from a server-side read. assignment_id is ON DELETE SET NULL, so
+   *  without these a cleared assignment leaves a log with no record of what it
+   *  was. Written once and never updated — a later edit to the assignment must
+   *  not rewrite what the student actually did.
+   *
+   *  Null on every row written before this existed; there is no backfill,
+   *  because today's assignment values are not necessarily what a past log
+   *  meant. Readers keep joining live to `assignments` and should treat these
+   *  as the fallback for an orphan, not the primary source. */
+  exercise_name: string | null
+  unit: string | null
+  goal_type: GoalType | null
+  target: number | null
+  side: Side | null
 }
