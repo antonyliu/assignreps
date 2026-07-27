@@ -412,6 +412,8 @@
       <a href="#add-student-parent">Add player · To parent</a>
       <a href="#add-student-empty">Add player · CTA inactive</a>
       <a href="#profile-menu">Profile menu <span class="new">NEW</span></a>
+      <a href="#edit-name">Edit name · modal <span class="new">NEW</span></a>
+      <a href="#edit-name-saving">Edit name · saving <span class="new">NEW</span></a>
       <a href="#signout">Sign out dialog</a>
     </nav>
 
@@ -494,9 +496,10 @@
   <main class="main">
     <div class="main-head">
       <h1>Reps — Screen Mockups</h1>
-      <p>A static reference gallery of every screen and meaningful UI state across the Coach, Student and Parent flows, rebuilt from the production page code in <code>src/app</code> at commit <code>9c62f1c</code> (local, staging and prod all in sync). Placeholder data only — Coach RJ, students Neo, Adam, Maya, Jordan and Sofia, real exercise names from <code>src/lib/exercises.ts</code>. Not connected to any backend.</p>
+      <p>A static reference gallery of every screen and meaningful UI state across the Coach, Student and Parent flows, rebuilt from the production page code in <code>src/app</code>, current as of July 26 2026. The prod commit is deliberately not recorded here — it drifts on every push; run <code>git branch -r -v</code> instead. Placeholder data only — Coach RJ, students Neo, Adam, Maya, Jordan and Sofia, real exercise names from <code>src/lib/exercises.ts</code>. Not connected to any backend.</p>
       <p>Supersedes <code>mocks-2026-07-24-1330.html</code>. Changed since — a <strong>coach roster and header pass</strong>. The page background dropped to <code>#080b0f</code> and body ink went to pure white. The <strong>logo is blue</strong>: tally and wordmark both <code>#378add</code>, bringing the header lockup into the same register <code>LogoLarge</code> already used — it changes on the student home, parent digest and signup headers too, not just here. The coach's name left the header for the top of the profile dropdown, which also gained <strong>Edit name</strong>; the profile icon is now a 26px circle in a 44px tap target. The roster header is <strong>sticky</strong>, with a full-bleed rule between the logo row and the title, and <strong>+ Add</strong> moved up beside the heading, retiring the pinned bottom button. Group labels lost their pill backgrounds and In progress is no longer green, so green now means Done and nothing else. Signup step 1 asks “What should students call you?”.</p>
-      <p style="color:#c88;">⚠️ Two caveats this snapshot cannot show. The full-bleed rule is <strong>unverified on iOS</strong> — three approaches shipped, none confirmed on WebKit, and every measurement behind them was taken on Blink. And <strong>Edit name cannot save</strong> until <code>supabase/migrations/20260725120000_coaches_update_own_name_rls.sql</code> is applied; it is committed but has never been run.</p>
+      <p>Then a <strong>landing page pass</strong> on July 26. The hero speaks to the instructor — “Help students work between sessions.” over <em>Assign in seconds / Students log it from anywhere / You see it as it happens</em> — and the product loop was redrawn from scratch: <strong>four new frames</strong> opening with the coach assigning rather than the student receiving (assign → text → log → coach student detail), an <code>Example: basketball</code> caption under the heading because the frames are sport-specific while the rest of the page is not, <strong>numbered captions</strong> in white carrying the section now that the subhead is gone, and a <code>#1c1f26</code> band so the phones read as objects on a surface rather than sinking into it.</p>
+      <p style="color:#c88;">⚠️ One caveat this snapshot cannot show: the header's full-bleed rule is <strong>unverified on iOS</strong> — three approaches shipped, none confirmed on WebKit, and every measurement behind them was taken on Blink.</p>
       <div class="swatches">
         <span class="sw"><i style="background:#2a2d36;"></i><b>#2a2d36</b> <span>track</span></span>
         <span class="sw"><i style="background:#3d7a24;"></i><b>#3d7a24</b> <span>attempts</span></span>
@@ -850,6 +853,54 @@
           </div>
         </div></div></div>
         <p class="note">The coach's name left the header and reappears here, at the top of the dropdown, labelling the account the two actions belong to. It is display only — not a button, not focusable — with a rule beneath it. The menu sizes to its widest item (~98px for these two) and caps at <code>160px</code>, which is what lets a long name truncate rather than stretching the menu: “RJW Skills &amp; Development” ellipsises, “Coach RJ” / “Debbie” / “Mr. Chen” never reach the cap. Saving a new name needs the <code>coaches</code> UPDATE RLS policy in <code>supabase/migrations/20260725120000_coaches_update_own_name_rls.sql</code>, which is <strong>not applied yet</strong> — until it runs, Save fails with a permission message rather than silently doing nothing.</p>
+      </div>
+
+      <!-- Edit name modal -->
+      <div class="cell" id="edit-name">
+        <div class="caption"><span class="cap-name">Edit name</span> <span class="cap-state">modal, prefilled</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.45);">
+            %COACHHEAD%
+            <div class="flex between" style="align-items:baseline;gap:12px;">
+              <h1 class="h1" style="font-size:20px;">Your players</h1>
+              <span style="flex-shrink:0;font-size:13px;font-weight:500;color:#fff;padding:6px 10px;border-radius:8px;border:1px solid #2a2d36;">+ Add</span>
+            </div>
+          </div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3>Edit name</h3>
+              <p style="margin:0 0 20px;">What should students call you?</p>
+              <input class="input" style="background:var(--reps-bg);font-size:15px;padding:12px 14px;" value="Coach RJ" disabled>
+              <p style="font-size:12px;color:var(--reps-sub);margin:8px 0 24px;min-height:16px;">Students and parents see this name.</p>
+              <div class="actions"><button class="btn-cancel">Cancel</button><button class="btn-blue" style="color:#fff;">Save</button></div>
+            </div>
+          </div>
+        </div></div>
+        <p class="note">Opened from <strong>Edit name</strong> in the profile menu above. The question is the same one signup step 1 asks — deliberately, so the field means “what students call you” in both places rather than reading as an account or legal name here. The input is prefilled with the current name and sits on <code>--reps-bg</code> rather than the card surface, so it reads as an input against the modal. Saving writes <code>coaches.name</code> for <code>auth.uid()</code>, then re-fetches: the name is server-rendered on the SMS, the celebrate screen and the parent digest, so local state is not trusted to match what students will see.</p>
+      </div>
+
+      <!-- Edit name, saving -->
+      <div class="cell" id="edit-name-saving">
+        <div class="caption"><span class="cap-name">Edit name</span> <span class="cap-state">saving — both controls inert</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.45);">
+            %COACHHEAD%
+            <div class="flex between" style="align-items:baseline;gap:12px;">
+              <h1 class="h1" style="font-size:20px;">Your players</h1>
+              <span style="flex-shrink:0;font-size:13px;font-weight:500;color:#fff;padding:6px 10px;border-radius:8px;border:1px solid #2a2d36;">+ Add</span>
+            </div>
+          </div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3>Edit name</h3>
+              <p style="margin:0 0 20px;">What should students call you?</p>
+              <input class="input" style="background:var(--reps-bg);font-size:15px;padding:12px 14px;" value="Coach RJ" disabled>
+              <p style="font-size:12px;color:var(--reps-sub);margin:8px 0 24px;min-height:16px;">Students and parents see this name.</p>
+              <div class="actions"><button class="btn-cancel" style="opacity:.5;">Cancel</button><button class="btn-blue" style="opacity:.5;color:#fff;">Saving…</button></div>
+            </div>
+          </div>
+        </div></div>
+        <p class="note">Both buttons go inert while the write is in flight, and the backdrop stops dismissing — a second submit would fire a second UPDATE. The save asks for the updated row back rather than trusting a 200: an UPDATE that no RLS policy permits returns success with zero rows, so without checking the result the modal would close on a write that never happened.</p>
       </div>
 
       <!-- Sign out dialog -->
@@ -1532,7 +1583,7 @@
       <div class="cell" id="log-consec">
         <div class="caption"><span class="cap-name">Log screen</span> <span class="cap-state">consecutive — single sets counter</span></div>
         <div class="phone"><div class="screen"><div class="pad">
-          %LOGHEAD(Free throws · 10 in a row)%
+          %LOGHEAD(Free throws)%
           <div style="font-size:14px;color:var(--reps-dim);margin-bottom:8px;">0 of 1 set · 10 in a row</div>
           <div class="bar lg" style="margin-bottom:84px;"><i class="att" style="width:0%;"></i></div>
           <div style="margin-bottom:56px;">
@@ -1545,7 +1596,7 @@
           </div>
           <div class="mt-auto"><button class="btn btn-blue" style="opacity:.4;">Log it</button></div>
         </div></div></div>
-        <p class="note">Not in the previous mocks. A <strong>consecutive</strong> goal reads its target as a streak length — shown in the title (<code>· 10 in a row</code>) and the progress line — but the student logs <strong>sets completed</strong>: one tap, one set, and it's done. Completion is <code>&gt;= 1 set</code>, not <code>&gt;= target</code>. ⚠️ Known: the stepper can climb past 1 while the progress line stays <code>1 of 1 set</code> (<code>progressValue</code> caps at 1) — the two visibly disagree.</p>
+        <p class="note">Not in the previous mocks. A <strong>consecutive</strong> goal reads its target as a streak length, shown in the progress line (<code>0 of 1 set · 10 in a row</code>) and nowhere else — the title is the exercise name alone, as on every other log screen — but the student logs <strong>sets completed</strong>: one tap, one set, and it's done. Completion is <code>&gt;= 1 set</code>, not <code>&gt;= target</code>. ⚠️ Known: the stepper can climb past 1 while the progress line stays <code>1 of 1 set</code> (<code>progressValue</code> caps at 1) — the two visibly disagree.</p>
       </div>
 
       <!-- Log: reps only -->
