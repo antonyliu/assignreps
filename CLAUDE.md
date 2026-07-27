@@ -1,5 +1,5 @@
 # Reps — CLAUDE.md
-*Last updated: July 25 2026 · Prod commit: `9c62f1c` · local, staging and prod all in sync*
+*Last updated: July 26 2026 · Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
 
 ---
 
@@ -375,9 +375,23 @@ Adding a new activity type is a content change — no engineering rework needed.
 
 ---
 
-## RJ feedback captured (July 22 2026)
+## RJ feedback captured
 
 RJ is the first real user and primary product validator.
+
+### July 26 2026 — first real usage
+
+**It is being used.** First completed assignments came in. One student told RJ she likes the app and how simple it is, and his summary: *"kids are liking it and really using it."* This is the first evidence of the loop closing with real students rather than in testing.
+
+Requests, in his words:
+
+- **Move "Assign more" button to the top** — currently pinned to the bottom of the student detail screen.
+- **A notes section for players** — somewhere to ask questions or write down what they understood that day. ❓ *Awaiting clarification:* whose note is it — the coach writing to the student, the student writing back, or both? That decides whether it is a new column, a new table, or a two-way thread, and whether the student page needs a write path it does not currently have.
+- **"Can timeframe be minutes & hours for weekly breakdown"** — verbatim. ❓ *Awaiting clarification:* unclear whether this means a new `hours` unit alongside `minutes`, or a time-spent total rolled up per week on a view that does not exist yet.
+- **A repeat-schedule function for when a set is finished** — reassign automatically once a student completes something. ⚠️ Ships the orphaned-log problem from a one-off into a weekly loss — see the KNOWN RISK entry in Pending.
+- **Add exercises to the library without being in the middle of assigning** — custom exercise creation is currently only reachable inside the assign flow for a specific player.
+
+### July 22 2026
 
 - **Makes-first coaching philosophy:** RJ assigns by makes ("make 50 free throws"), not attempts. Now a first-class goal type, not just a toggle.
 - **"Harder to cheat the system"** — makes-first is more accountable. A student can't just tap +50 and call it done if the coach wants makes.
@@ -420,6 +434,11 @@ RJ is the first real user and primary product validator.
 ## Pending / loose ends
 
 ### High priority
+- **⚠️ KNOWN RISK — a log loses its meaning when its assignment is deleted.** `logs` stores only `assignment_id`; `exercise_name`, `unit`, `goal_type`, `target` and `side` all live on the assignment. "Clear finished" and "Remove assignment" delete assignment rows, and `logs.assignment_id` is `ON DELETE SET NULL`, so the log row survives with an amount and a date and **no record of what it was**. Every reader keys on `assignment_id` and skips nulls, so orphans are invisible rather than visibly broken — the damage is silent.
+
+  *Not currently losing real data:* RJ has cleared nothing yet. But it blocks any future progress or insights view, and it becomes a **weekly** loss the moment a repeat-assignment feature ships (see RJ's July 26 ask for exactly that).
+
+  *Fix when ready:* snapshot `exercise_name`, `unit`, `goal_type`, `target`, `side` onto the log row at write time. Audited — there is exactly **one** INSERT site, `saveLog` in `src/app/student/[token]/log/[assignmentId]/actions.ts`, and it already re-queries the player's assignments immediately *after* the insert for the confetti check. Moving that query above the insert and widening its select gives the snapshot with **no extra round trip**. Server-side only: never accept these values as arguments from the client, because the student log page is public and token-addressed, so a crafted request could write any exercise name it liked into permanent history.
 - **Device-test the goal type feature** — shipped to prod July 24 with no real-iPhone pass. Never observed on device: the count screen and coach detail (auth-gated locally), and the incomplete-consecutive label `0/1 set · N in a row` (every consecutive row in the DB is already complete).
 - **Update `TWILIO_FROM_NUMBER`** to `+18338925640` in `.env.local` AND Vercel env vars
 - **Consecutive stepper overshoots its own progress line** — reads `1 of 1 set` while the stepper sits at 2. `progressValue` caps at 1 by design, but the two numbers visibly disagree.
@@ -505,17 +524,21 @@ RJ is the first real user and primary product validator.
 - **Headline:** Help students work between sessions. (breaks after "work" via a literal `<br />`)
 - **Bullets:** Assign in seconds / Students log it from anywhere / You see it as it happens
 - **Primary CTA:** Try Reps free
-- **Product loop:** "Here's how it works." — four phone mocks (link, student home, log counter, roster)
+- **Product loop:** "Here's how it works." → `Example: basketball` caption → four phone mocks, numbered: 1. You assign it (assign screen, makes tracked) / 2. They get a text (SMS thread) / 3. They log it (stepper + two-tone bar) / 4. You see it (coach student detail, `made 28/50 · 56%`)
 - **Footer:** dark `#1a1d24` with `1px solid #2a2d36` top border
-- **Background:** `#ede9e3` (warm off-white hero) / dark band for product loop + footer
+- **Background:** `#ede9e3` (warm off-white hero) / `#1c1f26` band for the product loop, `#1a1d24` footer
 
-⚠️ The four loop mocks are hand-drawn React, not screenshots — a second surface that has to track the design system by hand. They are currently out of date (see Pending).
+The loop band is deliberately **lighter** than the `#111318` phone frames — the band is the surface, the phones are objects on it, the same relationship the hero has putting dark photographs on cream.
+
+⚠️ The four loop mocks are hand-drawn React, not screenshots — a second surface that has to track the design system by hand. Redrawn July 26 2026, so they are current, but nothing keeps them that way.
+
+⚠️ The frames are basketball-specific (real exercise names, a real shooting percentage) while the rest of the page is activity-agnostic — hence the `Example: basketball` caption. It deliberately claims nothing about other activities: Basketball is the only ACTIVE entry in `activityTypes.ts`, so a broader promise would break at the signup picker one screen later.
 
 ---
 
 ## Screen inventory
 
-`mocks-2026-07-25-1441.html` in the project root — a static gallery of every screen and meaningful state, rebuilt from the page code. Opens standalone; image paths are relative, so it must stay at the project root. Current as of prod `9c62f1c`; the older `2026-07-24-1330` and `2026-07-23-1607` snapshots sit beside it as history.
+`mocks-2026-07-25-1441.html` in the project root — a static gallery of every screen and meaningful state, rebuilt from the page code. Opens standalone; image paths are relative, so it must stay at the project root. Current as of the July 26 2026 landing page redraw; the older `2026-07-24-1330` and `2026-07-23-1607` snapshots sit beside it as history.
 
 ---
 
