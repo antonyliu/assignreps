@@ -114,12 +114,20 @@ export default function AssignmentTabs({
 
       {tab === "new" ? (
         newCount > 0 ? (
-          // newTop rides inside the same gap-2.5 column as the cards, so the
-          // celebration sits in the stack at the exact spacing a card would.
-          <div className="flex flex-col gap-2.5">
-            {newTop}
-            {newList}
-          </div>
+          <>
+            {/* Deliberately OUTSIDE the cards' gap-2.5 column. Inside it the
+                celebration sat exactly one card-gap above the first card and
+                read as another item in the stack rather than as a message
+                sitting above one.
+
+                mb-5 (20px) is double the 10px the cards keep between
+                themselves — the same ratio, and the same value, as the gap
+                under the tab bar. That makes one rule for the screen: things
+                that aren't cards get 20px beneath them, cards get 10px between
+                them. */}
+            {newTop && <div className="mb-5">{newTop}</div>}
+            <div className="flex flex-col gap-2.5">{newList}</div>
+          </>
         ) : (
           newEmpty
         )
