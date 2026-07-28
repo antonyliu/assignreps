@@ -19,7 +19,12 @@ const config: Config = {
         "reps-dim":       "#8a8fa8",
         "reps-orange":    "#378add",
         "reps-orange-hi": "#4a9ae8",
-        "reps-green":     "#6bd63d",
+        // Emerald family, hue 150 — see the note in globals.css. Kept in step
+        // with the CSS variables of the same names; both are the source of
+        // truth for their own consumers (utility classes here, inline styles
+        // there), so a change to one has to be mirrored in the other.
+        "reps-green":       "#3ed68a",
+        "reps-green-muted": "#247a4f",
       },
       maxWidth: {
         mobile: "390px",

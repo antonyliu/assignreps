@@ -65,8 +65,13 @@ const T = {
   // These were a single #27500a, which the app retired — see the colour system
   // in CLAUDE.md. Matching them matters because the two-tone bar is the whole
   // point of frames 3 and 4: two shades stacked, meaning two different figures.
-  attempts: "#3d7a24",
-  green: "#6bd63d",
+  //
+  // Read from the tokens rather than copied as hex, so these mocks follow the
+  // app's greens automatically. Every consumer here is an inline style, so the
+  // var() resolves normally. One less surface to re-match by hand — the standing
+  // hazard with hand-drawn frames.
+  attempts: "var(--reps-green-muted)",
+  green: "var(--reps-green)",
 };
 
 /* A progress bar. `pct` is 0-100, `color` a token. */
@@ -380,7 +385,7 @@ function ScreenText() {
 }
 
 /* 3 — the log screen as it ships today: a stepper, not the +10/+25/+50 presets
-   that were retired. ATTEMPTS is muted #3d7a24 precisely because a MAKES row is
+   that were retired. ATTEMPTS is the muted green precisely because a MAKES row is
    on screen with it — a solo counter would take the bright green outright. */
 function ScreenLog() {
   return (

@@ -49,7 +49,7 @@ export async function updatePlayerPhone(
 export type FileAssignmentResult = { ok: true } | { ok: false; error: string };
 
 // Move one card between the two tabs. `filed_at` alone decides tab membership:
-// null = New, set = Logged. Completion is not consulted here at all.
+// null = New, set = Archive. Completion is not consulted here at all.
 //
 // Both directions are the same one-line update in opposite directions, and both
 // are fully reversible — which is why neither carries a confirm dialog, and why
@@ -75,12 +75,12 @@ async function setFiledAt(
   return { ok: true };
 }
 
-/** New → Logged. Stamps when the coach filed it. */
+/** New → Archive. Stamps when the coach filed it. */
 export async function moveAssignmentToLogged(assignmentId: string): Promise<FileAssignmentResult> {
   return setFiledAt(assignmentId, new Date().toISOString());
 }
 
-/** Logged → New. Clears the stamp; the card returns to the working list. */
+/** Archive → New. Clears the stamp; the card returns to the working list. */
 export async function moveAssignmentToNew(assignmentId: string): Promise<FileAssignmentResult> {
   return setFiledAt(assignmentId, null);
 }
@@ -107,7 +107,7 @@ export async function fileFinishedAssignments(playerId: string): Promise<FileFin
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not authenticated." };
 
-  // Only unfiled rows are candidates — anything already in Logged is where it
+  // Only unfiled rows are candidates — anything already in Archive is where it
   // belongs and must not have its original filing timestamp overwritten.
   const { data: assignments } = await supabase
     .from("assignments")

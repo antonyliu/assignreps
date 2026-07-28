@@ -9,7 +9,7 @@ type Props = {
 };
 
 // The bulk control under the all-done banner: move every finished, still-unfiled
-// assignment into the Logged tab.
+// assignment into the Archive tab.
 //
 // ⚠️ This used to be "Clear finished", which DELETED those rows — and took the
 // meaning of every log pointing at them with it, since logs.assignment_id is
@@ -36,7 +36,7 @@ export default function AllDoneActions({ playerId }: Props) {
       }
       // The count is worth saying: the cards leave the tab the coach is looking
       // at, so without it a successful move looks much like nothing happening.
-      setToast(result.moved === 1 ? "Moved 1 to Logged" : `Moved ${result.moved} to Logged`);
+      setToast(result.moved === 1 ? "Archived 1" : `Archived ${result.moved}`);
       setTimeout(() => setToast(""), 2500);
       router.refresh();
     });
@@ -44,19 +44,26 @@ export default function AllDoneActions({ playerId }: Props) {
 
   return (
     <>
-      <div className="flex justify-center mb-6">
-        <button
-          type="button"
-          onClick={handleFile}
-          disabled={isPending}
-          // Plain text, a clear step above the background but well below the
-          // primary CTA — a secondary action, not a competing one.
-          className="text-[13px] text-[var(--reps-label)] hover:text-reps-ink transition-colors py-1 disabled:opacity-50 disabled:pointer-events-none"
-          style={{ WebkitTapHighlightColor: "transparent" }}
-        >
-          {isPending ? "Moving…" : "Move finished to Logged"}
-        </button>
-      </div>
+      {/* No positioning of its own — it renders inside AllDonePanel, which owns
+          the spacing and already centres its contents.
+
+          Plain muted text, not a bordered button: this is the same treatment the
+          original "Clear finished" link had, and --reps-label is a clear step up
+          from the background while staying obviously secondary to the
+          "+ Assign new work" CTA pinned at the bottom of the screen. A bordered
+          button here was a pattern the app uses nowhere else, and it competed
+          with that CTA. */}
+      <button
+        type="button"
+        onClick={handleFile}
+        disabled={isPending}
+        className="text-[13px] text-[var(--reps-label)] hover:text-reps-ink transition-colors py-1 disabled:opacity-50 disabled:pointer-events-none"
+        style={{ WebkitTapHighlightColor: "transparent" }}
+      >
+        {/* "Archive it", not "Archive everything" — the headline directly above
+            already says "everything", and repeating it read as a stutter. */}
+        {isPending ? "Archiving…" : "Archive it"}
+      </button>
 
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-reps-raised border border-reps-line rounded-[10px] px-5 py-3 text-[14px] text-reps-sub shadow-xl">

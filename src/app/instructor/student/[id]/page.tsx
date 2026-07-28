@@ -9,7 +9,8 @@ import type { Assignment } from "@/types/database";
 import PlayerManage from "./PlayerManage";
 import AssignmentMenu from "./AssignmentMenu";
 import AllDoneActions from "./AllDoneActions";
-import AssignmentTabs from "./AssignmentTabs";
+import AssignmentTabs, { EmptyState } from "@/components/AssignmentTabs";
+import AllDonePanel from "@/components/AllDonePanel";
 
 // Static title — deliberately does not include the student's name, which would
 // otherwise leak into the browser tab / history.
@@ -74,7 +75,7 @@ export default async function CoachPlayerPage({
   // Both lists keep the query's `order("created_at")`, so New reads in the order
   // work was assigned, exactly as the single list did before tabs existed.
   const newList = assignmentList.filter((a) => !a.filed_at);
-  const loggedList = assignmentList.filter((a) => a.filed_at);
+  const archiveList = assignmentList.filter((a) => a.filed_at);
 
   // Unchanged meaning: every assignment this player has is finished. Drives the
   // banner. Deliberately spans BOTH tabs — filing work away doesn't make the
@@ -148,32 +149,46 @@ export default async function CoachPlayerPage({
           {/* Replaces the old "Assignments" section label — the tabs name the
               content themselves, so keeping both would stack two headings. */}
           <AssignmentTabs
-            firstName={firstName}
             newCount={newList.length}
-            loggedCount={loggedList.length}
+            archiveCount={archiveList.length}
             newList={newList.map((a) =>
               renderAssignmentCard(a, loggedByAssignment, makesByAssignment),
             )}
-            loggedList={loggedList.map((a) =>
+            archiveList={archiveList.map((a) =>
               renderAssignmentCard(a, loggedByAssignment, makesByAssignment),
             )}
+            // Finished work still sitting in New: celebrate at the top of that
+            // tab, above the cards, and offer to clear them out in one tap.
+            //
+            // No sub-line — the link says what it does, so a line above telling
+            // the coach to tap it was one instruction too many.
+            newTop={
+              allDone && fileableCount > 0 ? (
+                <AllDonePanel
+                  headline={`${firstName} finished everything.`}
+                  action={<AllDoneActions playerId={id} />}
+                />
+              ) : undefined
+            }
+            // New has run dry. If that is because everything is finished and
+            // archived, the celebration IS the empty state — no button, since
+            // there is nothing left to move. The plain line is the fallback for
+            // the odd case where New empties without the work being done.
+            newEmpty={
+              allDone ? (
+                <AllDonePanel
+                  headline={`${firstName} finished everything.`}
+                  sub="It's all in Archive."
+                />
+              ) : (
+                <EmptyState
+                  line={`Nothing open for ${firstName}.`}
+                  sub="Everything assigned has been archived."
+                />
+              )
+            }
+            archiveEmpty={<EmptyState line="Nothing archived yet." />}
           />
-
-          {allDone && (
-            <div
-              className="text-center rounded-[10px] mb-6"
-              style={{
-                background: "rgba(107,214,61,0.06)",
-                border: "0.5px solid rgba(107,214,61,0.15)",
-                padding: "12px 14px",
-              }}
-            >
-              <div className="text-[22px] leading-none mb-1.5">🎉</div>
-              <div className="text-[14px] font-medium text-reps-ink">{firstName} finished everything.</div>
-            </div>
-          )}
-
-          {allDone && fileableCount > 0 && <AllDoneActions playerId={id} />}
 
           <div
             className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
@@ -227,7 +242,7 @@ function assignmentDone(
 }
 
 // One assignment card. Lifted out of the page body unchanged when the list was
-// split into New / Logged tabs — both tabs render the identical card, so the
+// split into New / Archive tabs — both tabs render the identical card, so the
 // markup has to live in exactly one place or the two will drift.
 function renderAssignmentCard(
   a: Assignment,
@@ -296,23 +311,23 @@ function renderAssignmentCard(
         </div>
         {twoTone ? (
           <div
-            className="relative h-[3px] rounded-full overflow-hidden"
+            className="relative h-[2px] rounded-full overflow-hidden"
             style={{ background: "#2a2d36" }}
           >
             <div
               className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: `${pct}%`, background: "#3d7a24" }}
+              style={{ width: `${pct}%`, background: "var(--reps-green-muted)" }}
             />
             <div
               className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: `${barMakesPct}%`, background: "#6bd63d" }}
+              style={{ width: `${barMakesPct}%`, background: "var(--reps-green)" }}
             />
           </div>
         ) : (
-          <div className="h-[3px] rounded-full overflow-hidden" style={{ background: "#2a2d36" }}>
+          <div className="h-[2px] rounded-full overflow-hidden" style={{ background: "#2a2d36" }}>
             <div
               className="h-full rounded-full"
-              style={{ width: `${pct}%`, background: done ? "#6bd63d" : "#3d7a24" }}
+              style={{ width: `${pct}%`, background: done ? "var(--reps-green)" : "var(--reps-green-muted)" }}
             />
           </div>
         )}

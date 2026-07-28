@@ -28,7 +28,7 @@ type Status =
 
 const STORAGE_KEY = "reps:celebrate";
 
-const CONFETTI_COLORS = ["#378add", "#3dd68c", "#f0b429", "#e8eaf0"];
+const CONFETTI_COLORS = ["#378add", "#3ed68a", "#f0b429", "#e8eaf0"];
 
 // Singular/plural count label ("1 minute" / "8 minutes", "1 attempt" / "5 attempts").
 function unitWord(count: number, unit: string): string {

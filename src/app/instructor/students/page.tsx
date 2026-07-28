@@ -43,7 +43,7 @@ const GROUP_ORDER: Group[] = ["done", "progress", "notstarted", "unassigned"];
 // gray. The three grays sit a step apart from each other rather than at the
 // extremes, so the four groups read as one ramp down from Done.
 const GROUP_STYLE: Record<Group, { title: string; text: string; dot: string }> = {
-  done:       { title: "Done",             text: "#6bd63d", dot: "#6bd63d" },
+  done:       { title: "Done",             text: "#3ed68a", dot: "#3ed68a" },
   progress:   { title: "In progress",      text: "#8a8fa8", dot: "#8a8fa8" },
   notstarted: { title: "Not started",      text: "#6b7080", dot: "#6b7080" },
   unassigned: { title: "Nothing assigned", text: "#6b7080", dot: "#6b7080" },

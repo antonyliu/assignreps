@@ -85,9 +85,9 @@ const EDIT_SUBTITLE: Record<GoalType, string> = {
 // the old "Clear finished" did, and it orphaned the logs pointing at it. Filing
 // replaced that: a finished assignment is moved, never destroyed.
 //
-// "Delete", not "Remove": the menu now also carries "Move to Logged" / "Move
-// back to New", and remove/move read as neighbours. Delete says outright that
-// the row is gone — and matches "Delete exercise" in CustomExerciseMenu.
+// "Delete", not "Remove": the menu also carries "Archive" and "Move back to
+// New", and remove/move read as neighbours. Delete says outright that the row is
+// gone — and matches "Delete exercise" in CustomExerciseMenu.
 export default function AssignmentMenu({ assignmentId, exerciseName, target, presets, goalType, hasProgress, isDone, isFiled }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -163,7 +163,7 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
       }
       // Names the destination, since the card vanishes from the tab the coach is
       // looking at and reappears in one they aren't.
-      setToast(isFiled ? "Moved to New" : "Moved to Logged");
+      setToast(isFiled ? "Moved to New" : "Archived");
       setTimeout(() => setToast(""), 2500);
       router.refresh();
     });
@@ -229,7 +229,7 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
                     className={`${MENU_ITEM} ${MENU_DIVIDER}`}
                   >
                     {isFiled ? <ArrowLeft {...ICON} /> : <ArrowRight {...ICON} />}
-                    {isFiled ? "Move back to New" : "Move to Logged"}
+                    {isFiled ? "Move back to New" : "Archive"}
                   </button>
                 </>
               ) : (
@@ -290,7 +290,7 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
               Delete {exerciseName}?
             </h2>
             <p className="text-[13px] text-reps-sub mb-7">
-              This deletes the assignment. Logged progress is kept.
+              This deletes the assignment. Their progress is kept.
             </p>
             <div className="flex gap-3">
               <button

@@ -133,18 +133,25 @@ function primaryLabel(unit: string, trackMakes: boolean, categoryKey?: string): 
 }
 
 // Two greens on a grey track, one standard pair app-wide. Each measure owns
-// exactly one shade — attempts is #3d7a24 for its bar fill, label and number
-// alike (and for the coach detail bars); makes is #6bd63d for the same three —
-// so label and number read as one colour unit rather than two weights of the
-// same idea. Both sit near hue 100°, so nothing slides between lime and teal.
+// exactly one shade — attempts is --reps-green-muted for its bar fill, label and
+// number alike (and for the coach detail bars); makes is --reps-green for the
+// same three — so label and number read as one colour unit rather than two
+// weights of the same idea.
 //
-// Makes was specified as #3dd68c; that measures hue 151° (emerald), ~50° off
-// the rest. #6bd63d is the same colour rotated back into the family — identical
-// saturation 65% and lightness 54%.
+// Both sit on hue 150° EXACTLY, differing only in saturation and lightness
+// (65/54 bright, 54/31 muted). Nothing can slide between two greens because
+// there is only one hue in the family.
+//
+// The family was rotated here from a lime 102° on 2026-07-27, carrying its S/L
+// relationship across unchanged. The celebrate confetti's emerald — previously
+// the lone outlier at 151° — now sits on the same token.
+//
+// Referenced as var() rather than hex so these follow the token. The Tailwind
+// class equivalents below do the same through the theme.
 const BAR_TRACK = "#2a2d36";
-const BAR_ATTEMPTS = "#3d7a24";
-const ATTEMPTS_GREEN = "#3d7a24";
-const MAKES_GREEN = "#6bd63d";
+const BAR_ATTEMPTS = "var(--reps-green-muted)";
+const ATTEMPTS_GREEN = "var(--reps-green-muted)";
+const MAKES_GREEN = "var(--reps-green)";
 // Locked makes row. Green at any weight still reads as live, so the label and
 // number drop out of the family entirely rather than just fading. This is the
 // same #555 the disabled stepper buttons use: --reps-sub at full strength sat
@@ -157,11 +164,11 @@ const MUTED_GREY = "#555";
 // A reps-only assignment has no second field to rank against, so it takes the
 // bright green outright instead of the muted attempts shade.
 const ATTEMPTS_NUMBER =
-  "text-[76px] font-semibold text-[#3d7a24] placeholder:text-[#3d7a24] placeholder:opacity-100";
+  "text-[76px] font-semibold text-reps-green-muted placeholder:text-reps-green-muted placeholder:opacity-100";
 const SOLO_NUMBER =
-  "text-[76px] font-semibold text-[#6bd63d] placeholder:text-[#6bd63d] placeholder:opacity-100";
+  "text-[76px] font-semibold text-reps-green placeholder:text-reps-green placeholder:opacity-100";
 const MAKES_NUMBER =
-  "text-[31px] font-semibold text-[#6bd63d] placeholder:text-[#6bd63d] placeholder:opacity-100";
+  "text-[31px] font-semibold text-reps-green placeholder:text-reps-green placeholder:opacity-100";
 const MAKES_NUMBER_MUTED =
   "text-[31px] font-semibold text-[#8a8fa8] placeholder:text-[#8a8fa8] placeholder:opacity-100";
 

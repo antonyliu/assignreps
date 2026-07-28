@@ -14,7 +14,15 @@
   --reps-label:      #c8cdd8;
   --reps-orange:     #378add;
   --reps-orange-hi:  #4a9ae8;
-  --reps-green:      #6bd63d;
+  /* Emerald family, hue 150. Both tones share that hue exactly and differ only
+     in saturation and lightness — bright S65/L54, muted S54/L31 — so they read
+     as one colour at two weights rather than as two greens.
+
+     Rotated from a lime 102 on 2026-07-27. The S/L relationship between the two
+     is unchanged by that move (dS -10.5pp, dL -23.1pp, versus -10.7 and -22.9
+     before), so only the hue shifted. */
+  --reps-green:        #3ed68a;
+  --reps-green-muted:  #247a4f;
 }
 
 body {

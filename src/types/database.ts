@@ -51,7 +51,7 @@ export type Assignment = {
   goal_type: GoalType
   side: Side | null
   /** Which tab this card sits in on the coach's player detail screen: null =
-   *  "New", set = "Logged" (and when the coach moved it there).
+   *  "New", set = "Archive" (and when the coach moved it there).
    *
    *  ⚠️ Filing is independent of completion. Nothing moves on its own — a
    *  finished assignment stays in New until the coach files it, and filing can
