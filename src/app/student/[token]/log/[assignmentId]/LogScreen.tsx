@@ -404,7 +404,7 @@ export default function LogScreen({
           adding a flex gap on top of it — no gap, and a negative margin that
           pulls the text back over the dead half of the box, so arrow and title
           read as one unit. The glyph itself does not move. */}
-      <div className="flex items-center mb-14">
+      <div className="flex items-center mb-12">
         <Link
           href={`/student/${token}`}
           aria-label="Back"
@@ -418,7 +418,7 @@ export default function LogScreen({
       {/* Which hand the coach asked for. Quiet context under the title rather
           than part of it, so a long exercise name still truncates cleanly. */}
       {side && (
-        <div className="text-[13px] text-reps-sub -mt-12 mb-12">
+        <div className="text-[13px] text-reps-sub -mt-10 mb-10">
           {side === "left" ? "Left hand" : "Right hand"}
         </div>
       )}
@@ -439,7 +439,7 @@ export default function LogScreen({
       {showMakesRow ? (
         // attempts (muted green) with makes (bright green) stacked on top.
         <div
-          className="relative h-1.5 rounded-full overflow-hidden mb-[96px]"
+          className="relative h-1.5 rounded-full overflow-hidden mb-14"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -453,7 +453,7 @@ export default function LogScreen({
         </div>
       ) : (
         <div
-          className="h-1.5 rounded-full overflow-hidden mb-[96px]"
+          className="h-1.5 rounded-full overflow-hidden mb-14"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -466,7 +466,7 @@ export default function LogScreen({
       {/* Full-content-width lockup: ATTEMPTS label, the big stepper, the divider
           and the MAKES row share the same edges as the bar and title above —
           the page padding supplies the breathing room. */}
-      <div className="mb-14">
+      <div className="mb-12">
         {/* The hero stepper is whatever the assignment is scored on. Under a
             makes goal that is MAKES, so it takes the large control and the
             bright green, and attempts drop to the quiet row below. */}
@@ -553,12 +553,25 @@ export default function LogScreen({
       </div>
 
       <div
-        className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
+        // ⚠️ No `mt-auto`, unlike the coach detail screen's CTA which keeps it.
+        // There it is free: that screen's content is a card list long enough to
+        // fill the viewport, so auto margin has no slack to absorb. Here the
+        // content is short and fixed-height, so mt-auto shoved the button to the
+        // very bottom and opened a band of dead space above it — and tightening
+        // the gaps above only made that band LARGER, since the auto margin
+        // swallowed whatever they gave up. Without it the button follows the
+        // content, and `sticky bottom-0` still pins it once the screen is
+        // genuinely full (long name + side line + makes row on a small phone).
+        className="sticky bottom-0 -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
         // env()'s second argument is used when the inset can't be resolved (a
         // browser without safe-area support), so the button keeps a 16px floor
-        // instead of collapsing to the 2rem base alone. On iOS Safari, where
-        // env is supported, the real inset still drives the clearance.
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 16px) + 2rem)" }}
+        // instead of collapsing to the base alone. On iOS Safari, where env is
+        // supported, the real inset still drives the clearance.
+        //
+        // 1.5rem rather than the old 2rem: a touch more than the coach CTA's
+        // 1.25rem, since this button is no longer bottom-anchored and reads
+        // better with slightly more room beneath it.
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 16px) + 1.5rem)" }}
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8 bg-gradient-to-b from-transparent to-[#080b0f]" />
         <button
