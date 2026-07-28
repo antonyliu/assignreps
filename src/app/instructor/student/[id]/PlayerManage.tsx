@@ -86,8 +86,22 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
 
         {menuOpen && (
           <>
-            <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 top-8 z-20 bg-reps-raised border border-reps-line rounded-[10px] shadow-xl min-w-[180px] overflow-hidden">
+            {/* ⚠️ Overflow-menu tier: z-40 for the click-away, z-50 for the
+                panel — the same pair AssignmentMenu uses, because these are the
+                same kind of control and must clear the same things.
+
+                Both were 10/20 before the assignment list gained a sticky tab
+                bar at z-20. That tie put the bar above this panel on DOM order
+                alone (the bar comes later in the document), so the menu opened
+                UNDERNEATH it. The click-away was worse: at z-10 it sat below the
+                bar entirely, so tapping the bar with the menu open switched tabs
+                instead of dismissing.
+
+                Kept below the modals (z-[60]) and toasts (z-[70]) above. Any new
+                sticky or pinned element on this screen has to stay under z-40 or
+                it will swallow both menus again. */}
+            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <div className="absolute right-0 top-8 z-50 bg-reps-raised border border-reps-line rounded-[10px] shadow-xl min-w-[180px] overflow-hidden">
               <button
                 onClick={handleShare}
                 className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors"
@@ -111,8 +125,12 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
         )}
       </div>
 
+      {/* z-[70], matching the toasts in AssignmentMenu and AllDoneActions. Was
+          z-50, which now ties with this file's own menu panel and sat below the
+          modals — a "Link copied" raised behind an open dialog would simply not
+          be seen. Toasts are the top layer on this screen. */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-reps-raised border border-reps-line rounded-[10px] px-5 py-3 text-[14px] text-reps-sub shadow-xl">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-reps-raised border border-reps-line rounded-[10px] px-5 py-3 text-[14px] text-reps-sub shadow-xl">
           {toast}
         </div>
       )}

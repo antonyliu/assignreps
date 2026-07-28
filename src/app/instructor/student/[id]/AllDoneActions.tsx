@@ -1,46 +1,43 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { clearCompletedAssignments } from "./actions";
+import { fileFinishedAssignments } from "./actions";
 
 type Props = {
   playerId: string;
-  firstName: string;
 };
 
-export default function AllDoneActions({ playerId, firstName }: Props) {
+// The bulk control under the all-done banner: move every finished, still-unfiled
+// assignment into the Logged tab.
+//
+// ⚠️ This used to be "Clear finished", which DELETED those rows — and took the
+// meaning of every log pointing at them with it, since logs.assignment_id is
+// ON DELETE SET NULL. Filing replaces deleting outright: nothing is destroyed,
+// the cards simply move, and any of them can be moved back one tap at a time.
+//
+// Because it is non-destructive it is a single tap with no bottom sheet. The
+// sheet existed to make a coach pause before an irreversible delete; there is
+// nothing left here to pause over, and keeping it would be ceremony implying a
+// risk that no longer exists.
+export default function AllDoneActions({ playerId }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [sheetIn, setSheetIn] = useState(false);
-  const [error, setError] = useState("");
+  const [toast, setToast] = useState("");
 
-  // Slide the sheet up once it has mounted.
-  useEffect(() => {
-    if (!modalOpen) return;
-    const id = requestAnimationFrame(() => setSheetIn(true));
-    return () => cancelAnimationFrame(id);
-  }, [modalOpen]);
-
-  function openModal() {
-    setError("");
-    setSheetIn(false);
-    setModalOpen(true);
-  }
-
-  function closeModal() {
-    setSheetIn(false);
-    setModalOpen(false);
-  }
-
-  function handleClear() {
-    setError("");
+  function handleFile() {
+    if (isPending) return;
     startTransition(async () => {
-      const result = await clearCompletedAssignments(playerId);
-      if (!result.ok) { setError(result.error); return; }
-      setSheetIn(false);
-      setModalOpen(false);
+      const result = await fileFinishedAssignments(playerId);
+      if (!result.ok) {
+        setToast(result.error);
+        setTimeout(() => setToast(""), 3000);
+        return;
+      }
+      // The count is worth saying: the cards leave the tab the coach is looking
+      // at, so without it a successful move looks much like nothing happening.
+      setToast(result.moved === 1 ? "Moved 1 to Logged" : `Moved ${result.moved} to Logged`);
+      setTimeout(() => setToast(""), 2500);
       router.refresh();
     });
   }
@@ -50,67 +47,20 @@ export default function AllDoneActions({ playerId, firstName }: Props) {
       <div className="flex justify-center mb-6">
         <button
           type="button"
-          onClick={openModal}
-          // Was #454a5b — barely above the background and easy to miss entirely.
-          // --reps-label is a clear step up while staying plain text, so it reads
-          // as a secondary action rather than competing with the primary CTA.
-          className="text-[13px] text-[var(--reps-label)] hover:text-reps-ink transition-colors py-1"
+          onClick={handleFile}
+          disabled={isPending}
+          // Plain text, a clear step above the background but well below the
+          // primary CTA — a secondary action, not a competing one.
+          className="text-[13px] text-[var(--reps-label)] hover:text-reps-ink transition-colors py-1 disabled:opacity-50 disabled:pointer-events-none"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
-          Clear finished
+          {isPending ? "Moving…" : "Move finished to Logged"}
         </button>
       </div>
 
-      {modalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60"
-          onClick={closeModal}
-        >
-          <div
-            className={`bg-[#1c1f26] rounded-t-[16px] w-full max-w-[390px] p-6 transition-transform duration-200 ease-out ${sheetIn ? "translate-y-0" : "translate-y-full"}`}
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* One word for one concept: the banner above says "finished
-                everything", so the link, header and button all say "finished"
-                too. The old copy ran three synonyms across one screen
-                (completed / completed work / they've finished).
-                text-balance on the heading — it is short and evens out to two
-                tidy lines when a long first name pushes it over. */}
-            <h2 className="text-[17px] font-semibold text-reps-ink mb-2 text-balance">
-              Clear {firstName}&apos;s finished work?
-            </h2>
-            {/* Two block-level sentences, not one wrapped paragraph: the break
-                is structural so it holds at every width without a <br>. The
-                second line is the one answering "will I lose their history?",
-                so it gets a line of its own and the plainest words on screen.
-                text-pretty rather than balance here — these are body sentences
-                and the risk is a one-word last line, which is exactly what
-                pretty prevents; balance would even out the lines instead and
-                leave both looking oddly narrow. */}
-            <div className="text-[14px] text-reps-sub mb-6">
-              <p className="text-pretty">Finished assignments come off the list.</p>
-              <p className="text-pretty">Their progress is saved.</p>
-            </div>
-            {error && <p className="text-[12px] text-red-400 mb-3">{error}</p>}
-            <button
-              type="button"
-              onClick={handleClear}
-              disabled={isPending}
-              className="w-full text-center bg-[#6bd63d1a] border border-[#6bd63d] text-[#6bd63d] font-semibold text-[15px] py-[14px] rounded-[10px] disabled:opacity-50 transition-colors mb-2"
-              style={{ WebkitTapHighlightColor: "transparent" }}
-            >
-              {isPending ? "Clearing…" : "Clear finished"}
-            </button>
-            <button
-              type="button"
-              onClick={closeModal}
-              className="w-full text-center text-[#8a8fa8] font-medium text-[15px] py-3"
-              style={{ WebkitTapHighlightColor: "transparent" }}
-            >
-              Cancel
-            </button>
-          </div>
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-reps-raised border border-reps-line rounded-[10px] px-5 py-3 text-[14px] text-reps-sub shadow-xl">
+          {toast}
         </div>
       )}
     </>

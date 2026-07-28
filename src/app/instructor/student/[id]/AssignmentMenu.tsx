@@ -2,10 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MoreVertical } from "lucide-react";
+import { ArrowLeft, ArrowRight, MoreVertical, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { GOAL_PRESETS } from "@/lib/exercises";
 import type { GoalType } from "@/lib/exercises";
-import { deleteAssignment, updateAssignmentTarget } from "./actions";
+import {
+  deleteAssignment,
+  moveAssignmentToLogged,
+  moveAssignmentToNew,
+  repeatAssignment,
+  updateAssignmentTarget,
+} from "./actions";
 
 type Props = {
   assignmentId: string;
@@ -16,11 +22,40 @@ type Props = {
   presets: number[];
   goalType: GoalType;
   hasProgress: boolean;
+  /** Computed by the page via isComplete() — the one completion rule the whole
+   *  app shares, so this menu can't disagree with the card it sits on about
+   *  whether the work is finished.
+   *
+   *  Decides WHICH set of actions this card gets, not which tab it is in. A
+   *  finished card offers "Assign again" and a move; an unfinished one offers
+   *  "Edit amount" and the destructive delete. */
+  isDone: boolean;
+  /** Whether `filed_at` is set — i.e. which tab the card is actually sitting in.
+   *  Independent of isDone: a finished card stays in New until someone moves it.
+   *  Only decides the DIRECTION of the move action. */
+  isFiled: boolean;
 };
 
 // What the target means, per goal. "Edit amount" is only honest for attempts —
 // on a makes or streak assignment it left the coach guessing which number the
 // row was asking for.
+// Dropdown styling lifted from PlayerManage's overflow menu — the app's other
+// per-row "..." menu — so the two read as the same control. That means a raised
+// surface with the items running flush to its edges (the container clips them
+// via overflow-hidden), a hairline rule between rows rather than gaps, and no
+// inner padding on the container itself.
+const MENU_PANEL =
+  "absolute right-0 top-full mt-1 z-50 min-w-[190px] bg-reps-raised border border-reps-line rounded-[10px] shadow-xl overflow-hidden";
+const MENU_ITEM_BASE =
+  "flex items-center gap-2.5 w-full px-4 py-3 text-left text-[14px] whitespace-nowrap hover:bg-reps-line transition-colors";
+const MENU_ITEM = `${MENU_ITEM_BASE} text-reps-ink disabled:opacity-50 disabled:pointer-events-none`;
+// Rule sits on the row BELOW the gap, so the first item in a menu never carries
+// one — which is why each branch decides for itself where this goes.
+const MENU_DIVIDER = "border-t border-reps-line";
+// 16px at strokeWidth 2, matching the inline User icon in ProfileMenu. shrink-0
+// so a long label can never squash the glyph.
+const ICON = { size: 16, strokeWidth: 2, className: "shrink-0" } as const;
+
 const EDIT_SUBTITLE: Record<GoalType, string> = {
   reps: "Edit amount",
   makes: "Edit target makes",
@@ -28,10 +63,21 @@ const EDIT_SUBTITLE: Record<GoalType, string> = {
 };
 
 // Per-card overflow menu: a vertical three-dot trigger sitting in its own
-// column. "Remove assignment" is always available (gated behind a confirm
-// dialog). "Edit amount" appears only when the assignment has no logged
-// progress yet, and updates the target silently (no SMS).
-export default function AssignmentMenu({ assignmentId, exerciseName, target, presets, goalType, hasProgress }: Props) {
+// column. The menu splits cleanly on completion:
+//
+//   unfinished — "Edit amount" (only with no progress yet, silent, no SMS) and
+//                the red "Delete assignment", behind a confirm dialog.
+//   finished   — "Assign again" and a single-tap move between the two tabs.
+//
+// ⚠️ The two sets are mutually exclusive, which means "Delete assignment" is
+// deliberately unreachable on a finished card. Deleting finished work is what
+// the old "Clear finished" did, and it orphaned the logs pointing at it. Filing
+// replaced that: a finished assignment is moved, never destroyed.
+//
+// "Delete", not "Remove": the menu now also carries "Move to Logged" / "Move
+// back to New", and remove/move read as neighbours. Delete says outright that
+// the row is gone — and matches "Delete exercise" in CustomExerciseMenu.
+export default function AssignmentMenu({ assignmentId, exerciseName, target, presets, goalType, hasProgress, isDone, isFiled }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -39,6 +85,7 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
   const [editOpen, setEditOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(target);
   const [editCustom, setEditCustom] = useState(false);
+  const [toast, setToast] = useState("");
 
   // Same rule as the count screen, so assigning and editing offer the identical
   // row: a makes goal counts in makes and a streak in consecutive hits, neither
@@ -61,6 +108,53 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
         setConfirmOpen(false);
         router.refresh();
       }
+    });
+  }
+
+  // Closes the menu before the request rather than after it, so the item can't
+  // be tapped a second time while the first is still in flight — the pending
+  // guard backs that up for a fast double-tap that beats the re-render.
+  //
+  // Note this only stops an ACCIDENTAL repeat. Once the refresh lands, the
+  // original card is still finished and still offers "Assign again", so a coach who
+  // deliberately taps again gets a second assignment. That is the right
+  // behaviour: assigning the same drill twice is a legitimate thing to want.
+  function handleRepeat() {
+    if (isPending) return;
+    setMenuOpen(false);
+    startTransition(async () => {
+      const result = await repeatAssignment(assignmentId);
+      if (!result.ok) {
+        setToast(result.error);
+        setTimeout(() => setToast(""), 3000);
+        return;
+      }
+      setToast("Assigned again");
+      setTimeout(() => setToast(""), 2500);
+      router.refresh();
+    });
+  }
+
+  // Single tap, no confirm dialog — filing is reversible in one tap the other
+  // way, so a modal would be ceremony over a decision that costs nothing to
+  // undo. Contrast handleRemove, which is a real delete and keeps its dialog.
+  function handleMove() {
+    if (isPending) return;
+    setMenuOpen(false);
+    startTransition(async () => {
+      const result = isFiled
+        ? await moveAssignmentToNew(assignmentId)
+        : await moveAssignmentToLogged(assignmentId);
+      if (!result.ok) {
+        setToast(result.error);
+        setTimeout(() => setToast(""), 3000);
+        return;
+      }
+      // Names the destination, since the card vanishes from the tab the coach is
+      // looking at and reappears in one they aren't.
+      setToast(isFiled ? "Moved to New" : "Moved to Logged");
+      setTimeout(() => setToast(""), 2500);
+      router.refresh();
     });
   }
 
@@ -100,33 +194,74 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
               className="fixed inset-0 z-40 cursor-default"
               onClick={() => setMenuOpen(false)}
             />
-            <div
-              role="menu"
-              className="absolute right-0 top-full mt-1 z-50 w-max bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
-            >
-              {!hasProgress && (
-                <button
-                  role="menuitem"
-                  onClick={openEdit}
-                  className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
-                >
-                  Edit amount
-                </button>
+            <div role="menu" className={MENU_PANEL}>
+              {isDone ? (
+                // Finished: reassign, or move between tabs. No delete — see the
+                // note on the component.
+                <>
+                  <button
+                    role="menuitem"
+                    onClick={handleRepeat}
+                    disabled={isPending}
+                    className={MENU_ITEM}
+                  >
+                    <RotateCcw {...ICON} />
+                    {isPending ? "Assigning…" : "Assign again"}
+                  </button>
+                  {/* Left/right arrows rather than an archive or file glyph: the
+                      two tabs sit side by side with New on the left, so the
+                      direction of travel is the thing worth drawing. */}
+                  <button
+                    role="menuitem"
+                    onClick={handleMove}
+                    disabled={isPending}
+                    className={`${MENU_ITEM} ${MENU_DIVIDER}`}
+                  >
+                    {isFiled ? <ArrowLeft {...ICON} /> : <ArrowRight {...ICON} />}
+                    {isFiled ? "Move back to New" : "Move to Logged"}
+                  </button>
+                </>
+              ) : (
+                // Unfinished: correct it, or delete it outright. Delete keeps its
+                // confirm dialog — it is the one genuinely destructive action
+                // left on this menu.
+                <>
+                  {!hasProgress && (
+                    <button role="menuitem" onClick={openEdit} className={MENU_ITEM}>
+                      <Pencil {...ICON} />
+                      Edit amount
+                    </button>
+                  )}
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setConfirmOpen(true);
+                    }}
+                    // Divider only when "Edit amount" rendered above it —
+                    // otherwise this is the first row and needs no rule.
+                    className={`${MENU_ITEM_BASE} text-red-400 ${!hasProgress ? MENU_DIVIDER : ""}`}
+                  >
+                    <Trash2 {...ICON} />
+                    Delete assignment
+                  </button>
+                </>
               )}
-              <button
-                role="menuitem"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setConfirmOpen(true);
-                }}
-                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-red-400 whitespace-nowrap hover:bg-reps-raised transition-colors"
-              >
-                Remove assignment
-              </button>
             </div>
           </>
         )}
       </div>
+
+      {/* "Assign again" has no dialog and no visible result on this card — the new row
+          appears further down the list — so it needs some acknowledgement.
+          Doubles as the error surface for the stale-page case, where the server
+          rejects a repeat the menu still offered. Same treatment as the toast in
+          PlayerManage. */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-reps-raised border border-reps-line rounded-[10px] px-5 py-3 text-[14px] text-reps-sub shadow-xl">
+          {toast}
+        </div>
+      )}
 
       {confirmOpen && (
         <div
@@ -136,12 +271,12 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
           <div
             role="dialog"
             aria-modal="true"
-            aria-labelledby="remove-assignment-title"
+            aria-labelledby="delete-assignment-title"
             className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="remove-assignment-title" className="text-[16px] font-semibold text-reps-ink mb-2">
-              Remove {exerciseName}?
+            <h2 id="delete-assignment-title" className="text-[16px] font-semibold text-reps-ink mb-2">
+              Delete {exerciseName}?
             </h2>
             <p className="text-[13px] text-reps-sub mb-7">
               This deletes the assignment. Logged progress is kept.
@@ -158,7 +293,7 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
                 disabled={isPending}
                 className="flex-1 min-h-[44px] rounded-[10px] bg-red-500 text-white font-semibold text-[15px] hover:bg-red-400 disabled:opacity-50 transition-colors"
               >
-                {isPending ? "Removing…" : "Remove"}
+                {isPending ? "Deleting…" : "Delete"}
               </button>
             </div>
           </div>

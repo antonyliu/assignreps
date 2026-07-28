@@ -15,8 +15,60 @@ function laDate(value: Date): string {
   return LA_DATE.format(value);
 }
 
+type NotifiablePlayer = {
+  name: string;
+  phone: string | null;
+  token: string;
+  last_texted_at: string | null;
+};
+
+// The student's row, ownership-scoped. Split out so both notify paths resolve
+// the recipient identically — and so the gated path can still decide whether to
+// send BEFORE paying for the coach lookup below.
+async function loadPlayer(
+  supabase: ServerClient,
+  coachId: string,
+  playerId: string
+): Promise<NotifiablePlayer | null> {
+  const { data } = await supabase
+    .from("players")
+    .select("name, phone, token, last_texted_at")
+    .eq("id", playerId)
+    .eq("coach_id", coachId)
+    .single();
+
+  return data ?? null;
+}
+
+// One wording for every assignment notification, whichever path sends it. A
+// repeat is still "new work landed", so it reads identically to a first
+// assignment — kept in one place so the two can't drift apart.
+//
+// The message has to work as a first touch as well as a follow-up, since nothing
+// is sent when a student is added. Falls back to generic wording when
+// instructor_type is null/empty.
+async function composeBody(
+  supabase: ServerClient,
+  coachId: string,
+  player: NotifiablePlayer
+): Promise<string> {
+  const { data: coach } = await supabase
+    .from("coaches")
+    .select("name, instructor_type")
+    .eq("id", coachId)
+    .single();
+
+  const coachName = coach?.name ?? "Coach";
+  const activityType = coach?.instructor_type?.trim().replace(/_/g, " ");
+  const link = `https://assignreps.com/student/${player.token}`;
+  return activityType
+    ? `Hey ${player.name} — ${coachName} assigned you ${activityType} homework. Tap here: ${link}`
+    : `Hey ${player.name} — ${coachName} assigned you homework. Tap here: ${link}`;
+}
+
 // Text the student that new work was assigned — at most once per student per
-// Los Angeles day.
+// Los Angeles day. Used by the two assign flows, where a coach setting up a
+// session may add several drills in a row and should not fire a text each time.
 //
 // Best-effort and deliberately silent: every failure (lookup, Twilio, or the
 // bookkeeping write) is swallowed so a notification problem can never fail the
@@ -30,16 +82,11 @@ export async function notifyAssignmentOnce(
   playerId: string
 ): Promise<void> {
   try {
-    const { data: player } = await supabase
-      .from("players")
-      .select("name, phone, token, last_texted_at")
-      .eq("id", playerId)
-      .eq("coach_id", coachId)
-      .single();
-
+    const player = await loadPlayer(supabase, coachId, playerId);
     if (!player?.phone) return;
 
-    // Already texted today (LA) → nothing to do.
+    // Already texted today (LA) → nothing to do. Checked before composeBody so
+    // the blocked path still costs exactly one query, as it always has.
     if (
       player.last_texted_at &&
       laDate(new Date(player.last_texted_at)) === laDate(new Date())
@@ -47,22 +94,7 @@ export async function notifyAssignmentOnce(
       return;
     }
 
-    const { data: coach } = await supabase
-      .from("coaches")
-      .select("name, instructor_type")
-      .eq("id", coachId)
-      .single();
-
-    // This is the student's only text — nothing is sent when they're added — so
-    // the wording has to work as a first touch as well as a repeat. Falls back
-    // to generic wording when instructor_type is null/empty.
-    const coachName = coach?.name ?? "Coach";
-    const activityType = coach?.instructor_type?.trim().replace(/_/g, " ");
-    const link = `https://assignreps.com/student/${player.token}`;
-    const body = activityType
-      ? `Hey ${player.name} — ${coachName} assigned you ${activityType} homework. Tap here: ${link}`
-      : `Hey ${player.name} — ${coachName} assigned you homework. Tap here: ${link}`;
-
+    const body = await composeBody(supabase, coachId, player);
     const sent = await sendSms(player.phone, body);
 
     // Record the send only on success, so a Twilio outage doesn't silently burn
@@ -76,5 +108,43 @@ export async function notifyAssignmentOnce(
     }
   } catch {
     // Never surface notification problems to the assign flow.
+  }
+}
+
+// Text the student that a finished assignment was set again — ALWAYS, with no
+// daily gate.
+//
+// The gate on notifyAssignmentOnce exists to stop one setup session from firing
+// five texts while a coach adds five drills. A repeat is the opposite shape: a
+// single deliberate decision, taken about one specific piece of work, usually
+// days after the original. Swallowing it because something else was assigned
+// that morning would mean the student is never told the work came back.
+//
+// ⚠️ Deliberately does NOT write last_texted_at. Recording this send would let a
+// repeat consume the day's allowance and silence a genuinely separate assignment
+// made later the same day. The two are meant to be independent, so this path
+// reads no gate and moves no gate.
+//
+// The cost of that independence: last_texted_at now means "last GATED assignment
+// notification", not "last time we texted this student at all" — a repeat leaves
+// no trace on the row. Nothing reads the column for anything else today, but
+// anything that later wants a true last-contact timestamp needs its own field
+// rather than this one.
+//
+// Best-effort and silent on failure, same as the gated path — a repeat that was
+// already written to the database must not fail because Twilio was down.
+export async function notifyRepeatAssignment(
+  supabase: ServerClient,
+  coachId: string,
+  playerId: string
+): Promise<void> {
+  try {
+    const player = await loadPlayer(supabase, coachId, playerId);
+    if (!player?.phone) return;
+
+    const body = await composeBody(supabase, coachId, player);
+    await sendSms(player.phone, body);
+  } catch {
+    // Never surface notification problems to the repeat flow.
   }
 }

@@ -16,8 +16,13 @@ export type Player = {
   send_to_parent: boolean
   token: string
   created_at: string
-  /** Last assign-notification SMS. Null = never texted. Compared as an
-   *  America/Los_Angeles calendar date to cap sends at one per day. */
+  /** Last *gated* assign-notification SMS. Compared as an America/Los_Angeles
+   *  calendar date to cap those sends at one per day.
+   *
+   *  ⚠️ Not a true last-contact timestamp. Repeat sends (notifyRepeatAssignment)
+   *  deliberately neither read nor write this, so a repeat leaves no trace here
+   *  and null does NOT prove the student was never texted. Anything wanting real
+   *  last-contact needs its own column. */
   last_texted_at: string | null
 }
 
@@ -45,6 +50,16 @@ export type Assignment = {
   /** What `target` counts. Defaults to 'reps' for every pre-existing row. */
   goal_type: GoalType
   side: Side | null
+  /** Which tab this card sits in on the coach's player detail screen: null =
+   *  "New", set = "Logged" (and when the coach moved it there).
+   *
+   *  ⚠️ Filing is independent of completion. Nothing moves on its own — a
+   *  finished assignment stays in New until the coach files it, and filing can
+   *  be undone. isComplete() only draws the ✓ badge; it does not decide the tab.
+   *
+   *  ⚠️ Not `logs.logged_at`, which is when a STUDENT recorded reps. Different
+   *  table, different actor, different meaning — hence the different name. */
+  filed_at: string | null
 }
 
 export type Log = {
