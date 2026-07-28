@@ -151,13 +151,45 @@ export function defaultTrackMakes(categoryKey?: string): boolean {
   );
 }
 
+// Library names that have been RETIRED, mapped to the entry that replaced them.
+//
+// ⚠️ This exists because `exercise_name` is free text, stamped permanently onto
+// an assignment at creation time and never rewritten. An assignment created
+// before the two Layups entries were collapsed still stores "Layups (left
+// hand)", and that string is the ONLY link back to a category — nothing else on
+// the row records one.
+//
+// Drop a name from the library without listing it here and every stored row
+// carrying it silently loses its category. That is not cosmetic: the student's
+// log screen resolves ATTEMPTS vs REPS from the category, so the hero label on
+// already-assigned work would flip to REPS (and the celebrate screen would start
+// counting down in "reps" rather than "attempts"), while the coach's Edit-amount
+// modal would lose its preset row. The rows themselves are untouched and still
+// display their original name — this only keeps what is DERIVED from that name
+// resolving as it always has.
+//
+// The alternative was rewriting exercise_name across existing assignments. This
+// keeps history literal instead: a row assigned as "Layups (left hand)" still
+// says so, forever.
+const RETIRED_EXERCISE_NAMES: Record<string, string> = {
+  "Layups (left hand)": "Layups",
+  "Layups (right hand)": "Layups",
+};
+
+// A stored exercise_name resolved to the library entry that now represents it.
+// Current names pass straight through; only retired ones are redirected.
+function resolveLibraryName(exerciseName: string): string {
+  return RETIRED_EXERCISE_NAMES[exerciseName] ?? exerciseName;
+}
+
 // The category an exercise belongs to, matched by name — assignments store
 // `exercise_name` as free text, not a category key, so this is the only way back
 // to the category once work has been assigned. Custom exercises match nothing
 // and return undefined; callers must handle that.
 export function categoryKeyForExercise(exerciseName: string): string | undefined {
+  const name = resolveLibraryName(exerciseName);
   for (const [key, cat] of Object.entries(CATEGORIES)) {
-    if (cat.exercises.some((e) => e.name === exerciseName)) return key;
+    if (cat.exercises.some((e) => e.name === name)) return key;
   }
   return undefined;
 }
@@ -167,8 +199,11 @@ export function categoryKeyForExercise(exerciseName: string): string | undefined
 // falling back to the category's. Custom exercises (no category) return [] — the
 // Edit-amount modal then falls back to the number input.
 export function presetsForExercise(exerciseName: string): number[] {
+  // Retired names resolve too, so an already-assigned "Layups (left hand)" keeps
+  // the preset row it has always shown in the coach's Edit-amount modal.
+  const name = resolveLibraryName(exerciseName);
   for (const cat of Object.values(CATEGORIES)) {
-    const ex = cat.exercises.find((e) => e.name === exerciseName);
+    const ex = cat.exercises.find((e) => e.name === name);
     if (ex) return ex.quick ?? cat.quick;
   }
   return [];
@@ -210,8 +245,11 @@ export const CATEGORIES: Record<string, Category> = {
     unit: "reps",
     quick: [10, 20, 50, 100],
     exercises: [
-      { name: "Layups (right hand)", default: 20, slug: "layups-right" },
-      { name: "Layups (left hand)",  default: 20, slug: "layups-left" },
+      // One entry, with the hand chosen at assign time via the Side row. It gets
+      // that row by simply not appearing in SIDELESS_EXERCISES — the same way
+      // every other side-enabled exercise does. The old split pair meant a coach
+      // could assign "Layups (right hand) · Left".
+      { name: "Layups",             default: 20, slug: "layups" },
       { name: "Floaters",            default: 20, slug: "floaters" },
       { name: "Euro-step",           default: 20, slug: "euro-step" },
       { name: "Hop-step",            default: 20, slug: "hop-step" },
