@@ -37,7 +37,17 @@ const TRACK = "flex items-center gap-[2px] rounded-[8px] bg-reps-card p-[3px]";
 // menus use z-40 for their click-away and z-50 for the dropdown, so the bar has
 // to sit below both or it would clip a menu opened on the top row. Above the
 // cards (no z) and below the menus.
-const STICKY_BAR = "sticky top-0 z-20 -mx-[1.25rem] px-[1.25rem] pt-2 pb-3 bg-reps-bg";
+// pb-5 (20px) is the gap between the pills and the first card, deliberately
+// double the 10px the cards keep between themselves. At the old pb-3 the two
+// were 12 vs 10 — near enough that the tab bar read as one more item in the
+// stack rather than as a control sitting above it.
+//
+// ⚠️ The gap belongs to the BAR's padding, not to a margin on the list. A margin
+// would collapse the moment the bar pins: the card would scroll up under it and
+// the only thing left between pills and content would be the bar's own padding.
+// Keeping it here holds the same distance whether the bar is resting or stuck,
+// and gives the pinned band enough body to mask the rows passing beneath it.
+const STICKY_BAR = "sticky top-0 z-20 -mx-[1.25rem] px-[1.25rem] pt-2 pb-5 bg-reps-bg";
 const TAB_BASE =
   "flex-1 flex items-center justify-center gap-1.5 rounded-[6px] py-[7px] text-[12px] font-medium transition-colors";
 const TAB_ON = "bg-[#378add] text-white";

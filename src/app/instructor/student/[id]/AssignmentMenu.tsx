@@ -54,7 +54,18 @@ const MENU_ITEM = `${MENU_ITEM_BASE} text-reps-ink disabled:opacity-50 disabled:
 const MENU_DIVIDER = "border-t border-reps-line";
 // 16px at strokeWidth 2, matching the inline User icon in ProfileMenu. shrink-0
 // so a long label can never squash the glyph.
-const ICON = { size: 16, strokeWidth: 2, className: "shrink-0" } as const;
+//
+// Dimmed so the glyph supports the label instead of competing with it. The
+// precedent is that same ProfileMenu icon, which is pinned to #8a8fa8 rather
+// than inheriting full-strength ink — the app already treats a supporting icon
+// as muted.
+//
+// Opacity rather than that literal hex, though: these icons inherit their row's
+// colour, and hard-coding grey would leave a grey bin beside a red "Delete
+// assignment", splitting the one row that most needs to read as a single red
+// unit. At 60% over --reps-raised, white lands near #a7a8ab — squarely in the
+// app's muted range — while red-400 softens without ceasing to look red.
+const ICON = { size: 16, strokeWidth: 2, className: "shrink-0 opacity-60" } as const;
 
 const EDIT_SUBTITLE: Record<GoalType, string> = {
   reps: "Edit amount",

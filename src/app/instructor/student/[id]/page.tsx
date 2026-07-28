@@ -94,7 +94,10 @@ export default async function CoachPlayerPage({
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      <div className="flex items-center gap-3 mb-6">
+      {/* Header block runs tighter than the app's default mb-6 rhythm: the space
+          it gives up is spent below the tab bar, where a real gap is doing work.
+          Back row 24 -> 20. */}
+      <div className="flex items-center gap-3 mb-5">
         <Link
           href="/instructor/students"
           className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
@@ -104,7 +107,10 @@ export default async function CoachPlayerPage({
         <span className="text-[14px] font-medium text-reps-sub" style={{ textTransform: "capitalize" }}>{labels.studentsLabel}</span>
       </div>
 
-      <div className="flex items-center gap-[14px] mb-6">
+      {/* Header row 24 -> 16. The sticky bar carries its own pt-2, so the space
+          the eye reads between this block and the tab pills is 16 + 8 = 24,
+          down from 32. */}
+      <div className="flex items-center gap-[14px] mb-4">
         <div
           className="w-[52px] h-[52px] rounded-full flex items-center justify-center text-[18px] font-semibold shrink-0"
           style={{ background: "#252830", border: "0.5px solid #2a2d36", color: "#8a8fa8" }}
