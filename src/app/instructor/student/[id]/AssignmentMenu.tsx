@@ -5,13 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, MoreVertical, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { GOAL_PRESETS } from "@/lib/exercises";
 import type { GoalType } from "@/lib/exercises";
-import {
-  deleteAssignment,
-  moveAssignmentToLogged,
-  moveAssignmentToNew,
-  repeatAssignment,
-  updateAssignmentTarget,
-} from "./actions";
+import { updateAssignmentTarget } from "./actions";
 
 type Props = {
   assignmentId: string;
@@ -34,6 +28,19 @@ type Props = {
    *  Independent of isDone: a finished card stays in New until someone moves it.
    *  Only decides the DIRECTION of the move action. */
   isFiled: boolean;
+  /** True while this card is an unconfirmed optimistic placeholder. Its id is
+   *  local-only, so acting on it would target a row the server has never seen. */
+  disabled?: boolean;
+  /** ⚠️ These four no longer call the server here. CoachAssignmentList owns the
+   *  row list, so it owns the optimistic edit, the mutation, the rollback and
+   *  the error toast — all four have to happen together or the card and the
+   *  list would disagree about where it is. This component just says "the coach
+   *  tapped this"; Edit amount stays local because it mutates nothing about
+   *  which list a card belongs to. */
+  onArchive: () => void;
+  onMoveToNew: () => void;
+  onDelete: () => void;
+  onAssignAgain: () => void;
 };
 
 // What the target means, per goal. "Edit amount" is only honest for attempts —
@@ -88,15 +95,20 @@ const EDIT_SUBTITLE: Record<GoalType, string> = {
 // "Delete", not "Remove": the menu also carries "Archive" and "Move back to
 // New", and remove/move read as neighbours. Delete says outright that the row is
 // gone — and matches "Delete exercise" in CustomExerciseMenu.
-export default function AssignmentMenu({ assignmentId, exerciseName, target, presets, goalType, hasProgress, isDone, isFiled }: Props) {
+export default function AssignmentMenu({
+  assignmentId, exerciseName, target, presets, goalType, hasProgress, isDone, isFiled,
+  disabled = false, onArchive, onMoveToNew, onDelete, onAssignAgain,
+}: Props) {
   const router = useRouter();
+  // Only "Edit amount" still calls the server from this component, so this is
+  // the only spinner left. The other four hand off to CoachAssignmentList and
+  // return immediately — a pending label on them could never render.
   const [isPending, startTransition] = useTransition();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(target);
   const [editCustom, setEditCustom] = useState(false);
-  const [toast, setToast] = useState("");
 
   // Same rule as the count screen, so assigning and editing offer the identical
   // row: a makes goal counts in makes and a streak in consecutive hits, neither
@@ -112,61 +124,33 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
     setEditOpen(true);
   }
 
+  // Closes the dialog and hands off immediately — the card is already gone from
+  // the list by the time this returns, so there is nothing here to wait for.
   function handleRemove() {
-    startTransition(async () => {
-      const result = await deleteAssignment(assignmentId);
-      if (result.ok) {
-        setConfirmOpen(false);
-        router.refresh();
-      }
-    });
+    setConfirmOpen(false);
+    onDelete();
   }
 
-  // Closes the menu before the request rather than after it, so the item can't
-  // be tapped a second time while the first is still in flight — the pending
-  // guard backs that up for a fast double-tap that beats the re-render.
+  // Both of these close the menu and return. The optimistic update in the
+  // parent lands on the next frame; the server call runs behind it.
   //
-  // Note this only stops an ACCIDENTAL repeat. Once the refresh lands, the
-  // original card is still finished and still offers "Assign again", so a coach who
-  // deliberately taps again gets a second assignment. That is the right
-  // behaviour: assigning the same drill twice is a legitimate thing to want.
+  // Tapping twice is still only an accidental-repeat concern, and closing the
+  // menu first is what prevents it. A coach who deliberately reopens and taps
+  // again gets a second assignment, which is legitimate.
   function handleRepeat() {
-    if (isPending) return;
+    if (disabled) return;
     setMenuOpen(false);
-    startTransition(async () => {
-      const result = await repeatAssignment(assignmentId);
-      if (!result.ok) {
-        setToast(result.error);
-        setTimeout(() => setToast(""), 3000);
-        return;
-      }
-      setToast("Assigned again");
-      setTimeout(() => setToast(""), 2500);
-      router.refresh();
-    });
+    onAssignAgain();
   }
 
   // Single tap, no confirm dialog — filing is reversible in one tap the other
   // way, so a modal would be ceremony over a decision that costs nothing to
   // undo. Contrast handleRemove, which is a real delete and keeps its dialog.
   function handleMove() {
-    if (isPending) return;
+    if (disabled) return;
     setMenuOpen(false);
-    startTransition(async () => {
-      const result = isFiled
-        ? await moveAssignmentToNew(assignmentId)
-        : await moveAssignmentToLogged(assignmentId);
-      if (!result.ok) {
-        setToast(result.error);
-        setTimeout(() => setToast(""), 3000);
-        return;
-      }
-      // Names the destination, since the card vanishes from the tab the coach is
-      // looking at and reappears in one they aren't.
-      setToast(isFiled ? "Moved to New" : "Archived");
-      setTimeout(() => setToast(""), 2500);
-      router.refresh();
-    });
+    if (isFiled) onMoveToNew();
+    else onArchive();
   }
 
   function handleSaveAmount() {
@@ -263,17 +247,6 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
         )}
       </div>
 
-      {/* "Assign again" has no dialog and no visible result on this card — the new row
-          appears further down the list — so it needs some acknowledgement.
-          Doubles as the error surface for the stale-page case, where the server
-          rejects a repeat the menu still offered. Same treatment as the toast in
-          PlayerManage. */}
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-reps-raised border border-reps-line rounded-[10px] px-5 py-3 text-[14px] text-reps-sub shadow-xl">
-          {toast}
-        </div>
-      )}
-
       {confirmOpen && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70"
@@ -301,10 +274,10 @@ export default function AssignmentMenu({ assignmentId, exerciseName, target, pre
               </button>
               <button
                 onClick={handleRemove}
-                disabled={isPending}
+                disabled={disabled}
                 className="flex-1 min-h-[44px] rounded-[10px] bg-red-500 text-white font-semibold text-[15px] hover:bg-red-400 disabled:opacity-50 transition-colors"
               >
-                {isPending ? "Deleting…" : "Delete"}
+                Delete
               </button>
             </div>
           </div>
