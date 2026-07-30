@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reps — Screen Mockups (2026-07-27)</title>
+<style>
+  /* ---- App design tokens (from src/app/globals.css) ---- */
+  :root {
+    --reps-bg:        #080b0f;
+    --reps-card:      #1c1f26;
+    --reps-raised:    #22252e;
+    --reps-line:      #2a2d36;
+    --reps-line-hi:   #3a3d46;
+    --reps-ink:       #ffffff;
+    --reps-sub:       #8a8fa8;
+    --reps-dim:       #8a8fa8;
+    --reps-label:     #c8cdd8;
+    --blue:           #378add;
+    --blue-hi:        #4a9ae8;
+    --placeholder:    #5a5f72;
+    --row:            #111620;
+    --red:            #f87171;
+
+    /* ---- One green family — EMERALD, hue 150 (rotated July 27 2026) ----
+       Two tokens, one hue: they differ only in saturation and lightness, so they
+       read as one colour at two weights rather than as two greens. Rotated from
+       a lime H102 carrying the S/L relationship across intact. The confetti,
+       previously the lone outlier at H151, now uses --green outright — every
+       green in the app is H150. Yellow is gone platform-wide. */
+    --track:          #2a2d36;  /* empty bar track — same value as --reps-line */
+    --attempts:       #247a4f;  /* muted emerald  H150 S54 L31 — attempts fill + ATTEMPTS label/number */
+    --green:          #3ed68a;  /* bright emerald H150 S65 L54 — makes + every done state */
+    /* Group labels lost their pill backgrounds (July 25 2026) and "In progress"
+       is no longer green at all, so the old --prog-text / --prog-dot pair is
+       gone. Green on the roster now means Done and nothing else. */
+    --label-progress: #8a8fa8;  /* In progress — neutral, active but unearned */
+    --label-idle:     #6b7080;  /* Not started + Nothing assigned */
+    --label-sub:      #7d8494;  /* row subtext + timestamps 24h or older */
+
+    /* doc chrome */
+    --doc-bg:         #0b0c0f;
+    --doc-panel:      #16181d;
+    --doc-line:       #23262e;
+    --doc-ink:        #d7dae2;
+    --doc-dim:        #7a8090;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--doc-bg);
+    color: var(--doc-ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+
+  /* ---------- Layout ---------- */
+  .layout { display: flex; align-items: flex-start; }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    width: 210px;
+    flex: 0 0 210px;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 22px 16px 40px;
+    border-right: 1px solid var(--doc-line);
+    background: #0d0e12;
+  }
+  .brand { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; padding: 0 6px; }
+  .brand .name { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+  .brand .tag  { font-size: 11px; color: var(--doc-dim); padding: 0 6px 18px; display: block; }
+
+  .nav-group { margin-bottom: 18px; }
+  .nav-group h4 {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1.4px;
+    text-transform: uppercase; color: var(--doc-dim);
+    margin: 0 0 7px; padding: 0 6px;
+  }
+  .nav-group a {
+    display: block; text-decoration: none;
+    font-size: 12.5px; color: var(--doc-ink);
+    padding: 5px 8px; border-radius: 7px; line-height: 1.3;
+  }
+  .nav-group a:hover { background: var(--doc-panel); color: #fff; }
+  .nav-group a .new { color: var(--green); font-size: 10px; font-weight: 700; }
+
+  .main { flex: 1 1 auto; min-width: 0; padding: 30px 34px 120px; }
+  .main-head { max-width: 1300px; margin: 0 auto 30px; }
+  .main-head h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin: 0 0 8px; color: #fff; }
+  .main-head p  { font-size: 13.5px; color: var(--doc-dim); margin: 0 0 10px; max-width: 760px; line-height: 1.55; }
+  .main-head code { color: var(--doc-ink); }
+
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .sw {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--doc-line); border-radius: 8px;
+    padding: 5px 10px 5px 6px; font-size: 11.5px; color: var(--doc-ink);
+  }
+  .sw i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .sw b { font-weight: 600; }
+  .sw span { color: var(--doc-dim); }
+
+  .section { max-width: 1300px; margin: 0 auto 14px; scroll-margin-top: 12px; }
+  .section-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase;
+    color: var(--blue); margin: 40px 0 20px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--doc-line);
+  }
+
+  .grid { display: flex; flex-wrap: wrap; gap: 40px 30px; max-width: 1300px; margin: 0 auto; }
+
+  .cell { flex: 1 1 390px; max-width: 390px; min-width: 0; scroll-margin-top: 16px; }
+  .cell.wide { flex: 1 1 810px; max-width: 810px; }
+  .cell .caption { margin: 0 0 10px; padding: 0 2px; }
+  .cell .caption .cap-name { font-size: 13.5px; font-weight: 600; color: var(--doc-ink); }
+  .cell .caption .cap-state { font-size: 12px; color: var(--doc-dim); }
+  .cell .caption .cap-state::before { content: "— "; }
+  .cell .note { margin: 8px 2px 0; font-size: 11.5px; line-height: 1.5; color: var(--doc-dim); }
+
+  /* ---------- Phone frame ---------- */
+  .phone {
+    width: 100%;
+    border-radius: 34px;
+    border: 1px solid var(--reps-line);
+    background: var(--reps-bg);
+    padding: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+  }
+  .screen {
+    position: relative;
+    border-radius: 27px;
+    overflow: hidden;
+    background: var(--reps-bg);
+    min-height: 720px;
+    display: flex;
+    flex-direction: column;
+    color: var(--reps-ink);
+  }
+  /* status-bar notch hint */
+  .screen::before {
+    content: "";
+    position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+    width: 92px; height: 5px; border-radius: 3px; background: #2a2d36; z-index: 30;
+  }
+  .pad { padding: 34px 20px 24px; display: flex; flex-direction: column; flex: 1; }
+
+  /* ---------- App primitives ---------- */
+  .logo-mini { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #378add; }
+  .logo-mini svg { display: block; flex-shrink: 0; }
+
+  .h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; color: var(--reps-ink); margin: 0; }
+  .h2 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; color: var(--reps-ink); margin: 0; }
+  .sub { font-size: 13px; color: var(--reps-sub); margin: 0; }
+  .sub-sm { font-size: 12px; color: var(--reps-sub); margin: 0; }
+  .dim { color: var(--reps-dim); }
+  .label-cap { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--reps-dim); }
+  .field-label { font-size: 13px; font-weight: 500; color: var(--reps-label); }
+
+  .input {
+    width: 100%; background: var(--reps-card); border: 1px solid var(--reps-line);
+    border-radius: 10px; padding: 14px; font-size: 16px; color: var(--reps-ink);
+    font-family: inherit;
+  }
+  .input::placeholder { color: var(--placeholder); }
+  .input.focus { border-color: var(--blue); }
+  .input.center { text-align: center; }
+
+  .btn {
+    display: block; width: 100%; text-align: center; text-decoration: none;
+    border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 600;
+    border: none; cursor: default; font-family: inherit;
+  }
+  .btn-blue { background: var(--blue); color: #fff; }
+  .btn-disabled { background: var(--reps-card); color: #3d4252; }
+  .btn-ghost { background: var(--reps-card); color: var(--reps-ink); font-weight: 500; border: 1px solid var(--reps-line-hi); }
+  .btn-soft  { background: var(--reps-card); color: var(--reps-label); font-weight: 500; border-top: .5px solid var(--reps-line); }
+  /* Clear-completed confirm — outlined in the done-green rather than filled. */
+  .btn-green-outline { background: rgba(62,214,138,0.10); border: 1px solid var(--green); color: var(--green); }
+
+  .err {
+    background: rgba(127,29,29,0.2); border: 1px solid rgba(239,68,68,0.3);
+    color: #f87171; border-radius: 10px; padding: 11px 16px; font-size: 14px;
+  }
+
+  .avatar {
+    display: flex; align-items: center; justify-content: center; border-radius: 50%;
+    background: #252830; border: .5px solid var(--reps-line); color: var(--reps-sub);
+    font-weight: 600; flex-shrink: 0;
+  }
+
+  /* ---------- Bars ----------
+     Heights are the shipped ones (July 24): 3px on both list surfaces (student
+     home cards, coach detail cards), 6px on the log screen. Both came down a
+     step from the July 22 build (was 6px / 10px). Two-tone stacks a bright makes
+     layer over the muted attempts layer — both measured against the target. */
+  /* Card bars went 3px -> 2px on July 27 2026: some players now carry 10+
+     assignments at once and a stack of ten read as heavy banding. The log
+     screen's own bar (.lg) deliberately stays 6px — one bar on its own screen,
+     not one of a stack. */
+  .bar { height: 2px; background: var(--track); border-radius: 999px; overflow: hidden; }
+  .bar.lg { height: 6px; }
+  .bar > i { display: block; height: 100%; border-radius: 999px; }
+  .bar > i.green { background: var(--green); }
+  .bar > i.att   { background: var(--attempts); }
+  .bar.two { position: relative; }
+  .bar.two > i { position: absolute; top: 0; bottom: 0; left: 0; height: auto; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; border-radius: 20px;
+    padding: 3px 8px; font-size: 11px; font-weight: 600;
+  }
+  .pill i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+  .row-card {
+    display: flex; align-items: center; gap: 12px; padding: 8px 14px;
+    border-radius: 10px; background: var(--row); text-decoration: none;
+  }
+  .assign-card { border-radius: 10px; background: var(--row); display: flex; align-items: stretch; }
+  /* "made 8/20 · 40%" under a card's bar. The percentage lifts to the label
+     colour; it is omitted entirely when makes > attempts (bad data). */
+  .makes-line { margin-top: 8px; font-size: 11px; color: var(--reps-dim); }
+  .makes-line b { color: var(--reps-label); font-weight: 400; }
+
+  .chip { /* recipient toggle */
+    display: inline-flex; gap: 2px; background: var(--reps-card); border-radius: 7px; padding: 3px;
+  }
+  .chip button { border: none; background: none; border-radius: 5px; padding: 3px 10px; font-size: 11px; color: var(--reps-sub); font-family: inherit; }
+  .chip button.on { background: var(--blue); color: #fff; }
+
+  .seg { display: flex; gap: 2px; background: var(--reps-bg); border-radius: 8px; padding: 3px; }
+  .seg button { flex: 1; border: none; background: none; border-radius: 6px; padding: 7px; font-size: 12px; font-weight: 500; color: var(--reps-sub); font-family: inherit; }
+  .seg button.on { background: var(--blue); color: #fff; }
+
+  .preset { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 500; background: var(--reps-card); border: 1px solid var(--reps-line); color: var(--reps-ink); text-align: center; }
+  .preset.on { background: rgba(55,138,221,0.1); border-color: rgba(55,138,221,0.3); color: var(--blue); }
+
+  .list-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border: 1px solid var(--reps-line); border-radius: 10px; text-decoration: none;
+  }
+  .list-row .rt { font-size: 15px; font-weight: 500; color: var(--reps-ink); }
+  .list-row .rh { font-size: 12px; color: var(--reps-dim); margin-top: 2px; }
+  .chev { font-size: 18px; color: var(--reps-dim); }
+
+  .banner-done {
+    text-align: center; border-radius: 10px; padding: 12px 14px;
+    background: rgba(62,214,138,0.06); border: .5px solid rgba(62,214,138,0.15);
+  }
+
+  /* ---------- New / Archive tabs (July 27 2026) ----------
+     Borrowed from the add-student recipient toggle and the edit-phone modal
+     rather than inventing an underline style the app uses nowhere else. The
+     bar is sticky on both list screens; its padding-bottom (not a margin on
+     the list) carries the 20px gap to the first card, so the gap survives
+     when the bar pins and cards scroll underneath it. */
+  .tabs { display: flex; align-items: center; gap: 2px; border-radius: 8px;
+          background: var(--reps-card); padding: 3px; }
+  .tabs > span { flex: 1; display: inline-flex; align-items: center; justify-content: center;
+                 gap: 6px; border-radius: 6px; padding: 7px 0; font-size: 12px; font-weight: 500;
+                 color: var(--reps-sub); }
+  .tabs > span.on { background: var(--blue); color: #fff; }
+  .tabs > span b { font-weight: 500; color: var(--reps-dim); }
+  .tabs > span.on b { color: rgba(255,255,255,.7); }
+  /* The 20px pause under the bar, and the same 20px under the all-done panel:
+     one rule for the screen — things that aren't cards get 20px below them,
+     cards get 10px between them. */
+  .tabs-wrap { margin-bottom: 20px; }
+
+  /* The 🎉 panel. NOT a page-level banner any more — it is the New tab's own
+     content: above the cards when finished work is still waiting, and the
+     empty state itself once everything is archived. Unreachable from the
+     Archive tab by structure, not by condition. */
+  .alldone {
+    text-align: center; border-radius: 10px; padding: 18px 14px; margin-bottom: 20px;
+    background: rgba(62,214,138,0.06); border: .5px solid rgba(62,214,138,0.15);
+  }
+  .alldone .em { font-size: 22px; line-height: 1; margin-bottom: 6px; }
+  .alldone .hl { font-size: 14px; font-weight: 500; color: var(--reps-ink); }
+  .alldone .sb { font-size: 13px; margin-top: 2px; color: rgba(255,255,255,.55); }
+  /* Quiet text link, matching the original "Clear finished" treatment — not a
+     bordered button, which the app uses nowhere else and which competed with
+     the primary CTA. */
+  .alldone .act { display: inline-block; margin-top: 12px; font-size: 13px; color: var(--reps-label); }
+
+  /* ---------- Log-screen stepper ----------
+     − / bare number / +. The number carries no box; it floats between two round
+     buttons. Same control at two sizes: hero (67px buttons, 76px number) and the
+     inline makes row (50px buttons, 31px number). */
+  .step { display: flex; align-items: center; }
+  .step button {
+    flex-shrink: 0; border: none; border-radius: 999px; background: #2a2d36;
+    color: var(--reps-ink); line-height: 1; font-family: inherit;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step button.off { color: #555; }
+  .step .num {
+    text-align: center; font-weight: 600; line-height: 1;
+    font-variant-numeric: tabular-nums; background: none; border: none;
+  }
+  .step.hero { gap: 20px; }
+  .step.hero button { width: 67px; height: 67px; font-size: 38px; }
+  .step.hero .num { flex: 1; min-width: 0; font-size: 76px; }
+  .step.mini { gap: 8px; }
+  .step.mini button { width: 50px; height: 50px; font-size: 28px; }
+  .step.mini .num { width: 60px; flex-shrink: 0; font-size: 31px; }
+
+  .step-label { display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; }
+
+  /* Track-makes switch on the count screen */
+  .switch { position: relative; flex-shrink: 0; width: 46px; height: 26px; border-radius: 999px; background: var(--reps-line); border: none; }
+  .switch.on { background: var(--blue); }
+  .switch i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .switch.on i { left: 23px; }
+
+  /* modal-over-screen */
+  .backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 20; }
+  .backdrop.sheet { align-items: flex-end; padding: 0; background: rgba(0,0,0,0.6); }
+  .modal { width: 100%; max-width: 320px; background: var(--reps-card); border: 1px solid var(--reps-line); border-radius: 16px; padding: 28px 28px 32px; }
+  .modal h3 { font-size: 16px; font-weight: 600; color: var(--reps-ink); margin: 0 0 8px; }
+  .modal p  { font-size: 13px; color: var(--reps-sub); margin: 0 0 22px; }
+  .modal .actions { display: flex; gap: 12px; }
+  .modal .actions button { flex: 1; min-height: 44px; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: inherit; border: none; }
+  .btn-cancel { background: none; border: 1px solid var(--reps-line) !important; color: var(--reps-ink); }
+  .btn-red { background: var(--red); color: #fff; }
+  .sheet-panel { background: var(--reps-card); border-radius: 16px 16px 0 0; padding: 24px 24px 30px; width: 100%; }
+  .sheet-panel h3 { font-size: 17px; font-weight: 600; color: var(--reps-ink); margin: 0 0 8px; }
+  .sheet-panel p  { font-size: 14px; color: var(--reps-sub); margin: 0 0 24px; }
+
+  /* Toast — "Link copied" after the share fallback */
+  .toast {
+    position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 40;
+    background: var(--reps-raised); border: 1px solid var(--reps-line); border-radius: 10px;
+    padding: 12px 20px; font-size: 14px; color: var(--reps-sub); box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    white-space: nowrap;
+  }
+
+  /* July 27 2026: AssignmentMenu adopted PlayerManage's pattern — a raised
+     surface with items running flush to the edges (clipped by overflow:hidden),
+     a hairline rule between rows rather than gaps, and no padding on the panel
+     itself. It was previously the odd one out with a padded box and rounded
+     inner items. CustomExerciseMenu still uses the old style. */
+  .dropdown { position: absolute; z-index: 25; background: var(--reps-raised); border: 1px solid var(--reps-line); border-radius: 10px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.5); min-width: 190px; }
+  .dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; padding: 12px 16px; font-size: 14px; color: var(--reps-ink); font-family: inherit; white-space: nowrap; }
+  .dropdown button.red { color: var(--red); }
+  .dropdown button + button { border-top: 1px solid var(--reps-line); }
+  /* lucide at 16px / strokeWidth 2, dimmed to 0.6 so the glyph supports the
+     label rather than competing with it. Opacity rather than a fixed grey, so
+     the Delete row's icon stays red instead of going neutral beside red text. */
+  .dropdown button svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .6; }
+
+  .kebab { display: flex; align-items: center; justify-content: center; color: #52576a; }
+  .header-menu-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgba(42,45,54,0.5); background: rgba(28,31,38,0.3); color: var(--reps-sub); }
+
+  .flex { display: flex; }
+  .between { justify-content: space-between; }
+  .center { align-items: center; }
+  .col { flex-direction: column; }
+  .gap6 { gap: 6px; } .gap8 { gap: 8px; } .gap10 { gap: 10px; } .gap12 { gap: 12px; } .gap14 { gap: 14px; }
+  .grow { flex: 1; }
+  .mt-auto { margin-top: auto; }
+  .tcenter { text-align: center; }
+  .trunc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Landing (marketing) mini */
+  .landing { background: #ede9e3; color: #0f0f10; min-height: 720px; display: flex; flex-direction: column; }
+  .landing .top { display: flex; align-items: center; justify-content: space-between; padding: 40px 22px 0; }
+  .landing .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #2d7bc4; }
+  .landing h2 { font-size: 30px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.14; color: #0f0f10; margin: 8px 0 18px; }
+  .landing .bl { display: flex; align-items: center; gap: 11px; padding: 4px 0; font-size: 17px; font-weight: 600; color: #1a1a1a; }
+  .landing .dot { width: 20px; height: 20px; flex-shrink: 0; color: #378add; }
+  .landing .cta { display: block; background: #2d7bc4; color: #fff; font-weight: 700; font-size: 16px; padding: 15px 0; border-radius: 10px; text-align: center; text-decoration: none; margin-top: 24px; }
+  .hero-duo { position: relative; width: 220px; height: 175px; margin: 22px auto 4px; }
+  .hero-c { position: absolute; border-radius: 50%; border: 5px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; background: #d9d4cc; }
+  .hero-c img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-lg { width: 150px; height: 150px; left: 0; top: 0; }
+  .hero-sm { width: 100px; height: 100px; right: 0; bottom: 0; z-index: 2; }
+
+  /* Landing product-loop band — four miniature phones on #1a1d24. Everything
+     inside a frame is sized in em against the frame's own font-size, exactly as
+     the shipped section does it. */
+  .loop-band { background: #1c1f26; padding: 34px 0 30px; }  /* --reps-card: the surface the phones sit ON, one step lighter than the frames */
+  .loop-band h3 { margin: 0 0 8px; text-align: center; color: #fff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .loop-example { margin: 0 0 22px; text-align: center; font-size: 12px; font-weight: 500; color: #8a8fa8; }  /* --reps-sub: a caption, not a subhead */
+  .loop-track { display: flex; gap: 14px; justify-content: center; padding: 0 18px; }
+  .loop-item { display: flex; flex-direction: column; align-items: center; }
+  .loop-phone {
+    --pw: 150px; width: var(--pw); font-size: calc(var(--pw) / 13);
+    aspect-ratio: 9 / 19; flex-shrink: 0; display: flex; flex-direction: column;
+    padding: 1.1em 0.9em; background: #111318; border: 1px solid #2a2d36;
+    border-radius: 22px; overflow: hidden;
+  }
+  .loop-caption { margin: 12px 0 0; text-align: center; font-size: 14px; font-weight: 600; color: #ffffff; white-space: nowrap; }
+  .mini-bar { height: 0.28em; border-radius: 999px; background: #2a2d36; overflow: hidden; }
+  .mini-bar > i { display: block; height: 100%; border-radius: 999px; }
+  .mini-card { background: #161a20; border: 1px solid #2a2d36; border-radius: 0.62em; padding: 0.55em 0.62em; }
+  .mini-card .top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.45em; gap: 0.4em; }
+  .mini-card .nm { font-size: 0.74em; font-weight: 500; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-card .rt { font-size: 0.64em; white-space: nowrap; flex-shrink: 0; color: #c8cdd8; }
+  .mini-row { display: flex; align-items: center; gap: 0.45em; padding: 0.4em 0.5em; background: #1c1f26; border: 1px solid #2a2d36; border-radius: 0.55em; }
+  .mini-row .av { width: 1.35em; height: 1.35em; border-radius: 999px; background: #22252e; color: #c8cdd8; font-size: 0.62em; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .mini-pill { display: inline-flex; align-items: center; gap: 0.3em; font-size: 0.6em; font-weight: 600; padding: 0.25em 0.55em; border-radius: 999px; }
+  .mini-pill i { width: 0.4em; height: 0.4em; border-radius: 999px; display: inline-block; }
+
+  /* Landscape takeover (root layout) */
+  .landscape {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; padding: 32px; text-align: center; background: var(--reps-bg);
+    color: var(--reps-sub); font-size: 15px; flex: 1;
+  }
+
+  @media (max-width: 820px) {
+    .layout { flex-direction: column; }
+    .sidebar {
+      position: sticky; top: 0; width: 100%; flex: none; height: auto;
+      border-right: none; border-bottom: 1px solid var(--doc-line);
+      display: flex; gap: 18px; overflow-x: auto; white-space: nowrap;
+      padding: 12px 16px; z-index: 50;
+    }
+    .brand, .brand .tag { display: none; }
+    .nav-group { margin: 0; flex: 0 0 auto; }
+    .nav-group h4 { margin-bottom: 5px; }
+    .nav-group a { display: inline-block; padding: 4px 8px; }
+    .main { padding: 20px 16px 100px; }
+    .loop-track { overflow-x: auto; justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#378add"/><line x1="9" y1="8" x2="9" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><line x1="14" y1="8" x2="14" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><line x1="19" y1="8" x2="19" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><line x1="24" y1="8" x2="24" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><line x1="6" y1="23" x2="27" y2="9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <span class="name">Reps</span>
+    </div>
+    <span class="tag">Screen mockups · Jul 27 2026</span>
+
+    <nav class="nav-group">
+      <h4>Marketing</h4>
+      <a href="#landing">Landing · Hero</a>
+      <a href="#landing-loop">Landing · Product loop <span class="new">NEW</span></a>
+    </nav>
+
+    <nav class="nav-group">
+      <h4>Coach · Signup</h4>
+      <a href="#signup-name">Name</a>
+      <a href="#signup-name-empty">Name · CTA inactive <span class="new">NEW</span></a>
+      <a href="#signup-type">Discipline</a>
+      <a href="#signup-email">Email</a>
+      <a href="#signup-code">Code</a>
+    </nav>
+
+    <nav class="nav-group">
+      <h4>Coach · Roster</h4>
+      <a href="#roster-empty">Roster · Empty</a>
+      <a href="#roster-active">Roster · Grouped</a>
+      <a href="#add-student">Add player · To player</a>
+      <a href="#add-student-parent">Add player · To parent</a>
+      <a href="#add-student-empty">Add player · CTA inactive</a>
+      <a href="#profile-menu">Profile menu <span class="new">NEW</span></a>
+      <a href="#edit-name">Edit name · modal <span class="new">NEW</span></a>
+      <a href="#edit-name-saving">Edit name · saving <span class="new">NEW</span></a>
+      <a href="#signout">Sign out dialog</a>
+    </nav>
+
+    <nav class="nav-group">
+      <h4>Coach · Student</h4>
+      <a href="#student-empty">Detail · Nothing assigned</a>
+      <a href="#student-detail">Detail · In progress</a>
+      <a href="#student-makes">Detail · Makes tracked</a>
+      <a href="#student-goals">Detail · Goals + side <span class="new">NEW</span></a>
+      <a href="#student-alldone">Detail · All done</a>
+      <a href="#header-menu">Header menu</a>
+      <a href="#toast">Link copied toast <span class="new">NEW</span></a>
+      <a href="#edit-phone">Edit phone modal</a>
+      <a href="#remove-student">Remove student modal</a>
+      <a href="#assignment-menu">Assignment menu</a>
+      <a href="#assignment-menu-progress">Assignment menu · logged <span class="new">NEW</span></a>
+      <a href="#assignment-menu-done">Menu · Complete <span class="new">NEW</span></a>
+      <a href="#assignment-menu-archived">Menu · Archived <span class="new">NEW</span></a>
+      <a href="#edit-amount">Edit amount modal</a>
+      <a href="#remove-assignment">Delete assignment modal</a>
+      <a href="#detail-archived">Detail · All archived <span class="new">NEW</span></a>
+      <a href="#detail-archive-tab">Detail · Archive tab <span class="new">NEW</span></a>
+    </nav>
+
+    <nav class="nav-group">
+      <h4>Coach · Assign</h4>
+      <a href="#assign-cats">Categories</a>
+      <a href="#assign-list">Exercise list</a>
+      <a href="#assign-count">Count · Goal attempts <span class="new">NEW</span></a>
+      <a href="#assign-count-makes">Count · Goal makes <span class="new">NEW</span></a>
+      <a href="#assign-count-consec">Count · Goal consecutive <span class="new">NEW</span></a>
+      <a href="#assign-side">Count · Side row <span class="new">NEW</span></a>
+      <a href="#assign-count-min">Count · Ball-handling <span class="new">NEW</span></a>
+      <a href="#assign-sent">Sent</a>
+      <a href="#custom">Create your own</a>
+      <a href="#mine">My exercises</a>
+      <a href="#mine-empty">My exercises · Empty <span class="new">NEW</span></a>
+      <a href="#delete-exercise">Delete exercise modal <span class="new">NEW</span></a>
+    </nav>
+
+    <nav class="nav-group">
+      <h4>Student</h4>
+      <a href="#student-home">Home · In progress</a>
+      <a href="#student-home-makes">Home · Makes tracked</a>
+      <a href="#student-home-goals">Home · Goals + side <span class="new">NEW</span></a>
+      <a href="#student-home-sticky">Home · Sticky header <span class="new">NEW</span></a>
+      <a href="#student-home-done">Home · All done</a>
+      <a href="#student-home-empty">Home · Caught up</a>
+      <a href="#log-makes">Log · Attempts + makes</a>
+      <a href="#log-makes-goal">Log · Makes goal (hero) <span class="new">NEW</span></a>
+      <a href="#log-consec">Log · Consecutive <span class="new">NEW</span></a>
+      <a href="#log-reps">Log · Reps only</a>
+      <a href="#log-minutes">Log · Minutes</a>
+      <a href="#log-done">Log · Complete, locked</a>
+      <a href="#celebrate-done">Celebrate · Done</a>
+      <a href="#celebrate-partial">Celebrate · Partial</a>
+      <a href="#login-phone">Login · Phone</a>
+      <a href="#login-code">Login · Code</a>
+    </nav>
+
+    <nav class="nav-group">
+      <h4>Parent</h4>
+      <a href="#parent-alldone">Digest · All done <span class="new">NEW</span></a>
+      <a href="#parent-strong">Digest · Strong week</a>
+      <a href="#parent-quiet">Digest · Quiet week</a>
+      <a href="#parent-notstarted">Digest · Not started <span class="new">NEW</span></a>
+      <a href="#parent-none">Digest · Nothing assigned</a>
+    </nav>
+
+    <nav class="nav-group">
+      <h4>Edge cases</h4>
+      <a href="#err-email">Error · Email OTP</a>
+      <a href="#err-add">Error · Add player</a>
+      <a href="#err-log">Error · Log save</a>
+      <a href="#err-login">Error · Student OTP <span class="new">NEW</span></a>
+      <a href="#err-count">Error · Assign target <span class="new">NEW</span></a>
+      <a href="#makes-baddata">Makes &gt; attempts <span class="new">NEW</span></a>
+      <a href="#landscape">Landscape notice <span class="new">NEW</span></a>
+    </nav>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+    <div class="main-head">
+      <h1>Reps — Screen Mockups</h1>
+      <p>A static reference gallery of every screen and meaningful UI state across the Coach, Student and Parent flows, rebuilt from the production page code in <code>src/app</code>, current as of <strong>July 27 2026</strong>. The prod commit is deliberately not recorded here — it drifts on every push; run <code>git branch -r -v</code> instead. Data is invented; only Coach RJ, students Neo, Adam, Maya, Jordan and Sofia, and the exercise names from <code>src/lib/exercises.ts</code> are real. Not connected to any backend.</p>
+      <p>Supersedes <code>mocks-2026-07-25-1441.html</code>. Changed since — the <strong>manual Archive model</strong>. Both list screens now split into <strong>New / Archive</strong> tabs driven by <code>assignments.filed_at</code> and nothing else; completion no longer decides where a card lives. The destructive <em>Clear finished</em> is gone entirely, along with its confirmation sheet — finished work is moved, never deleted, and <em>Delete assignment</em> (renamed from <em>Remove</em>) is unreachable once anything is complete. The 🎉 celebration moved off the page and into the New tab as its own content, in two variants. <em>Assign again</em> re-issues finished work as a fresh row.</p>
+      <p>Then a <strong>colour and density pass</strong>. The green family rotated from lime <code>H102</code> to <strong>emerald <code>H150</code></strong> — bright <code>#3ed68a</code>, muted <code>#247a4f</code> — carrying its saturation/lightness relationship across intact, and the confetti (previously the lone outlier at <code>H151</code>) folded onto the bright token, so every green in the app is now one hue. Card bars thinned <code>3px → 2px</code>; the log screen’s own bar deliberately stayed <code>6px</code>. Menus adopted the divider style with dimmed lucide icons, and the log screen shed ~100px of vertical air with its <em>Log it</em> button unpinned from the bottom.</p>
+      <p style="color:#c88;">⚠️ Two caveats this snapshot cannot show: the sticky tab bar’s behaviour while pinned (the 20px gap under it lives in the bar’s own padding, so it survives cards scrolling underneath), and the <em>Log it</em> button’s new position on a short reps-only assignment, where it now follows the content rather than anchoring low.</p>
+      <div class="swatches">
+        <span class="sw"><i style="background:#2a2d36;"></i><b>#2a2d36</b> <span>track</span></span>
+        <span class="sw"><i style="background:#247a4f;"></i><b>#247a4f</b> <span>attempts</span></span>
+        <span class="sw"><i style="background:#3ed68a;"></i><b>#3ed68a</b> <span>makes / done</span></span>
+        <span class="sw"><i style="background:#378add;"></i><b>#378add</b> <span>accent</span></span>
+        <span class="sw"><i style="background:#080b0f;border:1px solid #2a2d36;"></i><b>#080b0f</b> <span>background</span></span>
+        <span class="sw"><i style="background:#1c1f26;"></i><b>#1c1f26</b> <span>surface</span></span>
+      </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- MARKETING                                                -->
+    <!-- ======================================================= -->
+    <div class="section"><div class="section-title">Marketing</div></div>
+    <div class="grid">
+
+      <!-- Landing hero -->
+      <div class="cell" id="landing">
+        <div class="caption"><span class="cap-name">Landing page — hero</span> <span class="cap-state">mobile, above the fold</span></div>
+        <div class="phone"><div class="screen"><div class="landing">
+          <div class="top">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <svg width="30" height="30" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#378add"/><line x1="9" y1="8" x2="9" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><line x1="14" y1="8" x2="14" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><line x1="19" y1="8" x2="19" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><line x1="24" y1="8" x2="24" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><line x1="6" y1="23" x2="27" y2="9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+              <span style="font-size:20px;font-weight:800;letter-spacing:-0.5px;">Reps</span>
+            </div>
+            <span style="font-size:14px;color:#666;text-decoration:underline;text-underline-offset:3px;">Sign in</span>
+          </div>
+          <div style="padding:0 22px;flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <div class="hero-duo">
+              <div class="hero-c hero-lg"><img alt="Coach training a basketball player" src="public/basketball-hero.webp"></div>
+              <div class="hero-c hero-sm"><img alt="Student practicing piano" src="public/piano-hero.webp"></div>
+            </div>
+            <p class="eyebrow">For instructors</p>
+            <h2>Help students work<br>between sessions.</h2>
+            <div>
+              <div class="bl"><svg class="dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Assign in seconds</div>
+              <div class="bl"><svg class="dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Students log it from anywhere</div>
+              <div class="bl"><svg class="dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> You see it as it happens</div>
+            </div>
+            <a class="cta">Try Reps free</a>
+          </div>
+          <div style="background:#1a1d24;border-top:1px solid #2a2d36;padding:18px 22px;text-align:center;font-size:13px;color:#8a8fa8;">
+            <span style="color:#378add;text-decoration:underline;">Privacy Policy</span> · <span style="color:#378add;text-decoration:underline;">Terms of Service</span><br>
+            <span style="display:inline-block;margin-top:6px;">© 2026 Reps · <span style="color:#378add;text-decoration:underline;">hello@assignreps.com</span></span>
+          </div>
+        </div></div></div>
+        <p class="note">Hero copy shifted from describing the product to describing the coach's part in it. The headline is “Help students work between sessions.” (was “Keep students working…”) — <em>help</em> rather than <em>keep</em>, since the instructor is assisting, not policing. The eyebrow narrowed to “For instructors” (was “For instructors &amp; coaches”), matching the product's own framing that the instructor is the customer. Bullets are now “Assign in seconds” (was “Assign work in seconds”), the unchanged “Students log it from anywhere”, and “You see it as it happens” (was “The work doesn't stop”) — the third now names what the coach gets rather than asserting a claim about the work. The headline break after “work” is a literal <code>&lt;br&gt;</code>, not a wrap, so it holds at every width. The standalone “I'm a student →” link is gone — students arrive by SMS link or via <code>/student/login</code>. Footer sits on the dark <code>#1a1d24</code> band with a <code>1px #2a2d36</code> top rule.</p>
+      </div>
+
+      <!-- Landing product loop -->
+      <div class="cell wide" id="landing-loop">
+        <div class="caption"><span class="cap-name">Landing page — product loop</span> <span class="cap-state">dark band, four miniature screens</span></div>
+        <div style="border-radius:16px;overflow:hidden;border:1px solid var(--reps-line);">
+          <div class="loop-band">
+            <h3>Here's how it works.</h3>
+            <p class="loop-example">Example: basketball</p>
+            <div class="loop-track">
+
+              <!-- 1 — the coach assigning -->
+              <div class="loop-item">
+                <div class="loop-phone">
+                  <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1.1em;"><span style="font-size:0.8em;color:#8a8fa8;">←</span><span style="font-size:0.64em;font-weight:500;color:#ffffff;">Corner 3s</span></div>
+                  <div style="font-size:0.6em;font-weight:500;color:#c8cdd8;margin-bottom:0.4em;">Goal</div>
+                  <div style="display:flex;gap:0.35em;margin-bottom:0.95em;"><span style="flex:1;text-align:center;background:rgba(55,138,221,0.14);border:1px solid #378add;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:600;color:#378add;white-space:nowrap;">Attempts</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">Makes</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">In a row</span></div>
+                  <div style="font-size:0.6em;font-weight:500;color:#c8cdd8;margin-bottom:0.4em;">How many?</div>
+                  <div style="display:flex;gap:0.35em;margin-bottom:0.95em;"><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">25</span><span style="flex:1;text-align:center;background:rgba(55,138,221,0.14);border:1px solid #378add;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:600;color:#378add;white-space:nowrap;">50</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">100</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">200</span></div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5em;margin-bottom:0.95em;">
+                    <span style="font-size:0.6em;font-weight:500;color:#ffffff;">Track makes?</span>
+                    <span style="width:1.7em;height:1em;border-radius:999px;background:#378add;display:inline-flex;align-items:center;justify-content:flex-end;padding:0.11em;flex-shrink:0;"><span style="width:0.78em;height:0.78em;border-radius:999px;background:#fff;"></span></span>
+                  </div>
+                  <div style="font-size:0.6em;font-weight:500;color:#c8cdd8;margin-bottom:0.4em;">Side</div>
+                  <div style="display:flex;gap:0.35em;"><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">Left</span><span style="flex:1;text-align:center;background:#1c1f26;border:1px solid #2a2d36;border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:#c8cdd8;white-space:nowrap;">Right</span></div>
+                  <div style="margin-top:auto;"><div style="background:#378add;color:#fff;text-align:center;border-radius:0.5em;padding:0.55em 0;font-size:0.72em;font-weight:600;">Send to Jalen</div></div>
+                </div>
+                <p class="loop-caption">1. You assign it</p>
+              </div>
+
+              <!-- 2 — the SMS thread -->
+              <div class="loop-item">
+                <div class="loop-phone">
+                  <div style="text-align:center;">
+                    <div style="width:2em;height:2em;border-radius:999px;background:#22252e;color:#c8cdd8;font-size:0.7em;font-weight:600;display:flex;align-items:center;justify-content:center;margin:0 auto 0.45em;">CM</div>
+                    <div style="font-size:0.66em;font-weight:500;color:#ffffff;">Coach Mike</div>
+                  </div>
+                  <div>
+                    <div style="font-size:0.52em;color:#8a8fa8;text-align:center;margin-top:1em;margin-bottom:0.7em;">Yesterday 5:02 PM</div>
+                    <div style="max-width:96%;background:#22252e;border-radius:1.15em;padding:0.62em 0.8em;font-size:0.72em;line-height:1.45;color:#ffffff;">Hey Jalen — Coach Mike assigned you work. Tap here: <span style="color:#378add;">assignreps.com/student/…</span></div>
+                    <div style="font-size:0.48em;color:#8a8fa8;margin:0.35em 0 0 0.4em;">Delivered</div>
+                    <div style="font-size:0.52em;color:#8a8fa8;text-align:center;margin-top:0.9em;margin-bottom:0.7em;">Today 4:12 PM</div>
+                    <div style="max-width:96%;background:#22252e;border-radius:1.15em;padding:0.62em 0.8em;font-size:0.72em;line-height:1.45;color:#ffffff;">Hey Jalen — Coach Mike assigned you homework. Tap here: <span style="color:#378add;">assignreps.com/student/…</span></div>
+                    <div style="font-size:0.48em;color:#8a8fa8;margin:0.35em 0 0 0.4em;">Delivered</div>
+                  </div>
+                </div>
+                <p class="loop-caption">2. They get a text</p>
+              </div>
+
+              <!-- 3 — the log screen -->
+              <div class="loop-item">
+                <div class="loop-phone">
+                  <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1em;"><span style="font-size:0.8em;color:#8a8fa8;">←</span><span style="font-size:0.64em;font-weight:500;color:#ffffff;">Corner 3s</span></div>
+                  <div style="font-size:0.58em;color:#c8cdd8;margin-bottom:0.45em;">50 of 50 done</div>
+                  <div style="margin-bottom:1.5em;"><div class="mini-bar"><i style="width:100%;background:#247a4f;"><i style="display:block;height:100%;width:56%;background:#3ed68a;border-radius:999px;"></i></i></div></div>
+                  <div style="text-align:center;margin-bottom:1em;"><div><div style="font-size:0.56em;font-weight:600;letter-spacing:1px;color:#247a4f;margin-bottom:0.3em;">ATTEMPTS</div><div style="display:flex;align-items:center;justify-content:center;gap:0.6em;"><span style="width:1.5em;height:1.5em;border-radius:999px;background:#2a2d36;color:#fff;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0;">−</span><span style="font-size:2.1em;font-weight:600;line-height:1;color:#247a4f;min-width:1.6em;text-align:center;">50</span><span style="width:1.5em;height:1.5em;border-radius:999px;background:#2a2d36;color:#fff;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0;">+</span></div></div></div>
+                  <div style="height:1px;background:#2a2d36;margin-bottom:0.8em;"></div>
+                  <div style="text-align:center;"><div><div style="font-size:0.56em;font-weight:600;letter-spacing:1px;color:#3ed68a;margin-bottom:0.3em;">MAKES</div><div style="display:flex;align-items:center;justify-content:center;gap:0.6em;"><span style="width:1.5em;height:1.5em;border-radius:999px;background:#2a2d36;color:#fff;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0;">−</span><span style="font-size:1.1em;font-weight:600;line-height:1;color:#3ed68a;min-width:1.6em;text-align:center;">28</span><span style="width:1.5em;height:1.5em;border-radius:999px;background:#2a2d36;color:#fff;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0;">+</span></div></div></div>
+                  <div style="margin-top:auto;"><div style="background:#378add;color:#fff;text-align:center;border-radius:0.5em;padding:0.55em 0;font-size:0.72em;font-weight:600;">Log it</div></div>
+                </div>
+                <p class="loop-caption">3. They log it</p>
+              </div>
+
+              <!-- 4 — the coach's student detail -->
+              <div class="loop-item">
+                <div class="loop-phone">
+                  <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1.1em;"><span style="font-size:0.8em;color:#8a8fa8;">←</span><span style="font-size:0.62em;font-weight:500;color:#8a8fa8;">Players</span></div>
+                  <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1.2em;">
+                    <span style="width:1.9em;height:1.9em;border-radius:999px;background:#22252e;color:#c8cdd8;font-size:0.7em;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;">J</span>
+                    <span style="display:flex;flex-direction:column;min-width:0;"><span style="font-size:1.05em;font-weight:600;letter-spacing:-0.3px;color:#ffffff;">Jalen</span><span style="font-size:0.56em;color:#8a8fa8;">Joined 1 month ago</span></span>
+                  </div>
+                  <div style="font-size:0.58em;font-weight:600;letter-spacing:1px;color:#8a8fa8;margin-bottom:0.7em;">ASSIGNMENTS</div>
+                  <div style="display:flex;flex-direction:column;gap:0.45em;">
+                    <div class="mini-card"><div class="top" style="margin-bottom:0.25em;"><span class="nm">Corner 3s</span><span class="rt" style="color:#3ed68a;">✓ Done</span></div><div style="font-size:0.58em;color:#3ed68a;margin-bottom:0.4em;">made 28/50 · 56%</div><div class="mini-bar"><i style="width:100%;background:#247a4f;"><i style="display:block;height:100%;width:56%;background:#3ed68a;border-radius:999px;"></i></i></div></div>
+                    <div class="mini-card"><div class="top"><span class="nm">Mid-range jumpers</span><span class="rt">18/50</span></div><div class="mini-bar"><i style="width:36%;background:#247a4f;"></i></div></div>
+                    <div class="mini-card"><div class="top"><span class="nm">Free throws</span><span class="rt">0/50</span></div><div class="mini-bar"><i style="width:0%;background:#247a4f;"></i></div></div>
+                  </div>
+                  <div style="margin-top:auto;"><div style="border:1px solid #378add;color:#378add;text-align:center;border-radius:0.5em;padding:0.5em 0;font-size:0.68em;font-weight:600;">+ Assign more</div></div>
+                </div>
+                <p class="loop-caption">4. You see it</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <p class="note">Redrawn July 25 2026. The loop now opens with the <strong>instructor acting</strong> — the section never showed that before, it began at the student receiving a link. Frame 1 is the real assign screen (goal first, because it decides what the number under it means), frame 3 is the current stepper rather than the retired +10/+25/+50 presets, and frame 4 is the coach's <strong>student detail</strong>, not the roster: <code>made 28/50 · 56%</code> renders there and nowhere else, since roster rows carry no percentage and no bar. Numbers are self-consistent across 3 and 4 — 50 of 50 attempted, 28 made, 56% — and 56% is a believable corner-3 session rather than a career-best. In-progress fills are <code>#247a4f</code> with makes at <code>#3ed68a</code>; <code>#27500a</code> is gone. The band is <code>#1c1f26</code> so the phones read as objects <em>on</em> a surface rather than sinking into it. The subhead was removed — it restated the four captions word for word — and the captions are numbered, white and larger because they now carry the section on their own. The <strong>Example: basketball</strong> caption exists because the rest of the page is activity-agnostic — the hero photographs span a court and a piano, the SMS says “homework” with no sport — while these four frames are unavoidably basketball, down to the exercise names and the shooting percentage. It makes no claim about other activities on purpose: <code>activityTypes.ts</code> has Basketball as the only ACTIVE entry, so “works for any sport” would break at the signup picker one screen later. <strong>Two caveats:</strong> the SMS body never names the exercise, so the two messages differ only by “work” vs “homework” (both real strings, from Resend link and from the assignment send); and the goal chip reads <strong>In a row</strong> while the app still says <strong>Consecutive</strong> — logged as known drift in CLAUDE.md.</p>
+      </div>
+
+    </div><!-- /grid marketing -->
+
+    <!-- ======================================================= -->
+    <!-- COACH · SIGNUP                                           -->
+    <!-- ======================================================= -->
+    <div class="section"><div class="section-title">Coach · Signup</div></div>
+    <div class="grid">
+
+      <!-- Signup: Name -->
+      <div class="cell" id="signup-name">
+        <div class="caption"><span class="cap-name">Signup — Name</span> <span class="cap-state">step 1 of 3, filled</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STEPHEAD(1)%
+          <h2 class="h2" style="margin-bottom:24px;">What should students call you?</h2>
+          <input class="input" style="margin-bottom:24px;" value="Coach RJ" disabled>
+          <button class="btn btn-blue">Continue</button>
+          <p class="tcenter" style="margin-top:24px;font-size:13px;color:var(--reps-dim);">Already have an account? <span style="color:var(--blue);">Sign in</span></p>
+        </div></div></div>
+      </div>
+
+      <!-- Signup: Name, empty -->
+      <div class="cell" id="signup-name-empty">
+        <div class="caption"><span class="cap-name">Signup — Name</span> <span class="cap-state">CTA inactive until a name is typed</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STEPHEAD(1)%
+          <h2 class="h2" style="margin-bottom:24px;">What should students call you?</h2>
+          <input class="input" style="margin-bottom:24px;font-style:italic;" placeholder="e.g. Coach RJ">
+          <button class="btn btn-disabled">Continue</button>
+          <p class="tcenter" style="margin-top:24px;font-size:13px;color:var(--reps-dim);">Already have an account? <span style="color:var(--blue);">Sign in</span></p>
+        </div></div></div>
+        <p class="note">The inactive treatment (<code>#1c1f26</code> fill, <code>#3d4252</code> text) is shared by every gated primary CTA — signup name, signup email, add player.</p>
+      </div>
+
+      <!-- Signup: Discipline -->
+      <div class="cell" id="signup-type">
+        <div class="caption"><span class="cap-name">Signup — What do you teach?</span> <span class="cap-state">step 2, basketball selected</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STEPHEAD(2)%
+          <h2 class="h2" style="margin-bottom:24px;">What do you teach?</h2>
+          <div class="flex col gap10 grow" style="min-height:0;overflow:hidden;position:relative;">
+            <div class="list-row" style="border-color:var(--blue);background:rgba(55,138,221,0.1);flex-shrink:0;">
+              <div class="flex center gap12"><span style="font-size:22px;">🏀</span><span class="rt">Basketball</span></div>
+              <span style="width:20px;height:20px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#080b0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>
+            %SOON(🎹,Piano)%
+            %SOON(🥋,Martial Arts)%
+            %SOON(🎾,Tennis)%
+            %SOON(⛳,Golf)%
+            %SOON(🎸,Guitar)%
+            <div class="list-row" style="border-style:dashed;border-color:var(--reps-line-hi);opacity:.6;flex-shrink:0;">
+              <div class="flex center gap12"><span style="font-size:22px;width:22px;text-align:center;color:var(--reps-sub);">+</span><span class="rt">Create your own</span></div>
+              <span style="font-size:10px;font-weight:600;color:var(--reps-sub);background:var(--reps-raised);padding:3px 7px;border-radius:999px;text-transform:uppercase;">Soon</span>
+            </div>
+            <div style="position:absolute;left:0;right:0;bottom:0;height:40px;background:linear-gradient(to top,#080b0f,transparent);pointer-events:none;"></div>
+          </div>
+          <button class="btn btn-blue" style="margin-top:16px;">Continue</button>
+        </div></div></div>
+        <p class="note">Ten disciplines ship in <code>ACTIVITY_TYPE_ORDER</code>; the list scrolls independently with Continue pinned, and only Basketball has <code>available: true</code>. Gymnastics 🤸, Soccer ⚽, Swimming 🏊 and Voice/Vocal 🎤 continue below the fade.</p>
+      </div>
+
+      <!-- Signup: Email -->
+      <div class="cell" id="signup-email">
+        <div class="caption"><span class="cap-name">Signup — Your email</span> <span class="cap-state">step 3, request code</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STEPHEAD(3)%
+          <h2 class="h2" style="margin-bottom:4px;">Your email</h2>
+          <p style="font-size:15px;color:var(--reps-sub);margin:0 0 24px;">We'll email you a sign-in code.</p>
+          <input class="input" style="margin-bottom:24px;" value="rj@example.com" disabled>
+          <button class="btn btn-blue">Send code</button>
+        </div></div></div>
+      </div>
+
+      <!-- Signup: Code -->
+      <div class="cell" id="signup-code">
+        <div class="caption"><span class="cap-name">Signup — Enter your code</span> <span class="cap-state">step 3, 6-digit OTP</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STEPHEAD(3)%
+          <h2 class="h2" style="margin-bottom:4px;">Enter your code</h2>
+          <p class="sub-sm" style="font-size:13px;margin-bottom:24px;">We emailed a 6-digit code to <span style="color:var(--reps-ink);font-weight:500;">rj@example.com</span>.</p>
+          <input class="input center" style="margin-bottom:24px;font-size:24px;letter-spacing:0.4em;font-weight:600;color:var(--reps-ink);" value="418203" disabled>
+          <button class="btn btn-blue">Verify &amp; continue</button>
+          <p class="tcenter" style="margin-top:24px;font-size:12px;color:var(--reps-dim);">Didn't get it? <span style="color:var(--blue);">Resend code</span></p>
+        </div></div></div>
+        <p class="note">Same route as the email step (<code>/instructor/signup/email</code>) — the code form replaces the email form in place rather than pushing a new URL.</p>
+      </div>
+
+    </div><!-- /grid signup -->
+
+    <!-- ======================================================= -->
+    <!-- COACH · ROSTER                                           -->
+    <!-- ======================================================= -->
+    <div class="section"><div class="section-title">Coach · Roster</div></div>
+    <div class="grid">
+
+      <!-- Roster empty -->
+      <div class="cell" id="roster-empty">
+        <div class="caption"><span class="cap-name">Roster</span> <span class="cap-state">empty — ghost rows</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %COACHHEAD%
+          <h1 class="h1" style="font-size:20px;margin-bottom:4px;">Your players</h1>
+          <div style="margin:24px 0 32px;-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 55%,transparent 100%);display:flex;flex-direction:column;gap:4px;">
+            %GHOST(0.25)%
+            %GHOST(0.18)%
+            %GHOST(0.12)%
+          </div>
+          <a class="btn btn-blue">+ Add your first player</a>
+        </div></div></div>
+        <p class="note">“players” / “player” come from the coach's <code>instructor_type</code> via <code>getActivityLabels</code> — a piano teacher sees “students”.</p>
+      </div>
+
+      <!-- Roster active -->
+      <div class="cell" id="roster-active">
+        <div class="caption"><span class="cap-name">Roster</span> <span class="cap-state">all four completion groups</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %COACHHEAD%
+          <div class="flex between" style="align-items:baseline;gap:12px;margin-bottom:6px;">
+            <h1 class="h1" style="font-size:20px;">Your players</h1>
+            <span style="flex-shrink:0;font-size:13px;font-weight:500;color:#fff;padding:6px 10px;border-radius:8px;border:1px solid #2a2d36;">+ Add</span>
+          </div>
+          <div class="flex col" style="gap:20px;">
+            <div>
+              <div style="margin-bottom:8px;"><span class="pill" style="padding:0;border-radius:0;font-size:12px;color:#3ed68a;"><i style="background:#3ed68a;"></i>Done</span></div>
+              <div class="flex col" style="gap:6px;">%ROW(N,Neo,3 of 3 done,20m ago,r)%</div>
+            </div>
+            <div>
+              <div style="margin-bottom:8px;"><span class="pill" style="padding:0;border-radius:0;font-size:12px;color:var(--label-progress);"><i style="background:var(--label-progress);"></i>In progress</span></div>
+              <div class="flex col" style="gap:6px;">
+                %ROW(A,Adam,1 of 3 done,1h ago,r)%
+                %ROW(M,Maya,2 of 4 done,1d ago,o)%
+                %ROW(T,Theo,1 of 5 done,4d ago,o)%
+              </div>
+            </div>
+            <div>
+              <div style="margin-bottom:8px;"><span class="pill" style="padding:0;border-radius:0;font-size:12px;color:var(--label-idle);"><i style="background:var(--label-idle);"></i>Not started</span></div>
+              <div class="flex col" style="gap:6px;">%ROW(J,Jordan,2 waiting,-,-)%</div>
+            </div>
+            <div>
+              <div style="margin-bottom:8px;"><span class="pill" style="padding:0;border-radius:0;font-size:12px;color:var(--label-idle);"><i style="background:var(--label-idle);"></i>Nothing assigned</span></div>
+              <div class="flex col" style="gap:6px;">%ROW(S,Sofia,no assignments,-,-)%</div>
+            </div>
+          </div>
+        </div></div></div>
+        <p class="note"><strong>Add moved into the heading row</strong> as a ghost outline, and the pinned bottom button (and the gradient fade that separated it from the list) is gone — the action is reachable without scrolling to the end. The header above it is sticky: logo, profile circle, rule, title and Add all travel together on a solid <code>#080b0f</code> fill, so rows disappear cleanly behind it. <strong>Group labels lost their pill backgrounds</strong> — dot and label now share one colour: Done <code>#3ed68a</code>, In progress <code>#8a8fa8</code>, and both idle groups <code>#6b7080</code>. Green means Done and nothing else now. The two idle groups also say less (“2 waiting”, “no assignments”) since the label above already supplies the noun. <strong>Last-activity timestamps</strong> sit on the right — under 24h accent blue <code>#378add</code> (Neo 20m, Adam 1h), a day or more <code>#7d8494</code> (Maya 1d, Theo 4d), matching the row subtext. A student who has never logged shows nothing, no dash, so the two idle groups stay blank on the right. Rows carry no progress bar yet.</p>
+      </div>
+
+      <!-- Add student -->
+      <div class="cell" id="add-student">
+        <div class="caption"><span class="cap-name">Add player</span> <span class="cap-state">send to player</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Add player)%
+          <label class="field-label" style="margin-bottom:8px;display:block;">Name</label>
+          <input class="input" style="margin-bottom:32px;" value="Neo" disabled>
+          <div class="flex between center" style="margin-bottom:8px;">
+            <label class="field-label">Send homework to</label>
+            <div class="chip"><button class="on">Player</button><button>Parent</button></div>
+          </div>
+          <input class="input" value="(562) 555-0184" disabled>
+          <p style="margin-top:8px;font-size:13px;color:var(--placeholder);">They'll get a text when you assign work.</p>
+          <button class="btn btn-blue" style="margin-top:32px;">Add Neo</button>
+        </div></div></div>
+        <p class="note">Copy changed: the helper is now “They'll get a text when you assign work.” — the link is sent on first assignment, not on add. The CTA switches from “Add player” to “Add <em>first name</em>” once name + 10 digits are present.</p>
+      </div>
+
+      <!-- Add student parent -->
+      <div class="cell" id="add-student-parent">
+        <div class="caption"><span class="cap-name">Add player</span> <span class="cap-state">send to parent</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Add player)%
+          <label class="field-label" style="margin-bottom:8px;display:block;">Name</label>
+          <input class="input" style="margin-bottom:32px;" value="Leo" disabled>
+          <div class="flex between center" style="margin-bottom:8px;">
+            <label class="field-label">Send homework to</label>
+            <div class="chip"><button>Player</button><button class="on">Parent</button></div>
+          </div>
+          <input class="input" value="(562) 555-0199" disabled>
+          <p style="margin-top:8px;font-size:13px;color:var(--placeholder);">They'll get a text when you assign work — to share with Leo.</p>
+          <p style="margin-top:2px;font-size:13px;color:var(--placeholder);">Great for younger students.</p>
+          <button class="btn btn-blue" style="margin-top:32px;">Add Leo</button>
+        </div></div></div>
+      </div>
+
+      <!-- Add student, empty -->
+      <div class="cell" id="add-student-empty">
+        <div class="caption"><span class="cap-name">Add player</span> <span class="cap-state">CTA inactive — needs name + 10 digits</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Add player)%
+          <label class="field-label" style="margin-bottom:8px;display:block;">Name</label>
+          <input class="input" style="margin-bottom:32px;" placeholder="First name">
+          <div class="flex between center" style="margin-bottom:8px;">
+            <label class="field-label">Send homework to</label>
+            <div class="chip"><button class="on">Player</button><button>Parent</button></div>
+          </div>
+          <input class="input" placeholder="(555) 000-0000">
+          <p style="margin-top:8px;font-size:13px;color:var(--placeholder);">They'll get a text when you assign work.</p>
+          <button class="btn btn-disabled" style="margin-top:32px;">Add player</button>
+        </div></div></div>
+      </div>
+
+      <!-- Profile menu -->
+      <div class="cell" id="profile-menu">
+        <div class="caption"><span class="cap-name">Profile menu</span> <span class="cap-state">open — name, Edit name, Sign out</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          <div class="flex between center" style="margin:0 -20px 20px;padding:0 20px 16px;border-bottom:1px solid #2a2d36;position:relative;">
+            <span class="logo-mini">%LOGO% Reps</span>
+            %USER%
+            <div style="position:absolute;top:34px;right:20px;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:10px;padding:4px;width:max-content;max-width:160px;box-shadow:0 10px 30px rgba(0,0,0,.55);">
+              <div style="padding:6px 12px 8px;font-size:12px;color:var(--reps-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Coach RJ</div>
+              <div style="height:1px;background:#2a2d36;margin-bottom:4px;"></div>
+              <div style="display:flex;align-items:center;height:36px;padding:0 12px;border-radius:7px;font-size:14px;color:var(--reps-ink);white-space:nowrap;background:var(--reps-raised);">Edit name</div>
+              <div style="display:flex;align-items:center;height:36px;padding:0 12px;border-radius:7px;font-size:14px;color:var(--reps-ink);white-space:nowrap;">Sign out</div>
+            </div>
+          </div>
+          <div class="flex between" style="align-items:baseline;gap:12px;">
+            <h1 class="h1" style="font-size:20px;">Your players</h1>
+            <span style="flex-shrink:0;font-size:13px;font-weight:500;color:#fff;padding:6px 10px;border-radius:8px;border:1px solid #2a2d36;">+ Add</span>
+          </div>
+        </div></div></div>
+        <p class="note">The coach's name left the header and reappears here, at the top of the dropdown, labelling the account the two actions belong to. It is display only — not a button, not focusable — with a rule beneath it. The menu sizes to its widest item (~98px for these two) and caps at <code>160px</code>, which is what lets a long name truncate rather than stretching the menu: “RJW Skills &amp; Development” ellipsises, “Coach RJ” / “Debbie” / “Mr. Chen” never reach the cap. Saving a new name needs the <code>coaches</code> UPDATE RLS policy in <code>supabase/migrations/20260725120000_coaches_update_own_name_rls.sql</code>, which is <strong>not applied yet</strong> — until it runs, Save fails with a permission message rather than silently doing nothing.</p>
+      </div>
+
+      <!-- Edit name modal -->
+      <div class="cell" id="edit-name">
+        <div class="caption"><span class="cap-name">Edit name</span> <span class="cap-state">modal, prefilled</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.45);">
+            %COACHHEAD%
+            <div class="flex between" style="align-items:baseline;gap:12px;">
+              <h1 class="h1" style="font-size:20px;">Your players</h1>
+              <span style="flex-shrink:0;font-size:13px;font-weight:500;color:#fff;padding:6px 10px;border-radius:8px;border:1px solid #2a2d36;">+ Add</span>
+            </div>
+          </div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3>Edit name</h3>
+              <p style="margin:0 0 20px;">What should students call you?</p>
+              <input class="input" style="background:var(--reps-bg);font-size:15px;padding:12px 14px;" value="Coach RJ" disabled>
+              <p style="font-size:12px;color:var(--reps-sub);margin:8px 0 24px;min-height:16px;">Students and parents see this name.</p>
+              <div class="actions"><button class="btn-cancel">Cancel</button><button class="btn-blue" style="color:#fff;">Save</button></div>
+            </div>
+          </div>
+        </div></div>
+        <p class="note">Opened from <strong>Edit name</strong> in the profile menu above. The question is the same one signup step 1 asks — deliberately, so the field means “what students call you” in both places rather than reading as an account or legal name here. The input is prefilled with the current name and sits on <code>--reps-bg</code> rather than the card surface, so it reads as an input against the modal. Saving writes <code>coaches.name</code> for <code>auth.uid()</code>, then re-fetches: the name is server-rendered on the SMS, the celebrate screen and the parent digest, so local state is not trusted to match what students will see.</p>
+      </div>
+
+      <!-- Edit name, saving -->
+      <div class="cell" id="edit-name-saving">
+        <div class="caption"><span class="cap-name">Edit name</span> <span class="cap-state">saving — both controls inert</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.45);">
+            %COACHHEAD%
+            <div class="flex between" style="align-items:baseline;gap:12px;">
+              <h1 class="h1" style="font-size:20px;">Your players</h1>
+              <span style="flex-shrink:0;font-size:13px;font-weight:500;color:#fff;padding:6px 10px;border-radius:8px;border:1px solid #2a2d36;">+ Add</span>
+            </div>
+          </div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3>Edit name</h3>
+              <p style="margin:0 0 20px;">What should students call you?</p>
+              <input class="input" style="background:var(--reps-bg);font-size:15px;padding:12px 14px;" value="Coach RJ" disabled>
+              <p style="font-size:12px;color:var(--reps-sub);margin:8px 0 24px;min-height:16px;">Students and parents see this name.</p>
+              <div class="actions"><button class="btn-cancel" style="opacity:.5;">Cancel</button><button class="btn-blue" style="opacity:.5;color:#fff;">Saving…</button></div>
+            </div>
+          </div>
+        </div></div>
+        <p class="note">Both buttons go inert while the write is in flight, and the backdrop stops dismissing — a second submit would fire a second UPDATE. The save asks for the updated row back rather than trusting a 200: an UPDATE that no RLS policy permits returns success with zero rows, so without checking the result the modal would close on a write that never happened.</p>
+      </div>
+
+      <!-- Sign out dialog -->
+      <div class="cell" id="signout">
+        <div class="caption"><span class="cap-name">Sign out</span> <span class="cap-state">confirm dialog</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.5);">
+            %COACHHEAD%
+            <h1 class="h1" style="font-size:20px;">Your players</h1>
+          </div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3>Sign out?</h3>
+              <p>Sign back in anytime with your email.</p>
+              <div class="actions"><button class="btn-cancel">Cancel</button><button class="btn-blue" style="color:#fff;">Sign out</button></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+    </div><!-- /grid roster -->
+
+    <!-- ======================================================= -->
+    <!-- COACH · STUDENT DETAIL                                   -->
+    <!-- ======================================================= -->
+    <div class="section"><div class="section-title">Coach · Student detail</div></div>
+    <div class="grid">
+
+      <!-- Student detail empty -->
+      <div class="cell" id="student-empty">
+        <div class="caption"><span class="cap-name">Student detail</span> <span class="cap-state">nothing assigned</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(S,Sofia,Joined 2 days ago)%
+          <div class="grow flex col center" style="justify-content:center;text-align:center;padding-bottom:32px;">
+            <p style="font-size:15px;color:var(--reps-sub);margin:0 0 20px;">Nothing assigned yet.<br>Give Sofia some homework.</p>
+            <a class="btn btn-blue" style="width:auto;padding:14px 24px;">+ Assign homework</a>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- Student detail active -->
+      <div class="cell" id="student-detail">
+        <div class="caption"><span class="cap-name">Student detail</span> <span class="cap-state">in progress, no makes recorded</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(A,Adam,Joined 3 weeks ago)%
+          %TABS(new,3,0)%
+          <div class="flex col" style="gap:10px;margin-bottom:24px;">
+            %ACARD(Form shooting,30,50,reps,60,no,-,-,-,0)%
+            %ACARD(Two-ball dribbling,10,10,min,100,yes,-,-,-,0)%
+            %ACARD(Corner 3s,0,25,reps,0,no,-,-,-,0)%
+          </div>
+          <div class="mt-auto" style="padding-top:14px;"><a class="btn btn-ghost">+ Assign more</a></div>
+        </div></div></div>
+        <p class="note">Single-tone bars: muted <code>#247a4f</code> while in progress, flipping to bright <code>#3ed68a</code> at completion. Minutes are abbreviated to “min” on the card only.</p>
+      </div>
+
+      <!-- Student detail with makes -->
+      <div class="cell" id="student-makes">
+        <div class="caption"><span class="cap-name">Student detail</span> <span class="cap-state">makes tracked — two-tone bars + percentage</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(M,Maya,Joined 2 months ago)%
+          %TABS(new,3,0)%
+          <div class="flex col" style="gap:10px;margin-bottom:24px;">
+            %ACARD(Free throws,40,50,reps,80,no,31,40,78,62)%
+            %ACARD(Corner 3s,25,25,reps,100,yes,9,25,36,36)%
+            %ACARD(Layups,12,20,reps,60,no,7,12,58,35,Left)%
+          </div>
+          <div class="mt-auto" style="padding-top:14px;"><a class="btn btn-ghost">+ Assign more</a></div>
+        </div></div></div>
+        <p class="note">The bright layer is makes ÷ target, the muted layer is attempts ÷ target, so the bright bar can never outrun the muted one. The “made X/Y · Z%” denominator is only the attempts from logs that <em>recorded</em> makes — a log with <code>makes = null</code> contributes to the bar but never to the percentage.</p>
+      </div>
+
+      <!-- Student detail — goal types + side -->
+      <div class="cell" id="student-goals">
+        <div class="caption"><span class="cap-name">Student detail</span> <span class="cap-state">makes goal, consecutive goal, side</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(M,Maya,Joined 2 months ago)%
+          %TABS(new,3,0)%
+          <div class="flex col" style="gap:10px;margin-bottom:24px;">
+            %ACARD(Corner 3s,21,25,makes,84,no,-,-,-,0,Left)%
+            %ACARD(Free throws,0,1,set · 10 in a row,0,no,-,-,-,0,10 in a row)%
+            %ACARD(Floaters,15,20,reps,75,no,-,-,-,0,Right)%
+          </div>
+          <div class="mt-auto" style="padding-top:14px;"><a class="btn btn-ghost">+ Assign more</a></div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. A <strong>makes goal</strong> reads <code>21/25 makes</code> and hides the <code>made X/Y · %</code> line entirely (the count already says it, and the percentage is over attempts — the two would read as contradicting). A <strong>consecutive</strong> goal carries its streak in both the title (<code>· 10 in a row</code>, muted) and the count (<code>0/1 set · 10 in a row</code>). The <strong>side</strong> rides muted after the name in its own span, so it survives when a long name truncates. Bars are now <code>3px</code>.</p>
+      </div>
+
+      <!-- Student detail all done -->
+      <div class="cell" id="student-alldone">
+        <div class="caption"><span class="cap-name">Student detail</span> <span class="cap-state">all done + clear completed</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(N,Neo,Joined 1 month ago)%
+          %TABS(new,3,0)%
+          %ALLDONE(Neo finished everything.,-,Archive it)%
+          <div class="flex col" style="gap:10px;margin-bottom:24px;">
+            %ACARD(Form shooting,50,50,reps,100,yes,-,-,-,0)%
+            %ACARD(Two-ball dribbling,10,10,min,100,yes,-,-,-,0)%
+            %ACARD(Layups,25,25,reps,100,yes,18,25,72,72,Right)%
+          </div>
+          <div class="mt-auto" style="padding-top:14px;"><a class="btn btn-blue">+ Assign new work</a></div>
+        </div></div></div>
+        <p class="note">The 🎉 panel is <strong>the New tab's own content</strong>, not a page-level banner. It used to render above the tabs on a plain <code>allDone</code> check, which meant it followed the coach onto Archive and — once everything was archived — sat directly above a second, greyer “nothing open” message saying the same thing twice. Here, with finished work still unarchived, it sits above the cards and carries the bulk action as a quiet text link. No sub-line: the link already says what it does. Its 20px gap to the first card is double the 10px the cards keep between themselves, matching the pause under the tab bar. The bottom CTA changes with state: filled blue “+ Assign new work” when everything is done, outlined “+ Assign more” otherwise.</p>
+      </div>
+
+      <!-- Coach detail — all archived -->
+      <div class="cell" id="detail-archived">
+        <div class="caption"><span class="cap-name">Student detail</span> <span class="cap-state">New empty, everything archived <span class="new">NEW</span></span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(N,Neo,Joined 1 month ago)%
+          %TABS(new,0,3)%
+          %ALLDONE(Neo finished everything.,It's all in Archive.,-)%
+          <div class="mt-auto" style="padding-top:14px;"><a class="btn btn-blue">+ Assign new work</a></div>
+        </div></div></div>
+        <p class="note">The second variant. With New empty the panel <em>is</em> the empty state — and it drops the action, because there is nothing left to move. That gating is real (<code>allDone &amp;&amp; fileableCount &gt; 0</code>): without it the link keeps rendering after everything is archived, promising a move with nothing to move. Note the counts have swapped: <code>New 0 / Archive 3</code>.</p>
+      </div>
+
+      <!-- Coach detail — Archive tab -->
+      <div class="cell" id="detail-archive-tab">
+        <div class="caption"><span class="cap-name">Student detail</span> <span class="cap-state">Archive tab <span class="new">NEW</span></span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(N,Neo,Joined 1 month ago)%
+          %TABS(archive,0,3)%
+          <div class="flex col" style="gap:10px;margin-bottom:24px;">
+            %ACARD(Form shooting,50,50,reps,100,yes,-,-,-,0)%
+            %ACARD(Two-ball dribbling,10,10,min,100,yes,-,-,-,0)%
+            %ACARD(Layups,25,25,reps,100,yes,18,25,72,72,Right)%
+          </div>
+          <div class="mt-auto" style="padding-top:14px;"><a class="btn btn-blue">+ Assign new work</a></div>
+        </div></div></div>
+        <p class="note"><strong>No celebration here.</strong> The panel lives inside the New branch of the tab switch, so it is unreachable from Archive by structure rather than by a condition that could be got wrong — which was the bug in the old banner. Cards render identically in both tabs; only the menu differs, offering <em>Move back to New</em> instead of <em>Archive</em>.</p>
+      </div>
+
+      <!-- Header menu open -->
+      <div class="cell" id="header-menu">
+        <div class="caption"><span class="cap-name">Student detail — header menu</span> <span class="cap-state">dropdown open</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACKSUB(Players)%
+          <div class="flex center gap14" style="margin-bottom:24px;position:relative;">
+            <div class="avatar" style="width:52px;height:52px;font-size:18px;">A</div>
+            <div class="grow"><div class="h2">Adam</div><div class="sub-sm" style="margin-top:2px;">Joined 3 weeks ago</div></div>
+            <button class="header-menu-btn">%DOTS_H%</button>
+            <div class="dropdown" style="right:0;top:44px;min-width:180px;">
+              <button>Share homework link</button>
+              <button>Edit phone number</button>
+              <button class="red">Remove Adam</button>
+            </div>
+          </div>
+          %TABS(new,1,0)%
+          <div class="flex col" style="gap:10px;opacity:.5;">%ACARD(Form shooting,30,50,reps,60,no,-,-,-,0)%</div>
+        </div></div></div>
+      </div>
+
+      <!-- Toast -->
+      <div class="cell" id="toast">
+        <div class="caption"><span class="cap-name">Share homework link</span> <span class="cap-state">clipboard fallback toast</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad">
+            %SDHEAD(A,Adam,Joined 3 weeks ago)%
+            %TABS(new,2,0)%
+            <div class="flex col" style="gap:10px;">
+              %ACARD(Form shooting,30,50,reps,60,no,-,-,-,0)%
+              %ACARD(Free throws,50,50,reps,100,yes,-,-,-,0)%
+            </div>
+          </div>
+          <div class="toast">Link copied</div>
+        </div></div>
+        <p class="note">Not in the previous mocks. On iOS/Android the native share sheet opens instead and no toast appears; this is the desktop path. The failure branch reads “Couldn't copy link”. Auto-dismisses after 2.5s.</p>
+      </div>
+
+      <!-- Edit phone modal -->
+      <div class="cell" id="edit-phone">
+        <div class="caption"><span class="cap-name">Edit phone number</span> <span class="cap-state">centered modal</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.5);">%SDHEAD(A,Adam,Joined 3 weeks ago)%</div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3>Edit phone number</h3>
+              <p style="margin-bottom:16px;">Who gets the homework link?</p>
+              <div class="seg" style="margin-bottom:16px;"><button class="on">Player</button><button>Parent</button></div>
+              <input class="input" style="background:var(--reps-bg);" value="(562) 555-0184" disabled>
+              <div class="actions" style="margin-top:24px;"><button class="btn-cancel">Cancel</button><button class="btn-blue" style="color:#fff;">Save</button></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- Remove student modal -->
+      <div class="cell" id="remove-student">
+        <div class="caption"><span class="cap-name">Remove student</span> <span class="cap-state">destructive confirm</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.5);">%SDHEAD(A,Adam,Joined 3 weeks ago)%</div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3>Remove Adam?</h3>
+              <p>This deletes all their assignments and logs. This can't be undone.</p>
+              <div class="actions"><button class="btn-cancel">Cancel</button><button class="btn-red">Remove</button></div>
+            </div>
+          </div>
+        </div></div>
+        <p class="note">Genuinely destructive, unlike every other “remove” in the app: <code>players.id</code> cascades to both assignments and logs.</p>
+      </div>
+
+      <!-- Assignment card menu -->
+      <div class="cell" id="assignment-menu">
+        <div class="caption"><span class="cap-name">Assignment card — menu</span> <span class="cap-state">not complete: edit + delete</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(A,Adam,Joined 3 weeks ago)%
+          %TABS(new,1,0)%
+          <div class="flex col" style="gap:10px;">
+            <div class="assign-card" style="position:relative;">
+              <div class="grow" style="min-width:0;padding:14px 16px;">
+                <div class="flex" style="align-items:baseline;gap:8px;margin-bottom:8px;"><span class="rt grow trunc">Corner 3s</span><span style="flex-shrink:0;font-size:12px;color:var(--reps-dim);">0/25 reps</span></div>
+                <div class="bar"><i class="att" style="width:0%;"></i></div>
+              </div>
+              <div class="flex center" style="padding-right:10px;"><span class="kebab">%DOTS_V%</span></div>
+              <div class="dropdown" style="right:6px;top:44px;">
+                <button>%I_PENCIL%Edit amount</button>
+                <button class="red">%I_TRASH%Delete assignment</button>
+              </div>
+            </div>
+            %ACARD(Free throws,50,50,reps,100,yes,-,-,-,0)%
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- Assignment card menu, has progress -->
+      <div class="cell" id="assignment-menu-progress">
+        <div class="caption"><span class="cap-name">Assignment card — menu</span> <span class="cap-state">not complete, in progress: delete only</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(A,Adam,Joined 3 weeks ago)%
+          %TABS(new,1,0)%
+          <div class="flex col" style="gap:10px;">
+            <div class="assign-card" style="position:relative;">
+              <div class="grow" style="min-width:0;padding:14px 16px;">
+                <div class="flex" style="align-items:baseline;gap:8px;margin-bottom:8px;"><span class="rt grow trunc">Form shooting</span><span style="flex-shrink:0;font-size:12px;color:var(--reps-dim);">30/50 reps</span></div>
+                <div class="bar"><i class="att" style="width:60%;"></i></div>
+              </div>
+              <div class="flex center" style="padding-right:10px;"><span class="kebab">%DOTS_V%</span></div>
+              <div class="dropdown" style="right:6px;top:44px;">
+                <button class="red">%I_TRASH%Delete assignment</button>
+              </div>
+            </div>
+          </div>
+        </div></div></div>
+        <p class="note">“Edit amount” is withheld once anything is logged — moving the target under a student who has already worked against it would silently rewrite what “done” meant. That same gate is what made the July 27 log backfill safe: <code>target</code> is the only snapshot field that can change after assigning, and it cannot change once a row has logs.</p>
+      </div>
+
+      <!-- Assignment card menu, complete -->
+      <div class="cell" id="assignment-menu-done">
+        <div class="caption"><span class="cap-name">Assignment card — menu</span> <span class="cap-state">complete, in New <span class="new">NEW</span></span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(A,Adam,Joined 3 weeks ago)%
+          %TABS(new,1,2)%
+          <div class="flex col" style="gap:10px;">
+            <div class="assign-card" style="position:relative;">
+              <div class="grow" style="min-width:0;padding:14px 16px;">
+                <div class="flex" style="align-items:baseline;gap:8px;margin-bottom:8px;"><span class="rt grow trunc">Form shooting</span><span style="flex-shrink:0;font-size:12px;font-weight:500;color:var(--green);">✓ 50/50 reps</span></div>
+                <div class="bar"><i class="green" style="width:100%;"></i></div>
+              </div>
+              <div class="flex center" style="padding-right:10px;"><span class="kebab">%DOTS_V%</span></div>
+              <div class="dropdown" style="right:6px;top:44px;">
+                <button>%I_REDO%Assign again</button>
+                <button>%I_RIGHT%Archive</button>
+              </div>
+            </div>
+          </div>
+        </div></div></div>
+        <p class="note">⚠️ <strong>No “Delete assignment” here.</strong> The menu splits on completion and the two sets are mutually exclusive, so deleting finished work is unreachable — that is exactly what the retired “Clear finished” did, and it orphaned every log pointing at the rows it removed. Finished work is moved, never destroyed. <em>Archive</em> is a single tap with no confirm, because it is reversible in one tap the other way; <em>Delete</em> keeps its dialog because it is not. <em>Assign again</em> inserts a brand-new row and never touches this one.</p>
+      </div>
+
+      <!-- Assignment card menu, archived -->
+      <div class="cell" id="assignment-menu-archived">
+        <div class="caption"><span class="cap-name">Assignment card — menu</span> <span class="cap-state">complete, in Archive <span class="new">NEW</span></span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(A,Adam,Joined 3 weeks ago)%
+          %TABS(archive,1,2)%
+          <div class="flex col" style="gap:10px;">
+            <div class="assign-card" style="position:relative;">
+              <div class="grow" style="min-width:0;padding:14px 16px;">
+                <div class="flex" style="align-items:baseline;gap:8px;margin-bottom:8px;"><span class="rt grow trunc">Corner 3s</span><span style="flex-shrink:0;font-size:12px;font-weight:500;color:var(--green);">✓ 25/25 reps</span></div>
+                <div class="bar"><i class="green" style="width:100%;"></i></div>
+              </div>
+              <div class="flex center" style="padding-right:10px;"><span class="kebab">%DOTS_V%</span></div>
+              <div class="dropdown" style="right:6px;top:44px;">
+                <button>%I_REDO%Assign again</button>
+                <button>%I_LEFT%Move back to New</button>
+              </div>
+            </div>
+          </div>
+        </div></div></div>
+        <p class="note">The same card in the other tab. Only the direction of the move changes — left/right arrows rather than an archive or file glyph, because the two tabs sit side by side with New on the left, so the direction of travel is the useful thing to draw. Filing is decided by <code>assignments.filed_at</code> alone; completion has no say in which tab a card sits in.</p>
+      </div>
+
+      <!-- Edit amount modal -->
+      <div class="cell" id="edit-amount">
+        <div class="caption"><span class="cap-name">Edit amount</span> <span class="cap-state">preset modal</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.5);">%SDHEAD(A,Adam,Joined 3 weeks ago)%</div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3 style="margin-bottom:4px;">Corner 3s</h3>
+              <p style="margin-bottom:20px;">Edit amount</p>
+              <div class="flex gap8" style="margin-bottom:12px;">
+                <span class="preset on">25</span><span class="preset">50</span><span class="preset">100</span><span class="preset">200</span>
+              </div>
+              <span style="font-size:13px;color:var(--reps-sub);">+ enter your own</span>
+              <div class="actions" style="margin-top:24px;"><button class="btn-cancel">Cancel</button><button class="btn-blue" style="color:#fff;">Save</button></div>
+            </div>
+          </div>
+        </div></div>
+        <p class="note">Presets come from <code>presetsForExercise(exercise_name)</code>, matched by name — a custom exercise resolves to none and the number input is shown instead. Saving does not re-send an SMS.</p>
+      </div>
+
+      <!-- Delete assignment modal -->
+      <div class="cell" id="remove-assignment">
+        <div class="caption"><span class="cap-name">Delete assignment</span> <span class="cap-state">confirm — progress kept</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.5);">%SDHEAD(A,Adam,Joined 3 weeks ago)%</div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3>Delete Corner 3s?</h3>
+              <p>This deletes the assignment. Logged progress is kept.</p>
+              <div class="actions"><button class="btn-cancel">Cancel</button><button class="btn-red">Remove</button></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+    </div><!-- /grid student detail -->
+
+    <!-- ======================================================= -->
+    <!-- COACH · ASSIGN                                           -->
+    <!-- ======================================================= -->
+    <div class="section"><div class="section-title">Coach · Assign flow</div></div>
+    <div class="grid">
+
+      <!-- Assign categories -->
+      <div class="cell" id="assign-cats">
+        <div class="caption"><span class="cap-name">Assign — Pick a category</span> <span class="cap-state">six categories + My exercises</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Assign to Adam)%
+          <h2 class="h2" style="margin-bottom:4px;">Pick an exercise</h2>
+          <p style="font-size:13px;color:var(--reps-sub);margin:0 0 24px;">Choose a category</p>
+          <div class="flex col gap8">
+            <div class="list-row" style="background:rgba(55,138,221,0.06);"><div><div class="rt">My exercises</div><div class="rh">2 exercises</div></div><span class="chev">›</span></div>
+            %CAT(Shooting,Free throws, corner 3s, catch & shoot)%
+            %CAT(Ball-handling,Stationary, two-ball, figure 8s)%
+            %CAT(Finishing,Layups, floaters, euro-step)%
+            %CAT(Footwork,Pivots, jump stops, defensive slides)%
+            %CAT(Conditioning,Suicides, sprints, jump rope)%
+            %CAT(Spot shots,Corner-to-wing spots)%
+          </div>
+          <div class="mt-auto tcenter" style="padding-top:24px;"><span style="display:inline-block;font-size:13px;font-weight:500;color:var(--reps-label);border:1px solid var(--reps-line);border-radius:10px;padding:12px 20px;">+ Create your own</span></div>
+        </div></div></div>
+        <p class="note">Spot shots was missing from the previous mocks — six categories ship, and the hints are the literal <code>cat.hint</code> strings. The “My exercises” row only appears when the coach has at least one saved custom.</p>
+      </div>
+
+      <!-- Assign exercises -->
+      <div class="cell" id="assign-list">
+        <div class="caption"><span class="cap-name">Assign — Exercise list</span> <span class="cap-state">Shooting, all eight</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Shooting)%
+          <h2 class="h2" style="margin-bottom:24px;">Shooting</h2>
+          <div class="flex col gap8">
+            %EX(Form shooting)% %EX(Free throws)% %EX(Mid-range jumpers)% %EX(Corner 3s)% %EX(Catch & shoot)% %EX(Elbow jumpers)% %EX(Short corner jumpers)% %EX(Dribble pull-ups)%
+          </div>
+          <div class="mt-auto tcenter" style="padding-top:24px;"><span style="display:inline-block;font-size:13px;font-weight:500;color:var(--reps-label);border:1px solid var(--reps-line);border-radius:10px;padding:12px 20px;">+ Create your own</span></div>
+        </div></div></div>
+        <p class="note">The previous mocks showed five of the eight. Full library is 31 exercises across six categories.</p>
+      </div>
+
+      <!-- Assign count — goal attempts (default) -->
+      <div class="cell" id="assign-count">
+        <div class="caption"><span class="cap-name">Assign — How many?</span> <span class="cap-state">shooting drill, goal = Attempts</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Assign to Adam)%
+          <h2 class="h2" style="margin-bottom:24px;">Corner 3s</h2>
+          <label class="field-label" style="display:block;margin-bottom:8px;">Goal</label>
+          <div class="flex gap8" style="margin-bottom:28px;">
+            <span class="preset on">Attempts</span><span class="preset">Makes</span><span class="preset">Consecutive</span>
+          </div>
+          <label class="field-label" style="display:block;margin-bottom:8px;">How many?</label>
+          <div class="flex gap8" style="margin-bottom:12px;">
+            <span class="preset on">25</span><span class="preset">50</span><span class="preset">100</span><span class="preset">200</span>
+          </div>
+          <span style="font-size:13px;color:var(--reps-sub);">+ enter your own</span>
+          <div class="flex between" style="align-items:flex-start;gap:16px;margin:28px 0;">
+            <div style="min-width:0;">
+              <div style="font-size:14px;font-weight:500;color:var(--reps-ink);">Track makes?</div>
+              <div class="sub-sm" style="margin-top:2px;">Lets Adam log how many they made.</div>
+            </div>
+            <button class="switch on"><i></i></button>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue">Send to Adam</button></div>
+        </div></div></div>
+        <p class="note">Goal comes first — it decides what the number below means, so choosing it after a count would silently reinterpret that count. Only <strong>shooting / finishing / spot-shots</strong> show the selector (<code>supportsGoalTypes</code>). On the Attempts goal the Track-makes toggle stays and defaults on. The Side row (below the toggle) is cut here for length — see the Side screen.</p>
+      </div>
+
+      <!-- Assign count — goal makes -->
+      <div class="cell" id="assign-count-makes">
+        <div class="caption"><span class="cap-name">Assign — How many makes?</span> <span class="cap-state">goal = Makes, toggle implied</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Assign to Adam)%
+          <h2 class="h2" style="margin-bottom:24px;">Corner 3s</h2>
+          <label class="field-label" style="display:block;margin-bottom:8px;">Goal</label>
+          <div class="flex gap8" style="margin-bottom:28px;">
+            <span class="preset">Attempts</span><span class="preset on">Makes</span><span class="preset">Consecutive</span>
+          </div>
+          <label class="field-label" style="display:block;margin-bottom:8px;">How many makes?</label>
+          <div class="flex gap8" style="margin-bottom:12px;">
+            <span class="preset">10</span><span class="preset on">25</span><span class="preset">50</span><span class="preset">100</span>
+          </div>
+          <span style="font-size:13px;color:var(--reps-sub);">+ enter your own</span>
+          <div class="mt-auto"><button class="btn btn-blue">Send to Adam</button></div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. Switching to Makes swaps the preset row to <code>10/25/50/100</code> (attempt-scaled 25/200 are far too high for makes) and relabels to “How many makes?”. The Track-makes toggle disappears — makes are the measure now, so it would ask a question already answered.</p>
+      </div>
+
+      <!-- Assign count — goal consecutive -->
+      <div class="cell" id="assign-count-consec">
+        <div class="caption"><span class="cap-name">Assign — Hit how many in a row?</span> <span class="cap-state">goal = Consecutive</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Assign to Adam)%
+          <h2 class="h2" style="margin-bottom:24px;">Free throws</h2>
+          <label class="field-label" style="display:block;margin-bottom:8px;">Goal</label>
+          <div class="flex gap8" style="margin-bottom:28px;">
+            <span class="preset">Attempts</span><span class="preset">Makes</span><span class="preset on">Consecutive</span>
+          </div>
+          <label class="field-label" style="display:block;margin-bottom:8px;">Hit how many in a row?</label>
+          <div class="flex gap8" style="margin-bottom:12px;">
+            <span class="preset">3</span><span class="preset">5</span><span class="preset on">10</span>
+          </div>
+          <span style="font-size:13px;color:var(--reps-sub);">+ enter your own</span>
+          <p class="sub-sm" style="margin:16px 0 0;">Student shoots until they hit the goal, then logs 1 completion.</p>
+          <div class="mt-auto"><button class="btn btn-blue">Send to Adam</button></div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. Presets are <code>3/5/10</code>. The note explains the one goal whose logging shape isn't self-evident: <code>target</code> is the streak length, but completion is a single logged set — so <code>isComplete</code> reads it as <code>&gt;= 1 set</code>, not <code>&gt;= target</code>.</p>
+      </div>
+
+      <!-- Assign count — side row -->
+      <div class="cell" id="assign-side">
+        <div class="caption"><span class="cap-name">Assign — Side</span> <span class="cap-state">Left / Right, nothing selected</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Assign to Adam)%
+          <h2 class="h2" style="margin-bottom:24px;">Floaters</h2>
+          <label class="field-label" style="display:block;margin-bottom:8px;">How many?</label>
+          <div class="flex gap8" style="margin-bottom:12px;">
+            <span class="preset on">20</span><span class="preset">50</span><span class="preset">100</span>
+          </div>
+          <span style="font-size:13px;color:var(--reps-sub);">+ enter your own</span>
+          <div class="flex between" style="align-items:flex-start;gap:16px;margin:28px 0 0;">
+            <div style="min-width:0;">
+              <div style="font-size:14px;font-weight:500;color:var(--reps-ink);">Track makes?</div>
+              <div class="sub-sm" style="margin-top:2px;">Lets Adam log how many they made.</div>
+            </div>
+            <button class="switch on"><i></i></button>
+          </div>
+          <label class="field-label" style="display:block;margin:28px 0 8px;">Side</label>
+          <div class="flex gap8">
+            <span class="preset">Left</span><span class="preset">Right</span>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue">Send to Adam</button></div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. Every exercise but seven (<code>supportsSide</code>) offers Left / Right. Nothing is selected by default — NULL means “unspecified”, not “both” — and tapping the active option clears it back to NULL. Neither pill is <code>.on</code> here.</p>
+      </div>
+
+      <!-- Assign count — ball-handling (no goal, no toggle) -->
+      <div class="cell" id="assign-count-min">
+        <div class="caption"><span class="cap-name">Assign — How many?</span> <span class="cap-state">ball-handling — no goal, no makes toggle</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Assign to Adam)%
+          <h2 class="h2" style="margin-bottom:24px;">Stationary dribbling</h2>
+          <label class="field-label" style="display:block;margin-bottom:8px;">How many?</label>
+          <div class="flex gap8" style="margin-bottom:12px;">
+            <span class="preset">5</span><span class="preset on">10</span><span class="preset">15</span><span class="preset">20</span>
+          </div>
+          <p class="sub-sm" style="margin-bottom:12px;">minutes</p>
+          <span style="font-size:13px;color:var(--reps-sub);">+ enter your own</span>
+          <label class="field-label" style="display:block;margin:28px 0 8px;">Side</label>
+          <div class="flex gap8">
+            <span class="preset">Left</span><span class="preset">Right</span>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue">Send to Adam</button></div>
+        </div></div></div>
+        <p class="note">Changed since the previous mocks. Ball-handling is a <strong>makeless</strong> category (with footwork and conditioning) — there's nothing to make in a dribble — so the Track-makes toggle no longer renders. It's timed, so no Goal selector either. It still offers Side. The <code>minutes</code> caption survives because presets are bare numbers.</p>
+      </div>
+
+      <!-- Assign sent -->
+      <div class="cell" id="assign-sent">
+        <div class="caption"><span class="cap-name">Assign — Sent</span> <span class="cap-state">confirmation, holds 1.3s</span></div>
+        <div class="phone"><div class="screen"><div class="pad" style="align-items:center;justify-content:center;text-align:center;">
+          <div style="width:72px;height:72px;border-radius:50%;background:rgba(62,214,138,0.12);display:flex;align-items:center;justify-content:center;">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3ed68a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <p style="font-size:17px;font-weight:600;color:var(--reps-ink);margin-top:20px;">Sent to Adam 🏀</p>
+        </div></div></div>
+        <p class="note">Check and halo moved from emerald <code>#3ed68a</code> to lime <code>#3ed68a</code>. Scales/fades in, then routes back to the student detail screen.</p>
+      </div>
+
+      <!-- Custom exercise -->
+      <div class="cell" id="custom">
+        <div class="caption"><span class="cap-name">Create your own</span> <span class="cap-state">custom exercise</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Assign to Adam)%
+          <h2 class="h2" style="margin-bottom:24px;">Create your own</h2>
+          <label class="field-label" style="display:block;margin-bottom:8px;">Exercise name</label>
+          <input class="input" style="margin-bottom:28px;" value="Wall sits" disabled>
+          <label class="field-label" style="display:block;margin-bottom:8px;">Track by</label>
+          <div class="flex gap8" style="margin-bottom:28px;"><span class="preset on">Reps</span><span class="preset">Minutes</span></div>
+          <label class="field-label" style="display:block;margin-bottom:8px;">How many?</label>
+          <input class="input center" style="font-size:18px;" value="25" disabled>
+          <div class="mt-auto"><button class="btn btn-blue">Send to Adam</button></div>
+        </div></div></div>
+        <p class="note">No “Track makes?” toggle here — a custom exercise belongs to no category, so there is nothing to infer a default from and it saves with makes off. The coach can turn it on later from the count screen when re-assigning it out of My exercises.</p>
+      </div>
+
+      <!-- My exercises -->
+      <div class="cell" id="mine">
+        <div class="caption"><span class="cap-name">My exercises</span> <span class="cap-state">saved customs + delete menu</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(My exercises)%
+          <h2 class="h2" style="margin-bottom:24px;">My exercises</h2>
+          <div class="flex col gap8">
+            <div class="list-row" style="padding:0;position:relative;">
+              <span class="rt" style="padding:14px 16px;flex:1;">Wall sits</span>
+              <span class="kebab" style="padding:14px 12px;">%DOTS_V%</span>
+              <div class="dropdown" style="right:6px;top:48px;"><button class="red">Delete exercise</button></div>
+            </div>
+            <div class="list-row" style="padding:0;">
+              <span class="rt" style="padding:14px 16px;flex:1;">Defensive stance holds</span>
+              <span class="kebab" style="padding:14px 12px;">%DOTS_V%</span>
+            </div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- My exercises empty -->
+      <div class="cell" id="mine-empty">
+        <div class="caption"><span class="cap-name">My exercises</span> <span class="cap-state">empty</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(My exercises)%
+          <h2 class="h2" style="margin-bottom:24px;">My exercises</h2>
+          <p style="font-size:14px;color:var(--reps-sub);margin:0;">No saved exercises yet.</p>
+        </div></div></div>
+        <p class="note">Reachable only by deleting your last custom while on the page — the category screen hides the “My exercises” row when the count is zero.</p>
+      </div>
+
+      <!-- Delete exercise modal -->
+      <div class="cell" id="delete-exercise">
+        <div class="caption"><span class="cap-name">Delete exercise</span> <span class="cap-state">confirm</span></div>
+        <div class="phone"><div class="screen">
+          <div class="pad" style="filter:brightness(.5);">
+            %BACK(My exercises)%
+            <h2 class="h2">My exercises</h2>
+          </div>
+          <div class="backdrop">
+            <div class="modal">
+              <h3>Delete Wall sits?</h3>
+              <p>This removes it from your saved exercises. Existing assignments aren't affected.</p>
+              <div class="actions"><button class="btn-cancel">Cancel</button><button class="btn-red">Delete</button></div>
+            </div>
+          </div>
+        </div></div>
+        <p class="note">Not in the previous mocks. Deleting the template leaves already-assigned copies alone — assignments store <code>exercise_name</code> as free text, not a foreign key.</p>
+      </div>
+
+    </div><!-- /grid assign -->
+
+    <!-- ======================================================= -->
+    <!-- STUDENT                                                  -->
+    <!-- ======================================================= -->
+    <div class="section"><div class="section-title">Student</div></div>
+    <div class="grid">
+
+      <!-- Home active -->
+      <div class="cell" id="student-home">
+        <div class="caption"><span class="cap-name">Student home</span> <span class="cap-state">in progress</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STUDHEAD(Neo)%
+          %TABS(new,3,0)%
+          <div class="flex col" style="gap:10px;">
+            %SCARD(Form shooting,30,50,reps,60,no,-,-,-,0)%
+            %SCARD(Free throws,50,50,reps,100,yes,-,-,-,0)%
+            %SCARD(Corner 3s,10,25,reps,40,no,-,-,-,0)%
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- Home with makes -->
+      <div class="cell" id="student-home-makes">
+        <div class="caption"><span class="cap-name">Student home</span> <span class="cap-state">makes tracked — two-tone + percentage</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STUDHEAD(Maya)%
+          %TABS(new,3,0)%
+          <div class="flex col" style="gap:10px;">
+            %SCARD(Free throws,40,50,reps,80,no,31,40,78,62)%
+            %SCARD(Corner 3s,25,25,reps,100,yes,9,25,36,36)%
+            %SCARD(Layups,12,20,reps,60,no,7,12,58,35,Left)%
+          </div>
+        </div></div></div>
+        <p class="note">The student sees the same percentage the coach does — deliberately, so nothing about the number is a surprise when it comes up in a session.</p>
+      </div>
+
+      <!-- Home — goal types + side -->
+      <div class="cell" id="student-home-goals">
+        <div class="caption"><span class="cap-name">Student home</span> <span class="cap-state">makes goal, consecutive, side</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STUDHEAD(Maya)%
+          %TABS(new,3,0)%
+          <div class="flex col" style="gap:10px;">
+            %SCARD(Corner 3s,21,25,makes,84,no,-,-,-,0,Left)%
+            %SCARD(Free throws,0,1,set · 10 in a row,0,no,-,-,-,0,-)%
+            %SCARD(Floaters,15,20,reps,75,no,-,-,-,0,Right)%
+          </div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. Mirrors the coach card, with one difference: the student home title shows the <em>side</em> but not the streak length — the consecutive streak lives only in the count label (<code>0/1 set · 10 in a row</code>) here, whereas the coach title also carries <code>· 10 in a row</code>.</p>
+      </div>
+
+      <!-- Home — sticky ASSIGNMENTS header (scrolled) -->
+      <div class="cell" id="student-home-sticky">
+        <div class="caption"><span class="cap-name">Student home</span> <span class="cap-state">sticky tab bar, scrolled</span></div>
+        <div class="phone"><div class="screen">
+          <!-- No .pad: the label is pinned to the very top of the scroll area, so
+               the logo/name block has already scrolled away above it. -->
+          <div style="flex:1;display:flex;flex-direction:column;padding:0 20px 24px;overflow:hidden;">
+            <!-- Sticky label on a solid bg — a hard edge, no gradient fade. -->
+            <div style="position:sticky;top:0;background:var(--reps-bg);padding:34px 0 20px;z-index:2;">
+              <div class="tabs"><span class="on">New <b>6</b></span><span>Archive <b>2</b></span></div>
+            </div>
+            <!-- First card is clipped at the top to show it passing under the label. -->
+            <div class="flex col" style="gap:10px;margin-top:-14px;">
+              <div style="margin-top:-24px;opacity:.55;">%SCARD(Form shooting,50,50,reps,100,yes,-,-,-,0,-)%</div>
+              %SCARD(Crossovers,3,5,min,60,no,-,-,-,0,-)%
+              %SCARD(Corner 3s,21,25,makes,84,no,-,-,-,0,Left)%
+              %SCARD(Free throws,0,1,set · 10 in a row,0,no,-,-,-,0,-)%
+              %SCARD(Floaters,15,20,reps,75,no,-,-,-,0,Right)%
+              %SCARD(Pivots,5,20,reps,25,no,-,-,-,0,Left)%
+            </div>
+          </div>
+        </div></div>
+        <p class="note">Not in the previous mocks. The tab bar sticks to the top of the scroll area (the logo + name block scroll away above it); cards pass cleanly beneath its solid background. An earlier build hung a gradient fade below the label, but the card list starts flush with the label's edge, so the fade dimmed the first card — it was removed for a clean hard edge (commit <code>1109eb4</code>). The clipped top card here shows the pass-under.</p>
+      </div>
+
+      <!-- Home all done -->
+      <div class="cell" id="student-home-done">
+        <div class="caption"><span class="cap-name">Student home</span> <span class="cap-state">all done, not yet archived</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STUDHEAD(Neo)%
+          %TABS(new,2,0)%
+          %ALLDONE(You finished everything.,Coach RJ can see your progress.,-)%
+          <div class="flex col" style="gap:10px;">
+            %SCARD(Form shooting,50,50,reps,100,yes,-,-,-,0)%
+            %SCARD(Free throws,50,50,reps,100,yes,18,50,36,36)%
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- Home empty -->
+      <div class="cell" id="student-home-empty">
+        <div class="caption"><span class="cap-name">Student home</span> <span class="cap-state">empty — all caught up</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STUDHEAD(Neo)%
+          <div class="grow flex col center" style="justify-content:center;text-align:center;padding-bottom:32px;">
+            <p style="font-size:21px;font-weight:600;color:var(--reps-ink);margin:0;">You're all caught up. 🙌</p>
+            <p style="font-size:14px;color:var(--reps-sub);margin:12px 0 0;max-width:240px;">Coach RJ will assign new work when it's time.</p>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- Log: attempts + makes -->
+      <div class="cell" id="log-makes">
+        <div class="caption"><span class="cap-name">Log screen</span> <span class="cap-state">attempts + makes, part-logged</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %LOGHEAD(Corner 3s)%
+          <div style="font-size:14px;color:var(--reps-dim);margin-bottom:8px;">14 of 25 done</div>
+          <div class="bar lg two" style="margin-bottom:84px;">
+            <i class="att" style="width:56%;"></i>
+            <i class="green" style="width:24%;"></i>
+          </div>
+          <div style="margin-bottom:56px;">
+            <span class="step-label" style="font-size:17px;color:var(--attempts);">Attempts</span>
+            <div class="step hero" style="margin-top:20px;">
+              <button>−</button>
+              <span class="num" style="color:var(--attempts);">14</span>
+              <button>+</button>
+            </div>
+            <div style="margin-top:24px;border-top:1px solid var(--reps-line-hi);"></div>
+            <div class="flex between center gap12" style="margin-top:20px;">
+              <span class="step-label" style="font-size:15px;color:var(--green);">Makes</span>
+              <div class="step mini">
+                <button>−</button>
+                <span class="num" style="color:var(--green);">6</span>
+                <button>+</button>
+              </div>
+            </div>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue">Log it</button></div>
+        </div></div></div>
+        <p class="note">This is a <strong>reps goal with makes on</strong> — attempts stay the hero, makes the inline row. Both steppers seed from banked totals, only the delta is written to <code>logs</code>, and the <code>−</code> floors at the banked total. Makes <code>+</code> stops at parity with attempts; a typed value settles down on blur. Bar is now <code>6px</code>.</p>
+      </div>
+
+      <!-- Log: makes goal (MAKES hero) -->
+      <div class="cell" id="log-makes-goal">
+        <div class="caption"><span class="cap-name">Log screen</span> <span class="cap-state">makes GOAL — MAKES is the hero, no attempts row</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %LOGHEAD(Corner 3s,Left)%
+          <div style="font-size:14px;color:var(--reps-dim);margin-bottom:8px;">21 of 25 done</div>
+          <div class="bar lg" style="margin-bottom:84px;"><i class="att" style="width:84%;"></i></div>
+          <div style="margin-bottom:56px;">
+            <span class="step-label" style="font-size:17px;color:var(--green);">Makes</span>
+            <div class="step hero" style="margin-top:20px;">
+              <button>−</button>
+              <span class="num" style="color:var(--green);">21</span>
+              <button>+</button>
+            </div>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue">Log it</button></div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. On a <strong>makes goal</strong> the coach asked for makes, so MAKES takes the 76px hero and the bright green; the attempts row is gone entirely — no divider, no second stepper. Completion is <code>makes &gt;= target</code>, and the single bar measures makes. “Left hand” context sits under the title. (<code>logs_amount_check</code> needs <code>amount &gt; 0</code>, so a save writes the makes delta as its amount.)</p>
+      </div>
+
+      <!-- Log: consecutive -->
+      <div class="cell" id="log-consec">
+        <div class="caption"><span class="cap-name">Log screen</span> <span class="cap-state">consecutive — single sets counter</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %LOGHEAD(Free throws)%
+          <div style="font-size:14px;color:var(--reps-dim);margin-bottom:8px;">0 of 1 set · 10 in a row</div>
+          <div class="bar lg" style="margin-bottom:84px;"><i class="att" style="width:0%;"></i></div>
+          <div style="margin-bottom:56px;">
+            <span class="step-label" style="font-size:17px;color:var(--green);">Sets completed</span>
+            <div class="step hero" style="margin-top:20px;">
+              <button class="off">−</button>
+              <span class="num" style="color:var(--green);">0</span>
+              <button>+</button>
+            </div>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue" style="opacity:.4;">Log it</button></div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. A <strong>consecutive</strong> goal reads its target as a streak length, shown in the progress line (<code>0 of 1 set · 10 in a row</code>) and nowhere else — the title is the exercise name alone, as on every other log screen — but the student logs <strong>sets completed</strong>: one tap, one set, and it's done. Completion is <code>&gt;= 1 set</code>, not <code>&gt;= target</code>. ⚠️ Known: the stepper can climb past 1 while the progress line stays <code>1 of 1 set</code> (<code>progressValue</code> caps at 1) — the two visibly disagree.</p>
+      </div>
+
+      <!-- Log: reps only -->
+      <div class="cell" id="log-reps">
+        <div class="caption"><span class="cap-name">Log screen</span> <span class="cap-state">reps only — single bright stepper</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %LOGHEAD(Pivots)%
+          <div style="font-size:14px;color:var(--reps-dim);margin-bottom:8px;">8 of 20 done</div>
+          <div class="bar lg" style="margin-bottom:84px;"><i class="att" style="width:40%;"></i></div>
+          <div style="margin-bottom:56px;">
+            <span class="step-label" style="font-size:17px;color:var(--green);">Reps</span>
+            <div class="step hero" style="margin-top:20px;">
+              <button>−</button>
+              <span class="num" style="color:var(--green);">8</span>
+              <button>+</button>
+            </div>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue">Log it</button></div>
+        </div></div></div>
+        <p class="note">With no makes row to rank against, the label and number take the bright green outright rather than the muted attempts shade — the muted tone only exists to subordinate attempts <em>to</em> makes. The bar fill stays muted until completion. Non-makes assignments are also clamped at the target.</p>
+      </div>
+
+      <!-- Log: minutes -->
+      <div class="cell" id="log-minutes">
+        <div class="caption"><span class="cap-name">Log screen</span> <span class="cap-state">minutes</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %LOGHEAD(Two-ball dribbling)%
+          <div style="font-size:14px;color:var(--reps-dim);margin-bottom:8px;">4 of 10 done</div>
+          <div class="bar lg" style="margin-bottom:84px;"><i class="att" style="width:40%;"></i></div>
+          <div style="margin-bottom:56px;">
+            <span class="step-label" style="font-size:17px;color:var(--green);">Minutes</span>
+            <div class="step hero" style="margin-top:20px;">
+              <button>−</button>
+              <span class="num" style="color:var(--green);">4</span>
+              <button>+</button>
+            </div>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue">Log it</button></div>
+        </div></div></div>
+        <p class="note">Label resolution, in order: minutes wins outright → ATTEMPTS when makes are on <em>and</em> the category is shooting / finishing / spot-shots → REPS otherwise.</p>
+      </div>
+
+      <!-- Log: complete -->
+      <div class="cell" id="log-done">
+        <div class="caption"><span class="cap-name">Log screen</span> <span class="cap-state">complete, no makes — controls locked</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %LOGHEAD(Form shooting)%
+          <div style="font-size:14px;color:var(--reps-dim);margin-bottom:8px;">50 of 50 done</div>
+          <div class="bar lg" style="margin-bottom:84px;"><i class="green" style="width:100%;"></i></div>
+          <div style="margin-bottom:56px;">
+            <span class="step-label" style="font-size:17px;color:var(--green);">Reps</span>
+            <div class="step hero" style="margin-top:20px;">
+              <button class="off">−</button>
+              <span class="num" style="color:var(--green);opacity:.4;">50</span>
+              <button class="off">+</button>
+            </div>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue" style="opacity:.4;">Log it</button></div>
+        </div></div></div>
+        <p class="note">Disabled buttons go to a visible grey <code>#555</code> rather than near-invisible opacity, so an inactive <code>−</code> still reads in bright sunlight on a court. This is also the dead end behind the known retroactive-makes gap: a completed non-makes assignment is fully inert, and there is no path back to add makes because <code>logs_amount_check</code> forbids inserting <code>amount: 0</code>.</p>
+      </div>
+
+      <!-- Celebrate done -->
+      <div class="cell" id="celebrate-done">
+        <div class="caption"><span class="cap-name">Celebrate</span> <span class="cap-state">assignment done (confetti when all done)</span></div>
+        <div class="phone"><div class="screen"><div class="pad" style="align-items:center;justify-content:center;text-align:center;">
+          <div style="font-size:64px;margin-bottom:24px;">🔥</div>
+          <h1 style="font-size:40px;font-weight:600;letter-spacing:-0.5px;margin:0 0 8px;">Done.</h1>
+          <p style="font-size:14px;color:var(--reps-sub);margin:0 0 40px;max-width:300px;">Coach RJ will see this.</p>
+          <a class="btn btn-blue" style="max-width:240px;">Back to my assignments</a>
+        </div></div></div>
+        <p class="note">The confetti burst fires only when the <em>last</em> open assignment closes, and is the one place emerald <code>#3ed68a</code> survives — decorative, intentionally left alone during the colour sweep.</p>
+      </div>
+
+      <!-- Celebrate partial -->
+      <div class="cell" id="celebrate-partial">
+        <div class="caption"><span class="cap-name">Celebrate</span> <span class="cap-state">partial log</span></div>
+        <div class="phone"><div class="screen"><div class="pad" style="align-items:center;justify-content:center;text-align:center;">
+          <div style="font-size:64px;margin-bottom:24px;">🔥</div>
+          <h1 style="font-size:26px;font-weight:600;letter-spacing:-0.5px;margin:0 0 8px;">Logged.</h1>
+          <p style="font-size:14px;color:var(--reps-sub);margin:0 0 40px;max-width:300px;">20 reps to go. Coach RJ will see this.</p>
+          <a class="btn btn-blue" style="max-width:240px;">Back to my assignments</a>
+        </div></div></div>
+        <p class="note">Headline drops from 40px to 26px on a partial log. The remainder is singularised — “1 rep to go”, “1 minute to go”. Details travel via <code>sessionStorage</code>, never the URL, so the coach's name stays out of browser history.</p>
+      </div>
+
+      <!-- Login phone -->
+      <div class="cell" id="login-phone">
+        <div class="caption"><span class="cap-name">Student login</span> <span class="cap-state">phone step</span></div>
+        <div class="phone"><div class="screen"><div class="pad" style="align-items:center;justify-content:center;text-align:center;">
+          %LOGO_LG%
+          <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.5px;margin:24px 0 8px;">Welcome back</h1>
+          <div style="width:100%;max-width:320px;">
+            <p style="font-size:13px;color:var(--reps-sub);margin-bottom:16px;">Enter your number to find your assignments.</p>
+            <input class="input" style="margin-bottom:16px;" placeholder="(555) 123-4567">
+            <button class="btn btn-blue">Send code</button>
+          </div>
+        </div></div></div>
+        <p class="note">The fallback route for a student who lost the SMS link — <code>/student/login</code> looks the player up by phone and redirects to their tokenised home.</p>
+      </div>
+
+      <!-- Login code -->
+      <div class="cell" id="login-code">
+        <div class="caption"><span class="cap-name">Student login</span> <span class="cap-state">OTP code step</span></div>
+        <div class="phone"><div class="screen"><div class="pad" style="align-items:center;justify-content:center;text-align:center;">
+          %LOGO_LG%
+          <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.5px;margin:24px 0 8px;">Welcome back</h1>
+          <div style="width:100%;max-width:320px;">
+            <p style="font-size:13px;color:var(--reps-sub);margin-bottom:16px;">Code sent to (555) 123-4567.</p>
+            <input class="input center" style="margin-bottom:16px;letter-spacing:6px;" value="000000" disabled>
+            <button class="btn btn-blue">Verify</button>
+            <p style="margin-top:16px;font-size:13px;color:var(--reps-dim);">Wrong number? Go back</p>
+          </div>
+        </div></div></div>
+      </div>
+
+    </div><!-- /grid student -->
+
+    <!-- ======================================================= -->
+    <!-- PARENT                                                   -->
+    <!-- ======================================================= -->
+    <div class="section"><div class="section-title">Parent</div></div>
+    <div class="grid">
+
+      %PARENT(parent-alldone,all assignments complete,Neo,🔥,All done. Great week.,3,3,3,Today,Practiced 3 days this week)%
+      %PARENT(parent-strong,strong week,Maya,💪,Putting in the work.,4,3,4,Today,Practiced 4 days this week)%
+      %PARENT(parent-quiet,quiet week,Adam,🟡,Just getting started.,1,1,3,Yesterday,Practiced 1 day this week)%
+
+      <!-- Not started -->
+      <div class="cell" id="parent-notstarted">
+        <div class="caption"><span class="cap-name">Parent digest</span> <span class="cap-state">assigned but untouched</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %PARENTHEAD(Jordan)%
+          <div style="background:var(--reps-card);border:1px solid var(--reps-line);border-radius:14px;padding:24px 20px;margin-bottom:16px;text-align:center;">
+            <div style="font-size:48px;margin-bottom:12px;">–</div>
+            <p style="font-size:17px;font-weight:600;color:var(--reps-ink);margin:0;">Hasn't started yet this week.</p>
+          </div>
+          <div class="flex gap12" style="margin-bottom:32px;">
+            %PSTAT(Practice days,0,this week)%
+            %PSTAT2(Assignments,0,2,started)%
+          </div>
+          %PARENTFOOT(No activity yet)%
+        </div></div></div>
+        <p class="note">Not in the previous mocks. Distinct from “nothing assigned”: work exists (0 / 2) but no log has landed. The practice line under the headline is suppressed whenever the day count is zero.</p>
+      </div>
+
+      <!-- Nothing assigned -->
+      <div class="cell" id="parent-none">
+        <div class="caption"><span class="cap-name">Parent digest</span> <span class="cap-state">nothing assigned</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %PARENTHEAD(Sofia)%
+          <div style="background:var(--reps-card);border:1px solid var(--reps-line);border-radius:14px;padding:24px 20px;margin-bottom:16px;text-align:center;">
+            <div style="font-size:48px;margin-bottom:12px;">–</div>
+            <p style="font-size:17px;font-weight:600;color:var(--reps-ink);margin:0;">Nothing assigned yet this week.</p>
+          </div>
+          <div class="flex gap12" style="margin-bottom:32px;">
+            %PSTAT(Practice days,0,this week)%
+            %PSTAT2(Assignments,0,,started)%
+          </div>
+          %PARENTFOOT(No activity yet)%
+        </div></div></div>
+        <p class="note">With no assignments the “/ total” half of the second stat is dropped entirely rather than printing “0 / 0”. Unlike every other surface, the parent digest <em>is</em> week-bounded — it filters assignments on <code>week_start</code>.</p>
+      </div>
+
+    </div><!-- /grid parent -->
+
+    <!-- ======================================================= -->
+    <!-- EDGE CASES                                               -->
+    <!-- ======================================================= -->
+    <div class="section"><div class="section-title">Edge cases — errors &amp; oddities</div></div>
+    <div class="grid">
+
+      <!-- Email error -->
+      <div class="cell" id="err-email">
+        <div class="caption"><span class="cap-name">Signup email</span> <span class="cap-state">validation error</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %STEPHEAD(3)%
+          <h2 class="h2" style="margin-bottom:4px;">Your email</h2>
+          <p style="font-size:15px;color:var(--reps-sub);margin:0 0 24px;">We'll email you a sign-in code.</p>
+          <div class="err" style="margin-bottom:16px;">Enter a valid email address.</div>
+          <input class="input" style="margin-bottom:24px;border-color:var(--blue);" value="rj@" disabled>
+          <button class="btn btn-disabled">Send code</button>
+        </div></div></div>
+      </div>
+
+      <!-- Add student error -->
+      <div class="cell" id="err-add">
+        <div class="caption"><span class="cap-name">Add player</span> <span class="cap-state">missing phone error</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Add player)%
+          <div class="err" style="margin-bottom:24px;">Enter a phone number.</div>
+          <label class="field-label" style="margin-bottom:8px;display:block;">Name</label>
+          <input class="input" style="margin-bottom:32px;" value="Neo" disabled>
+          <div class="flex between center" style="margin-bottom:8px;">
+            <label class="field-label">Send homework to</label>
+            <div class="chip"><button class="on">Player</button><button>Parent</button></div>
+          </div>
+          <input class="input" placeholder="(555) 000-0000">
+          <p style="margin-top:8px;font-size:13px;color:var(--placeholder);">They'll get a text when you assign work.</p>
+          <button class="btn btn-disabled" style="margin-top:32px;">Add player</button>
+        </div></div></div>
+      </div>
+
+      <!-- Log error -->
+      <div class="cell" id="err-log">
+        <div class="caption"><span class="cap-name">Log screen</span> <span class="cap-state">save error</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %LOGHEAD(Form shooting)%
+          <div class="err" style="margin-bottom:16px;">Something went wrong.</div>
+          <div style="font-size:14px;color:var(--reps-dim);margin-bottom:8px;">40 of 50 done</div>
+          <div class="bar lg" style="margin-bottom:84px;"><i class="att" style="width:80%;"></i></div>
+          <div style="margin-bottom:56px;">
+            <span class="step-label" style="font-size:17px;color:var(--green);">Reps</span>
+            <div class="step hero" style="margin-top:20px;">
+              <button>−</button>
+              <span class="num" style="color:var(--green);">40</span>
+              <button>+</button>
+            </div>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue">Log it</button></div>
+        </div></div></div>
+        <p class="note">The error banner sits above the progress line and the steppers keep their values, so a retry doesn't lose the count the student just tapped in.</p>
+      </div>
+
+      <!-- Student OTP error -->
+      <div class="cell" id="err-login">
+        <div class="caption"><span class="cap-name">Student login</span> <span class="cap-state">no matching number</span></div>
+        <div class="phone"><div class="screen"><div class="pad" style="align-items:center;justify-content:center;text-align:center;">
+          %LOGO_LG%
+          <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.5px;margin:24px 0 8px;">Welcome back</h1>
+          <div style="width:100%;max-width:320px;">
+            <p style="font-size:13px;color:var(--reps-sub);margin-bottom:16px;">Code sent to (555) 123-4567.</p>
+            <div class="err" style="margin-bottom:16px;text-align:left;">No assignments found for that number.</div>
+            <input class="input center" style="margin-bottom:16px;letter-spacing:6px;" value="418203" disabled>
+            <button class="btn btn-blue">Verify</button>
+            <p style="margin-top:16px;font-size:13px;color:var(--reps-dim);">Wrong number? Go back</p>
+          </div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. The OTP can verify successfully and the lookup still fail — a valid phone that no coach has added as a player.</p>
+      </div>
+
+      <!-- Count screen error -->
+      <div class="cell" id="err-count">
+        <div class="caption"><span class="cap-name">Assign — How many?</span> <span class="cap-state">target below 1</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %BACK(Assign to Adam)%
+          <div class="err" style="margin-bottom:16px;">Enter a target greater than 0.</div>
+          <h2 class="h2" style="margin-bottom:32px;">Corner 3s</h2>
+          <label class="field-label" style="display:block;margin-bottom:8px;">How many?</label>
+          <div class="flex gap8" style="margin-bottom:12px;">
+            <span class="preset">25</span><span class="preset">50</span><span class="preset">100</span><span class="preset">200</span>
+          </div>
+          <input class="input center" style="font-size:18px;margin-bottom:12px;" value="0" disabled>
+          <div class="flex between" style="align-items:flex-start;gap:16px;margin:32px 0;">
+            <div style="min-width:0;">
+              <div style="font-size:14px;font-weight:500;color:var(--reps-ink);">Track makes?</div>
+              <div class="sub-sm" style="margin-top:2px;">Lets Adam log how many they made.</div>
+            </div>
+            <button class="switch on"><i></i></button>
+          </div>
+          <div class="mt-auto"><button class="btn btn-blue">Send to Adam</button></div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. Mirrors the database's own floor — <code>logs_amount_check</code> requires <code>amount &gt; 0</code>, so a zero target would create an assignment nothing could ever be logged against.</p>
+      </div>
+
+      <!-- Makes bad data -->
+      <div class="cell" id="makes-baddata">
+        <div class="caption"><span class="cap-name">Makes &gt; attempts</span> <span class="cap-state">percentage suppressed, numbers kept</span></div>
+        <div class="phone"><div class="screen"><div class="pad">
+          %SDHEAD(M,Maya,Joined 2 months ago)%
+          %TABS(new,2,0)%
+          <div class="flex col" style="gap:10px;margin-bottom:24px;">
+            %ACARD(Free throws,20,50,reps,40,no,26,20,-,52)%
+            %ACARD(Corner 3s,25,25,reps,100,yes,9,25,36,36)%
+          </div>
+          <div class="mt-auto" style="padding-top:14px;"><a class="btn btn-ghost">+ Assign more</a></div>
+        </div></div></div>
+        <p class="note">Not in the previous mocks. Makes are never clamped against attempts at entry — a mismatch is the coach's signal that something went wrong, not something to silently correct. So the raw “made 26/20” stays visible while the percentage, which would read 130%, is dropped. Note the bright bar layer can overshoot the muted one here; it is the one case where that happens.</p>
+      </div>
+
+      <!-- Landscape -->
+      <div class="cell" id="landscape">
+        <div class="caption"><span class="cap-name">Landscape notice</span> <span class="cap-state">phone rotated — UI replaced</span></div>
+        <div class="phone"><div class="screen">
+          <div class="landscape">
+            %LOGO_LG%
+            <p style="margin:0;">Reps works best in portrait mode.</p>
+          </div>
+        </div></div>
+        <p class="note">Not in the previous mocks. Lives in the root layout and takes over the whole screen in landscape below 500px tall, hiding every sibling. The height guard keeps desktop and the responsive landing page untouched.</p>
+      </div>
+
+    </div><!-- /grid edge -->
+
+  </main>
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   Template expansion. The markup above uses %TOKEN(...)% shorthands
+   so repeated app primitives (rows, cards, headers) stay readable.
+   Expanded once at load — purely presentational, no app logic.
+----------------------------------------------------------------*/
+(function () {
+  const LOGO =
+    '<svg width="23" height="23" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#1c1f26"/>' +
+    '<line x1="9" y1="8" x2="9" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<line x1="14" y1="8" x2="14" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<line x1="19" y1="8" x2="19" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<line x1="24" y1="8" x2="24" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<line x1="6" y1="23" x2="27" y2="9" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/></svg>';
+
+  const LOGO_LG =
+    '<svg width="44" height="44" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#378add"/>' +
+    '<line x1="9" y1="8" x2="9" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<line x1="14" y1="8" x2="14" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<line x1="19" y1="8" x2="19" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<line x1="24" y1="8" x2="24" y2="24" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<line x1="6" y1="23" x2="27" y2="9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>';
+
+  // Landing product-loop frames draw their own smaller mark.
+  const MINILOGO =
+    '<span style="display:inline-flex;align-items:center;gap:0.3em;">' +
+    '<span style="width:0.85em;height:0.85em;border-radius:0.22em;background:#252830;display:inline-block;"></span>' +
+    '<span style="font-size:0.62em;font-weight:600;color:#6a6a72;">Reps</span></span>';
+
+  // 26px visible circle inside a 44px tap target (the target is transparent and
+  // pulled back with -9px margins in the app; the mock draws the visible mark).
+  const USER =
+    '<span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#252830;border:.5px solid #2a2d36;flex-shrink:0;">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a8fa8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>';
+
+  const IC = (d) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  const I_REDO  = IC('<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>');
+  const I_RIGHT = IC('<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>');
+  const I_LEFT  = IC('<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>');
+  const I_PENCIL= IC('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>');
+  const I_TRASH = IC('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>');
+
+  const DOTS_V =
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
+  const DOTS_H =
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>';
+
+  // ---- headers ----
+  function stephead(n) {
+    return '<div class="flex between center" style="height:28px;margin-bottom:48px;">' +
+      '<span class="logo-mini">' + LOGO + ' Reps</span>' +
+      '<span style="font-size:12px;font-weight:500;color:var(--reps-dim);">Step ' + n + ' of 3</span></div>';
+  }
+  // The coach's name no longer sits in the header — it moved into the profile
+  // dropdown. What is left is the logo, the profile circle, and a rule that
+  // separates app chrome from the page title. The rule is full bleed: -20px
+  // margins cancel .pad's 20px so it reaches the screen edges.
+  const COACHHEAD =
+    '<div class="flex between center" style="margin:0 -20px 20px;padding:0 20px 16px;border-bottom:1px solid #2a2d36;">' +
+    '<span class="logo-mini">' + LOGO + ' Reps</span>' + USER + '</div>';
+
+  // Student home: centred logo, name, "<Coach>'s assignments".
+  function studhead(name) {
+    return '<div class="flex center" style="justify-content:center;margin-bottom:32px;"><span class="logo-mini">' + LOGO + ' Reps</span></div>' +
+      '<div style="margin-bottom:24px;"><h1 class="h1">' + name + '</h1>' +
+      '<p class="sub-sm" style="margin-top:2px;">Coach RJ\'s assignments</p></div>';
+  }
+
+  // Back row where the label is the primary ink colour (assign flow, add player).
+  function back(label) {
+    return '<div class="flex center gap12" style="margin-bottom:24px;">' +
+      '<span style="font-size:18px;color:var(--reps-sub);">←</span>' +
+      '<span style="font-size:14px;font-weight:500;color:var(--reps-ink);">' + label + '</span></div>';
+  }
+  // Back row where the label is muted (student detail → Players).
+  function backsub(label) {
+    return '<div class="flex center gap12" style="margin-bottom:24px;">' +
+      '<span style="font-size:18px;color:var(--reps-sub);">←</span>' +
+      '<span style="font-size:14px;font-weight:500;color:var(--reps-sub);">' + label + '</span></div>';
+  }
+  // Log screen header — the exercise name IS the title (17px now), there is no
+  // "Log reps". A streak appends "· N in a row"; a side ("Left"/"Right") drops a
+  // muted context line beneath. Pass side='-' for none.
+  function loghead(name, side) {
+    const line = (side && side !== '-')
+      ? '<div style="font-size:13px;color:var(--reps-sub);margin:-40px 0 40px;">' + side + ' hand</div>'
+      : '';
+    return '<div class="flex center gap12" style="margin-bottom:48px;">' +
+      '<span style="font-size:18px;color:var(--reps-sub);">←</span>' +
+      '<span style="font-size:17px;font-weight:500;color:var(--reps-ink);">' + name + '</span></div>' + line;
+  }
+
+  function ghost(op) {
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--reps-line);border-radius:10px;opacity:' + op + ';">' +
+      '<div style="width:32px;height:32px;border-radius:50%;background:var(--reps-ink);flex-shrink:0;"></div>' +
+      '<div style="flex:1;display:flex;flex-direction:column;gap:6px;"><div style="height:12px;width:96px;border-radius:999px;background:var(--reps-ink);"></div>' +
+      '<div style="height:10px;width:64px;border-radius:999px;background:var(--reps-ink);"></div></div>' +
+      '<span style="font-size:18px;color:var(--reps-ink);">›</span></div>';
+  }
+
+  // Roster row. `time` is the last-activity label ('-' for a student who has
+  // never logged — nothing renders then, no dash), `recent` is 'r' (under 24h →
+  // accent blue) or 'o' (a day or more → muted grey). The timestamp sits
+  // shrink-0 between the name block and the chevron.
+  function row(initial, name, sub, time, recent) {
+    const ts = (!time || time === '-') ? ''
+      : '<span style="flex-shrink:0;font-size:12px;color:' + (recent === 'r' ? '#378add' : 'var(--label-sub)') + ';">' + time + '</span>';
+    return '<a class="row-card">' +
+      '<div class="avatar" style="width:34px;height:34px;font-size:13px;">' + initial + '</div>' +
+      '<div class="grow" style="min-width:0;"><div class="trunc" style="font-size:15px;font-weight:500;color:#ffffff;">' + name + '</div>' +
+      '<div class="trunc" style="font-size:12px;color:var(--label-sub);">' + sub + '</div></div>' +
+      ts +
+      '<span style="font-size:18px;color:#6b7080;">›</span></a>';
+  }
+
+  function sdhead(initial, name, joined) {
+    return backsub('Players') +
+      '<div class="flex center gap14" style="margin-bottom:24px;">' +
+      '<div class="avatar" style="width:52px;height:52px;font-size:18px;">' + initial + '</div>' +
+      '<div class="grow"><div class="h2">' + name + '</div><div class="sub-sm" style="margin-top:2px;">' + joined + '</div></div>' +
+      '<button class="header-menu-btn">' + DOTS_H + '</button></div>';
+  }
+
+  // %TABS(activeTab,newCount,archiveCount)% — the New/Archive switch.
+  function tabs(active, n, a) {
+    const t = (id, label, count) =>
+      '<span class="' + (active === id ? 'on' : '') + '">' + label + ' <b>' + count + '</b></span>';
+    return '<div class="tabs-wrap"><div class="tabs">' +
+      t('new', 'New', n) + t('archive', 'Archive', a) + '</div></div>';
+  }
+
+  // %ALLDONE(headline,sub,action)% — the celebration panel. `sub` or `action`
+  // may be "-" to omit. The coach's not-yet-archived variant carries the link
+  // and no sub-line; the already-archived variant carries the sub and no link.
+  function alldone(headline, sub, action) {
+    return '<div class="alldone"><div class="em">🎉</div>' +
+      '<div class="hl">' + headline + '</div>' +
+      (sub && sub !== '-' ? '<div class="sb">' + sub + '</div>' : '') +
+      (action && action !== '-' ? '<div class="act">' + action + '</div>' : '') +
+      '</div>';
+  }
+
+  function soon(emoji, label) {
+    return '<div class="list-row" style="border-color:rgba(42,45,54,0.4);background:rgba(28,31,38,0.5);opacity:.6;flex-shrink:0;">' +
+      '<div class="flex center gap12"><span style="font-size:22px;filter:grayscale(1);">' + emoji + '</span>' +
+      '<span class="rt" style="font-weight:500;">' + label + '</span></div>' +
+      '<span style="font-size:10px;font-weight:600;color:var(--reps-sub);background:var(--reps-raised);padding:3px 7px;border-radius:999px;text-transform:uppercase;">Soon</span></div>';
+  }
+
+  /* Progress bar shared by both card types.
+     `makes` === '-'  → single tone: bright when done, muted otherwise.
+     otherwise        → two layers, muted attempts under bright makes. */
+  function progressBar(pct, done, makes, barMakesPct) {
+    if (makes === '-') {
+      return '<div class="bar"><i class="' + (done === 'yes' ? 'green' : 'att') + '" style="width:' + pct + '%;"></i></div>';
+    }
+    return '<div class="bar two"><i class="att" style="width:' + pct + '%;"></i>' +
+      '<i class="green" style="width:' + barMakesPct + '%;"></i></div>';
+  }
+
+  /* "made 8/20 · 40%". makesPct '-' means suppressed (makes exceeded attempts). */
+  function makesLine(makes, makesAtt, makesPct) {
+    if (makes === '-') return '';
+    const pct = makesPct === '-' ? '' : '<b> · ' + makesPct + '%</b>';
+    return '<div class="makes-line">made ' + makes + '/' + makesAtt + pct + '</div>';
+  }
+
+  // The exercise name, with an optional muted " · Left"/" · 10 in a row" suffix
+  // riding in its own span so it survives when a long name truncates. `extra` is
+  // the muted text ('-' for none) — used for both the side and a streak length.
+  function nameWithExtra(name, extra) {
+    if (!extra || extra === '-') return '<span class="rt grow trunc">' + name + '</span>';
+    // Name truncates; the suffix rides shrink-0 so it survives — matching the
+    // real card, where the side/streak sits in its own non-shrinking span.
+    return '<span class="grow flex" style="min-width:0;align-items:baseline;">' +
+      '<span class="rt trunc" style="min-width:0;">' + name + '</span>' +
+      '<span style="flex-shrink:0;font-size:15px;font-weight:500;color:var(--reps-sub);">&nbsp;· ' + extra + '</span></span>';
+  }
+
+  // Coach detail card — name + count on one baseline, bar, optional makes line,
+  // kebab in its own full-height column. `side` ('-' for none) rides muted after
+  // the name; the count `unit` carries the goal's own noun ("makes", "set · 10
+  // in a row") since the goal decides what the number means.
+  function acard(name, logged, target, unit, pct, done, makes, makesAtt, makesPct, barMakesPct, side) {
+    const right = done === 'yes'
+      ? '<span style="flex-shrink:0;font-size:12px;font-weight:500;color:var(--green);white-space:nowrap;">✓ ' + logged + '/' + target + ' ' + unit + '</span>'
+      : '<span style="flex-shrink:0;font-size:12px;color:var(--reps-dim);white-space:nowrap;">' + logged + '/' + target + ' ' + unit + '</span>';
+    return '<div class="assign-card">' +
+      '<div class="grow" style="min-width:0;padding:14px 16px;">' +
+      '<div class="flex" style="align-items:baseline;gap:8px;margin-bottom:8px;">' + nameWithExtra(name, side) + right + '</div>' +
+      progressBar(pct, done, makes, barMakesPct) +
+      makesLine(makes, makesAtt, makesPct) +
+      '</div>' +
+      '<div class="flex center" style="padding-right:10px;"><span class="kebab">' + DOTS_V + '</span></div></div>';
+  }
+
+  // Student home card — tappable, bordered, no kebab, and "✓ Done" rather than
+  // the full count once complete.
+  function scard(name, logged, target, unit, pct, done, makes, makesAtt, makesPct, barMakesPct, side) {
+    const right = done === 'yes'
+      ? '<span style="flex-shrink:0;font-size:12px;font-weight:500;color:var(--green);white-space:nowrap;">✓ Done</span>'
+      : '<span style="flex-shrink:0;font-size:12px;color:var(--reps-dim);white-space:nowrap;">' + logged + '/' + target + ' ' + unit + '</span>';
+    return '<a style="display:block;background:var(--row);border:1px solid var(--reps-line);border-radius:10px;padding:14px 16px;text-decoration:none;">' +
+      '<div class="flex between" style="align-items:flex-start;gap:8px;margin-bottom:8px;">' + nameWithExtra(name, side) + right + '</div>' +
+      progressBar(pct, done, makes, barMakesPct) +
+      makesLine(makes, makesAtt, makesPct) + '</a>';
+  }
+
+  function cat(title, hint) {
+    return '<a class="list-row"><div><div class="rt">' + title + '</div><div class="rh">' + hint + '</div></div><span class="chev">›</span></a>';
+  }
+  function ex(name) {
+    return '<a class="list-row"><span class="rt">' + name + '</span><span class="chev">›</span></a>';
+  }
+
+  function pstat(label, value, foot) {
+    return '<div style="flex:1;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:12px;padding:16px;">' +
+      '<p style="font-size:11px;color:var(--reps-dim);text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">' + label + '</p>' +
+      '<p style="font-size:24px;font-weight:600;color:var(--reps-ink);margin:0;">' + value + '</p>' +
+      '<p style="font-size:11px;color:var(--reps-dim);margin:0;">' + foot + '</p></div>';
+  }
+  function pstat2(label, value, total, foot) {
+    const tot = total ? '<span style="font-size:14px;color:var(--reps-dim);font-weight:400;"> / ' + total + '</span>' : '';
+    return '<div style="flex:1;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:12px;padding:16px;">' +
+      '<p style="font-size:11px;color:var(--reps-dim);text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">' + label + '</p>' +
+      '<p style="font-size:24px;font-weight:600;color:var(--reps-ink);margin:0;">' + value + tot + '</p>' +
+      '<p style="font-size:11px;color:var(--reps-dim);margin:0;">' + foot + '</p></div>';
+  }
+
+  // Parent digest chrome, shared by the four digest states.
+  function parenthead(name) {
+    return '<div class="flex between center" style="margin-bottom:32px;"><span class="logo-mini">' + LOGO + ' Reps</span>' +
+      '<span style="font-size:12px;color:var(--reps-dim);">Jul 20 – Jul 26</span></div>' +
+      '<p style="font-size:13px;color:var(--reps-sub);margin:0 0 4px;">Weekly update</p>' +
+      '<h1 style="font-size:28px;font-weight:600;letter-spacing:-0.5px;margin:0 0 4px;">' + name + '</h1>' +
+      '<p style="font-size:13px;color:var(--reps-dim);margin:0 0 32px;">Assigned by Coach RJ</p>';
+  }
+  function parentfoot(active) {
+    return '<div style="border-top:1px solid var(--reps-line);padding-top:20px;" class="flex between center">' +
+      '<span style="font-size:13px;color:var(--reps-dim);">Last active</span>' +
+      '<span style="font-size:13px;color:var(--reps-sub);">' + active + '</span></div>' +
+      '<div class="mt-auto tcenter" style="padding-top:32px;"><span style="font-size:11px;color:rgba(138,143,168,0.5);">Read-only view · Reps</span></div>';
+  }
+
+  function parentCard(id, state, name, emoji, headline, pdays, done, total, active, practiceLine) {
+    return '<div class="cell" id="' + id + '">' +
+      '<div class="caption"><span class="cap-name">Parent digest</span> <span class="cap-state">' + state + '</span></div>' +
+      '<div class="phone"><div class="screen"><div class="pad">' +
+      parenthead(name) +
+      '<div style="background:var(--reps-card);border:1px solid var(--reps-line);border-radius:14px;padding:24px 20px;margin-bottom:16px;text-align:center;">' +
+      '<div style="font-size:48px;margin-bottom:12px;">' + emoji + '</div>' +
+      '<p style="font-size:17px;font-weight:600;color:var(--reps-ink);margin:0 0 4px;">' + headline + '</p>' +
+      '<p style="font-size:13px;color:var(--reps-sub);margin:0;">' + practiceLine + '</p></div>' +
+      '<div class="flex gap12" style="margin-bottom:32px;">' +
+      pstat('Practice days', pdays, 'this week') +
+      pstat2('Assignments', done, total, 'started') + '</div>' +
+      parentfoot(active) +
+      '</div></div></div></div>';
+  }
+
+  // ---- expansion pass over the whole document ----
+  let html = document.querySelector('.main').innerHTML;
+
+  const split = (a) => a.split(',').map((s) => s.trim());
+
+  // parent cards first (multi-arg, appear as raw %PARENT(...)%)
+  html = html.replace(/%PARENT\(([\s\S]*?)\)%/g, function (_, args) {
+    const a = split(args);
+    return parentCard(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
+  });
+  html = html.replace(/%PARENTHEAD\(([\s\S]*?)\)%/g, (_, a) => parenthead(a.trim()));
+  html = html.replace(/%PARENTFOOT\(([\s\S]*?)\)%/g, (_, a) => parentfoot(a.trim()));
+  html = html.replace(/%GHOST\(([\s\S]*?)\)%/g, (_, op) => ghost(op.trim()));
+  html = html.replace(/%ROW\(([\s\S]*?)\)%/g, (_, a) => { const p = a.split(',').map((s) => s.trim()); return row(p[0], p[1], p[2], p[3], p[4]); });
+  html = html.replace(/%SDHEAD\(([\s\S]*?)\)%/g, (_, a) => { const p = a.split(','); return sdhead(p[0].trim(), p[1].trim(), p.slice(2).join(',').trim()); });
+  html = html.replace(/%TABS\(([\s\S]*?)\)%/g, (_, a) => { const p = split(a); return tabs(p[0], p[1], p[2]); });
+  html = html.replace(/%ALLDONE\(([\s\S]*?)\)%/g, (_, a) => { const p = a.split(','); return alldone(p[0].trim(), (p[1]||'').trim(), p.slice(2).join(',').trim()); });
+  html = html.replace(/%ACARD\(([\s\S]*?)\)%/g, (_, a) => acard.apply(null, split(a)));
+  html = html.replace(/%SCARD\(([\s\S]*?)\)%/g, (_, a) => scard.apply(null, split(a)));
+  html = html.replace(/%SOON\(([\s\S]*?)\)%/g, (_, a) => { const p = split(a); return soon(p[0], p.slice(1).join(', ')); });
+  html = html.replace(/%CAT\(([\s\S]*?)\)%/g, (_, a) => { const p = a.split(','); return cat(p[0].trim(), p.slice(1).join(',').trim()); });
+  html = html.replace(/%EX\(([\s\S]*?)\)%/g, (_, a) => ex(a.trim()));
+  html = html.replace(/%PSTAT2\(([\s\S]*?)\)%/g, (_, a) => { const p = a.split(','); return pstat2(p[0].trim(), p[1].trim(), p[2].trim(), p[3].trim()); });
+  html = html.replace(/%PSTAT\(([\s\S]*?)\)%/g, (_, a) => { const p = split(a); return pstat(p[0], p[1], p[2]); });
+  html = html.replace(/%STEPHEAD\(([\s\S]*?)\)%/g, (_, a) => stephead(a.trim()));
+  html = html.replace(/%BACKSUB\(([\s\S]*?)\)%/g, (_, a) => backsub(a.trim()));
+  html = html.replace(/%BACK\(([\s\S]*?)\)%/g, (_, a) => back(a.trim()));
+  html = html.replace(/%LOGHEAD\(([\s\S]*?)\)%/g, (_, a) => loghead.apply(null, split(a)));
+  html = html.replace(/%STUDHEAD\(([\s\S]*?)\)%/g, (_, a) => studhead(a.trim()));
+  html = html.replace(/%COACHHEAD%/g, COACHHEAD);
+  html = html.replace(/%I_REDO%/g, I_REDO);
+  html = html.replace(/%I_RIGHT%/g, I_RIGHT);
+  html = html.replace(/%I_LEFT%/g, I_LEFT);
+  html = html.replace(/%I_PENCIL%/g, I_PENCIL);
+  html = html.replace(/%I_TRASH%/g, I_TRASH);
+  html = html.replace(/%DOTS_V%/g, DOTS_V);
+  html = html.replace(/%DOTS_H%/g, DOTS_H);
+  html = html.replace(/%LOGO_LG%/g, LOGO_LG);
+  html = html.replace(/%MINILOGO%/g, MINILOGO);
+  html = html.replace(/%LOGO%/g, LOGO);
+  html = html.replace(/%USER%/g, USER);
+
+  document.querySelector('.main').innerHTML = html;
+})();
+</script>
+</body>
+</html>
