@@ -73,21 +73,25 @@ export default function CustomExerciseScreen({ playerId, playerName }: Props) {
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      {/* 44px back target, matching the student log screen. The label beside it
-          is this screen's TITLE, not the back destination, so it stays a
-          separate element — only the arrow is a control. -ml-4 lets the target
-          reach toward the screen edge while the glyph stays optically on the
-          content edge; the span's -ml-2 reclaims the dead half of that box so
-          arrow and title still read as one unit. */}
+      {/* The whole row is one back control — arrow AND label inside the Link,
+          44px tall. These labels are nominally screen titles ("Shooting",
+          "My exercises"), which is why they were left un-tappable at first, but
+          in daily use they read as "go back" and get tapped as such. Matching
+          the player detail header rather than keeping a second pattern.
+
+          -ml-4/pl-4 puts the glyph optically on the content edge while the
+          target reaches toward the screen edge; the arrow keeps its muted tone
+          and the label its ink, so nothing changes visually. */}
       <div className="flex items-center mb-6">
         <Link
           href={`/instructor/student/${playerId}/assign`}
           aria-label="Back"
-          className="-ml-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg text-reps-sub hover:text-reps-ink transition-colors"
+          className="group -ml-4 flex h-11 shrink-0 items-center gap-2 rounded-full pl-4 pr-3 transition-colors"
+          style={{ WebkitTapHighlightColor: "transparent" }}
         >
-          ←
+          <span className="text-lg leading-none text-reps-sub group-hover:text-reps-ink transition-colors">←</span>
+          <span className="text-[14px] font-medium text-reps-ink">Assign to {playerName}</span>
         </Link>
-        <span className="-ml-2 text-[14px] font-medium text-reps-ink">Assign to {playerName}</span>
       </div>
 
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6">Create your own</h2>

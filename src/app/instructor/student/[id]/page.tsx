@@ -106,6 +106,7 @@ export default async function CoachPlayerPage({
           href="/instructor/students"
           aria-label={`Back to ${labels.studentsLabel}`}
           className="-ml-4 flex h-11 shrink-0 items-center gap-2 rounded-full pl-4 pr-3 text-reps-sub hover:text-reps-ink transition-colors"
+          style={{ WebkitTapHighlightColor: "transparent" }}
         >
           <span className="text-lg leading-none">←</span>
           <span className="text-[14px] font-medium" style={{ textTransform: "capitalize" }}>
