@@ -91,14 +91,27 @@ export default async function CoachPlayerPage({
       {/* Header block runs tighter than the app's default mb-6 rhythm: the space
           it gives up is spent below the tab bar, where a real gap is doing work.
           Back row 24 -> 20. */}
-      <div className="flex items-center gap-3 mb-5">
+      {/* ⚠️ The label lives INSIDE the link. It reads "Players" — the name of
+          where you are going — so it looks like a back button, and until now it
+          was a bare <span> beside the link: tapping the obvious target did
+          nothing at all. That, not latency, is why this needed several taps.
+
+          Sizing copied from the student log screen's back link, the one place
+          that already got this right: a 44px-tall box with -ml-4/pl-4 so the
+          arrow still sits optically on the content edge while the target
+          extends toward the screen edge. The label extends it further right,
+          so arrow and word are one control. */}
+      <div className="flex items-center mb-5">
         <Link
           href="/instructor/students"
-          className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
+          aria-label={`Back to ${labels.studentsLabel}`}
+          className="-ml-4 flex h-11 shrink-0 items-center gap-2 rounded-full pl-4 pr-3 text-reps-sub hover:text-reps-ink transition-colors"
         >
-          ←
+          <span className="text-lg leading-none">←</span>
+          <span className="text-[14px] font-medium" style={{ textTransform: "capitalize" }}>
+            {labels.studentsLabel}
+          </span>
         </Link>
-        <span className="text-[14px] font-medium text-reps-sub" style={{ textTransform: "capitalize" }}>{labels.studentsLabel}</span>
       </div>
 
       {/* Header row 24 -> 16. The sticky bar carries its own pt-2, so the space

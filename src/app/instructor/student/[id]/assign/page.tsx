@@ -27,14 +27,21 @@ export default async function AssignCategoriesPage({
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      <div className="flex items-center gap-3 mb-6">
+      {/* 44px back target, matching the student log screen. The label beside it
+          is this screen's TITLE, not the back destination, so it stays a
+          separate element — only the arrow is a control. -ml-4 lets the target
+          reach toward the screen edge while the glyph stays optically on the
+          content edge; the span's -ml-2 reclaims the dead half of that box so
+          arrow and title still read as one unit. */}
+      <div className="flex items-center mb-6">
         <Link
           href={`/instructor/student/${id}`}
-          className="text-reps-sub text-lg -ml-1 px-1 hover:text-reps-ink transition-colors"
+          aria-label="Back"
+          className="-ml-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg text-reps-sub hover:text-reps-ink transition-colors"
         >
           ←
         </Link>
-        <span className="text-[14px] font-medium text-reps-ink">Assign to {player.name}</span>
+        <span className="-ml-2 text-[14px] font-medium text-reps-ink">Assign to {player.name}</span>
       </div>
 
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1">Pick an exercise</h2>
