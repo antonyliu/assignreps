@@ -8,6 +8,13 @@
 // ghost rows ARE the empty state ("no students yet"), so a static skeleton on
 // the same screen would briefly tell a coach with seven players that they have
 // none. The pulse is what separates "still arriving" from "genuinely empty".
+// ⚠️ Filled with --reps-line (#2a2d36), NOT white-at-low-opacity. Faded white
+// on a near-black background still reads as a light shape, and pulsing it made
+// the swap flicker. #2a2d36 is the app's own border/bar-track colour — it sits
+// one step above the background, so it registers as "something is coming" and
+// then quietly hands over instead of flashing out.
+const SK_FILL = "#2a2d36";
+
 export function Sk({
   className = "",
   w,
@@ -21,8 +28,8 @@ export function Sk({
   return (
     <div
       aria-hidden="true"
-      className={`rounded-full bg-reps-ink pointer-events-none select-none ${className}`}
-      style={{ opacity: 0.11, width: w, height: h }}
+      className={`rounded-full pointer-events-none select-none ${className}`}
+      style={{ background: SK_FILL, width: w, height: h }}
     />
   );
 }
@@ -31,7 +38,7 @@ export function Sk({
  *  the skeleton lands where the real content will, with no jump on swap. */
 export function SkPage({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem] animate-pulse" aria-busy="true">
+    <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem] sk-breathe" aria-busy="true">
       {children}
     </main>
   );
@@ -42,8 +49,8 @@ export function SkPage({ children }: { children: React.ReactNode }) {
 export function SkTabs() {
   return (
     <div className="rounded-[8px] bg-reps-card p-[3px] flex gap-[2px] mb-5" aria-hidden="true">
-      <div className="flex-1 h-[30px] rounded-[6px]" style={{ background: "#22252e" }} />
-      <div className="flex-1 h-[30px] rounded-[6px]" style={{ background: "#22252e" }} />
+      <div className="flex-1 h-[30px] rounded-[6px]" style={{ background: SK_FILL }} />
+      <div className="flex-1 h-[30px] rounded-[6px]" style={{ background: SK_FILL }} />
     </div>
   );
 }

@@ -111,6 +111,16 @@ body {
   }
 }
 
+/* Loading skeletons. Tailwind's animate-pulse swings opacity 1 -> .5, which on
+   near-black reads as a flicker rather than a breath — and the swap to real
+   content then lands mid-swing. This is shallower and slower, so the skeleton
+   registers as alive without competing with the content replacing it. */
+@keyframes reps-sk-breathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.72; }
+}
+.sk-breathe { animation: reps-sk-breathe 1.8s ease-in-out infinite; }
+
 /* Celebrate screen confetti — one falling burst on full completion. */
 @keyframes reps-confetti-fall {
   0%   { transform: translateY(-10vh) rotate(0deg);   opacity: 1; }

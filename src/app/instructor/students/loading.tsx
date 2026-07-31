@@ -16,7 +16,7 @@ import { Sk } from "@/components/Skeleton";
 // (see the roster), so this shell repeats that shape instead of using SkPage.
 export default function Loading() {
   return (
-    <main className="flex flex-col min-h-screen p-[0_1.25rem_1.75rem] animate-pulse" aria-busy="true">
+    <main className="flex flex-col min-h-screen p-[0_1.25rem_1.75rem] sk-breathe" aria-busy="true">
       <div className="-mx-[1.25rem] pt-4">
         <div className="relative flex items-center justify-between px-[1.25rem] pb-4">
           <Sk h="23px" w="86px" className="!rounded-[6px]" />
