@@ -59,16 +59,29 @@ export default function AddPlayerForm({ studentLabel }: Props) {
   return (
     <main className="flex min-h-screen flex-col bg-[#080b0f] px-6 pb-10 pt-9">
 
-      {/* Header */}
-      <div className="mb-10 flex items-center gap-3">
+      {/* Header — the seventh back link, brought in line with the other six.
+          It had the same two faults they did: a 36px target (under the 44px
+          minimum) and the label sitting in a <span> beside the link rather than
+          inside it, so tapping the words did nothing.
+
+          Structure is lifted verbatim from CountScreen/CustomExerciseScreen:
+          arrow AND label inside one 44px-tall Link, -ml-4/pl-4 putting the
+          glyph optically on the content edge while the target reaches toward
+          the screen edge, and gap-2 rather than the parent's old gap-3 so the
+          spacing reads the same as everywhere else.
+
+          The colours are unchanged, only re-expressed as tokens: the literal
+          #8a8fa8 was --reps-sub and text-white was --reps-ink all along. */}
+      <div className="mb-10 flex items-center">
         <Link
           href="/instructor/students"
           aria-label="Back"
-          className="-ml-1 flex h-9 w-9 items-center justify-center rounded-full text-[20px] leading-none text-[#8a8fa8] transition-colors hover:text-white"
+          className="group -ml-4 flex h-11 shrink-0 items-center gap-2 rounded-full pl-4 pr-3 transition-colors"
+          style={{ WebkitTapHighlightColor: "transparent" }}
         >
-          ←
+          <span className="text-lg leading-none text-reps-sub group-hover:text-reps-ink transition-colors">←</span>
+          <span className="text-[14px] font-medium text-reps-ink">Add {studentLabel}</span>
         </Link>
-        <span className="text-[15px] font-medium text-white">Add {studentLabel}</span>
       </div>
 
       {error && (
