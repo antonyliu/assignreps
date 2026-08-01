@@ -123,6 +123,12 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | Most recent log **with a note** wins, per assignment | Most sessions carry no note, so keying on the newest log would blank an earlier note the moment the student logged again without writing one |
 | Surfaced on both the coach's student detail cards and the student's own home cards | A note nobody can read isn't a message — and the student's own card is their only confirmation it was received |
 
+## Log screen copy (Aug 1 2026)
+
+| Feature | Why it exists |
+|---|---|
+| `Log it` renamed to `Log progress` (log screen button + the landing page's hand-drawn mock) | A student paused before logging partial progress — "Log it" read as a final, complete commitment rather than a session update. Surfaced in real testing, not a design guess. Logs are increments summed at read time and the steppers seed from banked totals, so returning across sessions is exactly what the screen expects |
+
 ---
 
 ## Not shipped — recorded so the history is honest
