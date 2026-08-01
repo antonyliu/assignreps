@@ -478,7 +478,7 @@ export default function LogScreen({
       {showMakesRow ? (
         // attempts (muted green) with makes (bright green) stacked on top.
         <div
-          className="relative h-1.5 rounded-full overflow-hidden mb-14"
+          className="relative h-1.5 rounded-full overflow-hidden mb-8"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -492,7 +492,7 @@ export default function LogScreen({
         </div>
       ) : (
         <div
-          className="h-1.5 rounded-full overflow-hidden mb-14"
+          className="h-1.5 rounded-full overflow-hidden mb-8"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -505,7 +505,7 @@ export default function LogScreen({
       {/* Full-content-width lockup: ATTEMPTS label, the big stepper, the divider
           and the MAKES row share the same edges as the bar and title above —
           the page padding supplies the breathing room. */}
-      <div className="mb-12">
+      <div className="mb-10">
         {/* The hero stepper is whatever the assignment is scored on. Under a
             makes goal that is MAKES, so it takes the large control and the
             bright green, and attempts drop to the quiet row below. */}
@@ -596,9 +596,10 @@ export default function LogScreen({
           minutes) — what the student wants to say isn't a function of how the
           work is scored.
 
-          Takes the same mb-12 the stepper block above it carries, so the gap
-          from the last piece of content to the button stays what the July 27
-          spacing pass set it to; the note simply becomes that last piece. */}
+          Keeps mb-12 while the stepper block above it dropped to mb-10: this is
+          the last piece of content, and 48px to the button is what the July 27
+          spacing pass settled on. The gaps BETWEEN content tightened; the gap
+          to the button did not. */}
       <div className="mb-12">
         <div className="flex items-baseline gap-2 mb-3">
           <label htmlFor="note" className="text-[15px] font-medium text-reps-ink">
