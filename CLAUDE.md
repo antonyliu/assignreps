@@ -374,11 +374,28 @@ Stepper-based; the hero stepper is whatever the assignment is scored on.
 
 **Spacing tightened July 27 2026** — roughly 100px removed. The gap below the progress bar went 96px → 56px (by far the largest on the screen, and the dead zone between "here's where you are" and "here's what you're entering"); header 56 → 48; stepper block to button 56 → 48; button padding `+2rem` → `+1.5rem`.
 
-**Revised again Aug 1 2026, when the note field landed** — a further 48px removed. The July 27 numbers were sized for a screen whose last content was the stepper block; the note now sits between the steppers and the button, so the screen carries real content where it used to carry slack, and 56px above the stepper read as dead space.
+**Revised again Aug 1 2026, when the note field landed.** Two passes the same day. The first reclaimed slack the July 27 numbers had left behind — those were sized for a screen whose last content was the stepper block, and the note now sits between the steppers and the button. The second **redistributed** it: absolute sizes matter less here than ratios, and the first pass left the screen reading as five evenly spaced rows rather than as groups.
 
-- Progress bar gap **56 → 32px** (`mb-14` → `mb-8`). ⚠️ Changed in **both** branches of the `showMakesRow` ternary — that is what keeps all five goal-type layouts moving together, rather than the two-tone bar drifting away from the single one.
-- Stepper block **48 → 40px** (`mb-12` → `mb-10`), which is now the steppers-to-note gap rather than the steppers-to-button one.
-- The note block went **48 → 32px** (`mb-12` → `mb-8`), which is the gap from the last piece of content to the button. This one is about matching the rest of the app rather than reclaiming slack: `CountScreen`, `CustomExerciseScreen` and `AddPlayerForm` all put **32px** before a full-width primary button, and at `mb-12` this screen sat at **60px** once the sticky wrapper's own `pt-3` is counted — nearly double every other screen. The July 27 figure of 48px is superseded.
+The screen is **two units**: a *counting cluster* (progress bar → goal-type label → hero stepper → hairline → MAKES row) and the *note block* below it. Gaps inside the cluster are tight; the gaps bracketing it are the largest on the screen.
+
+**Current values, top to bottom:**
+
+| Gap | Value | Class |
+|---|---|---|
+| Header → progress text | 48px | `mb-12` |
+| Progress text → bar | 12px | `mb-3` |
+| **Bar → goal-type label** | **44px** | `mb-11` |
+| Label → hero stepper | 12px | `mt-3` |
+| Stepper → hairline | 20px | `mt-5` |
+| Hairline → MAKES row | 16px | `mt-4` |
+| **Cluster → note block** | **56px** | `mb-14` |
+| Note block → button | 32px (+12px `pt-3`) | `mb-8` |
+
+Every gap *inside* the cluster is 20px or less against boundaries of 44px and 56px, so the boundary always wins. The note-side boundary is deliberately the larger of the two — that is what makes the note read as the start of something new rather than the tail of the cluster.
+
+- ⚠️ The bar margin is changed in **both** branches of the `showMakesRow` ternary, which keeps all five goal-type layouts moving together rather than the two-tone bar drifting away from the single one.
+- ⚠️ **The four single-stepper layouts were evaluated and left unsplit on purpose** — not overlooked. Makes goal, consecutive, minutes and reps-only all drop the MAKES row, leaving a ~105px cluster against ~192px for attempts+makes, so the same 44px above it is proportionally about **1.8× more prominent** (0.42 vs 0.23 of cluster height). The candidate fix is to split the bar margin by ternary branch — `mb-11` with a MAKES row, `mb-8` without — since the branch already maps exactly to that distinction. Not applied: the grouping still holds arithmetically there (56 > 44), and whether the extra air reads as calm or as empty is a judgment that needs a **real device**. One number across all five until that is seen. Splitting would also reverse the rule in the bullet above, so it is a deliberate trade rather than a free tweak.
+- The note block's **32px** to the button is about matching the rest of the app rather than reclaiming slack: `CountScreen`, `CustomExerciseScreen` and `AddPlayerForm` all put **32px** before a full-width primary button, and at `mb-12` this screen sat at **60px** once the sticky wrapper's own `pt-3` is counted — nearly double every other screen. The July 27 figure of 48px is superseded.
   - ⚠️ **32px is the floor, not a free choice.** The sticky wrapper carries a gradient (`h-8`, 32px) anchored above it via `top-0` + `-translate-y-full`, so it occupies the **bottom 32px of this gap**. At `mb-8` the fade spans the gap *exactly*: **0px clear** between the counter and the gradient's top edge, down from 16px at `mb-12`. Tightening further would start the fade over the counter itself.
   - **It abuts the counter; it does not overlap it**, and nothing is dimmed at rest. The gradient runs `from-transparent` at the top edge where it meets the counter, fading to `#080b0f` — which *is* the page background, so on an unscrolled screen the whole thing is invisible. It only does work when content scrolls under the sticky footer.
   - ⚠️ The real consequence: on a screen tall enough to scroll, the counter now begins fading the moment it reaches the footer, where it previously had 16px of travel first. Genuine clearance at this margin would mean shrinking the gradient (`h-6` → 8px clear, `h-5` → 12px), which has **not** been done.
