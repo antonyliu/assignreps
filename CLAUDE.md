@@ -1,5 +1,5 @@
 # Reps — CLAUDE.md
-*Last updated: July 27 2026 · Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+*Last updated: Aug 1 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
 
 ---
 
@@ -112,6 +112,7 @@ Migrations live in `supabase/migrations/`. There is **no base schema migration**
 - `side` — `'left'`, `'right'`, or NULL. Checked by `assignments_side_check`. NULL means **unspecified**, not "both". (NULL passes a Postgres CHECK natively, so no explicit allowance is needed.)
 - `track_makes` — when true, the log screen offers a makes entry. Forced true by the assign action when `goal_type` is `'makes'` or `'consecutive'`, where makes are the point. Kept as its own column rather than derived, so the stored row states the coach's intent outright.
 - `logs.makes` — nullable integer. `null` means "didn't report makes"; `0` means "made none." Never conflate these — they mean different things for percentage calculations.
+- ⚠️ **`logs.logged_at` is stored in UTC**, like every timestamp here. Raw dashboard views show it unconverted, so Pacific-time evening sessions appear as the middle of the night — a 7pm log reads as `02:00` the next day. This has already caused one real misread: a run of logs at "2–3am" looked alarming until the offset was accounted for, and they were ordinary evening practice. Convert before drawing any conclusion from raw rows — `rj_logs_readable` exists for exactly this. The app itself is unaffected: it renders relative times, and the SMS gate compares LA calendar dates explicitly via `Intl` (see `notify-assignment.ts`).
 - **Log snapshot columns** — `exercise_name`, `unit`, `goal_type`, `target`, `side` on `logs`. The log's own copy of the assignment as it stood when the row was written. Set once by `saveLog` from a server-side read, never updated after — a later edit to the assignment must not rewrite what the student actually did. They exist because `logs.assignment_id` is `ON DELETE SET NULL`: without them a deleted assignment leaves a log with no record of what it was. No CHECK constraints, unlike their `assignments` counterparts: these are copies of already-validated values, and a constraint that rejected an unexpected legacy value would fail the student's insert and lose reps they actually did. See the RESOLVED entry in Pending for the backfill.
 - **`filed_at`** — which tab an assignment sits in: NULL = **New**, set = **Archive**, and the value is when the coach moved it. Nullable, no default, no backfill; every pre-existing row reads as New, which is where they all were. Indexed as `(player_id, filed_at)` since every read on both list screens is "this player's cards, split by filed or not."
   - ⚠️ **Filing is independent of completion.** Nothing moves automatically. A finished assignment stays in New until a coach archives it, and archiving is reversible. `isComplete()` no longer decides tab membership at all — it only draws the ✓ badge and picks which menu actions a card offers.
@@ -137,6 +138,8 @@ Rebuilt July 27 2026: player name joined in, columns reordered person-first so a
 ⚠️ **A view does not track its base table.** Postgres expands `SELECT *` at creation time and stores the expanded list, so adding a column to `assignments` or `logs` does **not** add it to these views — and `pg_get_viewdef` shows the expanded form either way, so you cannot tell from the definition whether it was written as `*` or spelled out. The only reliable check is comparing the view's column list against the table's.
 
 ⚠️ `create or replace view` can append columns but **cannot reorder or remove** them. Reordering needs `drop` + `create`, which also drops any grants and dependent objects. Re-run these after any schema change that should show up in them.
+
+**`rj_logs_readable`** — added on top of `rj_logs` (it does not modify it) purely for human browsing in the dashboard. Adds a formatted `logged_when` text column via `to_char(logged_at at time zone 'America/Los_Angeles', …)`, so a row can be read at a glance without doing UTC arithmetic in your head. Not app-facing, like its siblings, and created directly in the dashboard rather than in a migration file — same as the rest of these.
 
 ---
 
@@ -275,6 +278,7 @@ It is **structurally** unreachable from the Archive tab — it lives inside that
 - `moveAssignmentToLogged(id)` / `moveAssignmentToNew(id)` — one shared `setFiledAt` helper, ownership-scoped. Neither re-derives completion: both are fully reversible, so a mis-tap costs one tap back.
 - `fileFinishedAssignments(playerId)` — the bulk action. **Computes the set server-side** rather than inheriting it from whatever rendered the button, and touches only rows that are both finished and still `filed_at IS NULL` so a re-run can't overwrite an earlier timestamp. That server-side filter is the lesson from the delete version, which once deleted a player's whole list unfiltered.
 - ⚠️ Function names still say "Logged" (`moveAssignmentToLogged`) from the tab's original name. **UI labels changed, code names didn't** — same rule as when "Repeat" became "Assign again". Don't rename `filed_at` either.
+- ⚠️ **These are no longer called from `AssignmentMenu`.** Since the optimistic pass, `CoachAssignmentList` owns the row list and therefore owns the mutation, the optimistic edit, the rollback and the error toast — they have to happen together or the card and the list would disagree about where it is. The menu just reports the tap. See **Navigation & loading feel**.
 
 ### ❌ Removed: `clearCompletedAssignments`
 
@@ -480,6 +484,75 @@ The two menu panels tie at z-50, which is unreachable: each menu's full-screen c
 
 ---
 
+## Navigation & loading feel
+
+Live on prod **July 30 2026** (`874ddfa`). Prompted by roster → player detail and back taking several taps to register.
+
+⚠️ This section was originally dated July 27 in error. Everything else marked July 27 in this file is correct — the Archive model, Assign again, the emerald palette and the log snapshot all landed that day (`ade9e23`…`caedec8`). Only this pass (`4f992ba`…`874ddfa`) is July 30.
+
+⚠️ **The two navigations had different root causes**, which is the useful lesson. Roster → detail was real latency (five sequential round trips) made to *feel* broken by zero feedback. Detail → roster was a hit-target bug wearing a latency costume: the back label was not a link at all.
+
+### Optimistic card actions
+
+Archive, Move back to New, Assign again and Delete update the list on the next frame; the server call runs behind. They previously awaited the mutation and then `router.refresh()`, so nothing moved until a full round trip finished.
+
+⚠️ **This required moving the coach's card list to the client** (`CoachAssignmentList.tsx`). The list used to be built server-side and handed to `AssignmentTabs` as an opaque `ReactNode[]` — a menu sitting *inside* a pre-rendered card cannot remove that card, and the tab wrapper cannot tell one node from another to move it or recount. Nobody on the client owned the list. The server still does the DATA work (the queries and the log aggregation) and passes plain rows down; only rendering and the ownership of "which card is where" moved. This inverts the note in `AssignmentTabs` about keeping cards on the server — that note predates optimistic updates.
+
+Rollback is `useOptimistic`, not hand-written: the optimistic layer is discarded when the transition ends. On failure the handler simply returns — the card snaps back — and toasts the server's error. On success `router.refresh()` runs **inside** the transition, holding it open until fresh data lands, so the optimistic row is *replaced* rather than reverted-then-reapplied, which would flash.
+
+Derived state moved with the list or it would lag a frame behind the card that caused it: tab counts, both empty states, the all-done panel, and the bottom CTA — whose label depends on `allDone`, which an "Assign again" placeholder changes.
+
+"Assign again" inserts a dimmed placeholder with its menu disabled; its id is local-only until the server replies.
+
+`Edit amount` still calls the server directly from `AssignmentMenu` — it changes nothing about which list a card belongs to, so it has no optimistic state to own.
+
+### Loading boundaries
+
+There were **none anywhere in the app**. On a dynamic route that costs twice over: nothing paints between tap and render, *and* Next only prefetches a dynamic route down to its nearest loading boundary — so with none, prefetch was inert app-wide.
+
+| Route | Boundary |
+|---|---|
+| `/instructor/students` | own |
+| `/instructor/student/[id]` | own |
+| `/instructor/student/[id]/assign` | own — serves the whole subtree |
+| `/student/[token]` | own |
+| `/student/[token]/log/[assignmentId]` | own |
+| `/student/[token]/celebrate` | own — **renders `null`** |
+
+⚠️ **A wrong shape is worse than no shape.** Before `/assign` had its own, "+ Assign more" inherited the player detail skeleton — avatar, tab bar, progress cards — and then landed on a category picker. The same class of bug put the *student home* skeleton in front of the celebrate screen.
+
+⚠️ **Celebrate's boundary returns `null` deliberately.** It has zero server fetches, so any skeleton is a lie about what it is waiting for. It still needs the file, because `use(params)` suspends — `params` is a Promise in Next 16, so even a fetch-free route hits a boundary for a frame — and celebrate is a *sibling* of `/log/[assignmentId]`, not a child, so the nearest boundary was the student home. Returning null gives the bare page background instead. Do not add a shape: it would reintroduce from outside the exact "asserting an outcome it hasn't read yet" problem celebrate's own three-state loading exists to prevent.
+
+One boundary covers the whole `/assign` subtree because the category picker, exercise list and My exercises are the same shape — back row, heading pair, column of bordered rows. Three leaves under it (`custom`, `[category]/[exercise]`, `mine/[exerciseId]`) are *form* screens inheriting a row-list shape: much closer than the player detail skeleton they had, still not right, and each would want its own if it starts to show.
+
+Primitives live in `src/components/Skeleton.tsx`, one file so the six states can't drift.
+
+- **Fill is `#2a2d36`** — the app's own border/bar-track colour — not white at low opacity, which still reads as a light shape against near-black.
+- **Animation is `sk-breathe`** (1 → 0.72 over 1.8s, in `globals.css`) rather than Tailwind's `animate-pulse` (1 → 0.5), which flickered and landed the content swap mid-swing.
+- ⚠️ The roster's "ghost rows" empty state uses the same faded-shape idiom. The skeletons **pulse** specifically so a coach with seven players is never briefly told they have none.
+
+### Back links — one pattern, all seven
+
+44×44px (or 44 tall with the label inside), `aria-label`, `WebkitTapHighlightColor: transparent`.
+
+⚠️ **Six of the seven had the label in a `<span>` OUTSIDE the link.** On player detail that label read "Players" — the name of the destination — so the obvious tap did nothing at all, ever. That was the multiple-taps bug, and it was never latency.
+
+Round one left five of them arrow-only, on the grounds that their labels are screen titles ("Shooting", "My exercises") rather than back destinations. Reversed the same day: in daily use they read as "go back" and get tapped as such. The seventh (add-student) was missed in the original sweep because it already carried an `aria-label` and so looked done.
+
+### Tap feedback
+
+`hover:bg-reps-card` on the assign flow's category, exercise and My-exercises rows caused a grey flash. ⚠️ **On iOS the `:hover` state STICKS after a tap**, so the row lit grey and *stayed* lit while the next screen loaded — which read as a glitch, not a response. Replaced with the treatment the roster rows already used: `active:scale-[0.99]` plus a transparent tap highlight, keeping the border hover for desktop. On My exercises only the link half scales; that row is split with a menu beside it, and scaling the whole thing would pull the two visibly apart.
+
+### Diagnosed, NOT fixed
+
+- **Region mismatch.** No `vercel.json`, so functions default to `iad1` (US East) while Supabase is US West — roughly 60–70ms each way, × five sequential calls on player detail. A three-line region pin fixes it, but confirm the Supabase region in the dashboard first rather than trusting this file, and take it through staging.
+- **Player detail's waterfall** — five sequential round trips (`getUser` → `coaches` → `players` → `assignments` → `logs`). `players` and `assignments` are independent and could be one `Promise.all`.
+- ⚠️ **`getUser()` is a network call on every instructor page load — and must stay one.** It revalidates the JWT; `getSession()` reads the cookie without validating and is explicitly unsafe for server-side authorization. Swapping it would be a security regression, not a perf win. The fix is the waterfall, not the auth call.
+- **Four `router.refresh()` sites remain** — `PlayerManage` (edit phone), `ProfileMenu` (edit name), `CustomExerciseMenu` (delete exercise), `AssignmentMenu` (edit amount). All behind modals or menus where the pause doesn't read as broken; deliberately left. `AllDoneActions` (bulk archive) is the one genuine candidate for conversion.
+- **Cold starts.** One real coach, so these functions are almost always cold — which is why the first tap after idle is worse than the rest.
+
+---
+
 ## Twilio status
 
 - ✅ Toll-free (833) 892-5640 — registered and approved
@@ -548,7 +621,7 @@ RJ is the first real user and primary product validator.
 
 Three of his open asks were resolved by text and are now scoped in Pending under "Decided, not built":
 
-- **"Minutes & hours"** means **weekly / daily aggregated time totals** for time-based drills — *not* a new unit or a per-assignment toggle. The unit system stays as it is.
+- ~~**"Minutes & hours"** means weekly / daily aggregated time totals~~ — ⚠️ **this reading was wrong; corrected Aug 1.** He meant hours as a unit on a single drill. See the corrected entry under "Decided, not built".
 - **Notes** means one small, capped, optional "anything to tell coach" field on the **student log screen** — the student writing to the coach, not a two-way thread.
 - **Parent contact** resolved to the two-contact model: the existing single phone + Player/Parent toggle stays tone-only, plus a separate report-only `parent_phone` that never receives assignment SMS.
 
@@ -560,7 +633,7 @@ Requests, in his words:
 
 - **Move "Assign more" button to the top** — currently pinned to the bottom of the student detail screen.
 - **A notes section for players** — ✅ *Clarified July 27:* the student writing to the coach. One small capped field on the log screen. See "Decided, not built".
-- **"Can timeframe be minutes & hours for weekly breakdown"** — verbatim. ✅ *Clarified July 27:* aggregated weekly/daily time totals, not a unit change. See "Decided, not built".
+- **"Can timeframe be minutes & hours for weekly breakdown"** — verbatim. ⚠️ *Clarified twice.* The July 27 reading (aggregated weekly/daily totals) was **wrong**; on Aug 1 RJ confirmed he means hours as a unit on one drill — "1 hour of jump rope" rather than "60 minutes". The word "weekly" in his original text is what misled the first reading. See "Decided, not built".
 - **A repeat-schedule function for when a set is finished** — reassign automatically once a student completes something. ✅ *Partly delivered July 27 2026* as **Assign again**: one tap on a finished card creates fresh work. The automatic/scheduled half is still unbuilt, but it is now safe to build — a weekly reassign cycle would have turned the orphaned-log problem into a recurring loss, and logs now carry their own snapshot.
 - **Add exercises to the library without being in the middle of assigning** — custom exercise creation is currently only reachable inside the assign flow for a specific player.
 
@@ -573,6 +646,163 @@ Requests, in his words:
 - **Heel/Toe Hinge** — RJ's personal terminology, not universal. Not a preset; coach can create custom.
 - **3min/5min Shooting** — minutes unit + makes covers it.
 - **RJ's reaction to the redesigned log screen:** "It's perfect... almost has that same appeal as PrizePicks... The way the bar loads up and shows completion."
+
+---
+
+## Open exploration — not yet decided (Jul 31 2026)
+
+From a phone call with RJ, carrying second-hand feedback from **Zach** — another coach in RJ's circle who has been talking with him about Reps but is **not a Reps user himself**.
+
+⚠️ **Nothing in this section is scoped, prioritized or scheduled**, and none of it is in the Priority build list — deliberately. These are open questions with the tension left in them. The point of the section is that they are unresolved. Resolving one means moving it *out* of here: into "Decided, not built" if it earns a design, or deleting it if it doesn't.
+
+### Social sharing (Strava-style)
+
+Students sharing achievements or reps socially.
+
+**The tension identified on the call:** not all reps are equal. 500 reps of a warm-up drill and 500 of something genuinely hard should not carry the same weight — so any version of this likely needs the platform to distinguish a *share-worthy moment* from routine logging, rather than "share anything, anytime."
+
+**Unresolved:** whether this connects to an older goal-setting idea — a student setting their own target versus receiving a coach-assigned one. A goal the student set *and* hit feels more earned, and therefore more shareable, than one they were handed.
+
+⚠️ **Runs against the current product philosophy.** Students have no accounts, and a coach can remove one at any time; the relationship is coach-mediated by design. Any sharing concept has to fit *inside* that, not around it.
+
+**One direction floated in conversation, not decided:** the existing celebrate screen as a possible natural home — it is already the one moment completion gets its own beat — rather than a separate social system.
+
+Worth revisiting once there is more real log data, to see whether usage patterns say anything.
+
+### Reusable / recently-used presets (instructor side)
+
+RJ wants the app to remember what he usually enters for a given exercise. His comparison: MyFitnessPal remembering your usual serving size for a food.
+
+**Current state:** `exercises.ts` holds static defaults, identical for every coach — nothing is personalized. A true "remember what I last assigned" needs per-coach-per-exercise storage that does not exist today.
+
+**Current leaning, not finalized:** additive rather than a swap. Keep the static library defaults as the permanent baseline — what the vanilla app provides — and add a separate "recently used" row of a few recent values, dismissible or clearable by the coach.
+
+**Scoping — resolved (the rest of the entry stays open):** per **player AND exercise**, not per-exercise alone.
+
+Real `rj_logs` data settled it. RJ's players are different ages and levels, and his Layups targets already vary by player — Khloe 350, Caleb and Phoenix 500. That is a genuinely different number per kid, not one number RJ reuses everywhere, so a "recently used" row keyed on the exercise alone would offer him the wrong figure most of the time. It has to be scoped to the player he is assigning to as well.
+
+Note this is narrower than the MyFitnessPal analogy that prompted the idea: that app remembers *your* usual serving, one axis. Here the coach is not the one doing the reps, so the memory belongs to the pairing, not to the coach.
+
+### AAU / org-level licensing
+
+A different business model, not a feature: selling to an organization — multiple coaches, procurement, admin permissions, likely different pricing — rather than to an individual private instructor.
+
+Distant horizon. Not connected to the current beta plan.
+
+### Tight advocate group (~30 coaches)
+
+In tension with the current plan of five hand-picked trainers reached by careful personal outreach. Thirty implies a later phase: testing whether the product holds up with less founder-level personal touch per coach. Not where the product is now.
+
+### Sensor integration (e.g. Dribble Up-style smart equipment)
+
+Interesting but distant. Would mean Reps depends on hardware it does not control, and requires the student to own separate smart equipment. Furthest out of anything in this section.
+
+### Archive at scale — one player's own history
+
+⚠️ **This entry did not previously exist.** It was referred to on Aug 1 as already captured; it wasn't. Written down now so the next reference to it resolves.
+
+The assumed pain point, Tony's own rather than RJ's: one player's archive grows into a long list of visually similar cards over time. Every card is the same shape, the ✓ is on all of them, and nothing separates last week from three months ago. Not yet a felt problem — RJ's oldest archive is days old — but it is the predictable end state of a model where finished work is moved and never destroyed.
+
+⚠️ **RJ's "folder method / group by grade or age" suggestion does NOT fit here.** Grouping by grade makes no sense inside one player's own history — their grade doesn't vary across their own cards. That suggestion belongs to the entry below, which is a different thing entirely. The two were nearly conflated on Aug 1; keeping them apart is the point.
+
+### Roster-level archive — a view that does not exist
+
+⚠️ **New gap, not previously documented.** There is **no cross-student view of archived work anywhere in the app.** Only two archive views exist, and both are scoped to a single player: the coach's player-detail screen, and the student's own home screen.
+
+RJ suggested a "folder method" and grouping by grade or age. That only makes sense **across students** — organising a roster, not one child's history. Which suggests he may have been gesturing at a view that does not exist at all, rather than asking for a filter on one that does.
+
+⚠️ **Unresolved, and a clarifying question needs to go back to RJ before any design.** A roster-level, cross-student archive view is a meaningfully larger scope than tidying one player's list — different screen, different queries, different navigation. Guessing which he meant would risk building the expensive one to answer the cheap question, or the reverse.
+
+### Real-time stats on the landing page
+
+A live stats row on the landing page — the "684 / 18 / 123" pattern other product homepages use — pulling from Reps' own real usage: assignments, logs, reps.
+
+⚠️ **Too early right now, and that is the whole point of the entry.** The real numbers today (~10 students) are too small to be persuasive as raw counts. Publishing them would undercut trust rather than build it.
+
+**Better direction identified in discussion, not decided:** a **rate** rather than a raw count. A rate is honest and compelling regardless of scale — "% of assigned work logged within 24 hours", or a rolling "reps logged this week" that resets and so can never look stale.
+
+The distinction worth keeping: **raw totals** (student count, coach count) are the ones that specifically need time before they are a credible flex. **Rates and current-week figures work now and later** — they do not have to wait for scale.
+
+**Placement, as pictured (Jul 31):** directly **below** the landing page's "Here's how it works" section — the four phone mocks, which item 3 of *Queued for next session* imagines becoming a per-activity carousel. Not elsewhere on the page. That is the only part of this that has been pinned down; everything above is still open.
+
+Not connected to any current landing page work. Captured so the idea isn't lost.
+
+### Validation signal
+
+Factual, no interpretation:
+
+- RJ has grown his roster to **~10 students** organically in under three weeks. (The July 27 entry above records 7 — both are accurate at their dates.)
+- Asked directly, RJ described the app as having changed his own coaching practice — organization, and a repeatable record he sticks to — rather than as something he is trying out.
+- On the same call, RJ described Reps as having become part of his actual coaching workflow: his words were **"streamlined"**, that it helps him **"stick to it"**, and that it has become a **"template"** of his program and a **"record"** of it. Read as pointing to a *second, distinct use case* beyond student accountability — basic business and practice organisation for the instructor himself. ⚠️ This is a separate validation thread from the bullet above, not a restatement of it: that one is about his coaching changing, this one is about the app doing a job the product was not explicitly built for.
+- **Parents, second-hand but independent of RJ's own view.** RJ confirmed by text (Aug 1) that parents using the app are "all in on it" and "think it's extremely useful". ⚠️ Worth separating from the bullets above: those are RJ's own enthusiasm, repeatedly recorded. This is a different constituency reacting — the people who pay for the coaching — reported through him.
+- **Zach**, a second coach in RJ's circle, engaged with the product enough to generate several of the ideas above without being a user himself.
+
+---
+
+## Queued for next session (end of day, Jul 31 2026)
+
+⚠️ Fast end-of-day capture, not decisions and not a plan. Nothing here is scoped or prioritized, and none of it has been added to the Priority build list. Deliberately short — enough that nothing is lost overnight, no more.
+
+1. **Scale app screens beyond mobile.** The landing page supports desktop/tablet/mobile, but every in-app screen and mock is mobile-only. Consider taking app screens up to at least tablet width for those visitors.
+
+2. **Narrow the signup activity list — revised Jul 31, more conservative than first captured.** The picker should show **only four rows**:
+
+   | Row | State |
+   |---|---|
+   | Basketball | live |
+   | Soccer | "Soon" |
+   | Tennis | "Soon" |
+   | Create your own | "Soon" |
+
+   ⚠️ **Everything else is removed outright, not tagged.** Piano, Martial Arts, Golf, Guitar, Gymnastics, Swimming and Voice come *out of what a coach sees at signup* — not deprioritized, not left visible under a "Soon" label. The earlier capture said to keep them tagged; that was reversed. Rationale: only tease what is actually intended to be built next — adjacent, structurally similar activities — rather than advertising the full possible list. Stop overpromising.
+
+   Tennis stays because it is the close structural analog: individual instruction, drill/rep structure, and makes-based tracking translates directly.
+
+   Also swap the homepage thumbnail from a piano student to a young female soccer athlete.
+
+   ⚠️ Placeholder for a future session — **no code change yet**. `activityTypes.ts` still carries all ten; this is a correction to the captured plan so it is accurate when picked up.
+
+3. **Landing page second section as a carousel.** Currently a static basketball showcase. Consider one slide per activity, each with its own device mocks and content matching that sport.
+
+4. **Real-time stats, placed directly below that section.** Revisit the idea already captured under Open exploration ("% logged within 24 hours", weekly rep counts) — this time thinking through how to frame and select only the positive-reading figures rather than raw counts. Pictured sitting *underneath* the activity carousel / phone-mocks section, not elsewhere on the page.
+
+5. **Notes on the log screen.** Already under "Decided, not built". RJ asked for this directly, which is reason to pull it forward rather than leave it as generic backlog.
+
+---
+
+## Pricing (resolved Jul 31 2026 — price point still open)
+
+**Free tier — resolved.** 3 students, full features, no card required, no time limit. **Forever, not a trial.**
+
+⚠️ A 14-day-unlimited trial was considered and **rejected**. It does not solve the problem it was reached for — the "cold roster dump", where a coach adds twenty students on day one and blind-texts them all before feeling the product work. A trial doesn't prevent that; a coach can dump a full roster on day one of a trial just as easily. And it reintroduces a hard deadline, which the free-tier model deliberately does not have.
+
+**Paid tier — resolved in shape.** Monthly only, cancel anytime. No annual plan, no discount tiers, deliberately not built — nothing at this stage requires them.
+
+**Price point — NOT locked.** Genuinely open between **$5 and $10/mo**. What is settled is the reasoning around it:
+
+- **Cost to serve is a non-issue either way.** SMS per free user runs pennies to low single-digit dollars a month even in heavy-use edge cases, so the price is a positioning decision, not a margin one.
+- **Both sit well under market.** Comparable products in this niche charge substantially more — see the section below.
+- **$9.99 was considered and set aside in favour of $10.** A round number reads as honest; a charm-priced one reads as optimised extraction, which is the opposite of the voice this pricing is meant to carry.
+
+Promo code `COACHRJ` = lifetime free.
+
+---
+
+## Competitive landscape (Jul 31 2026)
+
+Factual, from real research. Not a reason to change direction — captured so pricing and positioning decisions aren't made blind.
+
+| Product | Free tier | Paid |
+|---|---|---|
+| **Trainerize** | 1 client — functions more like a trial than a working free tier | from ~$9/mo (2 clients) → $23/mo (5) → $248/mo (500+) |
+| **TrueCoach** | none — 14-day trial only, no card | from ~$26/mo (5 clients) → $137/mo (50), annual billing |
+| **Utrain** | 100% free for trainers | monetises payment processing, not subscription |
+
+Trainerize and TrueCoach figures are screenshot-confirmed.
+
+**Utrain** (utrainmobileapp.com) is the closest adjacent competitor **by audience** — basketball-specific, aimed directly at private trainers, and apparently well funded (tech incubator cohorts, a Ganon Baker partnership, Yahoo Finance coverage). ⚠️ But its **core function is different**: booking, scheduling and automated payment collection, not practice-homework accountability. Trainers keep 100% of the session price. Worth knowing it sits in the same audience's feed; not competing for the same job.
+
+**Conclusion:** against this set, Reps' free tier — 3 students, forever, full features, no card — is on the **generous** end of this market, not the stingy end.
 
 ---
 
@@ -592,6 +822,9 @@ Requests, in his words:
 - **Log history is never deleted** — `ON DELETE SET NULL` preserves logs forever, and since July 27 each log also carries its own snapshot of what it was.
 - **A banked mismatch is never silently rewritten.** Guards live on the controls, not on stored data.
 - **UI labels may change without renaming code.** "Repeat" → "Assign again", "Logged" → "Archive", "Remove" → "Delete" all left their functions and columns alone.
+- **A tap must acknowledge itself.** Either the UI moves on the next frame (optimistic) or a boundary paints something. A screen that sits unchanged during a round trip reads as broken, not slow — and gets tapped again.
+- **44px minimum on every tap target, and the visible label is the target.** A label beside a link rather than inside it is a dead zone, whatever it looks like.
+- **A wrong-shaped loading state is worse than none.** It promises one screen and delivers another. Where there is no data to wait for, the boundary renders nothing.
 
 ### What was killed and why
 - Leaderboard — privacy (minors), breaks 1:1 dynamic
@@ -626,6 +859,27 @@ Requests, in his words:
   *Implementation:* exactly **one** INSERT site, `saveLog` in `src/app/student/[token]/log/[assignmentId]/actions.ts` (audited repo-wide — no other insert, upsert, route handler or DB trigger writes `logs`). The assignments query the confetti check already needed moved *above* the insert and was widened, so the snapshot costs **no extra round trip**. Server-side only — `saveLog` accepts no snapshot parameters at all, because the student log page is public and token-addressed and a crafted request could otherwise write any exercise name it liked into permanent history. That read is player-scoped, which also establishes ownership. Migration `20260727120000_add_log_snapshot_columns.sql`.
 
   *Readers are unchanged.* Every screen still joins live to `assignments`. The snapshot is the fallback for an orphan, not the primary source — nothing reads it yet, and a future progress/insights view is what would first consume it. This is what makes longitudinal history possible at all.
+- **⚠️ OPEN QUESTION, no design — a parent asked for date + time on completed work.** Connected to the Parent contact model, not part of it.
+
+  A parent receiving assignment texts directly (via the existing Player/Parent toggle) asked for timestamps with dates on completed work. RJ's own suggestion was to show it in the **Archive** section specifically.
+
+  The tension, unresolved:
+  - **Date is meaningful either way** — did practice happen on a given day.
+  - **Time is only meaningful in one usage mode.** If the student logs live, in the moment (on a parent's phone at the park), the timestamp is real. If a parent logs it for their kid later, or in a batch, the timestamp records when the parent got round to data entry — not when practice happened. So "time" is misleading or honest depending on how a given family actually uses the app, and the app cannot tell which.
+  - **Tony's stated preference is clean, simple cards**, resistant to visual clutter.
+  - ⚠️ **Relevant data already exists and is not surfaced anywhere:** the app already distinguishes the assigned amount from the logged amount, including partial versus fully complete. That may be more informative to a parent than a raw timestamp, and is worth weighing as part of any eventual design rather than defaulting to a clock.
+
+  No design proposed. The usage-mode question above needs answering before one would mean anything.
+
+- **⚠️ OPEN GAP, no decision — a student who asks "is there an app?" has nowhere to be sent.** Recorded, deliberately without a proposed fix.
+
+  There is **no student-discovery path on the landing page at all**: no "I'm a student" link, nothing pointing at `/student/login`, and the footer carries only Privacy and Terms. Verified against `src/app/page.tsx`, not assumed.
+
+  *It was there once.* A student entry point was restored to the footer on Jul 21 (`ebfea68`), then removed again Jul 27 in favour of a **coach-only landing framing** — the eyebrow narrowed to "For instructors", the hero speaks to the instructor, and the mocks note for that release records the removal explicitly: "The standalone 'I'm a student →' link is gone — students arrive by SMS link or via `/student/login`." That was a deliberate decision, not an oversight.
+
+  *What surfaced it:* a real student texted back **"is there an app??"** and there was no channel to answer them. Today a student can only arrive by their SMS link, or by knowing `/student/login` exists — and nothing anywhere points at that fallback.
+
+  ⚠️ Any future fix has to weigh the coach-only framing it would reopen. Recorded here so that trade-off is visible when the decision is made, rather than rediscovered.
 - **Device-test the goal type feature** — shipped to prod July 24 with no real-iPhone pass. Never observed on device: the incomplete-consecutive label `0/1 set · N in a row` (every consecutive row in the DB is already complete).
 - **Update `TWILIO_FROM_NUMBER`** to `+18338925640` in `.env.local` AND Vercel env vars
 - **Consecutive stepper overshoots its own progress line** — reads `1 of 1 set` while the stepper sits at 2. `progressValue` caps at 1 by design, but the two numbers visibly disagree.
@@ -641,16 +895,29 @@ Requests, in his words:
 
 Design resolved — these need building, not deciding.
 
+⚠️ One exception as of Aug 1: **hours as a unit** sits here because the *requirement* is settled (RJ asked for it, unambiguously), but its *direction* is not — the approach below is a suggestion, not a choice. It stays in this list because the ask is real and won't change; move it once an approach is picked.
+
 - **Parent contact model.** Two contacts, distinct purposes:
   - The **existing single phone + Player/Parent toggle** stays as-is. It is **tone only** — it does not change routing, and every assignment SMS goes to `players.phone` regardless. That is by design, not an oversight.
   - A **separate optional `parent_phone`** becomes a *report-only secondary contact*. It **never** receives assignment SMS — only future digest/report sends. This revives the column, which has been dead since July 17 (present, written as `null` by the only caller, read nowhere).
   - ⚠️ The "Send parent a weekly recap" UI must be **rebuilt from scratch** with new copy. It was fully deleted in commit `c9bb887`, not hidden — the state, the effect and the card all went.
-- **Weekly / daily time totals.** RJ confirmed by text that this is what he meant by "minutes & hours" — **not** a per-assignment unit toggle. He wants aggregated daily/weekly totals for time-based drills (conditioning, footwork) shown as a total. The unit system stays as it is. No design work started, and no weekly view exists to hang it on.
+  - **Existing flexibility, previously undocumented (Aug 1).** The single phone + toggle already stretches further than this file recorded. A student with no phone of their own can tap the assignment link on a parent's phone and log directly there; or the parent can forward that same link so the student has it on their own device. And the coach's per-student "..." menu carries **"Share homework link" as a standing action** — always available, not limited to the add-student moment. ⚠️ This may *reduce* the urgency of the report-only `parent_phone` work, since some parent-visibility need is already served. It does **not** change this item's scope or design today — worth having in mind when it is picked up.
+  - ⚠️ **A soft commitment exists with a real user.** Tony told RJ by text on Aug 1 that he is "working on some type of automated weekly digest or report for parents" and that "it'll shape up when we have more data." The digest remains undesigned internally and unbuilt. Light expectation, not a promise of a date — but it is out there, and worth knowing next time this area is prioritized.
+  - **Open question attached to this work:** timestamps on completed work — see High priority.
+- **Hours as well as minutes on a single drill.**
+
+  ⚠️ **CORRECTION (Aug 1 2026) — the July 27 reading of this was wrong.** This file previously recorded RJ's "minutes & hours" ask as *aggregated daily/weekly time totals*, and stated flatly that it was "not a per-assignment unit toggle". That was a misreading of a July 27 text. It is kept visible here rather than quietly overwritten, because it stood as a documented conclusion for five days and shaped Priority #2.
+
+  *What he actually wants*, clarified by text this morning: a single drill's duration expressible in **hours as well as minutes** — being able to set "1 hour of jump rope" instead of "60 minutes of jump rope", with the minutes option kept. It has **nothing to do with aggregation** across days or weeks.
+
+  *One candidate direction, discussed but **NOT** decided — suggestion only, not greenlit:* keep everything stored in **minutes internally**, so there is no schema change and nothing that sums or reports breaks. Add hour-flavoured preset buttons on the assign screen that simply send a larger minutes value (a "1 hr" preset sends `amount: 60, unit: minutes`), and optionally format any round multiple of 60 as "1 hr" on display screens. This is one option among others; Tony has not chosen it.
+
+  No design work started.
 - **Notes field.** Resolved small: one optional, length-capped "anything to tell coach" field on the **student log screen**. Explicitly *not* the larger recap/insights idea, which is tracked separately below. Needs a write path the student page doesn't currently have.
 
 ### Medium priority
 - **Gate stranger signups** — currently open; invite code or waitlist before broader launch
-- **Stripe infrastructure** — free tier 3 students, paywall at 4th, ~$5/month, promo code `COACHRJ` = lifetime free
+- **Stripe infrastructure** — free tier 3 students, paywall at 4th, promo code `COACHRJ` = lifetime free. See **Pricing** for the resolved model; the price point ($5 vs $10) is the one piece still open.
 - **Tighten logs RLS policy** — INSERT currently open
 - **Demo mode** — "Try as Coach" seeded database with context overlay
 - **Account deletion flow** — required by privacy policy
@@ -695,7 +962,7 @@ Design resolved — these need building, not deciding.
 - Assign again — re-issue finished work ✅ (July 27 2026)
 - Parent read-only web view ⚠️ page exists, but nothing links to it and no digest is sent
 - Parent weekly digest ❌ — no cron, no scheduled job, never sent
-- Weekly / daily time totals ❌ — decided, not built
+- Hours as a unit alongside minutes ❌ — asked for, direction not chosen (was mis-recorded as "weekly / daily time totals" until Aug 1)
 - Notes field on the log screen ❌ — decided, not built
 - Demo mode ❌
 - Account deletion ❌
@@ -712,7 +979,8 @@ Design resolved — these need building, not deciding.
 The three at the top are the ones RJ has actually asked for and that now have a resolved design.
 
 1. **Parent contact model** — report-only `parent_phone` + rebuild the recap toggle UI (deleted in `c9bb887`, must be written fresh)
-2. **Weekly / daily time totals** — needs a weekly view to exist first; RJ's real "minutes & hours" ask
+   - *Why this matters (supporting context, not a new requirement):* Tony's own multi-year experience paying for private soccer and basketball coaching — wanting visibility into what the coach noticed and what the kid should work on beyond the paid hour. Visible "homework" reads to a parent as tangible proof of value: evidence of getting what you pay for. Does not change the design or the priority above.
+2. **Hours as well as minutes on a single drill** — "1 hour of jump rope" rather than "60 minutes". ⚠️ Re-scoped Aug 1: this was previously written as "weekly / daily time totals", which was a misreading. No weekly view is required after all, which makes this materially smaller than it looked.
 3. **Notes field** on the student log screen — small, capped, optional; needs a student write path
 4. Consecutive stepper overshoot (`1 of 1 set` vs stepper at 2)
 5. Edit `goal_type` / `side` after assigning
@@ -722,11 +990,14 @@ The three at the top are the ones RJ has actually asked for and that now have a 
 9. Progress bars on roster rows
 10. Retroactive makes gap — data model + RLS UPDATE policy
 11. Gate signups — invite code or waitlist
-12. Stripe infrastructure
-13. Activate additional activity types
-14. Light mode
+12. **First-student onboarding nudge** — a suggestion shown when a coach adds their *first* student, along the lines of starting with one or two players before adding a full roster. ⚠️ Explicitly **not** a gate or a limit: purely a nudge, to reduce the chance a coach blind-texts an existing roster before they have felt the product work. New Jul 31 2026, not designed.
+13. Stripe infrastructure
+14. Activate additional activity types
+15. Light mode
 
-**Shipped since the July 24 list:** log snapshot + backfill, manual Archive model, Assign again, layups collapse, emerald palette, device-test of the goal type feature.
+**Shipped since the July 24 list:** log snapshot + backfill, manual Archive model, Assign again, layups collapse, emerald palette, device-test of the goal type feature, and the navigation/loading pass (optimistic card actions, six loading boundaries, seven back links, tap feedback).
+
+⚠️ Nothing was removed from the list above by that pass — there was never a "performance audit" item on it. The work came out of a reported symptom (taps not registering), not a planned entry. What it *added* is the "Diagnosed, NOT fixed" set in **Navigation & loading feel**: the region pin, the player detail waterfall, and `AllDoneActions`. Those are the natural next perf items and are deliberately not slotted into this list, because none of them is user-visible on their own the way the feedback fixes were.
 
 ---
 
@@ -755,6 +1026,16 @@ The loop band is deliberately **lighter** than the `#111318` phone frames — th
 ⚠️ The gallery renders through a small **JS macro layer** at the bottom of the file (`%ACARD(...)%`, `%TABS(...)%`, `%ALLDONE(...)%` and friends, expanded into `.main` on load). A macro used but not registered in the expansion pass leaves raw `%NAME(...)%` text on screen; a JS error blanks the whole gallery, because the script replaces `.main.innerHTML` wholesale. Open it in a browser after editing — a syntax check alone won't catch either.
 
 New in this snapshot: New/Archive tabs on both list screens, the all-done panel in both variants, the Archive tab itself, the finished-card menus (Assign again / Archive / Move back to New), emerald tokens, 2px bars, and the divider-style menus with icons. The **Clear finished sheet frame was deleted**, matching the feature.
+
+⚠️ **The gallery is one release behind as of the navigation pass.** The six skeleton states are genuinely new UI and appear in no snapshot: five route shapes (roster, player detail, assign subtree, student home, log screen) plus celebrate's deliberate blank. They are transient, which is exactly why a static gallery is the only place they can be inspected side by side — a reviewer cannot hold one on screen. Also unrepresented: the widened back-link tap targets (invisible in a static frame but a real layout change, since the header row is now 44px tall), and the `active:scale` tap feedback. Worth folding into the next snapshot rather than regenerating for this alone.
+
+---
+
+## Shipped-feature history
+
+`CHANGELOG.md` at the repo root — a Feature / Why-it-exists table, oldest first, grouped by phase. **This file describes the app as it is now; CHANGELOG.md records how it got there.** Append a row there whenever something ships.
+
+⚠️ It carries roughly **a dozen "Reason not recorded" rows**, nearly all from the Jul 11–15 build days — the email-OTP switch, the original scaffold, per-step signup routes, the landing page, yellow's retirement, side-on-assignments. Those are honest gaps, not placeholders: the reason was never written down anywhere. Worth filling in from memory in a future session while it is still recoverable.
 
 ---
 
