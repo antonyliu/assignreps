@@ -478,7 +478,7 @@ export default function LogScreen({
       {showMakesRow ? (
         // attempts (muted green) with makes (bright green) stacked on top.
         <div
-          className="relative h-1.5 rounded-full overflow-hidden mb-8"
+          className="relative h-1.5 rounded-full overflow-hidden mb-11"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -492,7 +492,7 @@ export default function LogScreen({
         </div>
       ) : (
         <div
-          className="h-1.5 rounded-full overflow-hidden mb-8"
+          className="h-1.5 rounded-full overflow-hidden mb-11"
           style={{ background: BAR_TRACK }}
         >
           <div
@@ -505,7 +505,7 @@ export default function LogScreen({
       {/* Full-content-width lockup: ATTEMPTS label, the big stepper, the divider
           and the MAKES row share the same edges as the bar and title above —
           the page padding supplies the breathing room. */}
-      <div className="mb-10">
+      <div className="mb-14">
         {/* The hero stepper is whatever the assignment is scored on. Under a
             makes goal that is MAKES, so it takes the large control and the
             bright green, and attempts drop to the quiet row below. */}
@@ -515,7 +515,7 @@ export default function LogScreen({
           color={trackMakes && goalType === "reps" ? ATTEMPTS_GREEN : MAKES_GREEN}
           sizeClass="text-[17px]"
         />
-        <div className="mt-5">
+        <div className="mt-3">
           {isMakesGoal ? (
             <StepperRow
               id="makes"
@@ -559,8 +559,8 @@ export default function LogScreen({
           <>
             {/* Tight around the rule so attempts + makes read as one counting
                 section; the air lives outside it, not between the two. */}
-            <div className="mt-6 border-t border-reps-line-hi" />
-            <div className="mt-5 flex items-center justify-between gap-4">
+            <div className="mt-5 border-t border-reps-line-hi" />
+            <div className="mt-4 flex items-center justify-between gap-4">
               <FieldLabel
                 htmlFor="makes"
                 text="MAKES"
