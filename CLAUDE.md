@@ -120,6 +120,7 @@ Migrations live in `supabase/migrations/`. There is **no base schema migration**
   - ⚠️ **The write path must cap the text before inserting; the constraint is a backstop, never the guard.** `note` travels on the same INSERT as `amount` and `makes`, so a rejected note fails the whole row and loses reps the student actually did. That is precisely the failure the snapshot columns avoided by taking no CHECK constraints at all — a constraint is only safe here because the column is new and has no legacy values it could reject.
   - **Empty string normalizes to NULL at the write path**, never stored as `''`. Nothing in the schema stops `''` — it satisfies the constraint — so this is the app's job. Two spellings of "said nothing" is the same trap as `logs.makes` null vs 0, and it breaks the reader below: a `note IS NOT NULL` check treats `''` as a real note and renders a blank line.
   - ⚠️ **Display reads the most recent log for an assignment where `note IS NOT NULL`** — *not* the literal latest log. An assignment accumulates logs across sessions and most of them will carry no note, so keying on the newest row would blank out an earlier note the moment the student logs again without writing one.
+  - ✅ **Verified live on staging, Aug 1 2026** — against real data, not just the compiler. A note written on a **STAR drill** assignment rendered correctly on both surfaces: the coach's student detail card and the student's own home card, with the right text on each. The fold above and the card rendering are confirmed working end to end; every earlier note in this file describing them as compiler-verified only is superseded.
 - **`filed_at`** — which tab an assignment sits in: NULL = **New**, set = **Archive**, and the value is when the coach moved it. Nullable, no default, no backfill; every pre-existing row reads as New, which is where they all were. Indexed as `(player_id, filed_at)` since every read on both list screens is "this player's cards, split by filed or not."
   - ⚠️ **Filing is independent of completion.** Nothing moves automatically. A finished assignment stays in New until a coach archives it, and archiving is reversible. `isComplete()` no longer decides tab membership at all — it only draws the ✓ badge and picks which menu actions a card offers.
   - ⚠️ **Deliberately NOT named `logged_at`.** `logs.logged_at` already means "when a STUDENT recorded reps", and the player detail page reads both tables into one aggregation. Two columns, one name, opposite actors. The small mismatch with the "Archive" tab label is the price; the collision would have been permanent.
@@ -817,8 +818,6 @@ Factual, no interpretation:
 
 4. **Real-time stats, placed directly below that section.** Revisit the idea already captured under Open exploration ("% logged within 24 hours", weekly rep counts) — this time thinking through how to frame and select only the positive-reading figures rather than raw counts. Pictured sitting *underneath* the activity carousel / phone-mocks section, not elsewhere on the page.
 
-5. **Notes on the log screen.** Already under "Decided, not built". RJ asked for this directly, which is reason to pull it forward rather than leave it as generic backlog.
-
 ---
 
 ## Pricing (resolved Jul 31 2026 — price point still open)
@@ -964,7 +963,6 @@ Design resolved — these need building, not deciding.
   *One candidate direction, discussed but **NOT** decided — suggestion only, not greenlit:* keep everything stored in **minutes internally**, so there is no schema change and nothing that sums or reports breaks. Add hour-flavoured preset buttons on the assign screen that simply send a larger minutes value (a "1 hr" preset sends `amount: 60, unit: minutes`), and optionally format any round multiple of 60 as "1 hr" on display screens. This is one option among others; Tony has not chosen it.
 
   No design work started.
-- **Notes field.** Resolved small: one optional, length-capped "anything to tell coach" field on the **student log screen**. Explicitly *not* the larger recap/insights idea, which is tracked separately below. Needs a write path the student page doesn't currently have.
 
 ### Medium priority
 - **Gate stranger signups** — currently open; invite code or waitlist before broader launch
@@ -985,7 +983,7 @@ Design resolved — these need building, not deciding.
 - **Finish tokenising the greens** — 4 sites still hardcode `#3ed68a` rather than using the token: the celebrate confetti array, the two `Check` icon `color` props (CountScreen + CustomExerciseScreen), and the roster `GROUP_STYLE` object. The icons are the reason it stopped: lucide passes `color` into an SVG `stroke` attribute, where a CSS var resolves in practice but wants seeing rendered before trusting.
 - **`CustomExerciseMenu` is the odd one out** — three of the app's four overflow menus now share the raised/flush/divider style with icons; this one keeps the old padded `p-1` panel with rounded inner items and no icon. Its single item is `Delete exercise`, which pairs naturally with the `Trash2` on `Delete assignment`.
 - **Toast is dim** — noted on device, not fixed. All three toasts use `text-reps-sub` on `--reps-raised`.
-- **Student / parent progress recap** — "*Khloe's first 8 months*" style longitudinal view. Explicitly backburner, but explicitly *connected*: it is the original founding vision and it is what the July 20 RJ meeting notes on longitudinal tracking were about. Depends entirely on accumulated history, which the July 27 log-snapshot fix now protects going forward. Distinct from the small notes field above.
+- **Student / parent progress recap** — "*Khloe's first 8 months*" style longitudinal view. Explicitly backburner, but explicitly *connected*: it is the original founding vision and it is what the July 20 RJ meeting notes on longitudinal tracking were about. Depends entirely on accumulated history, which the July 27 log-snapshot fix now protects going forward. Distinct from the small notes field, which shipped Aug 1 — that is one capped line per log, this is a longitudinal view.
 - **Light mode** — after dark mode is validated with RJ
 - **Activate more activity types** — content problem, not engineering
 - **WhatsApp via Twilio** — international student SMS
@@ -1050,7 +1048,7 @@ The three at the top are the ones RJ has actually asked for and that now have a 
 
 **Shipped since the July 24 list:** log snapshot + backfill, manual Archive model, Assign again, layups collapse, emerald palette, device-test of the goal type feature, the navigation/loading pass (optimistic card actions, six loading boundaries, seven back links, tap feedback), and the **student notes field** (Aug 1 — schema, write path, read fold and rendering on both card lists), which was item 3 and is removed above rather than struck through.
 
-⚠️ Nothing was removed from the list above by that pass — there was never a "performance audit" item on it. The work came out of a reported symptom (taps not registering), not a planned entry. What it *added* is the "Diagnosed, NOT fixed" set in **Navigation & loading feel**: the region pin, the player detail waterfall, and `AllDoneActions`. Those are the natural next perf items and are deliberately not slotted into this list, because none of them is user-visible on their own the way the feedback fixes were.
+⚠️ **The following is about the July 30 navigation/loading pass only — not about the notes removal above.** Nothing was removed from the list by *that* pass; there was never a "performance audit" item on it. The work came out of a reported symptom (taps not registering), not a planned entry. What it *added* is the "Diagnosed, NOT fixed" set in **Navigation & loading feel**: the region pin, the player detail waterfall, and `AllDoneActions`. Those are the natural next perf items and are deliberately not slotted into this list, because none of them is user-visible on their own the way the feedback fixes were.
 
 ---
 
