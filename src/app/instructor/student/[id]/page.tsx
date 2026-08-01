@@ -46,13 +46,34 @@ export default async function CoachPlayerPage({
   const assignmentIds = assignmentList.map((a) => a.id);
   const loggedByAssignment: Record<string, number> = {};
   const makesByAssignment: Record<string, { makes: number; attempts: number }> = {};
+  // The student's most recent note per assignment. ⚠️ Most recent log that HAS a
+  // note — not the most recent log. Most sessions carry no note, so keying on
+  // the newest row would blank an earlier note the moment the student logged
+  // again without writing one.
+  const noteByAssignment: Record<string, { note: string; logged_at: string }> = {};
   if (assignmentIds.length > 0) {
     const { data: logs } = await supabase
       .from("logs")
-      .select("assignment_id, amount, makes")
+      // Widened for the note — no extra round trip, the same read the makes
+      // fold already needed. logged_at comes with it because the note fold
+      // has to compare recency; the makes fold, being a sum, never did.
+      .select("assignment_id, amount, makes, note, logged_at")
       .in("assignment_id", assignmentIds);
     for (const l of logs ?? []) {
       loggedByAssignment[l.assignment_id] = (loggedByAssignment[l.assignment_id] ?? 0) + l.amount;
+      // ⚠️ Before the `continue` below — a log can carry a note without makes,
+      // and skipping it there would lose exactly those notes.
+      //
+      // Neither query orders its rows, so this compares rather than assuming
+      // last-wins. Date.parse rather than string comparison: both are UTC and
+      // would usually sort lexicographically, but that quietly depends on
+      // every row carrying identical fractional-second precision.
+      if (l.note != null) {
+        const prev = noteByAssignment[l.assignment_id];
+        if (!prev || Date.parse(l.logged_at) > Date.parse(prev.logged_at)) {
+          noteByAssignment[l.assignment_id] = { note: l.note, logged_at: l.logged_at };
+        }
+      }
       if (l.makes === null || l.makes === undefined) continue;
       const entry = (makesByAssignment[l.assignment_id] ??= { makes: 0, attempts: 0 });
       entry.makes += l.makes;
@@ -161,6 +182,9 @@ export default async function CoachPlayerPage({
             rows={rows}
             loggedByAssignment={loggedByAssignment}
             makesByAssignment={makesByAssignment}
+            // ⚠️ Deliberately unconsumed this step. The data layer lands first
+            // and is verified on its own; rendering is the next step.
+            noteByAssignment={noteByAssignment}
           />
 
         </>

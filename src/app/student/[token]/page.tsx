@@ -40,7 +40,10 @@ export default async function PlayerHomePage({
       .order("created_at"),
     supabase
       .from("logs")
-      .select("assignment_id, amount, makes")
+      // Widened for the note — no extra round trip, the same read the makes
+      // fold already needed. logged_at comes with it because the note fold has
+      // to compare recency; the makes fold, being a sum, never did.
+      .select("assignment_id, amount, makes, note, logged_at")
       .eq("player_id", player.id),
   ]);
 
@@ -53,9 +56,27 @@ export default async function PlayerHomePage({
   // accumulate only from logs that recorded makes (null = "didn't say"), so the
   // "made X/Y · Z%" denominator matches the coach's exactly.
   const makesByAssignment: Record<string, { makes: number; attempts: number }> = {};
+  // The student's most recent note per assignment. ⚠️ Most recent log that HAS
+  // a note — not the most recent log. Most sessions carry no note, so keying on
+  // the newest row would blank an earlier note the moment they logged again
+  // without writing one. Same rule and shape as the coach detail page.
+  const noteByAssignment: Record<string, { note: string; logged_at: string }> = {};
   for (const log of logs ?? []) {
     loggedByAssignment[log.assignment_id] =
       (loggedByAssignment[log.assignment_id] ?? 0) + log.amount;
+    // ⚠️ Before the `continue` below — a log can carry a note without makes,
+    // and skipping it there would lose exactly those notes.
+    //
+    // The query imposes no order, so this compares rather than assuming
+    // last-wins. Date.parse rather than string comparison: both are UTC and
+    // would usually sort lexicographically, but that quietly depends on every
+    // row carrying identical fractional-second precision.
+    if (log.note != null) {
+      const prev = noteByAssignment[log.assignment_id];
+      if (!prev || Date.parse(log.logged_at) > Date.parse(prev.logged_at)) {
+        noteByAssignment[log.assignment_id] = { note: log.note, logged_at: log.logged_at };
+      }
+    }
     if (log.makes == null) continue;
     const entry = (makesByAssignment[log.assignment_id] ??= { makes: 0, attempts: 0 });
     entry.makes += log.makes;
@@ -107,10 +128,10 @@ export default async function PlayerHomePage({
           newCount={newList.length}
           archiveCount={archiveList.length}
           newList={newList.map((a) =>
-            renderAssignmentCard(a, token, loggedByAssignment, makesByAssignment),
+            renderAssignmentCard(a, token, loggedByAssignment, makesByAssignment, noteByAssignment),
           )}
           archiveList={archiveList.map((a) =>
-            renderAssignmentCard(a, token, loggedByAssignment, makesByAssignment),
+            renderAssignmentCard(a, token, loggedByAssignment, makesByAssignment, noteByAssignment),
           )}
           // Finished work still on the student's New tab: same celebration the
           // page used to show as a banner, now scoped to the tab it belongs to.
@@ -155,6 +176,11 @@ type LoggedMap = Record<string, number>;
 /** SUM(makes) and the attempts those makes were recorded against, per
  *  assignment — only from logs that actually reported makes. */
 type MakesMap = Record<string, { makes: number; attempts: number }>;
+/** The student's most recent note per assignment — most recent log that HAS a
+ *  note, not the most recent log.
+ *  ⚠️ Not consumed yet: the data layer landed first so it could be verified on
+ *  its own, and rendering is the next step. */
+type NoteMap = Record<string, { note: string; logged_at: string }>;
 
 /** One assignment row as the STUDENT sees it. Lifted out of the page body when
  *  the list was split into New / Archive tabs — both tabs render the identical
@@ -175,6 +201,7 @@ function renderAssignmentCard(
   token: string,
   loggedByAssignment: LoggedMap,
   makesByAssignment: MakesMap,
+  _noteByAssignment: NoteMap,
 ) {
   const goalType = (a.goal_type ?? "reps") as GoalType;
   const rawLogged = loggedByAssignment[a.id] ?? 0;

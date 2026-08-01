@@ -38,6 +38,11 @@ type LoggedMap = Record<string, number>;
 /** SUM(makes) and the attempts those makes were recorded against, per
  *  assignment — only from logs that actually reported makes. */
 type MakesMap = Record<string, { makes: number; attempts: number }>;
+/** The student's most recent note per assignment — most recent log that HAS a
+ *  note, not the most recent log. Computed server-side in page.tsx.
+ *  ⚠️ Not consumed yet: the data layer landed first so it could be verified on
+ *  its own, and rendering is the next step. */
+type NoteMap = Record<string, { note: string; logged_at: string }>;
 
 type CardActions = {
   archive: (a: CardRow) => void;
@@ -66,6 +71,10 @@ type Props = {
   rows: CardRow[];
   loggedByAssignment: LoggedMap;
   makesByAssignment: MakesMap;
+  /** ⚠️ Accepted but NOT destructured below, deliberately — nothing renders a
+   *  note yet. Declared here so the server's fold has somewhere to arrive and
+   *  can be verified before any UI depends on it. */
+  noteByAssignment: NoteMap;
 };
 
 /** The four mutations, as optimistic edits to the row list. Each mirrors
