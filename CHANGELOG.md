@@ -110,6 +110,19 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | Grey tap-flash removed from assign rows | On iOS `:hover` sticks after a tap, so the row lit grey and stayed lit while the next screen loaded |
 | Skeleton fill `#2a2d36` + `sk-breathe` animation | White at low opacity still read as a light shape on near-black, and `animate-pulse` landed the content swap mid-swing |
 
+## Student notes (Aug 1 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Optional note on the log screen, capped at 100 characters | RJ asked for "a notes section for players" — clarified to the student writing to the coach, not a two-way thread |
+| `logs.note` rather than a column on `assignments` | A note belongs to a session; a second log against the same assignment is a second, separate thing to say |
+| The cap is enforced at the write path, with the DB CHECK as backstop | `note` rides the same INSERT as `amount`, so letting the constraint reject an over-long note would fail the whole row and lose reps the student actually did |
+| Empty and whitespace-only notes normalise to `null`, never `""` | Two spellings of "said nothing" break every reader keying on `note IS NOT NULL` — `""` reads as a real note and renders a blank line |
+| Trimmed and re-capped server-side, not just in the textarea | The log screen is public and token-addressed, so the client's cap proves nothing about what arrives |
+| The field starts blank on every visit | The steppers seed from banked totals because they show a running total; a note is about the session being logged now, and there is no edit path to take a resent one back |
+| Most recent log **with a note** wins, per assignment | Most sessions carry no note, so keying on the newest log would blank an earlier note the moment the student logged again without writing one |
+| Surfaced on both the coach's student detail cards and the student's own home cards | A note nobody can read isn't a message — and the student's own card is their only confirmation it was received |
+
 ---
 
 ## Not shipped — recorded so the history is honest

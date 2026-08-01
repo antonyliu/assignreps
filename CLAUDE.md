@@ -1017,7 +1017,7 @@ Design resolved — these need building, not deciding.
 - Parent read-only web view ⚠️ page exists, but nothing links to it and no digest is sent
 - Parent weekly digest ❌ — no cron, no scheduled job, never sent
 - Hours as a unit alongside minutes ❌ — asked for, direction not chosen (was mis-recorded as "weekly / daily time totals" until Aug 1)
-- Notes field on the log screen ❌ — decided, not built
+- Notes field on the log screen ✅ (Aug 1 2026) — optional, 100-char capped; most recent log *with* a note shows on both card lists
 - Demo mode ❌
 - Account deletion ❌
 - Stripe billing ❌
@@ -1035,21 +1035,20 @@ The three at the top are the ones RJ has actually asked for and that now have a 
 1. **Parent contact model** — report-only `parent_phone` + rebuild the recap toggle UI (deleted in `c9bb887`, must be written fresh)
    - *Why this matters (supporting context, not a new requirement):* Tony's own multi-year experience paying for private soccer and basketball coaching — wanting visibility into what the coach noticed and what the kid should work on beyond the paid hour. Visible "homework" reads to a parent as tangible proof of value: evidence of getting what you pay for. Does not change the design or the priority above.
 2. **Hours as well as minutes on a single drill** — "1 hour of jump rope" rather than "60 minutes". ⚠️ Re-scoped Aug 1: this was previously written as "weekly / daily time totals", which was a misreading. No weekly view is required after all, which makes this materially smaller than it looked.
-3. **Notes field** on the student log screen — small, capped, optional; needs a student write path
-4. Consecutive stepper overshoot (`1 of 1 set` vs stepper at 2)
-5. Edit `goal_type` / `side` after assigning
-6. Honesty nudge on 0 attempts
-7. "Or type a number" hint — fix the keystroke clamp first
-8. Hold to accelerate on stepper buttons
-9. Progress bars on roster rows
-10. Retroactive makes gap — data model + RLS UPDATE policy
-11. Gate signups — invite code or waitlist
-12. **First-student onboarding nudge** — a suggestion shown when a coach adds their *first* student, along the lines of starting with one or two players before adding a full roster. ⚠️ Explicitly **not** a gate or a limit: purely a nudge, to reduce the chance a coach blind-texts an existing roster before they have felt the product work. New Jul 31 2026, not designed.
-13. Stripe infrastructure
-14. Activate additional activity types
-15. Light mode
+3. Consecutive stepper overshoot (`1 of 1 set` vs stepper at 2)
+4. Edit `goal_type` / `side` after assigning
+5. Honesty nudge on 0 attempts
+6. "Or type a number" hint — fix the keystroke clamp first
+7. Hold to accelerate on stepper buttons
+8. Progress bars on roster rows
+9. Retroactive makes gap — data model + RLS UPDATE policy
+10. Gate signups — invite code or waitlist
+11. **First-student onboarding nudge** — a suggestion shown when a coach adds their *first* student, along the lines of starting with one or two players before adding a full roster. ⚠️ Explicitly **not** a gate or a limit: purely a nudge, to reduce the chance a coach blind-texts an existing roster before they have felt the product work. New Jul 31 2026, not designed.
+12. Stripe infrastructure
+13. Activate additional activity types
+14. Light mode
 
-**Shipped since the July 24 list:** log snapshot + backfill, manual Archive model, Assign again, layups collapse, emerald palette, device-test of the goal type feature, and the navigation/loading pass (optimistic card actions, six loading boundaries, seven back links, tap feedback).
+**Shipped since the July 24 list:** log snapshot + backfill, manual Archive model, Assign again, layups collapse, emerald palette, device-test of the goal type feature, the navigation/loading pass (optimistic card actions, six loading boundaries, seven back links, tap feedback), and the **student notes field** (Aug 1 — schema, write path, read fold and rendering on both card lists), which was item 3 and is removed above rather than struck through.
 
 ⚠️ Nothing was removed from the list above by that pass — there was never a "performance audit" item on it. The work came out of a reported symptom (taps not registering), not a planned entry. What it *added* is the "Diagnosed, NOT fixed" set in **Navigation & loading feel**: the region pin, the player detail waterfall, and `AllDoneActions`. Those are the natural next perf items and are deliberately not slotted into this list, because none of them is user-visible on their own the way the feedback fixes were.
 
