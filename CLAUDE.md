@@ -969,7 +969,10 @@ Design resolved — these need building, not deciding.
 ### Medium priority
 - **Gate stranger signups** — currently open; invite code or waitlist before broader launch
 - **Stripe infrastructure** — free tier 3 students, paywall at 4th, promo code `COACHRJ` = lifetime free. See **Pricing** for the resolved model; the price point ($5 vs $10) is the one piece still open.
-- **Tighten logs RLS policy** — INSERT currently open
+- **Tighten logs RLS** — ⚠️ **corrected Aug 1 2026: there is no RLS policy on `logs` at all.** This entry read "INSERT currently open", which implied SELECT/UPDATE/DELETE were covered and only the insert path was loose. They never were. Confirmed by investigation, not assumed: no policy on `logs` appears in any migration file, and the student home page has always read `logs` straight through the **anon** key with none present. So SELECT has been exactly as open as INSERT this whole time.
+  - No column-level grants exist anywhere either, so any column added to `logs` is readable wherever the others are. That is why `note` needed no policy work to be read back — worth knowing, and worth not mistaking for a policy having permitted it.
+  - ⚠️ `note` raises the practical stakes of the gap without changing its shape. Until Aug 1 `logs` held only numbers and copied assignment metadata; `note` is the first **free-text field a student wrote themselves**. Still their own words on their own token-addressed page, so nothing new is exposed to anyone who wasn't already able to read the row — but the consequence of the gap is qualitatively different from a rep count.
+  - Priority is unchanged — still Medium, deliberately. This is a correction to what the entry *says*, not a re-rating of how urgent it is.
 - **Demo mode** — "Try as Coach" seeded database with context overlay
 - **Account deletion flow** — required by privacy policy
 - **hello@assignreps.com Gmail Send as setup**
