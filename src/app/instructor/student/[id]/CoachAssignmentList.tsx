@@ -39,9 +39,7 @@ type LoggedMap = Record<string, number>;
  *  assignment — only from logs that actually reported makes. */
 type MakesMap = Record<string, { makes: number; attempts: number }>;
 /** The student's most recent note per assignment — most recent log that HAS a
- *  note, not the most recent log. Computed server-side in page.tsx.
- *  ⚠️ Not consumed yet: the data layer landed first so it could be verified on
- *  its own, and rendering is the next step. */
+ *  note, not the most recent log. Computed server-side in page.tsx. */
 type NoteMap = Record<string, { note: string; logged_at: string }>;
 
 type CardActions = {
@@ -71,9 +69,6 @@ type Props = {
   rows: CardRow[];
   loggedByAssignment: LoggedMap;
   makesByAssignment: MakesMap;
-  /** ⚠️ Accepted but NOT destructured below, deliberately — nothing renders a
-   *  note yet. Declared here so the server's fold has somewhere to arrive and
-   *  can be verified before any UI depends on it. */
   noteByAssignment: NoteMap;
 };
 
@@ -111,6 +106,7 @@ export default function CoachAssignmentList({
   rows,
   loggedByAssignment,
   makesByAssignment,
+  noteByAssignment,
 }: Props) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -177,10 +173,10 @@ export default function CoachAssignmentList({
         newCount={newList.length}
         archiveCount={archiveList.length}
         newList={newList.map((a) =>
-          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, actions),
+          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions),
         )}
         archiveList={archiveList.map((a) =>
-          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, actions),
+          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions),
         )}
         newTop={
           allDone && fileableCount > 0 ? (
@@ -272,6 +268,7 @@ function renderAssignmentCard(
   a: CardRow,
   loggedByAssignment: LoggedMap,
   makesByAssignment: MakesMap,
+  noteByAssignment: NoteMap,
   actions: CardActions,
 ) {
   const goalType = (a.goal_type ?? "reps") as GoalType;
@@ -282,6 +279,7 @@ function renderAssignmentCard(
   const cardTarget = progressTarget(goalType, a.target);
   const shown = Math.min(progressValue(goalType, logged, rawMakes), cardTarget);
   const pct = cardTarget > 0 ? Math.min(100, Math.round((shown / cardTarget) * 100)) : 0;
+  const note = noteByAssignment[a.id]?.note;
   // Bad data (more makes than attempts) still shows the raw numbers —
   // only the percentage, which would read over 100%, is suppressed.
   const m = makesByAssignment[a.id];
@@ -366,6 +364,22 @@ function renderAssignmentCard(
           <div className="mt-2 text-[11px] text-reps-dim">
             made {m.makes}/{m.attempts}
             {makesPct !== null && <span className="text-[var(--reps-label)]"> · {makesPct}%</span>}
+          </div>
+        )}
+        {/* The student's own words, in their own voice — hence italic and
+            quoted, with no label or icon. A "NOTE:" prefix would make the
+            coach's card read as a form; the quotes already say who is
+            speaking.
+
+            Renders only when a note exists, so a card without one is
+            byte-identical to before. It sits last so it never pushes the
+            bar or the makes line around.
+
+            No truncation: the 100-char cap at write time is the limit, and
+            wrapping handles the rest. */}
+        {note && (
+          <div className="mt-2 border-t border-reps-line pt-2 text-[11.5px] italic text-reps-dim">
+            &ldquo;{note}&rdquo;
           </div>
         )}
       </div>

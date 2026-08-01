@@ -201,7 +201,7 @@ function renderAssignmentCard(
   token: string,
   loggedByAssignment: LoggedMap,
   makesByAssignment: MakesMap,
-  _noteByAssignment: NoteMap,
+  noteByAssignment: NoteMap,
 ) {
   const goalType = (a.goal_type ?? "reps") as GoalType;
   const rawLogged = loggedByAssignment[a.id] ?? 0;
@@ -213,6 +213,7 @@ function renderAssignmentCard(
   const logged = Math.min(progressValue(goalType, rawLogged, rawMakes), cardTarget);
   const pct = cardTarget > 0 ? Math.round((logged / cardTarget) * 100) : 0;
 
+  const note = noteByAssignment[a.id]?.note;
   // Makes summary — identical shape/logic/markup to the coach detail
   // card. attempts is the makes-recorded subset, not the target.
   const m = makesByAssignment[a.id];
@@ -299,6 +300,15 @@ function renderAssignmentCard(
         <div className="mt-2 text-[11px] text-reps-dim">
           made {m.makes}/{m.attempts}
           {makesPct !== null && <span className="text-[var(--reps-label)]"> · {makesPct}%</span>}
+        </div>
+      )}
+      {/* Identical treatment to the coach detail card — same border, size,
+          italic and quotes — because it is the same content. Here the student
+          is reading their own words back, which is also the only confirmation
+          they get that the note was received at all. */}
+      {note && (
+        <div className="mt-2 border-t border-reps-line pt-2 text-[11.5px] italic text-reps-dim">
+          &ldquo;{note}&rdquo;
         </div>
       )}
     </Link>
