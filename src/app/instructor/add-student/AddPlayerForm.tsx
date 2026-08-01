@@ -137,13 +137,13 @@ export default function AddPlayerForm({ studentLabel }: Props) {
           className={INPUT}
         />
         {isParent ? (
-          <>
-            <p className="mt-2 text-[13px] text-[#5a5f72]">
-              They&apos;ll get a text when you assign work — to share with{" "}
-              {firstName || "them"}.
-            </p>
-            <p className="mt-0.5 text-[13px] text-[#5a5f72]">Great for younger students.</p>
-          </>
+          // One paragraph, not two. The second line used to be its own <p> with
+          // mt-0.5 — 2px, too small to read as a deliberate paragraph break and
+          // too large to read as continuous text, so it landed as neither.
+          <p className="mt-2 text-[13px] text-[#5a5f72]">
+            They&apos;ll get a text when you assign work — to share with{" "}
+            {firstName || "them"}. Great for younger students.
+          </p>
         ) : (
           <p className="mt-2 text-[13px] text-[#5a5f72]">
             They&apos;ll get a text when you assign work.
