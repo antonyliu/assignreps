@@ -617,7 +617,20 @@ export default function LogScreen({
           start the fade over the counter itself. */}
       <div className="mb-8">
         <div className="flex items-baseline gap-2 mb-3">
-          <label htmlFor="note" className="text-[15px] font-medium text-reps-ink">
+          {/* Same colour as the "X of Y done" progress text above (#8a8fa8),
+              deliberately. As ink it ran at 19.72:1 against the page while the
+              progress text ran at 6.17:1 — over 3x — so the note announced
+              itself louder than the thing the student came here to do.
+
+              ⚠️ The label still outranks `optional` beside it, but on WEIGHT
+              (500 vs 400) and SIZE (15 vs 13) rather than colour. Those two
+              differences already existed; colour was simply drowning them out.
+              That is why `optional` needs no change: the next token down is
+              #5a5f72 at 3.11:1, below the 4.5:1 AA floor, and unlike a
+              placeholder the word "optional" carries real information — it
+              tells the student they can skip the field. Not worth dimming
+              below AA to restate a rank that weight and size already carry. */}
+          <label htmlFor="note" className="text-[15px] font-medium text-reps-dim">
             How&apos;d this one go?
           </label>
           <span className="text-[13px] text-reps-sub">optional</span>
