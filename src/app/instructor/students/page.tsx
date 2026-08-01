@@ -160,6 +160,37 @@ export default async function RosterPage() {
   const grouped: Record<Group, Player[]> = { done: [], progress: [], notstarted: [], unassigned: [] };
   for (const p of playerList) grouped[playerGroup(p.id)].push(p);
 
+  // Within a group, most recently active first. Reuses lastLoggedByPlayer — the
+  // same MAX(logged_at) the row's timestamp already renders — so the order a
+  // coach reads matches the dates they see beside each name.
+  //
+  // A player who has never logged has no timestamp at all and sorts to the
+  // BOTTOM of their own group, rather than being interleaved via a fallback
+  // date that would rank "never" against real activity.
+  //
+  // Ties keep their existing order: Array.prototype.sort is stable, and
+  // playerList arrived ordered by players.created_at — so two never-logged
+  // players stay in the order they were added, which is what the roster showed
+  // before this sort existed.
+  //
+  // ⚠️ Only two groups actually move. Done and In progress require logs by
+  // definition, so both reorder fully. Not started is assignments-with-no-logs
+  // and is a guaranteed no-op. Nothing assigned is usually a no-op too, but not
+  // always: a player whose assignments were all deleted keeps their logs
+  // (assignment_id goes NULL, never the row), and the activity read above is
+  // player-scoped precisely so that still counts — so they can outrank a
+  // genuinely new player in the same group.
+  for (const g of GROUP_ORDER) {
+    grouped[g].sort((a, b) => {
+      const la = lastLoggedByPlayer[a.id];
+      const lb = lastLoggedByPlayer[b.id];
+      if (!la && !lb) return 0;
+      if (!la) return 1;
+      if (!lb) return -1;
+      return Date.parse(lb) - Date.parse(la);
+    });
+  }
+
   return (
     <main className="flex flex-col min-h-screen p-[0_1.25rem_1.75rem]">
 
