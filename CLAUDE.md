@@ -344,8 +344,23 @@ This applies to text only. **Bar fills are unaffected** — an in-progress bar i
 - **Borders:** `#2a2d36`
 - **Accent (interactive):** `#378add` (sky blue)
 - **Labels:** `#c8cdd8` (`--reps-label`)
-- **Placeholders:** `#5a5f72`
+- **Placeholders:** `#5a5f72` — ⚠️ **the intended token, but NOT what most fields actually render.** See below.
 - **Helper text:** `#8a8fa8`
+
+⚠️ **Known inconsistency — the app has two placeholder colours.** This entry read as though `#5a5f72` were applied uniformly; it is not, and never has been. Nine text-field declarations are split roughly down the middle:
+
+| Placeholder | Declarations |
+|---|---|
+| `#5a5f72` (`placeholder:text-[#5a5f72]`) — the documented token | `SignupUI` (the shared `INPUT`, so every signup screen), `AddPlayerForm`, `ProfileMenu`, the log screen's **note field** |
+| `#8a8fa8` (`placeholder:text-reps-dim`) — actually the **helper-text** value | `CustomExerciseScreen` (×2 — its `INPUT` and its inline number field), `CountScreen`, `PlayerManage`, `PlayerOtpFlow` |
+
+**Why it matters:** `#8a8fa8` is `--reps-sub`, the helper-text value used for captions, counters and context lines. As a placeholder it separates from typed white by only **3.19:1**, so example text reads close enough to real input to be mistaken for a filled field. `#5a5f72` roughly doubles that to **6.34:1**. A placeholder's job is to be clearly lighter than what replaces it, and against typed text is the comparison that decides it — not contrast against the field background.
+
+⚠️ The counter-argument, which is why this isn't simply a bug: `#5a5f72` sits at **2.60:1** against the `#1c1f26` field background, **below WCAG AA**. That is defensible for placeholder text — it is decorative, non-essential, and the label above carries the meaning — but it is very likely why someone reached for the brighter value in the first place. Both choices are reasoned; the problem is that both are live.
+
+Only the **note field** has been moved (Aug 1 2026), and deliberately only that one: it was the field under review, and changing the other five as a side effect of a note-field fix would have been a platform-wide visual change nobody had looked at. **Resolving the split needs its own pass** — pick one value, apply it to all nine declarations, and check each on device. Until then this entry documents the reality rather than the intention.
+
+⚠️ Not part of this split: the log screen's **stepper** placeholders (`ATTEMPTS_NUMBER`, `SOLO_NUMBER`, `MAKES_NUMBER`, `MAKES_NUMBER_MUTED`) deliberately use the green tokens with `placeholder:opacity-100`, because the seeded `0` must read as the label's colour rather than as absent input. Those are intentional and unrelated.
 
 ### Bar behavior
 - Log screen bar: **6px** (`h-1.5`) — deliberately unchanged. One bar on its own screen, not one of a stack.
