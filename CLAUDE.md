@@ -386,7 +386,7 @@ Stepper-based; the hero stepper is whatever the assignment is scored on.
 5. Primary label + large stepper
 6. Divider + inline `MAKES` row — **only on a `reps` goal with `track_makes`**
 7. Note field — `How'd this one go?` with `optional` beside it, a 3-row textarea, and a right-aligned `{n}/100` counter. **Every goal type**: it sits outside all the branching above, since what a student wants to say isn't a function of how the work is scored
-8. `Log it` button, which **follows the content** rather than anchoring to the bottom
+8. `Log progress` button, which **follows the content** rather than anchoring to the bottom (renamed from `Log it` Aug 1 2026 — "Log it" read as a single terminal act, but logs are increments a student adds to across sessions)
 
 **Spacing tightened July 27 2026** — roughly 100px removed. The gap below the progress bar went 96px → 56px (by far the largest on the screen, and the dead zone between "here's where you are" and "here's what you're entering"); header 56 → 48; stepper block to button 56 → 48; button padding `+2rem` → `+1.5rem`.
 
@@ -454,7 +454,7 @@ Three states, not two: **loading → ready | missing**. The payload is read once
 
 The payload carries `noun` (derived from the same label the stepper shows, so "12 attempts to go" can't say "reps") and `goalType`. `unit` stays as a fallback for payloads written by an older bundle mid-deploy.
 
-⚠️ Both the write and the read are wrapped in try/catch. Safari private browsing throws on `sessionStorage`, and an uncaught throw on the write would skip the navigation and strand the student on the log screen with a live "Log it" button — inviting a second tap and a duplicate row.
+⚠️ Both the write and the read are wrapped in try/catch. Safari private browsing throws on `sessionStorage`, and an uncaught throw on the write would skip the navigation and strand the student on the log screen with a live `Log progress` button — inviting a second tap and a duplicate row.
 
 Confetti fires only when the **last** open assignment closes (`allDone`).
 

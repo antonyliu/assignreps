@@ -62,7 +62,7 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | Yellow retired platform-wide | Reason not recorded |
 | Green consolidated to one family (emerald → lime) | Bars, labels and numbers were drifting across several greens |
 | Celebrate screen — three states (loading / ready / missing) | The defaults doubled as the loading state, so every visit asserted "Done." for a frame — and a student who logged 10 of 50 and refreshed was told they'd finished |
-| `sessionStorage` write wrapped in try/catch | Safari private browsing throws on write; an uncaught throw stranded the student on a live "Log it" button, inviting a duplicate row |
+| `sessionStorage` write wrapped in try/catch | Safari private browsing throws on write; an uncaught throw stranded the student on a live submit button, inviting a duplicate row |
 | Makes ≤ attempts as a control guard, not a data clamp | A banked mismatch is the coach's signal something went wrong — not something to silently rewrite |
 
 ## Roster & landing polish (Jul 24–25 2026)
