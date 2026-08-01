@@ -6,11 +6,17 @@ import type { GoalType } from "@/lib/exercises";
 
 export type SaveLogResult = { ok: true; allDone: boolean } | { ok: false; error: string };
 
+// ⚠️ Mirrors `logs_note_length_check` (char_length(note) <= 100), and mirrors
+// NOTE_MAX in LogScreen. The DB constraint is the source of truth; these two are
+// its guards. Change one, change all three.
+const NOTE_MAX = 100;
+
 export async function saveLog(
   playerId: string,
   assignmentId: string,
   amount: number,
   makes: number | null = null,
+  note: string | null = null,
 ): Promise<SaveLogResult> {
   if (amount < 1) return { ok: false, error: "Nothing to save." };
 
@@ -18,6 +24,22 @@ export async function saveLog(
   // Negatives are clamped rather than rejected: the DB check would fail the whole
   // insert and lose the reps the student actually did.
   const safeMakes = makes === null || Number.isNaN(makes) ? null : Math.max(0, Math.round(makes));
+
+  // Trimmed and capped HERE, not just on the client. This page is public and
+  // token-addressed, so the textarea's cap is a convenience for the student and
+  // proves nothing about what arrives.
+  //
+  // ⚠️ Capped rather than rejected, for the same reason makes are clamped above:
+  // `note` rides the same INSERT as `amount` and `makes`, so letting an
+  // over-length note hit logs_note_length_check would fail the whole row and
+  // lose reps the student actually did. The constraint is the backstop; it must
+  // never be the thing that stops a note.
+  //
+  // Sliced by code point to match char_length, and "" collapses to null — an
+  // empty string would be a second spelling of "no note" that every reader
+  // keying on `note IS NOT NULL` would mistake for a real one.
+  const trimmedNote = typeof note === "string" ? note.trim() : "";
+  const safeNote = trimmedNote === "" ? null : [...trimmedNote].slice(0, NOTE_MAX).join("");
 
   const supabase = await createClient();
 
@@ -52,6 +74,11 @@ export async function saveLog(
     assignment_id: assignmentId,
     amount,
     makes: safeMakes,
+    // The student's own words about this session. Unlike the snapshot fields
+    // below, this genuinely does come from the client — it is what they typed,
+    // and there is nowhere else it could come from. It is sanitised above rather
+    // than trusted.
+    note: safeNote,
     // Written once, at the moment the work was logged, and never updated after.
     // That is the whole point: if the assignment is later edited or deleted,
     // this row still says what the student actually did.

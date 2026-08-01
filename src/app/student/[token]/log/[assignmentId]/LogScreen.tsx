@@ -172,6 +172,16 @@ const MAKES_NUMBER =
 const MAKES_NUMBER_MUTED =
   "text-[31px] font-semibold text-[#8a8fa8] placeholder:text-[#8a8fa8] placeholder:opacity-100";
 
+// The note field. First textarea in the app, so it borrows the shared INPUT
+// styling (SignupUI / CustomExerciseScreen) rather than inventing a look.
+//
+// ⚠️ 100 matches `logs_note_length_check` (char_length(note) <= 100). The DB
+// constraint is the real source of truth and this is its client-side mirror;
+// saveLog carries the same number server-side. Change one, change all three.
+const NOTE_MAX = 100;
+const NOTE_INPUT =
+  "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-base text-reps-ink outline-none focus:border-reps-orange transition-colors w-full resize-none placeholder:text-reps-dim disabled:opacity-40 disabled:pointer-events-none";
+
 export default function LogScreen({
   token,
   playerId,
@@ -195,6 +205,28 @@ export default function LogScreen({
   // instead of at zero — matching the bar, which already seeded this way.
   const [amountInput, setAmountInput] = useState(String(alreadyLogged));
   const [makesInput, setMakesInput]   = useState(String(alreadyMakes));
+
+  // ⚠️ Starts blank on EVERY visit, and is deliberately not seeded from a prior
+  // log's note the way the steppers are seeded from banked totals. The steppers
+  // show a running total that a return visit continues; a note is about the
+  // session being logged right now. Pre-filling last week's would invite
+  // re-sending it by accident, and there is no edit path to take it back.
+  const [note, setNote] = useState("");
+
+  // ⚠️ Counted in CODE POINTS to match Postgres `char_length`, which is what
+  // logs_note_length_check measures. JS `.length` counts UTF-16 units, so it
+  // would stop a student at 50 emoji on a 100-character allowance. (A few
+  // composite emoji are several code points and so still cost more than one —
+  // that is true of the DB constraint too, so the two agree.)
+  const noteLength = [...note].length;
+
+  // Hard stop at the cap rather than letting the field overflow and correcting
+  // later: the counter has to be able to say "100/100" and mean it. Slicing by
+  // code point keeps a surrogate pair from being cut in half.
+  function changeNote(next: string) {
+    const chars = [...next];
+    setNote(chars.length <= NOTE_MAX ? next : chars.slice(0, NOTE_MAX).join(""));
+  }
 
   // ⚠️ `logs` rows are increments, not snapshots: each save appends one row and
   // the totals are summed at read time. So what's persisted is the DELTA between
@@ -353,7 +385,14 @@ export default function LogScreen({
     // 0 and lose the whole row — so the makes delta stands in as the attempt
     // count. It is the honest floor: you cannot make a shot without taking it.
     const amount = isMakesGoal && added < 1 ? makesAdded : added;
-    const result = await saveLog(playerId, assignmentId, amount, makes);
+    // Trimmed here, and an all-whitespace note becomes null rather than "".
+    // ⚠️ Two spellings of "said nothing" is the trap: a reader keying on
+    // `note IS NOT NULL` would treat "" as a real note and render a blank line.
+    // saveLog trims and null-normalizes again server-side — this page is public
+    // and token-addressed, so the client's version of this is a convenience,
+    // never the guarantee.
+    const trimmedNote = note.trim();
+    const result = await saveLog(playerId, assignmentId, amount, makes, trimmedNote || null);
     setSaving(false);
     if (!result.ok) { setError(result.error); return; }
     const remaining = Math.max(0, shownTarget - shownCurrent);
@@ -550,6 +589,39 @@ export default function LogScreen({
             </div>
           </>
         )}
+      </div>
+
+      {/* The note. Outside every goal-type branch above, so it renders the same
+          on all five layouts (attempts+makes, makes goal, streak, reps-only,
+          minutes) — what the student wants to say isn't a function of how the
+          work is scored.
+
+          Takes the same mb-12 the stepper block above it carries, so the gap
+          from the last piece of content to the button stays what the July 27
+          spacing pass set it to; the note simply becomes that last piece. */}
+      <div className="mb-12">
+        <div className="flex items-baseline gap-2 mb-3">
+          <label htmlFor="note" className="text-[15px] font-medium text-reps-ink">
+            How&apos;d this one go?
+          </label>
+          <span className="text-[13px] text-reps-sub">optional</span>
+        </div>
+        <textarea
+          id="note"
+          value={note}
+          onChange={(e) => changeNote(e.target.value)}
+          // Reuses the steppers' own lock rather than adding a second rule, so
+          // the note can never be live on a screen where nothing can be logged.
+          // ⚠️ Note this is NOT plain `done` — see inputLocked above.
+          disabled={inputLocked}
+          rows={3}
+          placeholder="Left hand felt off today"
+          className={NOTE_INPUT}
+        />
+        {/* tabular-nums so the row doesn't jitter as the count crosses digits. */}
+        <div className="mt-2 text-right text-[13px] text-reps-sub tabular-nums">
+          {noteLength}/{NOTE_MAX}
+        </div>
       </div>
 
       <div
