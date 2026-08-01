@@ -623,7 +623,12 @@ export default function LogScreen({
           // ⚠️ Note this is NOT plain `done` — see inputLocked above.
           disabled={inputLocked}
           rows={3}
-          placeholder="Left hand felt off today"
+          // Exercise-agnostic on purpose. The old "Left hand felt off today"
+          // implied a side, which most of the library doesn't have — every
+          // exercise in SIDELESS_EXERCISES (Jump rope, Planks, Suicides,
+          // Sprints, Free throws, Isometric squats, Pick-up basketball) would
+          // have been prompted with an example that cannot apply to it.
+          placeholder="Felt easier by the end today"
           className={NOTE_INPUT}
         />
         {/* tabular-nums so the row doesn't jitter as the count crosses digits. */}
