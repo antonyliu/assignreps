@@ -369,9 +369,16 @@ Stepper-based; the hero stepper is whatever the assignment is scored on.
 4. Progress bar (6px)
 5. Primary label + large stepper
 6. Divider + inline `MAKES` row — **only on a `reps` goal with `track_makes`**
-7. `Log it` button, which **follows the content** rather than anchoring to the bottom
+7. Note field — `How'd this one go?` with `optional` beside it, a 3-row textarea, and a right-aligned `{n}/100` counter. **Every goal type**: it sits outside all the branching above, since what a student wants to say isn't a function of how the work is scored
+8. `Log it` button, which **follows the content** rather than anchoring to the bottom
 
 **Spacing tightened July 27 2026** — roughly 100px removed. The gap below the progress bar went 96px → 56px (by far the largest on the screen, and the dead zone between "here's where you are" and "here's what you're entering"); header 56 → 48; stepper block to button 56 → 48; button padding `+2rem` → `+1.5rem`.
+
+**Revised again Aug 1 2026, when the note field landed** — a further 32px off the top half. The July 27 numbers were sized for a screen whose last content was the stepper block; the note now sits between the steppers and the button, so the screen carries real content where it used to carry slack, and 56px above the stepper read as dead space.
+
+- Progress bar gap **56 → 32px** (`mb-14` → `mb-8`). ⚠️ Changed in **both** branches of the `showMakesRow` ternary — that is what keeps all five goal-type layouts moving together, rather than the two-tone bar drifting away from the single one.
+- Stepper block **48 → 40px** (`mb-12` → `mb-10`), which is now the steppers-to-note gap rather than the steppers-to-button one.
+- The note block **keeps `mb-12`**. The gaps *between* content tightened; the gap from the last piece of content to the button did not, so the button still sits at the 48px July 27 settled on.
 
 ⚠️ **The button lost its `mt-auto`, and that was the load-bearing part.** Auto margin absorbs all remaining vertical slack, so tightening the gaps above would have made the empty band below them *larger* — every pixel saved went straight into that margin. The two problems were one problem. `sticky bottom-0` stays, so it still pins once the screen genuinely fills (long name + side line + makes row on a small phone).
 
