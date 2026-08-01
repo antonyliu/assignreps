@@ -37,7 +37,7 @@ export default function Loading() {
         </div>
       </div>
 
-      {/* "Log it" — follows the content now rather than pinning to the bottom. */}
+      {/* Submit button — follows the content now rather than pinning to the bottom. */}
       <Sk h="50px" w="100%" className="!rounded-[10px]" />
     </SkPage>
   );

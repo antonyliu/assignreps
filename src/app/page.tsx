@@ -421,7 +421,7 @@ function ScreenLog() {
             fontWeight: 600,
           }}
         >
-          Log it
+          Log progress
         </div>
       </div>
     </>

@@ -365,9 +365,9 @@ export default function LogScreen({
   const inputLocked = !trackMakes && done && added < 1;
 
   // Makes need an attempt to be a subset of. At zero attempts there is nothing
-  // for them to belong to — and nothing saveable either, since "Log it" already
-  // requires added >= 1 — so the whole makes row goes inert rather than inviting
-  // a number that could never be recorded.
+  // for them to belong to — and nothing saveable either, since the submit
+  // button already requires added >= 1 — so the whole makes row goes inert
+  // rather than inviting a number that could never be recorded.
   //
   // Under a makes goal that dependency runs the other way: makes ARE the entry,
   // and attempts are the optional extra, so the field is never locked.
@@ -411,7 +411,7 @@ export default function LogScreen({
     // ⚠️ The log is ALREADY committed by this point. Storage is best-effort from
     // here on: Safari private browsing throws on setItem, and an uncaught throw
     // here would skip the navigation below and strand the student on this screen
-    // with a live "Log it" button — inviting a second tap and a duplicate row for
+    // with a live submit button — inviting a second tap and a duplicate row for
     // reps they already banked. So swallow it and navigate regardless; celebrate
     // reads a missing payload as "unknown" and shows its neutral fallback rather
     // than claiming anything about completion.
@@ -685,7 +685,7 @@ export default function LogScreen({
           disabled={primaryAdded < 1 || saving}
           className="w-full bg-reps-orange text-white font-semibold text-[15px] py-[14px] rounded-[10px] hover:bg-reps-orange-hi active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
         >
-          {saving ? "Logging…" : "Log it"}
+          {saving ? "Logging…" : "Log progress"}
         </button>
       </div>
     </main>
