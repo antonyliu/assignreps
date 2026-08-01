@@ -175,12 +175,20 @@ const MAKES_NUMBER_MUTED =
 // The note field. First textarea in the app, so it borrows the shared INPUT
 // styling (SignupUI / CustomExerciseScreen) rather than inventing a look.
 //
+// ⚠️ Placeholder is #5a5f72 — the token CLAUDE.md documents — NOT the
+// placeholder:text-reps-dim (#8a8fa8) that CustomExerciseScreen's INPUT carries
+// and that this constant originally copied. #8a8fa8 is the HELPER-text value,
+// used here by the `optional` label and the character counter, so as a
+// placeholder it separated from typed white by only 3.19:1 and read as a filled
+// field. #5a5f72 roughly doubles that to 6.34:1. The app is split on this —
+// see the placeholder note in CLAUDE.md's colour section.
+//
 // ⚠️ 100 matches `logs_note_length_check` (char_length(note) <= 100). The DB
 // constraint is the real source of truth and this is its client-side mirror;
 // saveLog carries the same number server-side. Change one, change all three.
 const NOTE_MAX = 100;
 const NOTE_INPUT =
-  "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-base text-reps-ink outline-none focus:border-reps-orange transition-colors w-full resize-none placeholder:text-reps-dim disabled:opacity-40 disabled:pointer-events-none";
+  "bg-reps-card border border-reps-line rounded-[10px] px-[14px] py-[14px] text-base text-reps-ink outline-none focus:border-reps-orange transition-colors w-full resize-none placeholder:text-[#5a5f72] disabled:opacity-40 disabled:pointer-events-none";
 
 export default function LogScreen({
   token,
