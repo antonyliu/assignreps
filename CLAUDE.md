@@ -384,7 +384,9 @@ The coach detail CTA **keeps** its `mt-auto` and is untouched. It's free there: 
 - Shooting / Finishing / Spot shots **with** `track_makes` → `ATTEMPTS`
 - Everything else, including a shooting drill with makes off → `REPS`
 
-All render uppercase. There is no question-form copy on this screen.
+All render uppercase — these are the goal-type labels, and they stay uppercase and non-question.
+
+⚠️ **One deliberate exception: the note field's `How'd this one go?`** — sentence case, and the only question-form copy on the screen. Validated with RJ and a real student before it shipped, so it is a considered break from the rule above rather than drift. The distinction is what each piece of text is doing: a goal-type label *names the measure* the stepper counts, where a question would be noise; the note field *asks the student for something optional*, which a bare uppercase `NOTE` does not do. Keep new labels uppercase; this exception covers the note field alone.
 
 **Stepper behavior:**
 - Numbers seed from already-logged totals on return (not 0)
