@@ -596,11 +596,18 @@ export default function LogScreen({
           minutes) — what the student wants to say isn't a function of how the
           work is scored.
 
-          Keeps mb-12 while the stepper block above it dropped to mb-10: this is
-          the last piece of content, and 48px to the button is what the July 27
-          spacing pass settled on. The gaps BETWEEN content tightened; the gap
-          to the button did not. */}
-      <div className="mb-12">
+          mb-8 (32px) matches the app's bottom-CTA convention — CountScreen,
+          CustomExerciseScreen and AddPlayerForm all put 32px before a full-width
+          primary button. The July 27 pass had settled this screen at 48px, but
+          that was sized when the stepper block was the last content; 48 + the
+          wrapper's pt-3 put 60px under the counter, nearly double every other
+          screen.
+
+          ⚠️ 32px is the FLOOR, not a free choice. The sticky wrapper's gradient
+          is h-8 (32px) and sits directly above it (top-0 + -translate-y-full),
+          so at mb-8 the fade spans this gap exactly. Tightening further would
+          start the fade over the counter itself. */}
+      <div className="mb-8">
         <div className="flex items-baseline gap-2 mb-3">
           <label htmlFor="note" className="text-[15px] font-medium text-reps-ink">
             How&apos;d this one go?
