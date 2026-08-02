@@ -123,11 +123,29 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | Most recent log **with a note** wins, per assignment | Most sessions carry no note, so keying on the newest log would blank an earlier note the moment the student logged again without writing one |
 | Surfaced on both the coach's student detail cards and the student's own home cards | A note nobody can read isn't a message — and the student's own card is their only confirmation it was received |
 
+## Log screen layout & type (Aug 1 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Vertical spacing tightened once the note field landed | The July 27 numbers were sized for a screen whose last content was the stepper block; with the note filling that space, 56px above the stepper was dead air rather than breathing room |
+| Note block set to 32px above the button | Every other full-width primary button in the app sits 32px below its last content; this screen sat at 60px once the sticky wrapper's own padding counted — nearly double, on the one screen students use most |
+| Progress bar, goal label, stepper and MAKES row grouped as one cluster | Ratios matter more than absolute sizes: the largest gap *inside* the counting cluster was close enough to the gap separating it from the note that nothing grouped, so the screen read as five evenly spaced rows |
+| Note label dropped to the progress text's colour | As white it ran at over 3× the contrast of the progress line above it, so an optional field announced itself louder than the work the student opened the screen to do. Its rank over `optional` now rests on weight and size, which colour had been drowning out |
+| Note placeholder moved to the documented placeholder token | It had inherited the helper-text value, which separates from typed white by only 3.19:1 — close enough that example text read as a filled field |
+
 ## Log screen copy (Aug 1 2026)
 
 | Feature | Why it exists |
 |---|---|
 | `Log it` renamed to `Log progress` (log screen button + the landing page's hand-drawn mock) | A student paused before logging partial progress — "Log it" read as a final, complete commitment rather than a session update. Surfaced in real testing, not a design guess. Logs are increments summed at read time and the steppers seed from banked totals, so returning across sessions is exactly what the screen expects |
+| Note placeholder made exercise-agnostic | "Left hand felt off today" implies a side most of the library doesn't have — every exercise in `SIDELESS_EXERCISES` (jump rope, planks, suicides, sprints, free throws) was being prompted with an example that could not apply to it |
+
+## Roster & add-student polish (Aug 1 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Roster groups sorted by most recent activity, never-logged players last | Rows were ordered by when the player was added, which bore no relation to the last-activity dates rendered beside their names — the coach read one order and saw another. Never-logged players sort to the bottom of their group rather than being interleaved via a fallback date that would rank "never" against real activity |
+| Parent recipient helper text combined into one paragraph | The second sentence sat in its own `<p>` with a 2px margin — too small to read as a deliberate paragraph break, too large to read as continuous prose, so it landed as neither |
 
 ---
 
