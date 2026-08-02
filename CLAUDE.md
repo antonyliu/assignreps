@@ -31,13 +31,14 @@ The instructor is the customer — not the student. Students never choose this t
 - Views each student's progress and shooting percentage (makes/attempts)
 - Sorts finished work into **New / Archive** tabs by hand — nothing moves on its own
 - Can re-issue finished work with **Assign again**, which creates a fresh assignment
-- Roster grouped: Done / In progress / Not started / Nothing assigned
+- Roster grouped: Done / In progress / Not started / Nothing assigned — and **within each group, sorted by most recent activity**, so the reading order matches the last-activity dates shown beside each name. See the roster sort note below
 
 ### Student
 - Gets a text with a unique link — no signup required
 - Can also log in from any device at assignreps.com via phone OTP
 - Taps link → sees their assignments, split into the same **New / Archive** tabs the coach sees
 - Logs with a stepper counter; what the stepper counts depends on the goal type
+- Can leave an optional note with a log — one capped line to the coach, on the log screen. The only thing a student **writes** in the app; everything else they do is a count
 - Sees a celebration when done: 🔥 + "[Coach] will see this."
 - ⚠️ Read-only on the tabs. Only the coach files and unfiles; the student screen has no write path for it.
 
@@ -247,6 +248,21 @@ Both list screens — the coach's player detail and the student's own home — s
 
 Shared components: `src/components/AssignmentTabs.tsx` (the tab bar + list switch, used by both screens; empty-state copy is injected per caller, since the coach reads about their student and the student reads about themselves) and `src/components/AllDonePanel.tsx` (the 🎉 celebration).
 
+### What a card shows
+
+Identical content on both screens — the coach's player detail and the student's own home — because it is the same information about the same work:
+
+- Exercise name, with `· Left` / `· Right` appended when `side` is set
+- The count in the goal's own measure, and the progress bar (2px; two-tone on a `reps` goal with makes)
+- `made X/Y · Z%` — only where makes were recorded, and **hidden entirely on a makes goal**
+- **The student's note**, when one exists
+
+**The note line** sits **last**, below everything else — under the bar on a card with no makes line, under the makes line where there is one. It follows the card's structure rather than a fixed position, so it needs no branch of its own. Treatment: a `border-t border-reps-line` hairline, `mt-2`/`pt-2`, **11.5px italic** in `text-reps-dim`, wrapped in curly quotes. No label, no icon — the words are the student's own and the quotes say who is speaking; a `NOTE:` prefix would make the card read as a form.
+
+⚠️ **Renders only when a note exists.** A card without one is byte-identical to before the feature — no border, no spacing, no wrapper element. This is why adding it changed no existing layout.
+
+⚠️ Which note is shown is **not** "the latest log's note" — see `logs.note` in Key schema notes for the most-recent-*with-content* rule and why the naive version would blank an earlier note.
+
 ### Per-card menu, split on completion
 
 | Card | Menu |
@@ -373,6 +389,22 @@ Only the **note field** has been moved (Aug 1 2026), and deliberately only that 
 - Complete: full bright
 
 ---
+
+## Roster screen
+
+The coach's home. `src/app/instructor/students/page.tsx`.
+
+Players are grouped by completion — **Done / In progress / Not started / Nothing assigned** — and within each group sorted by **most recent activity, descending** (Aug 1 2026).
+
+⚠️ **This ordering was undocumented until Aug 1, in both directions.** Before that date rows sat in `players.created_at` order — the order a coach added them — which was never written down either. So this is a first description, not a correction: nothing in this file ever claimed the old behaviour.
+
+- Sort key is `lastLoggedByPlayer`, the same `MAX(logged_at)` already computed for the relative timestamp on each row. No extra query, and the order a coach reads now matches the dates they see.
+- **Never-logged players sort to the bottom of their own group** rather than being interleaved via a fallback date, which would rank "never" against real activity.
+- Ties keep their previous order. `Array.prototype.sort` is stable and the players query is still ordered by `created_at`, so two never-logged players stay in the order they were added.
+
+⚠️ **Only two groups actually move.** *Done* and *In progress* require logs by definition and reorder fully. *Not started* is assignments-with-no-logs and is a guaranteed no-op — if it ever appears to reorder, something is wrong. *Nothing assigned* is usually a no-op too, but not always: a player whose assignments were all deleted keeps their logs (`assignment_id` goes NULL, never the row), and the activity read is player-scoped precisely so that still counts — so they can outrank a genuinely new player.
+
+⚠️ The sort compares with `Date.parse`; the `MAX(logged_at)` fold immediately above it still compares raw strings with `>`. Both work on uniformly-formatted UTC values — the string form quietly depends on every row carrying identical fractional-second precision. Left as-is, noted so the inconsistency isn't mistaken for intent.
 
 ## Student log screen
 
@@ -1078,7 +1110,19 @@ The loop band is deliberately **lighter** than the `#111318` phone frames — th
 
 New in this snapshot: New/Archive tabs on both list screens, the all-done panel in both variants, the Archive tab itself, the finished-card menus (Assign again / Archive / Move back to New), emerald tokens, 2px bars, and the divider-style menus with icons. The **Clear finished sheet frame was deleted**, matching the feature.
 
-⚠️ **The gallery is one release behind as of the navigation pass.** The six skeleton states are genuinely new UI and appear in no snapshot: five route shapes (roster, player detail, assign subtree, student home, log screen) plus celebrate's deliberate blank. They are transient, which is exactly why a static gallery is the only place they can be inspected side by side — a reviewer cannot hold one on screen. Also unrepresented: the widened back-link tap targets (invisible in a static frame but a real layout change, since the header row is now 44px tall), and the `active:scale` tap feedback. Worth folding into the next snapshot rather than regenerating for this alone.
+⚠️ **The gallery is TWO releases behind** — the July 30 navigation pass and the whole of Aug 1.
+
+*From the navigation pass:* the six skeleton states are genuinely new UI and appear in no snapshot — five route shapes (roster, player detail, assign subtree, student home, log screen) plus celebrate's deliberate blank. They are transient, which is exactly why a static gallery is the only place they can be inspected side by side. Also unrepresented: the widened back-link tap targets (invisible in a static frame but a real layout change, since the header row is now 44px tall), and the `active:scale` tap feedback.
+
+*From Aug 1, and this is the larger half:*
+- **The entire notes feature** — the log screen's label/textarea/counter block, and the note line on **both** card lists. New UI on three screens with no frame anywhere.
+- **Both log screen spacing passes.** Every vertical relationship on that screen moved: bar→label 32→44, label→stepper 20→12, stepper→hairline 24→20, hairline→MAKES 20→16, cluster→note 40→56, note→button 48→32.
+- **Log screen typography** — the note label at `#8a8fa8`/500/15px and the placeholder at `#5a5f72`.
+- **The button rename.** `Log it` appears **10 times** in the Jul 27 file.
+- **The parent helper text**, still shown as two paragraphs on the add-student frame.
+- **The roster activity sort** — the roster frames show a fixed order that no longer reflects how rows rank.
+
+⚠️ **This is a regeneration, not a touch-up.** The log screen needs its frames redrawn rather than edited, and the note line touches every card frame in the gallery (70 phone frames total). Deliberately deferred: nothing depends on the gallery, and CLAUDE.md's own warning applies — a JS error in the macro layer blanks the whole page, so it wants a session with time to open it in a browser afterwards, not a late-night edit.
 
 ---
 
