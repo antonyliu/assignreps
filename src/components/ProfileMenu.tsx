@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { User } from "lucide-react";
+import { createCheckoutSession } from "@/app/instructor/billing/actions";
 
 // The display name is what students and parents see — "[Coach] assigned you
 // basketball homework" in the SMS, "[Coach] will see this" on the celebrate
@@ -17,7 +18,16 @@ import { User } from "lucide-react";
 // header, and now appears at the top of the dropdown instead, where it labels
 // the account the actions below belong to. "Sign out" is gated behind a
 // confirmation dialog so an accidental tap can't end the session.
-export default function ProfileMenu({ coachName }: { coachName: string }) {
+export default function ProfileMenu({
+  coachName,
+  // Whether the coach is on a paid plan. Decided by isEntitled() on the server
+  // — the same helper the add-student gate uses, so this menu and the paywall
+  // can never disagree about what "Pro" means.
+  isPro,
+}: {
+  coachName: string;
+  isPro: boolean;
+}) {
   const router = useRouter();
   const supabase = createClient();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -27,6 +37,40 @@ export default function ProfileMenu({ coachName }: { coachName: string }) {
   const [draft, setDraft] = useState(coachName);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const [upgrading, setUpgrading] = useState(false);
+  const [upgradeError, setUpgradeError] = useState("");
+
+  // Creating a Checkout session is a real Stripe round trip, so the menu stays
+  // open and the item reports progress rather than appearing to do nothing.
+  async function handleUpgrade() {
+    if (upgrading) return;
+    setUpgrading(true);
+    setUpgradeError("");
+
+    let result;
+    try {
+      result = await createCheckoutSession();
+    } catch {
+      // A thrown action means a server-side failure the coach can do nothing
+      // about — a missing key, Stripe unreachable. Don't leak the detail.
+      setUpgrading(false);
+      setUpgradeError("Couldn't start checkout. Try again in a moment.");
+      return;
+    }
+
+    if (!result.ok) {
+      setUpgrading(false);
+      setUpgradeError(result.error);
+      return;
+    }
+
+    // ⚠️ Full navigation, not router.push — Checkout is on Stripe's domain and
+    // the Next router cannot route to it. `upgrading` is deliberately left true:
+    // the browser is leaving, and resetting it would flash the idle label for a
+    // frame on the way out.
+    window.location.href = result.url;
+  }
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -144,7 +188,13 @@ export default function ProfileMenu({ coachName }: { coachName: string }) {
                 than generous — at 200px a name like "RJW Skills & Development"
                 still fitted and simply stretched the menu to 183px, which is the
                 oversized shape this is meant to avoid; at 160px it truncates
-                instead and the menu stays compact. */}
+                instead and the menu stays compact.
+
+                ⚠️ "Upgrade to Pro" is now the widest item, so the panel sits
+                wider at rest than the ~98px above and a long name truncates
+                slightly later. Still inside the 160px cap. The width therefore
+                varies with isPro: a Pro coach sees the original narrower menu,
+                because the item is removed rather than disabled. */}
             <div
               role="menu"
               className="absolute right-0 top-full mt-1.5 z-50 w-max max-w-[160px] bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
@@ -173,6 +223,36 @@ export default function ProfileMenu({ coachName }: { coachName: string }) {
                     className="h-px mb-1"
                     style={{ background: "#2a2d36" }}
                   />
+                </>
+              )}
+              {/* First, above Edit name, with Sign out staying last — that is
+                  the one action a thumb should not find by accident.
+
+                  ⚠️ Hidden entirely for a coach already on a paid plan rather
+                  than shown disabled: offering "Upgrade" to someone who has
+                  already upgraded is worse than offering nothing. Managing an
+                  existing subscription is a separate action (Billing Portal)
+                  and is not built yet, so a Pro coach currently sees the menu
+                  exactly as it was before this feature. */}
+              {!isPro && (
+                <>
+                  <button
+                    role="menuitem"
+                    onClick={handleUpgrade}
+                    disabled={upgrading}
+                    className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {upgrading ? "Starting…" : "Upgrade to Pro"}
+                  </button>
+                  {/* Inline rather than a toast: this menu has no toast, and the
+                      errors reachable here are configuration problems a coach
+                      cannot act on beyond retrying. Wraps rather than truncating
+                      so the message is actually readable in a 160px panel. */}
+                  {upgradeError && (
+                    <p className="px-3 pb-1.5 text-[12px] leading-snug text-red-400 whitespace-normal">
+                      {upgradeError}
+                    </p>
+                  )}
                 </>
               )}
               <button

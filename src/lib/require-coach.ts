@@ -24,9 +24,13 @@ export async function requireCoach() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/instructor/signup");
 
+  // subscription_status rides along on a query that already runs, so the
+  // entitlement question costs no extra round trip anywhere in the instructor
+  // app. Callers pass it to isEntitled() rather than reading it directly — see
+  // src/lib/entitlement.ts for why the judgement lives in one place.
   const { data: coach } = await supabase
     .from("coaches")
-    .select("id, name, instructor_type")
+    .select("id, name, instructor_type, subscription_status")
     .eq("id", user.id)
     .single();
 

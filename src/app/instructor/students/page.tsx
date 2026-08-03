@@ -5,6 +5,7 @@ import ProfileMenu from "@/components/ProfileMenu";
 import ScrollToTop from "./ScrollToTop";
 import { getActivityLabels } from "@/config/activityTypes";
 import { isComplete } from "@/lib/exercises";
+import { isEntitled } from "@/lib/entitlement";
 import type { GoalType } from "@/lib/exercises";
 import type { Metadata } from "next";
 import type { Player } from "@/types/database";
@@ -217,7 +218,10 @@ export default async function RosterPage() {
             `relative` exists to anchor the divider below. */}
         <div className="relative flex items-center justify-between px-[1.25rem] pb-4">
           <LogoMini />
-          <ProfileMenu coachName={coach?.name?.trim() || ""} />
+          <ProfileMenu
+            coachName={coach?.name?.trim() || ""}
+            isPro={isEntitled(coach?.subscription_status)}
+          />
 
           {/* Separates app chrome (logo, account) from the page itself, so the
               title reads as the top of the content rather than the bottom of
