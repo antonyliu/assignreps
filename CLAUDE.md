@@ -688,6 +688,22 @@ Both paths always send to `players.phone`. `send_to_parent` is still not consult
 
 ---
 
+## Stripe status
+
+- ✅ **Test mode** product **Reps** — $10.00/month recurring, created in the dashboard Aug 1 2026
+- Test price ID: `price_1U0EVsJoxKRCY55iExnvBMmP`
+- ✅ Coupon `COACHRJ` — 100% off, **Forever** duration (not Once, not Repeating — it is lifetime free, so anything else bills RJ from month two)
+- Env var names: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET` — see `.env.local.example`
+- Schema: three columns on `coaches` — see **`coaches` billing columns** and **`coaches` write protection** in Key schema notes
+
+⚠️ **Live mode does not exist yet.** No live product, price or coupon has been created. None of the test values above work in live mode — Stripe keeps the two entirely separate, so *every* ID changes at launch, and the whole dashboard sequence has to be repeated. `sk_test_` vs `sk_live_` is the tell for which mode a key is in.
+
+⚠️ **Still pending:** all three Stripe env vars in Vercel, **staging AND prod** — alongside the `TWILIO_FROM_NUMBER` update already outstanding in both.
+
+⚠️ **No service-role Supabase client exists.** `src/lib/` has `supabase-browser.ts` and `supabase-server.ts`, both anon-key, and `SUPABASE_SERVICE_ROLE_KEY` is not in `.env.local`. The webhook cannot write the billing columns without one — the trigger blocks `anon` and `authenticated` by design, which is the point. This is a prerequisite for the billing work, not an optional extra.
+
+---
+
 ## Activity type system
 
 `src/config/activityTypes.ts` — single source of truth for discipline picker and UI copy.
