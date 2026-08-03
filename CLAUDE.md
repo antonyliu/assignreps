@@ -700,7 +700,68 @@ Both paths always send to `players.phone`. `send_to_parent` is still not consult
 
 ⚠️ **Still pending:** all three Stripe env vars in Vercel, **staging AND prod** — alongside the `TWILIO_FROM_NUMBER` update already outstanding in both.
 
-⚠️ **No service-role Supabase client exists.** `src/lib/` has `supabase-browser.ts` and `supabase-server.ts`, both anon-key, and `SUPABASE_SERVICE_ROLE_KEY` is not in `.env.local`. The webhook cannot write the billing columns without one — the trigger blocks `anon` and `authenticated` by design, which is the point. This is a prerequisite for the billing work, not an optional extra.
+---
+
+## Billing architecture (Aug 2 2026)
+
+Every piece is built; none is verified end to end. Free tier is 3 students forever, paywall at the 4th, $10/mo.
+
+| Piece | Where | What it does |
+|---|---|---|
+| Schema | `20260801170000` | `stripe_customer_id`, `stripe_subscription_id`, `subscription_status` on `coaches` |
+| Write protection | `20260801180000` | Revoke + column grant, **plus a trigger** — see `coaches` write protection in Key schema notes |
+| Service-role client | `src/lib/supabase-service.ts` | The only role allowed to write the billing columns |
+| Stripe client | `src/lib/stripe.ts` | Lazy `getStripe()`; no `apiVersion` pinned |
+| Checkout action | `src/app/instructor/billing/actions.ts` | Create-or-reuse customer, then a Checkout session |
+| Entitlement | `src/lib/entitlement.ts` | `isEntitled()` — the single source of truth |
+| Upgrade button | `src/components/ProfileMenu.tsx` | First menu item, hidden when `isPro` |
+| Webhook | `src/app/api/stripe/webhook/route.ts` | Writes billing state back |
+
+⚠️ **`/api` now exists, and it is a deliberate exception.** Every other server entry point in this app is a server action. Stripe POSTs from its own infrastructure to a URL, which an action cannot receive, so the webhook had to be a route handler. That is the *only* reason — a new route handler for anything reachable from our own UI would be drift.
+
+### `isEntitled()` is the one rule
+
+`active` + `trialing`, an **allowlist**. Asked by the upgrade button today and by the add-student gate when it exists, so the two can never disagree — the `isComplete()` lesson applied before the drift rather than after it.
+
+- ⚠️ Unrecognised statuses **fail closed**. Stripe owns this vocabulary and has extended it before; a denylist would silently admit whatever it invents next.
+- ⚠️ `past_due` is **not** entitled. Stripe retries a failed payment for weeks, and treating that window as paid means a coach who never successfully pays keeps access throughout it.
+- `COACHRJ` needs no special case: a 100%-off-forever coupon still yields a real subscription reporting `active` at $0.
+
+### Webhook contract
+
+| Event | Writes |
+|---|---|
+| `checkout.session.completed` | `subscription_status`, `stripe_subscription_id`, `stripe_customer_id` |
+| `customer.subscription.updated` | `subscription_status` |
+| `customer.subscription.deleted` | `subscription_status` (`canceled`) |
+
+`customer.subscription.created` is deliberately **not** handled — checkout covers creation, and both would mean two writes for one thing.
+
+⚠️ **Signature verification is the security boundary of the entire billing system.** The column grant, the trigger and the service-role isolation all exist so a coach cannot set their own `subscription_status`. This route can. Unsigned requests would hand that to anyone who guesses the URL. The body is read with `req.text()` and never `req.json()` — re-serialising changes whitespace and key order and the HMAC stops matching — and nothing from the body is read before `constructEvent`.
+
+⚠️ **Retrieves the subscription fresh on every event** rather than trusting the payload. Stripe delivers at-least-once and in no guaranteed order, so a stale `updated` can land after a newer one and overwrite current status with old. Reading current state at handling time makes ordering irrelevant and duplicates harmless.
+
+⚠️ **Never assume `active` on checkout completion.** A card needing 3DS lands as `incomplete`; writing `active` would grant access to someone who has not paid.
+
+**Three routes home**, priority-ordered — no single one covers every event:
+
+1. `client_reference_id` — checkout sessions only
+2. `subscription.metadata.coach_id` — subscription events carry no `client_reference_id`
+3. `stripe_customer_id` lookup — catches a subscription created by hand in the dashboard, which has neither
+
+⚠️ If none match it does **not** guess: logs and returns 200. An unmatchable event is not transient, and a 500 would have Stripe retrying it for days.
+
+**Status codes are the retry protocol**, not decoration: `400` bad signature (never retry) · `500` missing secret (we are broken; retry succeeds once fixed, so events aren't lost) · `500` write or retrieve failure (transient) · `200` handled or ignorable. ⚠️ A `200` on a failed write marks the event delivered and loses it permanently.
+
+### Open — next session
+
+- ⚠️ **`STRIPE_WEBHOOK_SECRET` is not set.** Needs `brew install stripe` for `stripe listen --forward-to localhost:3000/api/stripe/webhook`, or a real staging endpoint. The Stripe CLI is not installed.
+- ⚠️ **The signature check has never executed.** The missing-secret guard fires first, so `constructEvent` has not run and the 400-on-bad-signature branch is untested. Verified so far: unsigned and forged POSTs both refused, `GET` → 405, route registers in the build. **First thing to re-run once the secret exists.**
+- **No live end-to-end test.** Nothing has gone through Checkout → webhook → `subscription_status` → `isPro`.
+- **The add-student gate is not built.** `FREE_STUDENT_LIMIT` exists and nothing reads it. ⚠️ RJ has ~10 students and no subscription, so the gate blocks his 11th the day it ships — he needs a heads-up first, deliberately held until the gate is close to live.
+- **UI never rendered.** Menu width at its new widest item, the `Starting…` pending state, and the wrapping error line are all unseen.
+- **The `?upgraded=1` landing is a silent return** — parked on purpose. A warm success screen wants a trustworthy `isPro`, which needs the webhook working; until then any "you're Pro" copy would be racing the webhook, the same failure the celebrate screen's three-state loading exists to prevent.
+- **Live mode does not exist** — see Stripe status above.
 
 ---
 
