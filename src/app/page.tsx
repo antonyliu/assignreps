@@ -556,8 +556,8 @@ export default function LandingPage() {
                 </div>
                 <div className="hero-circle hero-circle-sm">
                   <Image
-                    src="/piano-hero.webp"
-                    alt="Student practicing piano"
+                    src="/soccer-hero.webp"
+                    alt="Young soccer player training"
                     width={360}
                     height={360}
                     priority
