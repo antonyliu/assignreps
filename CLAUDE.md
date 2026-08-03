@@ -852,7 +852,7 @@ Factual, no interpretation:
 
 ---
 
-## Pricing (resolved Jul 31 2026 — price point still open)
+## Pricing (fully resolved — model Jul 31 2026, price point Aug 1 2026)
 
 **Free tier — resolved.** 3 students, full features, no card required, no time limit. **Forever, not a trial.**
 
@@ -860,11 +860,13 @@ Factual, no interpretation:
 
 **Paid tier — resolved in shape.** Monthly only, cancel anytime. No annual plan, no discount tiers, deliberately not built — nothing at this stage requires them.
 
-**Price point — NOT locked.** Genuinely open between **$5 and $10/mo**. What is settled is the reasoning around it:
+**Price point — LOCKED at $10/mo (Aug 1 2026).** The $5–$10 range is closed; use **$10** everywhere — the Stripe Price object, any pricing UI copy, and this file. The reasoning that settled it:
 
-- **Cost to serve is a non-issue either way.** SMS per free user runs pennies to low single-digit dollars a month even in heavy-use edge cases, so the price is a positioning decision, not a margin one.
-- **Both sit well under market.** Comparable products in this niche charge substantially more — see the section below.
+- **Cost to serve was never the constraint.** SMS per free user runs pennies to low single-digit dollars a month even in heavy-use edge cases, so this was a positioning decision, not a margin one — which is why the range could stay open as long as it did without blocking anything.
+- **$10 still sits well under market.** Comparable products charge substantially more — see the section below. Taking the top of the range costs nothing in competitiveness.
 - **$9.99 was considered and set aside in favour of $10.** A round number reads as honest; a charm-priced one reads as optimised extraction, which is the opposite of the voice this pricing is meant to carry.
+
+⚠️ **$10 is the figure, not $10.00 or $9.99.** Stripe stores it as `1000` (cents, USD). Any UI copy should read `$10/mo`.
 
 Promo code `COACHRJ` = lifetime free.
 
@@ -998,7 +1000,7 @@ Design resolved — these need building, not deciding.
 
 ### Medium priority
 - **Gate stranger signups** — currently open; invite code or waitlist before broader launch
-- **Stripe infrastructure** — free tier 3 students, paywall at 4th, promo code `COACHRJ` = lifetime free. See **Pricing** for the resolved model; the price point ($5 vs $10) is the one piece still open.
+- **Stripe infrastructure** — free tier 3 students, paywall at 4th, **$10/mo**, promo code `COACHRJ` = lifetime free. See **Pricing** — the model and the price point are both resolved, so this needs building, not deciding.
 - **Tighten logs RLS** — ⚠️ **corrected Aug 1 2026: there is no RLS policy on `logs` at all.** This entry read "INSERT currently open", which implied SELECT/UPDATE/DELETE were covered and only the insert path was loose. They never were. Confirmed by investigation, not assumed: no policy on `logs` appears in any migration file, and the student home page has always read `logs` straight through the **anon** key with none present. So SELECT has been exactly as open as INSERT this whole time.
   - No column-level grants exist anywhere either, so any column added to `logs` is readable wherever the others are. That is why `note` needed no policy work to be read back — worth knowing, and worth not mistaking for a policy having permitted it.
   - ⚠️ `note` raises the practical stakes of the gap without changing its shape. Until Aug 1 `logs` held only numbers and copied assignment metadata; `note` is the first **free-text field a student wrote themselves**. Still their own words on their own token-addressed page, so nothing new is exposed to anyone who wasn't already able to read the row — but the consequence of the gap is qualitatively different from a rep count.
