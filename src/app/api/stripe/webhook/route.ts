@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase-service";
+import { isEntitled } from "@/lib/entitlement";
 
 // ⚠️ The first /api route handler in this app. Everything else server-side is a
 // server action, deliberately — but Stripe POSTs from its own infrastructure to
@@ -162,6 +163,52 @@ export async function POST(req: Request) {
     return new Response(null, { status: 200 });
   }
 
+  // ⚠️ RESOLVE AT THE CUSTOMER LEVEL, NOT THE SUBSCRIPTION LEVEL.
+  //
+  // Retrieving the event's own subscription fresh gives its correct state, but
+  // says nothing about whether it is the coach's CURRENT one. Writing it
+  // blindly means any event about any old subscription overwrites everything.
+  //
+  // ⚠️ Observed on 2026-08-03, not theorised: cancelling two stray test
+  // subscriptions fired customer.subscription.deleted for each, and the webhook
+  // wrote `canceled` over a coach who still held a live subscription. A paying
+  // coach was marked unsubscribed by an event about a subscription that was not
+  // theirs any more.
+  //
+  // The real-world shape is cancel-then-resubscribe: an old canceled
+  // subscription alongside a new active one. A late or retried `deleted` for
+  // the old one would silently strip access.
+  //
+  // So ask Stripe what this CUSTOMER's state is, rather than what one
+  // subscription's state is. Any live subscription wins; otherwise the most
+  // recent one describes them.
+  const effectiveCustomerId = customerId ?? idOf(subscription.customer);
+  let effective = subscription;
+
+  if (effectiveCustomerId) {
+    try {
+      const list = await stripe.subscriptions.list({
+        customer: effectiveCustomerId,
+        status: "all",
+        limit: 100,
+      });
+
+      if (list.data.length > 0) {
+        // Newest first. Stripe returns created-desc already, but sorting
+        // explicitly means this does not depend on that staying true.
+        const byNewest = [...list.data].sort((a, b) => b.created - a.created);
+        // isEntitled() rather than a local status list, so "counts as
+        // subscribed" means exactly the same thing here, in the upgrade button
+        // and in the add-student gate.
+        effective = byNewest.find((s) => isEntitled(s.status)) ?? byNewest[0];
+      }
+    } catch (err) {
+      // Non-fatal: fall back to the event's own subscription. Worst case is the
+      // pre-existing behaviour, and the next event self-corrects.
+      console.error("[stripe-webhook] failed to list customer subscriptions", err);
+    }
+  }
+
   // ⚠️ SERVICE ROLE. These three columns are unwritable by `anon` and
   // `authenticated` by design — that is the whole point of the trigger — so
   // this is the one path allowed to set them.
@@ -175,9 +222,11 @@ export async function POST(req: Request) {
   const { data: updated, error: writeError } = await admin
     .from("coaches")
     .update({
-      subscription_status: subscription.status,
-      stripe_subscription_id: subscription.id,
-      ...(customerId ? { stripe_customer_id: customerId } : {}),
+      // `effective`, not `subscription` — the customer's current state, which
+      // may be a DIFFERENT subscription than the one this event is about.
+      subscription_status: effective.status,
+      stripe_subscription_id: effective.id,
+      ...(effectiveCustomerId ? { stripe_customer_id: effectiveCustomerId } : {}),
     })
     .eq("id", coachId)
     .select("id");
