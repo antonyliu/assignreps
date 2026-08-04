@@ -692,7 +692,8 @@ Both paths always send to `players.phone`. `send_to_parent` is still not consult
 
 - ✅ **Test mode** product **Reps** — $10.00/month recurring, created in the dashboard Aug 1 2026
 - Test price ID: `price_1U0EVsJoxKRCY55iExnvBMmP`
-- ✅ Coupon `COACHRJ` — 100% off, **Forever** duration (not Once, not Repeating — it is lifetime free, so anything else bills RJ from month two)
+- ✅ Coupon `COACHRJ` — 100% off, **Forever** duration (not Once, not Repeating — it is lifetime free, so anything else bills RJ from month two). Coupon `OuDvRjjw`, recreated Aug 3 with **no redemption cap** — see finding 3 below for why the original was replaced.
+- ✅ Stripe CLI 1.45.0 installed (Homebrew). `stripe listen --forward-to localhost:3000/api/stripe/webhook` is how the webhook is exercised locally.
 - Env var names: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET` — see `.env.local.example`
 - Schema: three columns on `coaches` — see **`coaches` billing columns** and **`coaches` write protection** in Key schema notes
 
@@ -704,7 +705,7 @@ Both paths always send to `players.phone`. `send_to_parent` is still not consult
 
 ## Billing architecture (Aug 2 2026)
 
-Every piece is built; none is verified end to end. Free tier is 3 students forever, paywall at the 4th, $10/mo.
+Every piece is built, and the loop is **verified end to end locally** (Aug 3 2026 — see below). Free tier is 3 students forever, paywall at the 4th, $10/mo. The gate itself is the one piece still missing.
 
 | Piece | Where | What it does |
 |---|---|---|
@@ -753,15 +754,30 @@ Every piece is built; none is verified end to end. Free tier is 3 students forev
 
 **Status codes are the retry protocol**, not decoration: `400` bad signature (never retry) · `500` missing secret (we are broken; retry succeeds once fixed, so events aren't lost) · `500` write or retrieve failure (transient) · `200` handled or ignorable. ⚠️ A `200` on a failed write marks the event delivered and loses it permanently.
 
+### ✅ Verified end to end (Aug 3 2026)
+
+Local, via `stripe listen --forward-to localhost:3000/api/stripe/webhook`. Stripe CLI 1.45.0 installed with Homebrew.
+
+- **The full loop works.** Checkout → webhook → `subscription_status = active` → `isPro` flips → the Upgrade item disappears.
+- **Signature verification executes and rejects.** Unsigned → 400 `Missing stripe-signature`. Forged HMAC → 400 `Invalid signature`, including a hand-crafted `checkout.session.completed` naming a coach id, refused **before any part of the body was read**. `GET` → 405. The message text is the proof: `Invalid signature` comes only from the `constructEvent` catch, where previously the missing-secret guard fired first.
+- **The webhook wrote to exactly one coach.** RJ's row stayed NULL throughout — the three-routes-home lookup did not spray.
+- **One customer across three checkouts** — the idempotency key on customer creation holds.
+- ⚠️ **The `?upgraded=1` race is real and was observed.** The Upgrade item was still showing on the redirect back and disappeared after one refresh. That is why the landing is a silent return rather than a "you're Pro" claim.
+
+### Three findings from that test
+
+1. **No already-subscribed guard** *(fixed, `cf04f83`)*. `createCheckoutSession()` created-or-reused the customer but never checked for an existing subscription, so **three active subscriptions** ended up on one customer — $20/mo of real double-billing in live mode. ⚠️ Hiding the menu item is not protection: `isPro` only turns true once the webhook lands, so the redirect-to-webhook window is a live double-subscribe window, and the action can be invoked directly regardless. Same lesson as `fileFinishedAssignments`.
+2. **The webhook clobbered state from stray events** *(fixed, `bc24e51`)*. It retrieved the event's own subscription — correct for that subscription, silent about whether it is the coach's current one. Cancelling the two strays fired `customer.subscription.deleted` for each and wrote `canceled` over a coach who still held a live subscription. ⚠️ The real-world shape is cancel-then-resubscribe. Now resolves at the **customer** level: list the customer's subscriptions, any `isEntitled()` one wins, else the most recent. Proven by the failing case — a real event about a canceled stray now leaves the row `active`.
+3. ⚠️ **`COACHRJ` was burned by the test.** The coupon had `max_redemptions: 1`, and testing consumed the single redemption, leaving RJ's own code dead. Recreated Aug 3 with **`max_redemptions` unset** (coupon `OuDvRjjw`, code active, 0 redeemed). **The lesson is for live mode, where it is one-way:** a code meant for exactly one person must not be capped at one redemption, or testing it destroys it. Test with a throwaway code instead.
+
 ### Open — next session
 
-- ⚠️ **`STRIPE_WEBHOOK_SECRET` is not set.** Needs `brew install stripe` for `stripe listen --forward-to localhost:3000/api/stripe/webhook`, or a real staging endpoint. The Stripe CLI is not installed.
-- ⚠️ **The signature check has never executed.** The missing-secret guard fires first, so `constructEvent` has not run and the 400-on-bad-signature branch is untested. Verified so far: unsigned and forged POSTs both refused, `GET` → 405, route registers in the build. **First thing to re-run once the secret exists.**
-- **No live end-to-end test.** Nothing has gone through Checkout → webhook → `subscription_status` → `isPro`.
 - **The add-student gate is not built.** `FREE_STUDENT_LIMIT` exists and nothing reads it. ⚠️ RJ has ~10 students and no subscription, so the gate blocks his 11th the day it ships — he needs a heads-up first, deliberately held until the gate is close to live.
 - **UI never rendered.** Menu width at its new widest item, the `Starting…` pending state, and the wrapping error line are all unseen.
-- **The `?upgraded=1` landing is a silent return** — parked on purpose. A warm success screen wants a trustworthy `isPro`, which needs the webhook working; until then any "you're Pro" copy would be racing the webhook, the same failure the celebrate screen's three-state loading exists to prevent.
-- **Live mode does not exist** — see Stripe status above.
+- **The `?upgraded=1` landing is a silent return.** Now unblocked — `isPro` is trustworthy — so the warm success screen can be designed. Still needs to survive the redirect/webhook race observed above.
+- ⚠️ **`STRIPE_WEBHOOK_SECRET` is local-only.** It comes from `stripe listen` and rotates between sessions; staging and prod each need their own endpoint and secret. Nothing is configured in Vercel yet.
+- ⚠️ **No `apiVersion` is pinned in `getStripe()`, so the app runs on the account default — currently `2026-07-29.dahlia`.** That is not theoretical drift: on dahlia, `promotion_codes.create` rejects `coupon` as an unknown parameter, and recreating `COACHRJ` only worked pinned to `2024-06-20`. Checkout and the webhook are fine on dahlia, but a dashboard-side version change can alter API shapes underneath us with no code change.
+- **Live mode does not exist** — see Stripe status above. Every id changes, and the coupon must be recreated there uncapped.
 
 ---
 
