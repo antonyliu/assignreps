@@ -1,30 +1,45 @@
 # Reps — CLAUDE.md
-*Last updated: Aug 3 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+*Last updated: Aug 4 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
 
 ---
 
-## 🔖 Where we left off — Aug 3 2026
+## 🔖 Where we left off — Aug 4 2026
 
 **Start here tomorrow.** Everything below is committed on local `main`; nothing is in progress and the working tree is clean.
 
 ### Git state at close
 
-`main` is **11 commits ahead of prod** and **5 ahead of staging**. Both remotes are ancestors, so either push is a clean fast-forward.
+`main` is **14 commits ahead of prod** and **8 ahead of staging**. Both remotes are ancestors, so either push is a clean fast-forward. (Verified against `git branch -r -v` on Aug 4, not carried over from the previous entry.)
 
 ⚠️ **Prod is held back deliberately, not by neglect.** `main` carries the "Upgrade to Pro" menu item, and prod has no Stripe env vars — so pushing would show RJ a button that errors. Two harmless landing-page commits (the soccer hero) are stuck behind that same gate; cherry-pick them onto a branch off `origin/main` if they're wanted sooner.
 
 ### Billing — where it actually stands
 
-The whole loop is **built and verified end to end locally** (see Billing architecture). What remains is the gate.
+The whole loop **including the add-student gate** is built and verified end to end locally (see Billing architecture). ⚠️ **What remains is live mode**, which does not exist at all — see Stripe status.
 
 ⚠️ **RJ is provisioned as Pro in TEST MODE ONLY.** On Aug 3 his Stripe customer (`cus_V0bVdpHROg0RE1`) and subscription (`sub_1U0aJ6JoxKRCY55iGi5HfZ3l`, $0/mo via `COACHRJ`) were created **directly through the Stripe API — not through the app's checkout button** — and his `coaches` row was updated by firing a real `customer.subscription.updated` through the webhook rather than by editing the database.
 - **None of this exists in live mode and must be redone at launch.** New customer, new subscription, and the coupon recreated uncapped against a `sk_live_` key. Test and live share nothing.
-- Why it was done: so neither real coach is the one blocked while the gate is being built and tested. **Testing the block now requires a third, non-Pro coach.**
-- ⚠️ **RJ still has not been told** about the 3-student limit. He is at ~10 students. In live mode he hits the wall the day the gate ships unless provisioned there first. That conversation is still owed.
+- Why it was done: so neither real coach is the one blocked while the gate was being built and tested. ✅ **Resolved Aug 4** — testing the block needed a third, non-Pro coach, and one was created for exactly that (`tonyliu34+gate@gmail.com`, "ZZ Test — gate"). ⚠️ It lives in the **same shared Supabase project as prod**, so delete it when it has served its purpose; `players.coach_id` is CASCADE, so its players go with it.
+- ⚠️ RJ has still not been told about the 3-student limit — see its own section below, which is now the blocking item.
 
-### The next real piece: the add-student gate
+### ✅ The add-student gate — BUILT and VERIFIED end to end (Aug 4 2026)
 
-**Not built.** `FREE_STUDENT_LIMIT = 3` exists in `src/lib/entitlement.ts` and nothing reads it. Blocking the 4th student for a non-entitled coach, with an upgrade prompt, is the next unit of work. `isEntitled()` is the shared rule the gate must route through — it already backs the upgrade button, and the two must not drift.
+**Done, and proven against a real coach in a real browser — not just compiled.** `FREE_STUDENT_LIMIT` is now read by both the mutation and the page. See **The add-student gate** under Billing architecture for the design and the two deliberate asymmetries in it.
+
+What was actually exercised, in order:
+
+1. A third, non-Pro test coach (`tonyliu34+gate@gmail.com`, named "ZZ Test — gate") was blocked at the 4th player. The gate fired at exactly 3.
+2. **Upgrade was started from the gate screen itself**, not the ProfileMenu — so the shared `useUpgrade()` handler is confirmed working from **both** entry points, which is the whole reason it was extracted.
+3. ⚠️ **The first checkout silently did nothing, because `stripe listen` was not running** — it had died in a reboot. See the gotcha under *To resume local billing work*; this cost real time.
+4. After restarting `stripe listen` and taking the **fresh** `STRIPE_WEBHOOK_SECRET` into `.env.local`, checkout completed, the webhook fired, `isPro` flipped, and a 4th player ("Nanna") was added.
+
+⚠️ **Live mode is still untouched by all of this.** The gate works against `sk_test_`; nothing about it has run against a live key, and there is no live product, price or coupon to run it against yet.
+
+### ⚠️ RJ still has not been told about the 3-student limit
+
+**This is now the blocking item, and it changed character today.** Until the gate existed, the limit was theoretical. It is now real code on `main`: the day this reaches an environment RJ uses with live billing, he is stopped at his 11th student.
+
+He is at ~10 students and holds no live-mode subscription. He must either be told, or be provisioned in live mode first — ideally both, in that order. That conversation is still owed and is no longer safe to defer indefinitely.
 
 ### Parked, deliberately — not started
 
@@ -41,6 +56,22 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 ```
 
 ⚠️ It issues a **new secret each session** — update `.env.local` and restart the dev server, or every event fails signature verification. Nothing is configured in Vercel for staging or prod yet.
+
+### ⚠️ `stripe listen` does not survive a reboot — and its failure is SILENT
+
+**This cost real time on Aug 4 and will cost it again.** `stripe listen` is a foreground process. Anything that ends it — a reboot, closing the terminal, killing the tab, the machine sleeping hard enough — ends webhook delivery, and **nothing in the app says so**.
+
+The symptom is not an error. Checkout completes, Stripe takes the payment, the coach is redirected back, and then *nothing happens*: `subscription_status` is never written, `isPro` never flips, and the upgrade appears to have simply failed. The app is behaving correctly — it never received the event.
+
+**Every time the dev environment restarts, before touching billing:**
+
+1. Restart it — `stripe listen --forward-to localhost:3000/api/stripe/webhook`
+2. Copy the **new** `whsec_…` it prints. ⚠️ It is different every run; the old value in `.env.local` is dead.
+3. Paste it into `.env.local` as `STRIPE_WEBHOOK_SECRET` and **restart the dev server** so Next re-reads it.
+
+⚠️ Skipping step 2 or 3 fails differently but just as quietly — events arrive and are rejected `400 Invalid signature` at the webhook. That at least appears in the `stripe listen` output, where a dead listener shows nothing at all.
+
+**Check it is alive before assuming the code is wrong.** A live listener prints each forwarded event; silence during a checkout means the listener, not the app.
 
 ---
 
@@ -746,7 +777,7 @@ Both paths always send to `players.phone`. `send_to_parent` is still not consult
 
 ## Billing architecture (Aug 2 2026)
 
-Every piece is built, and the loop is **verified end to end locally** (Aug 3 2026 — see below). Free tier is 3 students forever, paywall at the 4th, $10/mo. The gate itself is the one piece still missing.
+Every piece is built, and the loop is **verified end to end locally** (Aug 3 2026, and again with the gate on Aug 4 — see below). Free tier is 3 students forever, paywall at the 4th, $10/mo. ⚠️ Nothing here has ever run against a live-mode key.
 
 | Piece | Where | What it does |
 |---|---|---|
@@ -755,8 +786,10 @@ Every piece is built, and the loop is **verified end to end locally** (Aug 3 202
 | Service-role client | `src/lib/supabase-service.ts` | The only role allowed to write the billing columns |
 | Stripe client | `src/lib/stripe.ts` | Lazy `getStripe()`; no `apiVersion` pinned |
 | Checkout action | `src/app/instructor/billing/actions.ts` | Create-or-reuse customer, then a Checkout session |
-| Entitlement | `src/lib/entitlement.ts` | `isEntitled()` — the single source of truth |
+| Entitlement | `src/lib/entitlement.ts` | `isEntitled()` + `FREE_STUDENT_LIMIT` — the single source of truth |
+| Upgrade handler | `src/lib/use-upgrade.ts` | `useUpgrade()` — shared by both upgrade entry points |
 | Upgrade button | `src/components/ProfileMenu.tsx` | First menu item, hidden when `isPro` |
+| **Add-student gate** | `add-student/actions.ts` + `page.tsx` + `AddPlayerForm.tsx` | Blocks the 4th player, offers the paywall |
 | Webhook | `src/app/api/stripe/webhook/route.ts` | Writes billing state back |
 
 ⚠️ **`/api` now exists, and it is a deliberate exception.** Every other server entry point in this app is a server action. Stripe POSTs from its own infrastructure to a URL, which an action cannot receive, so the webhook had to be a route handler. That is the *only* reason — a new route handler for anything reachable from our own UI would be drift.
@@ -768,6 +801,39 @@ Every piece is built, and the loop is **verified end to end locally** (Aug 3 202
 - ⚠️ Unrecognised statuses **fail closed**. Stripe owns this vocabulary and has extended it before; a denylist would silently admit whatever it invents next.
 - ⚠️ `past_due` is **not** entitled. Stripe retries a failed payment for weeks, and treating that window as paid means a coach who never successfully pays keeps access throughout it.
 - `COACHRJ` needs no special case: a 100%-off-forever coupon still yields a real subscription reporting `active` at $0.
+
+### The add-student gate (Aug 4 2026)
+
+Blocks a non-entitled coach's **4th** player and offers the paywall instead. Three layers, and **only one of them is enforcement**.
+
+| Layer | Where | Job |
+|---|---|---|
+| **Enforcement** | `addPlayer()` in `add-student/actions.ts` | The gate. Counts server-side, blocks the insert |
+| Convenience | `add-student/page.tsx` | Renders the paywall instead of a form the coach can't submit |
+| Presentation | `AddPlayerForm.tsx` | Draws the paywall, in the same screen shell as the form |
+
+✅ **`addPlayer()` is the ONLY INSERT into `players` anywhere in `src/`** — audited across all 15 files that touch the table before building. Signup has no student-creation step in code. So the gate has one enforcement point, not several to keep in sync.
+
+⚠️ **The page check is not protection and must never be mistaken for it.** A stale tab, a second device, or a direct invocation of the action all arrive with no page gate in front of them. This is the `fileFinishedAssignments` lesson and the already-subscribed guard in `createCheckoutSession()`, applied a third time: an action establishes its own preconditions rather than borrowing them from whatever rendered its button.
+
+**Two deliberate asymmetries, both easy to "fix" into bugs:**
+
+- ⚠️ **The action fails CLOSED, the page fails OPEN.** In `addPlayer()`, an unreadable count (`countError`, *or* a `null` count with no error) blocks. `count ?? 0` there would read "we don't know" as "zero players" and wave a coach straight through the paywall on a transient hiccup — the failure nobody would ever notice. The page does use `count ?? 0`, because it only decides whether to draw a form; on a hiccup it shows the form and lets the action have the final word, rather than telling a coach they are out of room when we could not read how much room they have.
+- **The blocked result carries `code: "limit_reached"`, separate from its error string.** Hitting a paywall is not a validation failure and must not render as one — a red bordered box reads as "you typed something wrong", which is exactly what the coach did not do. The form swaps the whole screen for the prompt instead.
+
+**Existing students are never touched.** The rule is `count >= FREE_STUDENT_LIMIT` blocks the *add*; a coach already over the limit (RJ at ~10, or a lapsed Pro) keeps everyone they have.
+
+⚠️ **KNOWN AND ACCEPTED: count-then-insert is not atomic.** Two submits racing could land a 4th and 5th player. Closing it properly needs a database trigger, and any migration hits local, staging and prod at once (one shared Supabase project). The cost of the gap is one extra free player for one coach — not a security hole, not meaningful revenue at this scale. Deliberately left; revisit if the free tier ever guards something expensive.
+
+**The paywall is in-place, not a redirect or a modal.** It renders inside the add-student screen's own shell — same back link, same padding — so the back link is reused rather than hand-copied into an eighth version. A redirect would strand the coach on the roster hunting for an upgrade item buried in a dropdown; a modal is ceremony this screen uses nowhere else. Copy is warm before transactional, because reaching the limit means the coach is actually using the product: *"You've got 3 players — nice work."* / *"Pro unlocks unlimited, $10/month."* The noun comes from `getActivityLabels`, so a piano teacher reads "students".
+
+⚠️ The count in that copy is `Math.max(playerCount, FREE_STUDENT_LIMIT)`. A stale page can be told "blocked" by the action while holding an older, lower number — and it must never print a figure below the limit that was just enforced.
+
+### `useUpgrade()` — one handler, two entry points
+
+`src/lib/use-upgrade.ts` owns starting a Checkout session: the pending state, which failures surface, and the fact that leaving for Stripe is a **full navigation** rather than a router push. `ProfileMenu` and the add-student paywall both call it.
+
+⚠️ **A HOOK, not a shared component, deliberately.** The two surfaces render genuinely different controls — a 36px menu row inside a 160px panel, and a full-width primary button on its own screen. A shared component would need a variant prop for every visual difference and would force one shape into a slot it does not fit. What must not drift is the *handler*, so that is what is shared; each surface keeps its own markup. Same reasoning as `isEntitled()` one layer up: that stops the two disagreeing about **who** is entitled, this stops them disagreeing about what pressing Upgrade **does**.
 
 ### Webhook contract
 
@@ -795,7 +861,13 @@ Every piece is built, and the loop is **verified end to end locally** (Aug 3 202
 
 **Status codes are the retry protocol**, not decoration: `400` bad signature (never retry) · `500` missing secret (we are broken; retry succeeds once fixed, so events aren't lost) · `500` write or retrieve failure (transient) · `200` handled or ignorable. ⚠️ A `200` on a failed write marks the event delivered and loses it permanently.
 
-### ✅ Verified end to end (Aug 3 2026)
+### ✅ Verified end to end — the gate (Aug 4 2026)
+
+Local, real browser, real coach. A third non-Pro coach (`tonyliu34+gate@gmail.com`, "ZZ Test — gate") was blocked at the 4th player; upgrade was started **from the gate screen rather than the ProfileMenu**, confirming the shared `useUpgrade()` handler from both entry points; checkout completed; the webhook wrote `active`; `isPro` flipped; and a 4th player ("Nanna") was then added successfully.
+
+⚠️ **The first attempt of that run failed silently because `stripe listen` was not running** — killed by a reboot. It was restarted with a fresh `STRIPE_WEBHOOK_SECRET` and the run repeated. See the gotcha in *To resume local billing work*; this is the single most likely way to lose time in this area.
+
+### ✅ Verified end to end — the billing loop (Aug 3 2026)
 
 Local, via `stripe listen --forward-to localhost:3000/api/stripe/webhook`. Stripe CLI 1.45.0 installed with Homebrew.
 
@@ -813,8 +885,8 @@ Local, via `stripe listen --forward-to localhost:3000/api/stripe/webhook`. Strip
 
 ### Open — next session
 
-- **The add-student gate is not built.** `FREE_STUDENT_LIMIT` exists and nothing reads it. ⚠️ RJ has ~10 students and no subscription, so the gate blocks his 11th the day it ships — he needs a heads-up first, deliberately held until the gate is close to live.
-- **UI never rendered.** Menu width at its new widest item, the `Starting…` pending state, and the wrapping error line are all unseen.
+- ✅ **The add-student gate is built and verified** (Aug 4) — see its own section above. ⚠️ What it leaves open is the RJ conversation: he has ~10 students and no live subscription, so the gate stops his 11th the day it reaches an environment he uses with live billing.
+- **Some upgrade UI is still unrendered.** The gate's own paywall was seen and used on Aug 4, and the `Starting…` pending state was exercised on the way to Checkout from that screen. Still unseen: the **ProfileMenu panel's width at its new widest item**, and the **wrapping error line** inside that 160px panel — no upgrade error has been made to occur there.
 - **The `?upgraded=1` landing is a silent return.** Now unblocked — `isPro` is trustworthy — so the warm success screen can be designed. Still needs to survive the redirect/webhook race observed above.
 - ⚠️ **`STRIPE_WEBHOOK_SECRET` is local-only.** It comes from `stripe listen` and rotates between sessions; staging and prod each need their own endpoint and secret. Nothing is configured in Vercel yet.
 - ⚠️ **No `apiVersion` is pinned in `getStripe()`, so the app runs on the account default — currently `2026-07-29.dahlia`.** That is not theoretical drift: on dahlia, `promotion_codes.create` rejects `coupon` as an unknown parameter, and recreating `COACHRJ` only worked pinned to `2024-06-20`. Checkout and the webhook are fine on dahlia, but a dashboard-side version change can alter API shapes underneath us with no code change.
@@ -1147,7 +1219,7 @@ Design resolved — these need building, not deciding.
 
 ### Medium priority
 - **Gate stranger signups** — currently open; invite code or waitlist before broader launch
-- **Stripe infrastructure** — free tier 3 students, paywall at 4th, **$10/mo**, promo code `COACHRJ` = lifetime free. See **Pricing** — the model and the price point are both resolved, so this needs building, not deciding.
+- **Stripe infrastructure** — ✅ **built and verified in TEST MODE** as of Aug 4 2026: schema, webhook, checkout, entitlement, and the add-student gate. See **Billing architecture**. ⚠️ What is left is not code — it is **live mode**, which does not exist: no live product, price or coupon, and no Stripe env vars in Vercel for staging or prod. Every test-mode id changes at launch.
 - **Tighten logs RLS** — ⚠️ **corrected Aug 1 2026: there is no RLS policy on `logs` at all.** This entry read "INSERT currently open", which implied SELECT/UPDATE/DELETE were covered and only the insert path was loose. They never were. Confirmed by investigation, not assumed: no policy on `logs` appears in any migration file, and the student home page has always read `logs` straight through the **anon** key with none present. So SELECT has been exactly as open as INSERT this whole time.
   - No column-level grants exist **on `logs`**, so any column added there is readable wherever the others are. That is why `note` needed no policy work to be read back — worth knowing, and worth not mistaking for a policy having permitted it.
     - ⚠️ **This bullet was corrected twice on Aug 1 2026, and the second correction matters more than the first.** It originally claimed no column-level grants existed *anywhere* — wrong, and wrong because of a bad grep rather than a bad reading: the pattern used could not match `grant update (name)`. **One does exist**, in `20260725120000`. It doesn't touch `logs`, so the point above stands on its own; only the blanket version was false.
@@ -1202,7 +1274,8 @@ Design resolved — these need building, not deciding.
 - Notes field on the log screen ✅ (Aug 1 2026) — optional, 100-char capped; most recent log *with* a note shows on both card lists
 - Demo mode ❌
 - Account deletion ❌
-- Stripe billing ❌
+- Stripe billing ⚠️ — the whole loop (checkout, webhook, entitlement) and the 3-student gate are built and verified **in test mode only** (Aug 3–4 2026). Live mode does not exist yet, so this is not shippable to a paying coach
+- Add-student gate — blocks the 4th student, offers the paywall ✅ (Aug 4 2026, verified end to end locally)
 - Progress bars on roster rows ❌
 - Retroactive makes editing ❌
 - Editing goal_type / side after assigning ❌
@@ -1226,11 +1299,11 @@ The three at the top are the ones RJ has actually asked for and that now have a 
 9. Retroactive makes gap — data model + RLS UPDATE policy
 10. Gate signups — invite code or waitlist
 11. **First-student onboarding nudge** — a suggestion shown when a coach adds their *first* student, along the lines of starting with one or two players before adding a full roster. ⚠️ Explicitly **not** a gate or a limit: purely a nudge, to reduce the chance a coach blind-texts an existing roster before they have felt the product work. New Jul 31 2026, not designed.
-12. Stripe infrastructure
+12. **Stripe — LIVE MODE ONLY.** The code is done and verified in test mode (Aug 3–4); what is left is dashboard and configuration work, not engineering: create the live product, price and an uncapped `COACHRJ`, add the three Stripe env vars to Vercel for staging and prod, and provision RJ in live mode before he meets the gate.
 13. Activate additional activity types
 14. Light mode
 
-**Shipped since the July 24 list:** log snapshot + backfill, manual Archive model, Assign again, layups collapse, emerald palette, device-test of the goal type feature, the navigation/loading pass (optimistic card actions, six loading boundaries, seven back links, tap feedback), and the **student notes field** (Aug 1 — schema, write path, read fold and rendering on both card lists), which was item 3 and is removed above rather than struck through.
+**Shipped since the July 24 list:** log snapshot + backfill, manual Archive model, Assign again, layups collapse, emerald palette, device-test of the goal type feature, the navigation/loading pass (optimistic card actions, six loading boundaries, seven back links, tap feedback), the **student notes field** (Aug 1 — schema, write path, read fold and rendering on both card lists), which was item 3 and is removed above rather than struck through, and the **billing loop + add-student gate** (Aug 3–4 — test mode only, which is why item 12 above survives as configuration rather than disappearing).
 
 ⚠️ **The following is about the July 30 navigation/loading pass only — not about the notes removal above.** Nothing was removed from the list by *that* pass; there was never a "performance audit" item on it. The work came out of a reported symptom (taps not registering), not a planned entry. What it *added* is the "Diagnosed, NOT fixed" set in **Navigation & loading feel**: the region pin, the player detail waterfall, and `AllDoneActions`. Those are the natural next perf items and are deliberately not slotted into this list, because none of them is user-visible on their own the way the feedback fixes were.
 

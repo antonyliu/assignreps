@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { addPlayer } from "./actions";
+import { useUpgrade } from "@/lib/use-upgrade";
+import { FREE_STUDENT_LIMIT } from "@/lib/entitlement";
 
 const INPUT =
   "w-full rounded-[10px] border border-[#2a2d36] bg-[#1c1f26] px-[14px] py-[13px] text-base text-white outline-none transition-colors placeholder:text-[#5a5f72] focus:border-[#378add]";
@@ -12,9 +14,71 @@ type Recipient = "player" | "parent";
 
 type Props = {
   studentLabel: string;
+  studentsLabel: string;
+  /** Free-tier coach already at the limit — show the paywall, not the form. */
+  atLimit: boolean;
+  playerCount: number;
 };
 
-export default function AddPlayerForm({ studentLabel }: Props) {
+// The free-tier paywall, rendered in place of the form inside the SAME screen
+// shell — same back link, same padding — rather than as a redirect or a modal.
+// A redirect would strand the coach on the roster and leave them hunting for an
+// upgrade item buried in a dropdown; a modal is ceremony this screen uses
+// nowhere else. Standing still and explaining is the cheapest correct answer.
+//
+// Warm before transactional, deliberately: reaching the limit means the coach
+// is actually using the product, and the first line says so before the second
+// one asks for money.
+function UpgradeBlock({
+  shownCount,
+  studentsLabel,
+  onUpgrade,
+  upgrading,
+  upgradeError,
+}: {
+  shownCount: number;
+  studentsLabel: string;
+  onUpgrade: () => void;
+  upgrading: boolean;
+  upgradeError: string;
+}) {
+  return (
+    <div className="flex flex-1 flex-col">
+      <h1 className="text-[17px] font-semibold leading-snug text-white">
+        You&apos;ve got {shownCount} {studentsLabel} — nice work.
+      </h1>
+      <p className="mt-2 text-[14px] leading-relaxed text-[#8a8fa8]">
+        Pro unlocks unlimited, $10/month.
+      </p>
+
+      {/* 32px above a full-width primary button, matching CountScreen,
+          CustomExerciseScreen and the add form's own submit. */}
+      <button
+        type="button"
+        onClick={onUpgrade}
+        disabled={upgrading}
+        className="mt-8 w-full rounded-[10px] bg-[#378add] py-[14px] text-[15px] font-semibold text-white transition-all hover:bg-[#4a9ae8] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
+      >
+        {upgrading ? "Starting…" : "Upgrade to Pro"}
+      </button>
+
+      {/* Inline and quiet. The failures reachable here are configuration
+          problems a coach cannot act on beyond retrying, so they get a line
+          rather than the red bordered box the form uses for input they can
+          actually fix. */}
+      {upgradeError && (
+        <p className="mt-3 text-[13px] leading-snug text-red-400">{upgradeError}</p>
+      )}
+    </div>
+  );
+}
+
+export default function AddPlayerForm({
+  studentLabel,
+  studentsLabel,
+  atLimit,
+  playerCount,
+}: Props) {
   const router = useRouter();
 
   const [name, setName]           = useState("");
@@ -22,6 +86,15 @@ export default function AddPlayerForm({ studentLabel }: Props) {
   const [recipient, setRecipient] = useState<Recipient>("player");
   const [error, setError]         = useState("");
   const [loading, setLoading]     = useState(false);
+
+  // Seeded from the server's read, but able to flip on its own: the action is
+  // the real gate, so a coach whose page loaded under the limit (stale tab,
+  // second device, the race the action documents) gets the paywall on submit
+  // rather than a red validation box.
+  const [blocked, setBlocked] = useState(atLimit);
+
+  // Same handler the ProfileMenu's "Upgrade to Pro" item uses.
+  const { startUpgrade, upgrading, upgradeError } = useUpgrade();
 
   const isParent = recipient === "parent";
 
@@ -52,9 +125,22 @@ export default function AddPlayerForm({ studentLabel }: Props) {
     );
     setLoading(false);
 
-    if (!result.ok) { setError(result.error); return; }
+    if (!result.ok) {
+      // The paywall is not a validation failure and must not read as one —
+      // swap the whole screen for the upgrade prompt instead of reddening the
+      // form the coach filled in correctly.
+      if (result.code === "limit_reached") { setBlocked(true); return; }
+      setError(result.error);
+      return;
+    }
     router.push("/instructor/students");
   }
+
+  // What the paywall claims the coach has. Normally the server's count, but a
+  // stale page can arrive here reporting fewer than the limit — the action
+  // blocked on a fresher number than this component was rendered with. Never
+  // print a figure lower than the limit that was just enforced.
+  const shownCount = Math.max(playerCount, FREE_STUDENT_LIMIT);
 
   return (
     <main className="flex min-h-screen flex-col bg-[#080b0f] px-6 pb-10 pt-9">
@@ -84,6 +170,16 @@ export default function AddPlayerForm({ studentLabel }: Props) {
         </Link>
       </div>
 
+      {blocked ? (
+        <UpgradeBlock
+          shownCount={shownCount}
+          studentsLabel={studentsLabel}
+          onUpgrade={startUpgrade}
+          upgrading={upgrading}
+          upgradeError={upgradeError}
+        />
+      ) : (
+      <>
       {error && (
         <div className="mb-6 rounded-[10px] border border-red-500/30 bg-red-900/20 px-4 py-3 text-sm text-red-400">
           {error}
@@ -163,6 +259,8 @@ export default function AddPlayerForm({ studentLabel }: Props) {
           {loading ? "Adding…" : formValid ? `Add ${firstName}` : `Add ${studentLabel}`}
         </button>
       </form>
+      </>
+      )}
     </main>
   );
 }

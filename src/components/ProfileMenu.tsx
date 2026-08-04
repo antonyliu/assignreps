@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { User } from "lucide-react";
-import { createCheckoutSession } from "@/app/instructor/billing/actions";
+import { useUpgrade } from "@/lib/use-upgrade";
 
 // The display name is what students and parents see — "[Coach] assigned you
 // basketball homework" in the SMS, "[Coach] will see this" on the celebrate
@@ -38,39 +38,10 @@ export default function ProfileMenu({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const [upgrading, setUpgrading] = useState(false);
-  const [upgradeError, setUpgradeError] = useState("");
-
-  // Creating a Checkout session is a real Stripe round trip, so the menu stays
-  // open and the item reports progress rather than appearing to do nothing.
-  async function handleUpgrade() {
-    if (upgrading) return;
-    setUpgrading(true);
-    setUpgradeError("");
-
-    let result;
-    try {
-      result = await createCheckoutSession();
-    } catch {
-      // A thrown action means a server-side failure the coach can do nothing
-      // about — a missing key, Stripe unreachable. Don't leak the detail.
-      setUpgrading(false);
-      setUpgradeError("Couldn't start checkout. Try again in a moment.");
-      return;
-    }
-
-    if (!result.ok) {
-      setUpgrading(false);
-      setUpgradeError(result.error);
-      return;
-    }
-
-    // ⚠️ Full navigation, not router.push — Checkout is on Stripe's domain and
-    // the Next router cannot route to it. `upgrading` is deliberately left true:
-    // the browser is leaving, and resetting it would flash the idle label for a
-    // frame on the way out.
-    window.location.href = result.url;
-  }
+  // Shared with the add-student paywall so the two upgrade entry points cannot
+  // drift in behaviour — see src/lib/use-upgrade.ts. The menu stays open while
+  // it runs; the item reports progress rather than appearing to do nothing.
+  const { startUpgrade, upgrading, upgradeError } = useUpgrade();
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -238,7 +209,7 @@ export default function ProfileMenu({
                 <>
                   <button
                     role="menuitem"
-                    onClick={handleUpgrade}
+                    onClick={startUpgrade}
                     disabled={upgrading}
                     className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors disabled:opacity-50 disabled:pointer-events-none"
                   >
