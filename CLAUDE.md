@@ -30,6 +30,7 @@ The whole loop is **built and verified end to end locally** (see Billing archite
 
 - **Activity picker narrowing** — basketball live, soccer/tennis/"create your own" hinted as Soon, everything else removed from what a coach sees at signup. Still only a captured plan; `activityTypes.ts` carries all ten. The homepage half shipped Aug 3 (soccer hero photo); the picker half has not started. See *Queued for next session* item 2.
 - **Landing page copy — empty state and permission language.** Reviewed and **deliberately left unchanged**; the existing copy was judged already correct. ⚠️ The specific strings and reasoning were not captured at the time, so this entry records the decision but not its detail — worth writing down properly if it is ever revisited, rather than re-deriving it.
+- **Roster weekly summary stat (RJ's consistency + active players)** — explored in depth, not shipped, see `docs/explorations/roster-weekly-summary-exploration.html` for reasoning and visual variations.
 
 ### To resume local billing work
 

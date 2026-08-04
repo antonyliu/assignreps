@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Exploration — roster weekly summary stat</title>
+
+<!--
+  ============================================================================
+  EXPLORATION — an idea explored and NOT shipped. Kept deliberately.
+  docs/explorations/roster-weekly-summary-exploration.html
+  ============================================================================
+
+  ⚠️ This documents an IDEA, not shipped work. Nothing in this file has been
+  built. Every figure and name in it is hand-typed; no query exists for any of
+  these numbers. Do not read it as a description of the app.
+
+  It was a throwaway sketch (scratch-stat-pair.html, repo root) through the
+  Aug 4 2026 session and was PROMOTED to a kept exploration at the end of it,
+  because future feedback may well come back to this idea and the reasoning is
+  worth more than the file costs. Committed on that basis — it is a record of
+  WHY, not a to-do.
+
+  NOT part of the mocks-YYYY-MM-DD-HHMM.html lineage, and deliberately stored
+  away from it:
+    mocks-2026-07-23-1607.html
+    mocks-2026-07-24-1330.html
+    mocks-2026-07-25-1441.html
+    mocks-2026-07-27-1830.html   <- the current numbered snapshot
+  Those record what EXISTS, live at the repo root, and are regenerated as the
+  app changes. This file records what was CONSIDERED, lives under docs/, and is
+  frozen at Aug 4 2026. It should not be updated to track later design changes —
+  if the idea is revived, that is a new exploration or a real screen.
+
+  It also does NOT use the numbered gallery's %MACRO(...)% expansion layer —
+  everything here is literal HTML, so there is no script that can blank the
+  page and nothing to keep in sync. The roster markup is repeated once per
+  frame rather than factored out.
+
+  ⚠️ NOT in public/, deliberately. Anything under public/ is served by Next and
+  would deploy publicly on the next push. docs/ is not served.
+
+  Indexed from CLAUDE.md under "Parked, deliberately — not started".
+
+  ----------------------------------------------------------------------------
+  WHAT WAS EXPLORED — final state at the close of the Aug 4 2026 session
+
+  Direction A ("lead with the unit") is the chosen shape and A1's separation
+  (24px above / 34px below) is the chosen spacing. Both are now FIXED. The
+  open question is the personality of the numbers themselves.
+
+  ROW 1 — the live question. Three treatments, identical spacing:
+    V1   A1 exactly as-is — the control
+    V2   a small Tabler outline icon per stat
+    V3   a muted colour splash on the figures
+
+  ROW 2 — earlier directions, kept for reference, unchanged.
+
+  ⚠️ V3 COLOUR PROVENANCE — read before adopting. #ff7a3d is REAL but RETIRED.
+  It was the original brand orange (`--orange` in reps.html, the pre-Next.js
+  prototype) and was deliberately replaced by sky blue #378add on 2026-07-13 in
+  commit 3ca8324, titled "sky-blue theme". Today it survives in exactly one
+  tracked file — reps.html, which has one commit to its name and is a frozen
+  artifact. It appears NOWHERE in src/, globals.css or tailwind.config.ts.
+  The tokens still NAMED --reps-orange / --reps-orange-hi hold #378add and
+  #4a9ae8 — sky blue. The name is a leftover; the value is not orange.
+  So V3 is not "use the brand accent". It is "revive a killed colour", and
+  that is a decision, not a lookup. Nothing new was invented here.
+  ----------------------------------------------------------------------------
+-->
+
+<style>
+  /* ---- App design tokens, verbatim from src/app/globals.css ---- */
+  :root {
+    --reps-bg:      #080b0f;
+    --reps-card:    #1c1f26;
+    --reps-line:    #2a2d36;
+    --reps-ink:     #ffffff;
+    --reps-sub:     #8a8fa8;
+    --blue:         #378add;  /* = --reps-orange. Accent / recent timestamps. */
+    --green:        #3ed68a;  /* Done, and ONLY Done, on this screen */
+    --row:          #111620;  /* roster row card background */
+    --label-idle:   #6b7080;  /* Not started + Nothing assigned + chevron */
+    --label-sub:    #7d8494;  /* row subtext + timestamps 24h or older */
+
+    /* V3 only. Derived from the RETIRED #ff7a3d (hsl 18 100% 62%) by the same
+       transform the app used to make --reps-green-muted from --reps-green
+       (bright hsl 150 65% 54% -> muted hsl 150 54% 31%): pull saturation and
+       lightness down, leave hue untouched. Landing at hsl(18 60% 58%) rather
+       than a literal -11/-23 keeps it legible as text on #080b0f — the green
+       pair are bar fills, which can go darker than type can.
+       NOT a token. Does not exist in the app. */
+    --coral-muted:  #d47a54;
+
+    /* doc chrome (this page only, not the app) */
+    --doc-bg:    #0b0c0f;
+    --doc-line:  #23262e;
+    --doc-ink:   #d7dae2;
+    --doc-dim:   #7a8090;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 34px 30px 90px;
+    background: var(--doc-bg); color: var(--doc-ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .status-flag {
+    max-width: 900px; margin: 0 0 22px;
+    border: 1px dashed #4a3a1a; border-radius: 10px;
+    background: rgba(200,140,40,0.06);
+    padding: 12px 16px; font-size: 12.5px; line-height: 1.6; color: #c9a44c;
+  }
+  .status-flag b { color: #e8c169; }
+
+  .finding {
+    max-width: 900px; margin: 0 0 30px;
+    border: 1px solid #3a2c1c; border-left: 3px solid #c9773a; border-radius: 10px;
+    background: rgba(201,119,58,0.07);
+    padding: 14px 18px; font-size: 12.5px; line-height: 1.7; color: var(--doc-ink);
+  }
+  .finding h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; color: #d98d52; }
+  .finding p { margin: 0 0 9px; color: var(--doc-dim); }
+  .finding p:last-child { margin-bottom: 0; }
+  .finding strong { color: var(--doc-ink); }
+  .finding code { color: var(--doc-ink); font-size: 11.5px; }
+  .finding .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+                 vertical-align: -1px; margin-right: 4px; border: 1px solid rgba(255,255,255,.14); }
+
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin: 0 0 8px; color: #fff; }
+  .lede { font-size: 13.5px; line-height: 1.6; color: var(--doc-dim); margin: 0 0 8px; max-width: 830px; }
+  .lede code { color: var(--doc-ink); }
+
+  h2 { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+       color: var(--blue); margin: 40px 0 6px; padding-bottom: 9px; border-bottom: 1px solid var(--doc-line); }
+  h2 span { color: var(--doc-dim); font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 12px; }
+  .secnote { font-size: 12.5px; line-height: 1.6; color: var(--doc-dim); margin: 0 0 22px; max-width: 830px; }
+  .secnote code { color: var(--doc-ink); font-size: 11.5px; }
+
+  .wrap { display: flex; flex-wrap: wrap; gap: 40px 30px; align-items: flex-start; }
+  .col  { flex: 0 0 390px; max-width: 390px; }
+
+  .caption   { margin: 0 0 4px; padding: 0 2px; font-size: 14px; font-weight: 700; color: #fff; }
+  .caption b { color: var(--blue); }
+  .caption i { font-style: normal; color: #e8c169; }
+  .subcap    { margin: 0 0 12px; padding: 0 2px; font-size: 12px; line-height: 1.5; color: var(--doc-dim); }
+
+  .note { margin: 14px 2px 0; font-size: 12.5px; line-height: 1.6; color: var(--doc-dim); }
+  .note p { margin: 0 0 9px; }
+  .note code { color: var(--doc-ink); font-size: 11.5px; }
+  .note strong { color: var(--doc-ink); font-weight: 600; }
+  .note .warn { color: #e8c169; }
+
+  .prose { font-size: 13px; line-height: 1.7; color: var(--doc-dim); max-width: 900px; }
+  .prose p { margin: 0 0 12px; }
+  .prose code { color: var(--doc-ink); font-size: 12px; }
+  .prose strong { color: var(--doc-ink); font-weight: 600; }
+  .prose .warn { color: #e8c169; }
+
+  /* ---------- Phone frame ---------- */
+  .phone {
+    width: 100%; border-radius: 34px; border: 1px solid var(--reps-line);
+    background: var(--reps-bg); padding: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+  }
+  .screen {
+    position: relative; border-radius: 27px; overflow: hidden;
+    background: var(--reps-bg); min-height: 720px;
+    display: flex; flex-direction: column; color: var(--reps-ink);
+  }
+  .screen::before {
+    content: ""; position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+    width: 92px; height: 5px; border-radius: 3px; background: #2a2d36; z-index: 30;
+  }
+
+  /* ---------- Real app metrics ---------- */
+  .app     { display: flex; flex-direction: column; flex: 1; padding: 26px 0 28px; }
+  .sticky  { padding-top: 16px; }
+  .chrome  { position: relative; display: flex; align-items: center; justify-content: space-between;
+             padding: 0 20px 16px; }
+  .chrome::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0;
+                   height: 1px; background: #2a2d36; }
+
+  .logo-mini { display: inline-flex; align-items: center; gap: 6px;
+               font-size: 13px; font-weight: 600; color: #378add; }
+  .logo-mini svg { display: block; flex-shrink: 0; }
+  .user { width: 26px; height: 26px; border-radius: 50%; background: #252830;
+          border: .5px solid #2a2d36; color: var(--reps-sub);
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+          padding: 20px 20px 6px; }
+  .head.tight { padding-top: 0; }
+  .h1   { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; margin: 0; color: #fff; }
+  .add  { flex-shrink: 0; font-size: 13px; font-weight: 500; color: #fff;
+          padding: 6px 10px; border-radius: 8px; border: 1px solid #2a2d36; }
+
+  /* =========================================================================
+     DIRECTION A + A1 SEPARATION — fixed across all three frames.
+     24px above the strip, 34px below (the heading runs .tight, so the strip
+     owns the whole gap). Only the contents of .cell change between V1/V2/V3.
+     ========================================================================= */
+  .unitpair { display: flex; align-items: stretch; padding: 24px 20px 34px; }
+  .unitpair .cell { flex: 1 1 0; min-width: 0;
+                    display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+  .unitpair .rule { flex: 0 0 1px; background: #2a2d36; margin: 3px 16px 3px; }
+  .unitpair .fig  { font-size: 20px; font-weight: 600; letter-spacing: -0.5px;
+                    color: #fff; font-variant-numeric: tabular-nums; }
+  .unitpair .qual { font-size: 13px; color: var(--label-sub); }
+
+  /* ---- V2: Tabler outline icon, 16px, stroke 1.75, #6b7080 ----
+     One step dimmer than the qualifier, so the glyph supports the phrase
+     rather than competing with it — the same call AssignmentMenu makes by
+     dropping its lucide icons to opacity-60. Nudged down 3px because a
+     baseline-aligned box sits optically high against a 20px figure. */
+  .unitpair .ico { flex: 0 0 auto; color: var(--label-idle);
+                   transform: translateY(3px); margin-right: 2px; }
+
+  /* ---- V3: muted coral on the figure only. Qualifier stays grey. ---- */
+  .unitpair.tint .fig { color: var(--coral-muted); }
+
+  /* =========================================================================
+     REFERENCE ROW (unchanged) — original 14px/20px spacing.
+     ========================================================================= */
+  .statpair { display: flex; align-items: stretch; padding: 14px 20px 0; }
+  .statpair .cell { flex: 1 1 0; min-width: 0; }
+  .statpair .rule { flex: 0 0 1px; background: #2a2d36; margin: 2px 16px 4px; }
+  .statpair .num  { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.1;
+                    color: #fff; font-variant-numeric: tabular-nums; }
+  .statpair .lab  { margin-top: 3px; font-size: 11px; line-height: 1.35; color: var(--label-sub); }
+
+  .lastline { padding: 14px 20px 0; font-size: 13px; line-height: 1.4; color: var(--label-sub); }
+  .lastline b    { font-weight: 500; color: #fff; }
+  .lastline .ago { color: var(--blue); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Roster groups + rows (live values) ---------- */
+  .groups { display: flex; flex-direction: column; gap: 20px;
+            margin: 2px 0 32px; padding: 0 20px; }
+  .glabel { margin-bottom: 8px; display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px; font-weight: 600; }
+  .glabel i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .rows   { display: flex; flex-direction: column; gap: 6px; }
+
+  .row    { display: flex; align-items: center; gap: 12px;
+            padding: 8px 14px; border-radius: 10px; background: var(--row); }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: #252830;
+            border: .5px solid #2a2d36; color: var(--reps-sub);
+            font-size: 13px; font-weight: 600; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; }
+  .rmid   { flex: 1 1 auto; min-width: 0; }
+  .rname  { font-size: 15px; font-weight: 500; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rsub   { font-size: 12px; color: var(--label-sub);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rtime  { font-size: 12px; flex-shrink: 0; font-variant-numeric: tabular-nums; color: var(--label-sub); }
+  .rtime.recent { color: var(--blue); }
+  .chev   { font-size: 18px; color: var(--label-idle); }
+</style>
+</head>
+<body>
+
+<div class="status-flag">
+  <b>EXPLORATION — not shipped.</b> This documents an <em>idea</em>, not the app.
+  <strong>Nothing here is built</strong>, and every figure and name is hand-typed — no query exists
+  for any of these numbers. Not part of the <code>mocks-YYYY-MM-DD-HHMM.html</code> lineage, which
+  records what exists; this is frozen at <strong>Aug 4 2026</strong> and is not maintained against
+  later design changes. Kept because future feedback may return to it.
+</div>
+
+<div class="finding">
+  <h3>Colour check — answered before drawing V3</h3>
+  <p><strong><span class="sw" style="background:#ff7a3d"></span><code>#ff7a3d</code> is real, and it
+  is retired.</strong> It was the original brand orange, defined as <code>--orange</code> in
+  <code>reps.html</code> — the pre-Next.js standalone prototype, which has exactly one commit to its
+  name and is a frozen artifact. It was <strong>deliberately replaced by sky blue</strong>
+  <span class="sw" style="background:#378add"></span><code>#378add</code> on <strong>2026-07-13</strong>
+  in commit <code>3ca8324</code>, whose message names the change outright: “sky-blue theme”.</p>
+  <p><strong>Today it exists in one tracked file — <code>reps.html</code> — and nowhere else.</strong>
+  Not in <code>src/</code>, not in <code>globals.css</code>, not in <code>tailwind.config.ts</code>.</p>
+  <p><strong>The trap you half-spotted:</strong> the tokens are still <em>named</em>
+  <code>--reps-orange</code> and <code>--reps-orange-hi</code>, but they hold <code>#378add</code> and
+  <code>#4a9ae8</code> — sky blue. The name is a leftover from the rename; every “orange” button in
+  the app renders blue. So the established brand accent <em>is</em> blue, and blue is already spoken
+  for on this screen (recent-activity timestamps).</p>
+  <p><strong>What that means for V3:</strong> it fails your test twice over — <code>#ff7a3d</code>
+  is not currently established, and the colour that <em>is</em> established is already used here. So
+  V3 below is not “apply the brand accent”; it is <strong>revive a killed colour</strong>, which is a
+  decision rather than a lookup. I drew it anyway so you can judge it, using
+  <span class="sw" style="background:#d47a54"></span><code>#d47a54</code> — <code>#ff7a3d</code>
+  desaturated and darkened by the same kind of move that produced
+  <code>--reps-green-muted</code> from <code>--reps-green</code>. <strong>Nothing was invented</strong>:
+  the hue is the retired one, unchanged.</p>
+</div>
+
+<h1>Direction A — personality treatments</h1>
+<p class="lede">
+  Shape (Direction A) and separation (A1: <code>24px</code> above, <code>34px</code> below) are both
+  <strong>fixed and identical</strong> across the three frames below. Same figures, same type sizes,
+  same hairline between the cells, same spacing. The only thing that varies is how the numbers
+  themselves are dressed. Everything else is lifted from
+  <code>src/app/instructor/students/page.tsx</code>; same ten players, same sort.
+</p>
+
+<h2>Row 1 — the live question <span>· three personality treatments, one spacing</span></h2>
+<p class="secnote">
+  V1 is the control — A1 exactly as you last saw it, unchanged. V2 adds a Tabler outline glyph per
+  stat. V3 tints the figures with the retired coral (see the box above before adopting it).
+</p>
+
+<div class="wrap">
+
+  <!-- ==================================================================== -->
+  <!-- V1 — control                                                          -->
+  <!-- ==================================================================== -->
+  <div class="col">
+    <p class="caption">V1 <b>— A1 as-is (control)</b></p>
+    <p class="subcap">No icons, no colour. White figure, grey qualifier.</p>
+
+    <div class="phone"><div class="screen"><div class="app">
+      <div class="sticky">
+        <div class="chrome">
+          <span class="logo-mini">
+            <svg width="23" height="23" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="8" fill="#1c1f26"/>
+              <line x1="9"  y1="8" x2="9"  y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="14" y1="8" x2="14" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="19" y1="8" x2="19" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="24" y1="8" x2="24" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="6"  y1="23" x2="27" y2="9"  stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+            Reps
+          </span>
+          <span class="user">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="unitpair" id="slot-v1">
+          <div class="cell"><span class="fig">7 days</span><span class="qual">in a row</span></div>
+          <div class="rule"></div>
+          <div class="cell"><span class="fig">7 of 10</span><span class="qual">active</span></div>
+        </div>
+
+        <div class="head tight"><h1 class="h1">Your players</h1><span class="add">+ Add</span></div>
+      </div>
+
+      <div class="groups">
+        <div>
+          <div><span class="glabel" style="color:#3ed68a;"><i style="background:#3ed68a;"></i>Done</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">K</div><div class="rmid"><div class="rname">Khloe</div><div class="rsub">3 of 3 done</div></div><span class="rtime recent">20m ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">C</div><div class="rmid"><div class="rname">Caleb</div><div class="rsub">2 of 2 done</div></div><span class="rtime recent">5h ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#8a8fa8;"><i style="background:#8a8fa8;"></i>In progress</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">P</div><div class="rmid"><div class="rname">Phoenix</div><div class="rsub">1 of 3 done</div></div><span class="rtime recent">1h ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Mason</div><div class="rsub">2 of 4 done</div></div><span class="rtime">1d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Avery</div><div class="rsub">1 of 2 done</div></div><span class="rtime">2d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">N</div><div class="rmid"><div class="rname">Neo</div><div class="rsub">3 of 6 done</div></div><span class="rtime">4d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">T</div><div class="rmid"><div class="rname">Theo</div><div class="rsub">1 of 5 done</div></div><span class="rtime">6d ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Not started</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Adam</div><div class="rsub">2 waiting</div></div><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Maya</div><div class="rsub">1 waiting</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Nothing assigned</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">J</div><div class="rmid"><div class="rname">Jordan</div><div class="rsub">no assignments</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div>
+
+    <div class="note">
+      <p><strong>The quietest of the three, and the only one that adds nothing.</strong> Every mark
+      on the strip is type the screen already uses — no new glyph vocabulary, no new colour.</p>
+      <p>Worth judging on whether it is <em>too</em> quiet: at a glance the strip is two figures in
+      the same white as the heading directly below it, so what distinguishes it is spacing alone.</p>
+    </div>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- V2 — icons                                                            -->
+  <!-- ==================================================================== -->
+  <div class="col">
+    <p class="caption">V2 <b>— Tabler outline icons</b></p>
+    <p class="subcap">flame + activity · 16px · stroke 1.75 · <code>#6b7080</code></p>
+
+    <div class="phone"><div class="screen"><div class="app">
+      <div class="sticky">
+        <div class="chrome">
+          <span class="logo-mini">
+            <svg width="23" height="23" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="8" fill="#1c1f26"/>
+              <line x1="9"  y1="8" x2="9"  y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="14" y1="8" x2="14" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="19" y1="8" x2="19" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="24" y1="8" x2="24" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="6"  y1="23" x2="27" y2="9"  stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+            Reps
+          </span>
+          <span class="user">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="unitpair" id="slot-v2">
+          <div class="cell">
+            <!-- Tabler `flame`, outline -->
+            <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z"/>
+            </svg>
+            <span class="fig">7 days</span><span class="qual">in a row</span>
+          </div>
+          <div class="rule"></div>
+          <div class="cell">
+            <!-- Tabler `activity`, outline -->
+            <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12h4l3 8l4 -16l3 8h4"/>
+            </svg>
+            <span class="fig">7 of 10</span><span class="qual">active</span>
+          </div>
+        </div>
+
+        <div class="head tight"><h1 class="h1">Your players</h1><span class="add">+ Add</span></div>
+      </div>
+
+      <div class="groups">
+        <div>
+          <div><span class="glabel" style="color:#3ed68a;"><i style="background:#3ed68a;"></i>Done</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">K</div><div class="rmid"><div class="rname">Khloe</div><div class="rsub">3 of 3 done</div></div><span class="rtime recent">20m ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">C</div><div class="rmid"><div class="rname">Caleb</div><div class="rsub">2 of 2 done</div></div><span class="rtime recent">5h ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#8a8fa8;"><i style="background:#8a8fa8;"></i>In progress</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">P</div><div class="rmid"><div class="rname">Phoenix</div><div class="rsub">1 of 3 done</div></div><span class="rtime recent">1h ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Mason</div><div class="rsub">2 of 4 done</div></div><span class="rtime">1d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Avery</div><div class="rsub">1 of 2 done</div></div><span class="rtime">2d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">N</div><div class="rmid"><div class="rname">Neo</div><div class="rsub">3 of 6 done</div></div><span class="rtime">4d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">T</div><div class="rmid"><div class="rname">Theo</div><div class="rsub">1 of 5 done</div></div><span class="rtime">6d ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Not started</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Adam</div><div class="rsub">2 waiting</div></div><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Maya</div><div class="rsub">1 waiting</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Nothing assigned</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">J</div><div class="rmid"><div class="rname">Jordan</div><div class="rsub">no assignments</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div>
+
+    <div class="note">
+      <p><strong>Icons at <code>#6b7080</code></strong> — one step dimmer than the qualifier, so the
+      glyph supports the phrase rather than competing with it. Same call
+      <code>AssignmentMenu</code> already makes by dropping its icons to <code>opacity-60</code>.</p>
+      <p><code>activity</code> is the safe half: it is a pulse line, it means what it draws, and it
+      is literally the icon's name.</p>
+      <p class="warn"><strong><code>flame</code> is the risk.</strong> It is the streak convention
+      everywhere, which is exactly the problem — it imports the gamified register (Duolingo, Snap)
+      into a screen that has been careful to stay in a reporting voice. <code>calendar-check</code>
+      would say the same thing flatter. Worth seeing both before committing.</p>
+      <p class="warn"><strong>It would be the app's first non-menu icon.</strong> Every glyph in the
+      app today sits inside an overflow menu, labelling an action. These label a measure, which is a
+      new job for iconography here.</p>
+    </div>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- V3 — muted coral                                                      -->
+  <!-- ==================================================================== -->
+  <div class="col">
+    <p class="caption">V3 <i>— muted coral (retired colour)</i></p>
+    <p class="subcap"><code>#d47a54</code>, from the retired <code>#ff7a3d</code>. Figures only.</p>
+
+    <div class="phone"><div class="screen"><div class="app">
+      <div class="sticky">
+        <div class="chrome">
+          <span class="logo-mini">
+            <svg width="23" height="23" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="8" fill="#1c1f26"/>
+              <line x1="9"  y1="8" x2="9"  y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="14" y1="8" x2="14" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="19" y1="8" x2="19" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="24" y1="8" x2="24" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="6"  y1="23" x2="27" y2="9"  stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+            Reps
+          </span>
+          <span class="user">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="unitpair tint" id="slot-v3">
+          <div class="cell"><span class="fig">7 days</span><span class="qual">in a row</span></div>
+          <div class="rule"></div>
+          <div class="cell"><span class="fig">7 of 10</span><span class="qual">active</span></div>
+        </div>
+
+        <div class="head tight"><h1 class="h1">Your players</h1><span class="add">+ Add</span></div>
+      </div>
+
+      <div class="groups">
+        <div>
+          <div><span class="glabel" style="color:#3ed68a;"><i style="background:#3ed68a;"></i>Done</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">K</div><div class="rmid"><div class="rname">Khloe</div><div class="rsub">3 of 3 done</div></div><span class="rtime recent">20m ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">C</div><div class="rmid"><div class="rname">Caleb</div><div class="rsub">2 of 2 done</div></div><span class="rtime recent">5h ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#8a8fa8;"><i style="background:#8a8fa8;"></i>In progress</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">P</div><div class="rmid"><div class="rname">Phoenix</div><div class="rsub">1 of 3 done</div></div><span class="rtime recent">1h ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Mason</div><div class="rsub">2 of 4 done</div></div><span class="rtime">1d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Avery</div><div class="rsub">1 of 2 done</div></div><span class="rtime">2d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">N</div><div class="rmid"><div class="rname">Neo</div><div class="rsub">3 of 6 done</div></div><span class="rtime">4d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">T</div><div class="rmid"><div class="rname">Theo</div><div class="rsub">1 of 5 done</div></div><span class="rtime">6d ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Not started</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Adam</div><div class="rsub">2 waiting</div></div><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Maya</div><div class="rsub">1 waiting</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Nothing assigned</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">J</div><div class="rmid"><div class="rname">Jordan</div><div class="rsub">no assignments</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div>
+
+    <div class="note">
+      <p><strong>The tint is on the figures only.</strong> Qualifiers stay <code>#7d8494</code>, the
+      cell hairline stays <code>#2a2d36</code> — so the colour marks the numbers and nothing else.</p>
+      <p><strong>It does solve a real problem.</strong> In V1 the strip is white type sitting above a
+      white heading; the tint is what makes it read as a different <em>kind</em> of thing rather than
+      as a smaller title. That is a genuine argument for it, separate from whether the hue is
+      allowed.</p>
+      <p class="warn"><strong>Adopting it reverses a shipped decision.</strong> Orange was removed
+      from the whole product on Jul 13 in favour of sky blue. Bringing it back for one strip means
+      the app has an accent it uses in exactly one place, and a fourth colour meaning on a screen
+      that currently runs three (green = Done, blue = recent, grey = idle).</p>
+      <p class="warn"><strong>It also warms toward the killed yellow.</strong> Yellow was removed
+      platform-wide in July; at 13px on a phone, coral against
+      <code>#f0b429</code>'s memory is closer than the hex suggests.</p>
+    </div>
+  </div>
+
+</div><!-- /wrap row 1 -->
+
+
+<h2>Row 2 — earlier directions <span>· kept for reference, unchanged</span></h2>
+<p class="secnote">
+  Not part of the current question, and still on the original <code>14px</code>/<code>20px</code>
+  spacing rather than A1's. Left in place so the earlier comparison survives.
+</p>
+
+<div class="wrap">
+
+  <div class="col">
+    <p class="caption">Baseline <b>— stat pair + label</b></p>
+    <p class="subcap">Number, then a small line underneath telling you what it counts.</p>
+
+    <div class="phone"><div class="screen"><div class="app">
+      <div class="sticky">
+        <div class="chrome">
+          <span class="logo-mini">
+            <svg width="23" height="23" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="8" fill="#1c1f26"/>
+              <line x1="9"  y1="8" x2="9"  y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="14" y1="8" x2="14" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="19" y1="8" x2="19" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="24" y1="8" x2="24" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="6"  y1="23" x2="27" y2="9"  stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+            Reps
+          </span>
+          <span class="user">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="statpair" id="slot-baseline">
+          <div class="cell"><div class="num">7</div><div class="lab">days in a row assigned</div></div>
+          <div class="rule"></div>
+          <div class="cell"><div class="num">7/10</div><div class="lab">players active this week</div></div>
+        </div>
+
+        <div class="head"><h1 class="h1">Your players</h1><span class="add">+ Add</span></div>
+      </div>
+
+      <div class="groups">
+        <div>
+          <div><span class="glabel" style="color:#3ed68a;"><i style="background:#3ed68a;"></i>Done</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">K</div><div class="rmid"><div class="rname">Khloe</div><div class="rsub">3 of 3 done</div></div><span class="rtime recent">20m ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">C</div><div class="rmid"><div class="rname">Caleb</div><div class="rsub">2 of 2 done</div></div><span class="rtime recent">5h ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#8a8fa8;"><i style="background:#8a8fa8;"></i>In progress</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">P</div><div class="rmid"><div class="rname">Phoenix</div><div class="rsub">1 of 3 done</div></div><span class="rtime recent">1h ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Mason</div><div class="rsub">2 of 4 done</div></div><span class="rtime">1d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Avery</div><div class="rsub">1 of 2 done</div></div><span class="rtime">2d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">N</div><div class="rmid"><div class="rname">Neo</div><div class="rsub">3 of 6 done</div></div><span class="rtime">4d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">T</div><div class="rmid"><div class="rname">Theo</div><div class="rsub">1 of 5 done</div></div><span class="rtime">6d ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Not started</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Adam</div><div class="rsub">2 waiting</div></div><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Maya</div><div class="rsub">1 waiting</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Nothing assigned</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">J</div><div class="rmid"><div class="rname">Jordan</div><div class="rsub">no assignments</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div>
+
+    <div class="note">
+      <p><strong>Two-beat read.</strong> Figure, then label. The label is doing repair work — the
+      number cannot stand alone.</p>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="caption">Direction B <b>— one named fact, no summary</b></p>
+    <p class="subcap">No aggregate anywhere. Who logged, and when.</p>
+
+    <div class="phone"><div class="screen"><div class="app">
+      <div class="sticky">
+        <div class="chrome">
+          <span class="logo-mini">
+            <svg width="23" height="23" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="8" fill="#1c1f26"/>
+              <line x1="9"  y1="8" x2="9"  y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="14" y1="8" x2="14" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="19" y1="8" x2="19" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="24" y1="8" x2="24" y2="24" stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+              <line x1="6"  y1="23" x2="27" y2="9"  stroke="#378add" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+            Reps
+          </span>
+          <span class="user">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="lastline" id="slot-b">
+          <b>Khloe</b> logged <span class="ago">20m ago</span>
+        </div>
+
+        <div class="head"><h1 class="h1">Your players</h1><span class="add">+ Add</span></div>
+      </div>
+
+      <div class="groups">
+        <div>
+          <div><span class="glabel" style="color:#3ed68a;"><i style="background:#3ed68a;"></i>Done</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">K</div><div class="rmid"><div class="rname">Khloe</div><div class="rsub">3 of 3 done</div></div><span class="rtime recent">20m ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">C</div><div class="rmid"><div class="rname">Caleb</div><div class="rsub">2 of 2 done</div></div><span class="rtime recent">5h ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#8a8fa8;"><i style="background:#8a8fa8;"></i>In progress</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">P</div><div class="rmid"><div class="rname">Phoenix</div><div class="rsub">1 of 3 done</div></div><span class="rtime recent">1h ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Mason</div><div class="rsub">2 of 4 done</div></div><span class="rtime">1d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Avery</div><div class="rsub">1 of 2 done</div></div><span class="rtime">2d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">N</div><div class="rmid"><div class="rname">Neo</div><div class="rsub">3 of 6 done</div></div><span class="rtime">4d ago</span><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">T</div><div class="rmid"><div class="rname">Theo</div><div class="rsub">1 of 5 done</div></div><span class="rtime">6d ago</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Not started</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">A</div><div class="rmid"><div class="rname">Adam</div><div class="rsub">2 waiting</div></div><span class="chev">›</span></div>
+            <div class="row"><div class="avatar">M</div><div class="rmid"><div class="rname">Maya</div><div class="rsub">1 waiting</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div>
+          <div><span class="glabel" style="color:#6b7080;"><i style="background:#6b7080;"></i>Nothing assigned</span></div>
+          <div class="rows">
+            <div class="row"><div class="avatar">J</div><div class="rmid"><div class="rname">Jordan</div><div class="rsub">no assignments</div></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div>
+
+    <div class="note">
+      <p><strong>Nothing to decode, because nothing is aggregated</strong>, and it needs no new
+      query — <code>lastLoggedByPlayer</code> is already computed on this page.</p>
+      <p class="warn"><strong>It restates the top row</strong> — Khloe, twice, 20m ago, same blue.</p>
+    </div>
+  </div>
+
+</div><!-- /wrap row 2 -->
+
+
+<h2>Reading the three</h2>
+<div class="prose">
+  <p><strong>All three are geometrically identical</strong>, measured: the strip's ink is 23.5px
+  tall, the slot occupies 81.5px once A1's 24/34 padding is counted, and the sticky unit is 174.5px —
+  the same three numbers in every frame. The 16px icons sit inside the existing line box without
+  growing it, and the tint costs nothing at all. So this is purely a question of register, with no
+  layout consequence to weigh against it.</p>
+
+  <p><strong>V1 is the safest and possibly the weakest.</strong> It adds no vocabulary at all, but it
+  leaves the strip as white type above a white heading — distinguished by spacing and nothing else.
+  If A1's separation reads well on device, V1 is enough; if the strip still feels absorbed, that is
+  evidence the problem was never only spacing.</p>
+
+  <p><strong>V2's real cost is not the glyphs, it is the precedent.</strong> Every icon in the app
+  today lives in an overflow menu and labels an <em>action</em>. These label a <em>measure</em>,
+  which is a new job. And <code>flame</code> carries the streak convention wholesale — the gamified
+  register the product has otherwise stayed out of. <code>activity</code> has no such problem.</p>
+
+  <p class="warn"><strong>V3 is the one with a decision attached.</strong> It is the most effective at
+  making the strip read as its own kind of thing — but the hue was deliberately retired on Jul 13,
+  and adopting it here gives the app an accent used in exactly one place and a fourth colour meaning
+  on a screen that runs three. See the box at the top of this page before treating it as available.</p>
+
+  <p>Unchanged and still open: <code>7 days in a row</code> needs defining (what counts as a day,
+  does today count before you have assigned, midnight or rolling 24h — all in LA calendar dates);
+  the strip needs seeing at the bottom of the range, where a new coach reads <code>1 day in a row</code>
+  and <code>1 of 3 active</code>; and whatever sits in this slot is pinned by
+  <code>sticky top-0</code> over the whole list, which moving it below the heading row would avoid.</p>
+</div>
+
+</body>
+</html>
