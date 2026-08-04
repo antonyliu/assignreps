@@ -147,6 +147,12 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | Roster groups sorted by most recent activity, never-logged players last | Rows were ordered by when the player was added, which bore no relation to the last-activity dates rendered beside their names — the coach read one order and saw another. Never-logged players sort to the bottom of their group rather than being interleaved via a fallback date that would rank "never" against real activity |
 | Parent recipient helper text combined into one paragraph | The second sentence sat in its own `<p>` with a 2px margin — too small to read as a deliberate paragraph break, too large to read as continuous prose, so it landed as neither |
 
+## Landing page (Aug 3 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Hero thumbnail swapped from a piano student to a young soccer player | Soccer is one of the three activities that stay visible at signup under the narrowed picker; the hero should show something being built toward rather than an activity being removed. Compressed to WebP (1016 KB → 68 KB, −93%) at a quality tuned to sit beside its siblings, then re-cropped 5% tighter from the original PNG so the zoom did not stack a second lossy encode |
+
 ---
 
 ## Not shipped — recorded so the history is honest

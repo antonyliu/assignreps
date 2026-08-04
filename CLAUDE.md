@@ -1,5 +1,45 @@
 # Reps — CLAUDE.md
-*Last updated: Aug 1 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+*Last updated: Aug 3 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+
+---
+
+## 🔖 Where we left off — Aug 3 2026
+
+**Start here tomorrow.** Everything below is committed on local `main`; nothing is in progress and the working tree is clean.
+
+### Git state at close
+
+`main` is **11 commits ahead of prod** and **5 ahead of staging**. Both remotes are ancestors, so either push is a clean fast-forward.
+
+⚠️ **Prod is held back deliberately, not by neglect.** `main` carries the "Upgrade to Pro" menu item, and prod has no Stripe env vars — so pushing would show RJ a button that errors. Two harmless landing-page commits (the soccer hero) are stuck behind that same gate; cherry-pick them onto a branch off `origin/main` if they're wanted sooner.
+
+### Billing — where it actually stands
+
+The whole loop is **built and verified end to end locally** (see Billing architecture). What remains is the gate.
+
+⚠️ **RJ is provisioned as Pro in TEST MODE ONLY.** On Aug 3 his Stripe customer (`cus_V0bVdpHROg0RE1`) and subscription (`sub_1U0aJ6JoxKRCY55iGi5HfZ3l`, $0/mo via `COACHRJ`) were created **directly through the Stripe API — not through the app's checkout button** — and his `coaches` row was updated by firing a real `customer.subscription.updated` through the webhook rather than by editing the database.
+- **None of this exists in live mode and must be redone at launch.** New customer, new subscription, and the coupon recreated uncapped against a `sk_live_` key. Test and live share nothing.
+- Why it was done: so neither real coach is the one blocked while the gate is being built and tested. **Testing the block now requires a third, non-Pro coach.**
+- ⚠️ **RJ still has not been told** about the 3-student limit. He is at ~10 students. In live mode he hits the wall the day the gate ships unless provisioned there first. That conversation is still owed.
+
+### The next real piece: the add-student gate
+
+**Not built.** `FREE_STUDENT_LIMIT = 3` exists in `src/lib/entitlement.ts` and nothing reads it. Blocking the 4th student for a non-entitled coach, with an upgrade prompt, is the next unit of work. `isEntitled()` is the shared rule the gate must route through — it already backs the upgrade button, and the two must not drift.
+
+### Parked, deliberately — not started
+
+- **Activity picker narrowing** — basketball live, soccer/tennis/"create your own" hinted as Soon, everything else removed from what a coach sees at signup. Still only a captured plan; `activityTypes.ts` carries all ten. The homepage half shipped Aug 3 (soccer hero photo); the picker half has not started. See *Queued for next session* item 2.
+- **Landing page copy — empty state and permission language.** Reviewed and **deliberately left unchanged**; the existing copy was judged already correct. ⚠️ The specific strings and reasoning were not captured at the time, so this entry records the decision but not its detail — worth writing down properly if it is ever revisited, rather than re-deriving it.
+
+### To resume local billing work
+
+`STRIPE_WEBHOOK_SECRET` is **local-only** and comes from `stripe listen`, which must be running for any webhook to arrive:
+
+```
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+⚠️ It issues a **new secret each session** — update `.env.local` and restart the dev server, or every event fails signature verification. Nothing is configured in Vercel for staging or prod yet.
 
 ---
 
