@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { requireCoach } from "@/lib/require-coach";
 import { createServiceClient } from "@/lib/supabase-service";
 import { getStripe } from "@/lib/stripe";
+import { isEntitled } from "@/lib/entitlement";
 
 export type CheckoutResult = { ok: true; url: string } | { ok: false; error: string };
 
@@ -35,16 +36,40 @@ export async function createCheckoutSession(): Promise<CheckoutResult> {
   const priceId = process.env.STRIPE_PRICE_ID;
   if (!priceId) return { ok: false, error: "Billing isn't configured yet." };
 
-  // requireCoach() selects only id/name/instructor_type, so read the two fields
+  // requireCoach() selects only id/name/instructor_type, so read the fields
   // billing needs. Read through the USER's client, not the service client —
   // this is their own row and RLS should be the thing proving that.
   const { data: coach, error: readError } = await supabase
     .from("coaches")
-    .select("id, email, stripe_customer_id")
+    .select("id, email, stripe_customer_id, subscription_status")
     .eq("id", user.id)
     .single();
 
   if (readError || !coach) return { ok: false, error: "Couldn't load your account." };
+
+  // ⚠️ ALREADY-SUBSCRIBED GUARD. Without it every completed checkout mints
+  // ANOTHER subscription on the same customer, and the coach is billed once per
+  // trip through Checkout. This is not hypothetical: testing on 2026-08-03 left
+  // three active subscriptions on one customer — $20/mo of real double-billing
+  // had it been live mode.
+  //
+  // ⚠️ Hiding the "Upgrade to Pro" menu item is NOT protection, which is the
+  // whole reason this lives here. `isPro` only becomes true once the webhook
+  // lands, so between the Stripe redirect and that write the button is still
+  // showing and a second tap subscribes again — a window observed in practice,
+  // not imagined. A server action can also be invoked directly, where no UI
+  // gate reaches at all. Same lesson as fileFinishedAssignments: an action
+  // establishes its own preconditions rather than borrowing them from whatever
+  // rendered its button.
+  //
+  // Reads the coach's CURRENT status rather than trusting the isPro prop the
+  // client rendered with, which may be a page-load old.
+  //
+  // isEntitled() rather than a status string comparison, so this and the
+  // add-student gate can never disagree about what counts as subscribed.
+  if (isEntitled(coach.subscription_status)) {
+    return { ok: false, error: "You're already on Pro." };
+  }
 
   const stripe = getStripe();
 
