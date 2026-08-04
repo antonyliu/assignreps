@@ -1324,6 +1324,31 @@ The loop band is deliberately **lighter** than the `#111318` phone frames — th
 
 ⚠️ The four loop mocks are hand-drawn React, not screenshots — a second surface that has to track the design system by hand. Redrawn July 26 2026, so they are current, but nothing keeps them that way.
 
+### ⚠️ Swapping a hero image: the browser will lie to you
+
+**Cost real time on Aug 4 2026.** Replacing a file in `public/` and reloading shows the **old** image, through hard reloads and dev-server restarts. Nothing is wrong with the file.
+
+`next/image` serves optimised copies from a disk cache, and in **Next 16 that cache is `.next/dev/cache/images`** — *not* `.next/cache/images`, which is the path worth guessing and which does nothing. Clearing the wrong one and reloading also repopulates the right one from the running server's memory, so it gets *more* stale, not less.
+
+**The sequence that works:** stop the dev server → `rm -rf .next/dev/cache/images` → start it again. Order matters; clearing while it runs lets it write the old bytes straight back.
+
+⚠️ **Do not verify an image swap by eye.** A screenshot mid-fade shows empty circles, and a cached hit is indistinguishable from a fresh one. Compare bytes instead — `sharp(file).stats()` mean RGB per channel, against three references: the old version out of git (`git show HEAD:public/x.webp`), what the server actually returns (`curl` the `/_next/image?url=…` URL the DOM is using), and the new file on disk. Served must match disk, not HEAD. That is what caught it here after two restarts had "confirmed" the wrong thing.
+
+### Hero image sources — recover them from git, do not re-encode the WebP
+
+⚠️ **Re-cropping the shipped `.webp` stacks a second lossy encode on the first.** Always crop from the original.
+
+The originals are **not in the working tree** — `026b623` deleted them when the heroes were converted to WebP. They are still in history:
+
+| Source | Recover with |
+|---|---|
+| `basketball-hero.png` (2048×2048) | `git show 626c7f9:public/basketball-hero.png` |
+| `piano-hero.png` | in history, same commit range |
+
+⚠️ **The soccer source is GONE and cannot be recovered.** `soccer.png` and `soccer-updated.png` were both untracked when deleted, so no commit holds them — re-cropping soccer means re-supplying the original by hand. Confirm a recovered file is the right one before trusting it: compare its mean RGB against the shipped WebP, which should match to within a fraction of a level.
+
+**Encode quality is chosen by sweeping, not by reusing a number.** The rule from `ad9e14d` is that the output should land beside its siblings in file size. The right quality moves with the pipeline: a 768×768 source encoded 1:1 needed q68, while a 1696×1696 or 2048×2048 source downscaled to the same output needs ~q82, because the downscale removes noise and the same quality number lands 30% smaller.
+
 ⚠️ The frames are basketball-specific (real exercise names, a real shooting percentage) while the rest of the page is activity-agnostic — hence the `Example: basketball` caption. It deliberately claims nothing about other activities: Basketball is the only ACTIVE entry in `activityTypes.ts`, so a broader promise would break at the signup picker one screen later.
 
 ---
