@@ -1229,6 +1229,7 @@ Design resolved — these need building, not deciding.
   - Priority is unchanged — still Medium, deliberately. This is a correction to what the entry *says*, not a re-rating of how urgent it is.
 - **Demo mode** — "Try as Coach" seeded database with context overlay
 - **Account deletion flow** — required by privacy policy
+- **Auth user audit** — 8 rows in `auth.users` against 3 in `coaches` (noticed Aug 4 2026 while deleting the gate test account, not investigated). Four carry no email and are *probably* student phone-OTP logins, which is expected — confirm that rather than assume it, since a blank-email row could also be a half-finished coach signup, the "authenticated but no coaches row" case `requireCoach()` exists to catch. One is a typo signup, `tonyliu34@gnail.com` (`gnail`), which can never receive an OTP and should go. Not urgent; nothing is broken by it.
 - **hello@assignreps.com Gmail Send as setup**
 - **Final legal review of /privacy + /terms**
 - **Re-engagement nudge** — Monday email to coaches who haven't assigned anything
