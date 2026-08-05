@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { Send, CheckCircle, Layers } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -38,9 +37,9 @@ function TallyMark() {
 }
 
 const bullets = [
-  { icon: Send,        text: "Assign in seconds" },
+  { icon: Send,        text: "Assign it in seconds" },
   { icon: CheckCircle, text: "Students log it from anywhere" },
-  { icon: Layers,      text: "You see it as it happens" },
+  { icon: Layers,      text: "You see it happen live" },
 ];
 
 /* ---------- The product-loop section ----------------------------------------
@@ -51,14 +50,23 @@ const bullets = [
    Colours are the shipped tokens from globals.css, not approximations.        */
 
 const T = {
+  // ⚠️ These two are NOT the app's tokens and must not be "corrected" into them.
+  // The app's real background is --reps-bg #080b0f and its ink is --reps-ink
+  // #ffffff. A phone frame on this page sits on cream, where true near-black
+  // reads as a hole punched in the page, and pure-white 12px text on it glares.
+  // #111318 and #e8eaf0 are deliberate landing-page values — see the loop band
+  // note in CLAUDE.md, which sets #1c1f26 lighter than these frames on purpose.
   bg: "#111318",
-  card: "#1c1f26",
-  raised: "#22252e",
-  line: "#2a2d36",
   ink: "#e8eaf0",
-  sub: "#8a8fa8",
-  label: "#c8cdd8",
-  blue: "#378add",
+  // The rest DO match the app exactly, so they read from the tokens instead of
+  // being copied as hex — the same call already made for the greens below, and
+  // one less surface to re-match by hand when the palette moves.
+  card: "var(--reps-card)",
+  raised: "var(--reps-raised)",
+  line: "var(--reps-line)",
+  sub: "var(--reps-sub)",
+  label: "var(--reps-label)",
+  blue: "var(--reps-orange)",
   // The app's two greens, and they are not interchangeable. `attempts` fills the
   // muted layer of a two-tone bar and colours the ATTEMPTS label and number;
   // `green` (makes/done) fills the bright layer and every completion state.
@@ -204,6 +212,7 @@ function MiniCard({
   made,
   makesPct,
   done,
+  note,
 }: {
   name: string;
   right: string;
@@ -212,6 +221,8 @@ function MiniCard({
   made?: string;
   makesPct?: number;
   done?: boolean;
+  /** The student's own line to the coach. Renders last, under the bar. */
+  note?: string;
 }) {
   return (
     <div
@@ -237,6 +248,26 @@ function MiniCard({
         <MiniBar pct={pct} color={color ?? T.attempts} />
       ) : (
         <MiniBar2 pct={pct} makesPct={makesPct} />
+      )}
+      {/* The note sits LAST, below the bar, exactly as the real card builds it —
+          a hairline, then the student's words in dim italic inside curly quotes.
+          No label and no icon: the quotes say who is speaking, where a "NOTE:"
+          prefix would make the card read as a form. A card without one is
+          byte-identical to before, which is why adding it changes no layout. */}
+      {note && (
+        <div
+          style={{
+            borderTop: `1px solid ${T.line}`,
+            marginTop: "0.45em",
+            paddingTop: "0.4em",
+            fontSize: "0.56em",
+            fontStyle: "italic",
+            lineHeight: 1.35,
+            color: T.sub,
+          }}
+        >
+          &ldquo;{note}&rdquo;
+        </div>
       )}
     </div>
   );
@@ -497,6 +528,89 @@ function ScreenDetail() {
   );
 }
 
+/* ---------- The hero device ------------------------------------------------
+   The coach's student-detail screen, and deliberately that one rather than the
+   roster. It is the only screen in the app where all three things the hero
+   claims are simultaneously true and REAL: progress bars including the two-tone
+   makes bar, a completed assignment, and a student's own note. The roster shows
+   none of those — its rows are avatar, first name, subline, timestamp, chevron,
+   and progress bars on roster rows are not built. Drawing a note on a roster row
+   would be inventing UI, which is precisely what the "Example: basketball"
+   caption further down this page exists to avoid.
+
+   It is also the payoff screen, which is what the third bullet now promises:
+   "You see it happen live."
+
+   ⚠️ Every name here is invented. Real rosters are real children, and this page
+   is public. Do not paste in anything from `rj_players`.
+
+   Shares the loop section's primitives and its em-scaling: every size is in `em`
+   against the frame's own font-size, which is derived from its width, so one set
+   of numbers renders at 178px on mobile and 280px on desktop.               */
+function ScreenHeroDetail() {
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1em" }}>
+        <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
+        <span style={{ fontSize: "0.62em", fontWeight: 500, color: T.sub }}>Players</span>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1.05em" }}>
+        <span
+          style={{
+            width: "1.9em",
+            height: "1.9em",
+            borderRadius: "999px",
+            background: T.raised,
+            color: T.label,
+            fontSize: "0.7em",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          M
+        </span>
+        <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <span style={{ fontSize: "1.05em", fontWeight: 600, letterSpacing: "-0.3px", color: T.ink }}>Maya</span>
+          <span style={{ fontSize: "0.56em", color: T.sub }}>Last logged 2h ago</span>
+        </span>
+      </div>
+
+      <div style={{ fontSize: "0.58em", fontWeight: 600, letterSpacing: "1px", color: T.sub, marginBottom: "0.7em" }}>
+        ASSIGNMENTS
+      </div>
+
+      {/* Three states on purpose: finished with makes recorded, underway with a
+          note, and untouched. A hero showing three green ✓ would be claiming a
+          product nobody's students ever fall behind in. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
+        <MiniCard name="Corner 3s · Left" right="✓ Done" made="made 28/50 · 56%" pct={100} makesPct={56} done />
+        <MiniCard name="Mid-range jumpers" right="18/50" pct={36} note="Felt way better today." />
+        <MiniCard name="Free throws" right="0/50" pct={0} />
+      </div>
+
+      <div style={{ marginTop: "auto" }}>
+        <div
+          style={{
+            border: `1px solid ${T.blue}`,
+            color: T.blue,
+            textAlign: "center",
+            borderRadius: "0.5em",
+            padding: "0.5em 0",
+            fontSize: "0.68em",
+            fontWeight: 600,
+          }}
+        >
+          + Assign more
+        </div>
+      </div>
+    </>
+  );
+}
+
 const loopSteps = [
   { caption: "You assign it",   screen: <ScreenAssign /> },
   { caption: "They get a text", screen: <ScreenText /> },
@@ -541,28 +655,20 @@ export default function LandingPage() {
           {/* Mobile: stacked. Desktop: side by side */}
           <div className="landing-layout">
 
-            {/* Image — left on desktop, top on mobile. Two overlapping circles. */}
+            {/* Image — left on desktop, top on mobile. A single device showing
+                the coach's student-detail screen, replacing the two-circle photo
+                collage. Hand-drawn from the loop section's own primitives rather
+                than a screenshot: a screenshot of the real app would put real
+                students' names on a public page, and would need 2x/3x assets to
+                stay crisp where drawn text is sharp at any density. */}
             <div className="landing-image-wrap">
-              <div className="hero-duo">
-                <div className="hero-circle hero-circle-lg">
-                  <Image
-                    src="/basketball-hero.webp"
-                    alt="Coach training a basketball player"
-                    width={500}
-                    height={500}
-                    priority
-                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-                  />
-                </div>
-                <div className="hero-circle hero-circle-sm">
-                  <Image
-                    src="/soccer-hero.webp"
-                    alt="Young soccer player training"
-                    width={360}
-                    height={360}
-                    priority
-                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-                  />
+              <div className="hero-device-wrap">
+                {/* Warm ambient glow. Sits BEHIND the device and is pure
+                    decoration, so the dark UI itself stays exactly the shipped
+                    colour — the softening happens around it, never on it. */}
+                <div className="hero-glow" aria-hidden="true" />
+                <div className="hero-device" aria-hidden="true">
+                  <ScreenHeroDetail />
                 </div>
               </div>
             </div>
@@ -586,7 +692,7 @@ export default function LandingPage() {
                 letterSpacing: "-0.5px",
                 color: "#0f0f10",
               }}>
-                Help students work<br />between sessions.
+                The work doesn&apos;t stop<br />when the session does.
               </h1>
 
               {/* Bullets */}
@@ -713,39 +819,61 @@ export default function LandingPage() {
           width: var(--hero-w);
           flex-shrink: 0;
         }
-        .hero-duo {
+        /* ---- Hero device ---------------------------------------------------
+           Same em-scaling contract as .loop-phone: font-size is derived from the
+           frame's own width, and everything inside ScreenHeroDetail is sized in
+           em, so one set of numbers renders correctly at every breakpoint
+           without a second scale or a transform.
+
+           ⚠️ The device is capped by WIDTH at each breakpoint rather than being
+           a percentage of --hero-w. A 9/18 frame is far taller than the circle
+           cluster it replaces, and on mobile — where the hero stacks — every
+           pixel of device height pushes "Try Reps free" further past the fold.
+           Mobile therefore gets both a narrower frame and a shorter ratio. */
+        .hero-device-wrap {
           position: relative;
-          width: var(--hero-w);
-          height: calc(var(--hero-w) * 0.82);
+          display: flex;
+          justify-content: center;
         }
-        .hero-circle {
+        /* Warm ambient glow, behind the device and purely decorative.
+           ⚠️ Deliberately NOT a black shadow. Black on #ede9e3 greys the cream
+           and makes the device read as a hole punched in the page. This is the
+           background's own family pushed darker and warmer, so the device sits
+           ON the page rather than in front of it. The dark UI inside is
+           untouched — the softening happens entirely around it. */
+        .hero-glow {
           position: absolute;
-          border-radius: 50%;
-          overflow: hidden;
+          inset: -12% -22%;
+          z-index: 0;
+          pointer-events: none;
+          background: radial-gradient(
+            ellipse at 50% 48%,
+            rgba(150, 118, 82, 0.30) 0%,
+            rgba(150, 118, 82, 0.13) 42%,
+            rgba(150, 118, 82, 0) 72%
+          );
+          filter: blur(16px);
+        }
+        .hero-device {
+          --pw: 172px;
+          position: relative;
+          z-index: 1;
+          width: var(--pw);
+          font-size: calc(var(--pw) / 13);
+          aspect-ratio: 9 / 17.5;
           box-sizing: border-box;
-          border: 5px solid #ffffff;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        .hero-circle > img {
-          display: block;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        .hero-circle-lg {
-          width:  calc(var(--hero-w) * 0.68);
-          height: calc(var(--hero-w) * 0.68);
-          aspect-ratio: 1;
-          left: 0;
-          top: 0;
-        }
-        .hero-circle-sm {
-          width:  calc(var(--hero-w) * 0.46);
-          height: calc(var(--hero-w) * 0.46);
-          aspect-ratio: 1;
-          right: 0;
-          bottom: 0;
-          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          padding: 1.1em 0.9em;
+          background: #111318;
+          border: 1px solid #2a2d36;
+          border-radius: 26px;
+          overflow: hidden;
+          /* Two layers, both warm-tinted rather than black: a tight contact
+             shadow that seats the device, and a wide soft ambient one. */
+          box-shadow:
+            0 2px 6px rgba(60, 45, 30, 0.07),
+            0 18px 50px -12px rgba(90, 70, 45, 0.24);
         }
         .landing-text { width: 100%; }
         .cta-primary  { width: 100%; }
@@ -777,6 +905,32 @@ export default function LandingPage() {
           white-space: nowrap;
         }
 
+        /* ⚠️ SHORT viewports, not narrow ones. A 375x812 phone fits the hero
+           comfortably; a 375x667 (SE-class) does not, because the device is
+           ~120px taller than the circle cluster it replaced and that pushed
+           "Try Reps free" 81px below the fold. Keyed on max-height so tall
+           phones keep the full-size device and only genuinely short screens
+           pay. The headline and the stack gap give up a little as well, so the
+           device does not absorb the whole deficit and shrink past legibility. */
+        @media (max-width: 767px) and (max-height: 700px) {
+          /* ⚠️ Narrowing the frame does NOT stop the screen inside overflowing
+             it. Both the frame height and the content scale off --pw, so width
+             cancels out: fitting is purely a question of the ASPECT RATIO
+             against the content's height in em. Shortening 9/17.5 to 9/15 at
+             the same width clipped "+ Assign more" straight off the bottom.
+             So the ratio only shortens to what the content actually needs
+             (~9/16.4 with the trimmed padding below), and the height comes down
+             by narrowing instead. */
+          .hero-device {
+            --pw: 140px;
+            aspect-ratio: 9 / 16.4;
+            padding: 0.85em 0.8em;
+            border-radius: 22px;
+          }
+          .headline { font-size: 28px; }
+          .landing-layout { gap: 10px; }
+        }
+
         @media (min-width: 768px) {
           .page-header { padding: 24px 40px 0; }
           .page-main   { padding: 80px 40px 60px; }
@@ -789,6 +943,13 @@ export default function LandingPage() {
             --hero-w: 340px;
             flex: 0 0 var(--hero-w);
             width: var(--hero-w);
+          }
+          /* Side-by-side from here, so the device's height stops competing with
+             the CTA and it can take its full ratio. */
+          .hero-device {
+            --pw: 236px;
+            aspect-ratio: 9 / 19;
+            border-radius: 30px;
           }
           .landing-text { flex: 1; }
           .cta-primary  { width: auto; }
@@ -978,6 +1139,7 @@ export default function LandingPage() {
             flex: 0 0 var(--hero-w);
             width: var(--hero-w);
           }
+          .hero-device { --pw: 268px; }
         }
       `}</style>
     </div>

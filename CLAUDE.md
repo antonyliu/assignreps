@@ -46,6 +46,7 @@ He is at ~10 students and holds no live-mode subscription. He must either be tol
 - **Activity picker narrowing** — basketball live, soccer/tennis/"create your own" hinted as Soon, everything else removed from what a coach sees at signup. Still only a captured plan; `activityTypes.ts` carries all ten. The homepage half shipped Aug 3 (soccer hero photo); the picker half has not started. See *Queued for next session* item 2.
 - **Landing page copy — empty state and permission language.** Reviewed and **deliberately left unchanged**; the existing copy was judged already correct. ⚠️ The specific strings and reasoning were not captured at the time, so this entry records the decision but not its detail — worth writing down properly if it is ever revisited, rather than re-deriving it.
 - **Roster weekly summary stat (RJ's consistency + active players)** — explored in depth, not shipped, see `docs/explorations/roster-weekly-summary-exploration.html` for reasoning and visual variations.
+- **"How it works" section redesign** — move away from four full dark phone screens in a row, which read as repetitive once the new hero carries a single device mock. Direction: numbered steps (1–4) as the primary structure with short human copy per step, using small contextual screen snippets only where they genuinely help, rather than a full flow. Different section background colour to separate it visually from the hero. **Not started — direction only, no design work done.**
 
 ### To resume local billing work
 
@@ -1313,9 +1314,15 @@ The three at the top are the ones RJ has actually asked for and that now have a 
 ## Landing page (current)
 
 - **Eyebrow:** For instructors
-- **Headline:** Help students work between sessions. (breaks after "work" via a literal `<br />`)
-- **Bullets:** Assign in seconds / Students log it from anywhere / You see it as it happens
+- **Headline:** The work doesn't stop when the session does. (breaks after "stop" via a literal `<br />`)
+- **Bullets:** Assign it in seconds / Students log it from anywhere / You see it happen live
 - **Primary CTA:** Try Reps free
+- **Hero visual (Aug 4 2026):** a **single device mock** of the coach's student-detail screen, replacing the two-circle photo collage. Hand-drawn from the loop section's own primitives — `ScreenHeroDetail` + `.hero-device`, sharing `MiniCard`/`MiniBar2` and the same em-scaling contract.
+  - **Student detail rather than the roster, deliberately.** It is the only screen where all three things the hero shows are simultaneously real: progress bars including the two-tone makes bar, a completed assignment, and a student's note. Roster rows carry none of those — no note surface, and progress bars on roster rows are not built — so a roster mock with a note would have been inventing UI.
+  - ⚠️ **Every name in it is invented.** Real rosters are real children and this page is public. Do not paste anything from `rj_players`.
+  - **Warm two-layer shadow plus a warm radial glow**, never black: black on `#ede9e3` greys the cream and makes the device read as a hole punched in the page. The dark UI inside keeps the shipped colours exactly; the softening is entirely around it.
+  - ⚠️ **Sized by aspect ratio, not width, on short screens.** Both the frame height and its contents scale off `--pw`, so width cancels out and only the RATIO decides whether the screen overflows its own frame. Shortening the ratio to fit a 375×667 viewport clipped "+ Assign more" off the bottom; the fix was to shorten only to what the content needs (~9/16.4) and take the remaining height out of the width. The `max-height: 700px` query exists because a 375×812 phone fits comfortably and only genuinely short screens pay.
+  - `basketball-hero.webp` and `soccer-hero.webp` are now **unreferenced by the app but NOT deleted** — five dated `mocks-*.html` snapshots still load them, exactly as with `piano-hero.webp`.
 - **Product loop:** "Here's how it works." → `Example: basketball` caption → four phone mocks, numbered: 1. You assign it (assign screen, makes tracked) / 2. They get a text (SMS thread) / 3. They log it (stepper + two-tone bar) / 4. You see it (coach student detail, `made 28/50 · 56%`)
 - **Footer:** dark `#1a1d24` with `1px solid #2a2d36` top border
 - **Background:** `#ede9e3` (warm off-white hero) / `#1c1f26` band for the product loop, `#1a1d24` footer
