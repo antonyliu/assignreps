@@ -1368,6 +1368,37 @@ The originals are **not in the working tree** — `026b623` deleted them when th
 
 ⚠️ The frames are basketball-specific (real exercise names, a real shooting percentage) while the rest of the page is activity-agnostic — hence the `Example: basketball` caption. It deliberately claims nothing about other activities: Basketball is the only ACTIVE entry in `activityTypes.ts`, so a broader promise would break at the signup picker one screen later.
 
+### ⚠️ Editing `src/app/page.tsx` — two traps that have each bitten more than once
+
+This file is ~1500 lines with the entire stylesheet inside one `<style>{\`…\`}</style>` template literal and a dozen media queries. Two specific mistakes cost real time on Aug 4 2026 and will again.
+
+**1. A rule that looks applied because it is applied SOMEWHERE. Four instances in one day.**
+
+A breakpoint-scoped rule can be silently outranked, and the symptom is always the same: the value is right in the source, wrong on screen, and correct at *some* width — so it looks fine wherever you happen to be looking.
+
+| What happened | Why |
+|---|---|
+| Section-2 devices stayed mobile-sized | The desktop rules went into a `768` block that sits **earlier in the stylesheet** than the base `.program-*` rules. Equal specificity, later wins, so the base overrode them. |
+| Hero image column stayed 420px above 1023 | The `768` override was correct; the **`1024` block re-declared `flex`/`width` after it** and put the old value straight back. |
+| The section-2 CTA ran the full column width | `display: inline-block` was put in the `768–1023` block **only**, so at 1280 the base `display: block; width: 100%` still applied. |
+| The section-2 heading rendered at 48% of the hero instead of 82% | The `clamp()` was put in the `768–1023` block **only**, so at 1280 it fell back to the 27px mobile size. |
+
+Related, same family: the `768` block once held **two** `.landing-layout { gap }` declarations (80px, then a 56px override further down). The value in effect was not the one you would find first.
+
+**How to not lose an hour to it:**
+- A rule meant for "desktop and up" belongs in its own `@media (min-width: 768px)` block placed **after** the base rules — not inside a `768–1023` range block, and not duplicated per breakpoint.
+- **Check the widest width, not the one you are on.** Three of the four survived a screenshot at the width being worked on.
+- **Measure, do not look.** `getComputedStyle` / `getBoundingClientRect` in the console is what caught every one of these; a large bold heading looks fine on its own and only a *ratio* against the hero exposes it.
+- Before adding an override, grep the selector — the duplicate is often already there.
+
+**2. Backticks inside the `<style>` template literal terminate the string. Twice.**
+
+Both times it was a CSS *comment* written in prose — `` `.landing-text` `` and `` `pretty` rather than `balance` `` — using backticks the way this file's own markdown does. The build fails with a confusing JSX error (`TS1381: Unexpected token. Did you mean {'}'}`) pointing at a line nowhere near the comment.
+
+Use plain words in CSS comments in that file. `tsc --noEmit` catches it immediately, so run it before assuming an edit landed.
+
+**3. A batch edit that throws part-way writes NOTHING.** The Python helper scripts used for these edits build the whole string and write once at the end, so an `AssertionError` on match 5 of 8 silently discards matches 1–4 — while still having printed `ok:` for them. Verify the file, not the log.
+
 ---
 
 ## Screen inventory
