@@ -620,21 +620,21 @@ const loopSteps = [
 
 export default function LandingPage() {
   return (
-    <div className="paper-grain" style={{ backgroundColor: "#ede9e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className="paper-grain paper-grain-dark" style={{ backgroundColor: "#2e2823", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
       {/* Top bar */}
       <header className="page-header">
         <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <TallyMark />
-            <span style={{ fontSize: "20px", fontWeight: 800, letterSpacing: "-0.5px", color: "#0f0f10" }}>
+            <span style={{ fontSize: "20px", fontWeight: 800, letterSpacing: "-0.5px", color: "#f2ede5" }}>
               Reps
             </span>
           </div>
           <Link
             href="/instructor/signup/email"
-            style={{ fontSize: "14px", fontWeight: 500, color: "#666", textDecoration: "underline", textUnderlineOffset: "3px" }}
-            className="hover:text-[#0f0f10] transition-colors"
+            style={{ fontSize: "14px", fontWeight: 500, color: "#a9a49c", textDecoration: "underline", textUnderlineOffset: "3px" }}
+            className="hover:text-[#f2ede5] transition-colors"
           >
             Sign in
           </Link>
@@ -681,7 +681,7 @@ export default function LandingPage() {
                 fontWeight: 700,
                 letterSpacing: "2px",
                 textTransform: "uppercase",
-                color: "#2d7bc4",
+                color: "#4d9ae8",
               }}>
                 For instructors
               </p>
@@ -690,9 +690,9 @@ export default function LandingPage() {
               <h1 className="headline" style={{
                 fontWeight: 600,
                 letterSpacing: "-0.5px",
-                color: "#0f0f10",
+                color: "#f2ede5",
               }}>
-                The work doesn&apos;t stop<br />when the session does.
+                The work doesn&apos;t stop when the session does.
               </h1>
 
               {/* Bullets */}
@@ -700,7 +700,7 @@ export default function LandingPage() {
                 {bullets.map(({ icon: Icon, text }) => (
                   <li key={text} className="bullet-row">
                     <span className="bullet-icon-wrap" aria-hidden>
-                      <Icon className="bullet-icon" color="#378add" />
+                      <Icon className="bullet-icon" color="#4d9ae8" />
                     </span>
                     <span className="bullet-text">{text}</span>
                   </li>
@@ -798,6 +798,17 @@ export default function LandingPage() {
           first paint (fixing Safari's unstyled flash) instead of loading late
           from the end of <body>. Rules are unchanged. */}
       <style href="landing" precedence="default">{`
+        /* ⚠️ The paper grain is mean-preserving soft-light noise tuned for a
+           CREAM page. On a base around 237 it moves the surface by roughly ±3
+           levels — about 1% — and reads as tooth. On this background the base is
+           around 45, where the same noise swings roughly ±10 levels before
+           opacity: proportionally an order of magnitude louder, and it reads as
+           dither rather than paper. Scoped down here rather than changed in
+           globals.css, because /privacy and /terms are still cream and still
+           want the full strength. Doubled class beats the base rule outright
+           instead of relying on source order. */
+        .paper-grain.paper-grain-dark::before { opacity: 0.13; }
+
         .page-header { padding: 20px 22px 0; }
         .page-main   { padding: 48px 22px 24px; }
         .landing-layout {
@@ -835,24 +846,27 @@ export default function LandingPage() {
           display: flex;
           justify-content: center;
         }
-        /* Warm ambient glow, behind the device and purely decorative.
-           ⚠️ Deliberately NOT a black shadow. Black on #ede9e3 greys the cream
-           and makes the device read as a hole punched in the page. This is the
-           background's own family pushed darker and warmer, so the device sits
-           ON the page rather than in front of it. The dark UI inside is
-           untouched — the softening happens entirely around it. */
+        /* Warm halo behind the device — EMISSION, not absorption, and that
+           inversion is the whole point of the dark hero.
+           ⚠️ On the old cream background the device sat at roughly 17:1 against
+           it and the job was to SOFTEN a too-stark edge, so this was a warm
+           DARKENING haze. On #2e2823 the same device sits at about 1.3:1 — it
+           very nearly disappears — so the job is now the opposite: to SEPARATE.
+           A darkening haze would do nothing here; light does the work instead,
+           and it reads as a screen lit in a dim room, which is also why it stays
+           warm rather than going neutral or blue. */
         .hero-glow {
           position: absolute;
-          inset: -12% -22%;
+          inset: -16% -26%;
           z-index: 0;
           pointer-events: none;
           background: radial-gradient(
-            ellipse at 50% 48%,
-            rgba(150, 118, 82, 0.30) 0%,
-            rgba(150, 118, 82, 0.13) 42%,
-            rgba(150, 118, 82, 0) 72%
+            ellipse at 50% 46%,
+            rgba(255, 193, 133, 0.15) 0%,
+            rgba(255, 178, 120, 0.07) 44%,
+            rgba(255, 178, 120, 0) 72%
           );
-          filter: blur(16px);
+          filter: blur(26px);
         }
         .hero-device {
           --pw: 172px;
@@ -866,14 +880,21 @@ export default function LandingPage() {
           flex-direction: column;
           padding: 1.1em 0.9em;
           background: #111318;
-          border: 1px solid #2a2d36;
+          /* ⚠️ A warm hairline RIM, not the loop phones' #2a2d36. The device is
+             darker than the background it now sits on, so its own edge has to
+             carry the separation — on cream the fill did that for free. */
+          border: 1px solid rgba(255, 240, 225, 0.11);
           border-radius: 26px;
           overflow: hidden;
-          /* Two layers, both warm-tinted rather than black: a tight contact
-             shadow that seats the device, and a wide soft ambient one. */
+          /* ⚠️ Black, where this was warm brown on cream. A shadow can only
+             darken what is behind it, so the old rgba(90,70,45,...) had nothing
+             left to bite on once the page went dark and simply vanished. True
+             black is still darker than #2e2823, so depth survives the inversion
+             — it is the one part of the old treatment that still works, just in
+             a different colour. */
           box-shadow:
-            0 2px 6px rgba(60, 45, 30, 0.07),
-            0 18px 50px -12px rgba(90, 70, 45, 0.24);
+            0 4px 14px rgba(0, 0, 0, 0.40),
+            0 26px 60px -18px rgba(0, 0, 0, 0.62);
         }
         .landing-text { width: 100%; }
         .cta-primary  { width: 100%; }
@@ -881,7 +902,12 @@ export default function LandingPage() {
         /* Mobile type scale. Eyebrow, headline and bullet rows share the
            same left edge — no extra indent on any of them. */
         .eyebrow  { font-size: 13px; margin: 0 0 10px; }
-        .headline { font-size: 32px; line-height: 1.14; margin: 0 0 18px; }
+        /* ⚠️ text-wrap: balance replaces the literal <br /> this headline used
+           to carry. A hard break fixes one width and produces a widow at every
+           other; balance evens the lines out at whatever width the viewport
+           happens to be. Browsers that do not support it fall back to ordinary
+           wrapping, which is what removing the <br /> gives anyway. */
+        .headline { font-size: 32px; line-height: 1.14; margin: 0 0 18px; text-wrap: balance; }
         .bullets  { margin-bottom: 24px !important; }
         .bullet-row {
           display: grid;
@@ -900,7 +926,7 @@ export default function LandingPage() {
         .bullet-text {
           font-size: 18px;
           line-height: 1.4;
-          color: #1a1a1a;
+          color: #d6d0c6;
           font-weight: 600;
           white-space: nowrap;
         }

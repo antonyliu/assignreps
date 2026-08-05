@@ -1314,20 +1314,36 @@ The three at the top are the ones RJ has actually asked for and that now have a 
 ## Landing page (current)
 
 - **Eyebrow:** For instructors
-- **Headline:** The work doesn't stop when the session does. (breaks after "stop" via a literal `<br />`)
+- **Headline:** The work doesn't stop when the session does. ⚠️ **No literal `<br />`** — it carries `text-wrap: balance` instead. The hard break fixed one width and produced a widow at every other; balance evens the lines at whatever width the viewport is. Verified 375 → 1440: two balanced lines at 390 and below and at 1280+, three at 768–1024, no single-word last line anywhere.
 - **Bullets:** Assign it in seconds / Students log it from anywhere / You see it happen live
 - **Primary CTA:** Try Reps free
 - **Hero visual (Aug 4 2026):** a **single device mock** of the coach's student-detail screen, replacing the two-circle photo collage. Hand-drawn from the loop section's own primitives — `ScreenHeroDetail` + `.hero-device`, sharing `MiniCard`/`MiniBar2` and the same em-scaling contract.
   - **Student detail rather than the roster, deliberately.** It is the only screen where all three things the hero shows are simultaneously real: progress bars including the two-tone makes bar, a completed assignment, and a student's note. Roster rows carry none of those — no note surface, and progress bars on roster rows are not built — so a roster mock with a note would have been inventing UI.
   - ⚠️ **Every name in it is invented.** Real rosters are real children and this page is public. Do not paste anything from `rj_players`.
-  - **Warm two-layer shadow plus a warm radial glow**, never black: black on `#ede9e3` greys the cream and makes the device read as a hole punched in the page. The dark UI inside keeps the shipped colours exactly; the softening is entirely around it.
+  - ⚠️ **The device treatment INVERTED when the hero went dark (Aug 4 2026), and this is the part most likely to be "fixed" back by mistake.** On the old cream background the device sat at roughly **17:1** against it, so the job was to SOFTEN a too-stark edge: a warm *darkening* haze plus two warm-brown shadows, deliberately never black, because black on cream greys it. On `#2e2823` the same device sits at about **1.3:1** — it very nearly disappears — so the job is the opposite, to SEPARATE:
+    - The glow became **emission, not absorption** — a warm *light* halo, `rgba(255,193,133,.15)`, reading as a screen lit in a dim room.
+    - The device gained a **warm hairline rim**, `rgba(255,240,225,.11)`, rather than the loop phones' `#2a2d36`. Its own edge now carries the separation the fill used to give for free.
+    - Shadows went **black**. A shadow can only darken what is behind it, so the warm-brown pair had nothing to bite on once the page went dark and simply vanished; true black is still darker than `#2e2823`, so depth survives.
+    - The dark UI *inside* the device is untouched in both eras — all of this happens around it.
   - ⚠️ **Sized by aspect ratio, not width, on short screens.** Both the frame height and its contents scale off `--pw`, so width cancels out and only the RATIO decides whether the screen overflows its own frame. Shortening the ratio to fit a 375×667 viewport clipped "+ Assign more" off the bottom; the fix was to shorten only to what the content needs (~9/16.4) and take the remaining height out of the width. The `max-height: 700px` query exists because a 375×812 phone fits comfortably and only genuinely short screens pay.
   - `basketball-hero.webp` and `soccer-hero.webp` are now **unreferenced by the app but NOT deleted** — five dated `mocks-*.html` snapshots still load them, exactly as with `piano-hero.webp`.
 - **Product loop:** "Here's how it works." → `Example: basketball` caption → four phone mocks, numbered: 1. You assign it (assign screen, makes tracked) / 2. They get a text (SMS thread) / 3. They log it (stepper + two-tone bar) / 4. You see it (coach student detail, `made 28/50 · 56%`)
 - **Footer:** dark `#1a1d24` with `1px solid #2a2d36` top border
-- **Background:** `#ede9e3` (warm off-white hero) / `#1c1f26` band for the product loop, `#1a1d24` footer
+- **Background — the page is dark end to end as of Aug 4 2026.** The hero was `#ede9e3` cream; it is now `#2e2823`, a **warm** charcoal against an app palette that is uniformly cool. Temperature, not just lightness, is what keeps it from reading as in-app chrome sitting next to itself.
 
-The loop band is deliberately **lighter** than the `#111318` phone frames — the band is the surface, the phones are objects on it, the same relationship the hero has putting dark photographs on cream.
+  **The surfaces form a descending ladder, and the order is the point** (measured relative luminance):
+
+  | Surface | Hex | L |
+  |---|---|---|
+  | Hero | `#2e2823` | 0.0222 |
+  | Product-loop band | `#1c1f26` | 0.0137 |
+  | Footer | `#1a1d24` | 0.0123 |
+  | Phone / device frames | `#111318` | 0.0065 |
+
+  Scrolling therefore reads as descending *into* the product, and the device stays the darkest, most prominent object on every surface. ⚠️ A warm hero directly above a cool band at the *same* lightness would have read as a colour mismatch rather than a section change — the lightness step is what makes the temperature shift legible as intent.
+
+- **Hero text is the dark set.** Headline and wordmark `#f2ede5`, bullets `#d6d0c6`, eyebrow and bullet icons `#4d9ae8`, "Sign in" `#a9a49c`. The cream did not disappear when the background went dark — it became the text. ⚠️ The eyebrow is `#4d9ae8` rather than the app's `#378add`, which lands at only 4.05:1 on this background and fails AA at 13–14px; `#4d9ae8` gives 4.9:1. ⚠️ The CTA stays the deeper `#2d7bc4` and must **not** be brightened to match — its label is white, and lightening the fill *lowers* white-on-blue contrast (4.4:1 → 3.6:1).
+- ⚠️ **The paper grain is scoped down on this page** to `opacity: .13` via `.paper-grain.paper-grain-dark::before`, defined in `page.tsx` rather than `globals.css`. That noise is mean-preserving soft-light tuned for cream: on a base near 237 it moves the surface about ±3 levels (~1%) and reads as tooth, but on a base near 45 the same noise swings roughly ±10 levels before opacity — proportionally an order of magnitude louder, and it reads as dither. `/privacy` and `/terms` are still `#f8f7f5` and keep the full-strength grain, which is why this is a page-local override and not an edit to the shared rule. The comment in `globals.css` still describes the grain as being for "the light marketing pages" and is now only two-thirds true.
 
 ⚠️ The four loop mocks are hand-drawn React, not screenshots — a second surface that has to track the design system by hand. Redrawn July 26 2026, so they are current, but nothing keeps them that way.
 
