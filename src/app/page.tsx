@@ -62,12 +62,16 @@ const bullets = [
   { icon: Layers,      text: "You know exactly what got done" },
 ];
 
-/* ---------- The product-loop section ----------------------------------------
-   Four miniature phones showing the real screens. Everything inside a phone is
-   sized in `em` against the frame's own font-size, which is derived from its
-   width (see .loop-phone in the stylesheet) — so one set of numbers renders
-   correctly at 160px on desktop and at 80vw on mobile without a second scale.
-   Colours are the shipped tokens from globals.css, not approximations.        */
+/* ---------- Device-mock primitives ------------------------------------------
+   The shared parts of every phone drawn on this page. Everything inside a frame
+   is sized in `em` against the frame's own font-size, which is derived from its
+   width (see .hero-device and .program-phone in the stylesheet) — so one set of
+   numbers renders correctly at every breakpoint without a second scale.
+   Colours are the shipped tokens from globals.css, not approximations.
+
+   ⚠️ These also fed a four-frame "how it works" row until Aug 5 2026. Section 3
+   is numbered copy now, so the only consumers left are the hero device and
+   section 2's two screens — which is why MiniStepper went with it.            */
 
 const T = {
   // ⚠️ These two are NOT the app's tokens and must not be "corrected" into them.
@@ -92,7 +96,7 @@ const T = {
   // `green` (makes/done) fills the bright layer and every completion state.
   // These were a single #27500a, which the app retired — see the colour system
   // in CLAUDE.md. Matching them matters because the two-tone bar is the whole
-  // point of frames 3 and 4: two shades stacked, meaning two different figures.
+  // point of the hero device: two shades stacked, meaning two different figures.
   //
   // Read from the tokens rather than copied as hex, so these mocks follow the
   // app's greens automatically. Every consumer here is an inline style, so the
@@ -105,9 +109,10 @@ const T = {
 /* ---------- The cast --------------------------------------------------------
    ⚠️ ONE source of truth for every invented person and number on this page,
    because there used to be three and they drifted. The hero was a byte-identical
-   clone of loop frame 4 — same three exercises, same three figures, same three
-   states — with only the student's name swapped, so the page read as two
-   disconnected mock sets rather than one coach's roster.
+   clone of the product loop's fourth frame — same three exercises, same three
+   figures, same three states — with only the student's name swapped, so the page
+   read as two disconnected mock sets rather than one coach's roster. Those four
+   frames are gone (section 3 is copy now); the rule they taught is not.
 
    ⚠️ EVERY NAME HERE IS INVENTED and must stay that way. This page is public and
    real rosters are real children. Checked against both live rosters; do not
@@ -118,11 +123,15 @@ const T = {
 const CAST = {
   coach: "Coach Mike",
 
-  /* The product loop, frames 1-4, and the numbers CHAIN across them: Corner 3s
-     is assigned at 50 attempts with makes tracked (1), texted to Jalen (2),
-     logged as 50 attempts / 28 makes (3), and read back as "made 28/50 · 56%"
-     (4). 28/50 = 56%. Change one of these and all four frames have to move
-     together, which is exactly why they now come from one object. */
+  /* The product loop — section 3's four steps — and the numbers CHAIN across
+     them: Corner 3s is assigned at 50 attempts with makes tracked (1), texted to
+     Jalen (2), logged as 50 attempts / 28 makes (3), and read back as 28 of 50
+     at 56% (4). 28/50 = 56%. Change one and every step has to move with it,
+     which is exactly why they come from one object.
+
+     ⚠️ Section 3 drew these as four phone frames until Aug 5 2026. It is copy
+     now, and only the SMS bubble on step 2 survives as a drawn fragment — so
+     the chain is stated in WORDS, where a mismatch is more visible, not less. */
   loop: {
     student: "Jalen",
     exercise: "Corner 3s",
@@ -177,50 +186,8 @@ function MiniBar2({ pct, makesPct }: { pct: number; makesPct: number }) {
   );
 }
 
-/* One stepper control: the round −/+ buttons flanking a number, as on the log
-   screen. `numberColor` carries the label/number pairing rule — attempts go
-   muted only when a MAKES row shares the screen. */
-function MiniStepper({
-  label,
-  value,
-  size,
-  numberColor,
-}: {
-  label: string;
-  value: string;
-  size: string;
-  numberColor: string;
-}) {
-  const btn = {
-    width: "1.5em",
-    height: "1.5em",
-    borderRadius: "999px",
-    background: T.line,
-    color: T.ink,
-    fontSize: "0.7em",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  } as const;
-  return (
-    <div>
-      <div style={{ fontSize: "0.56em", fontWeight: 600, letterSpacing: "1px", color: numberColor, marginBottom: "0.3em" }}>
-        {label}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.6em" }}>
-        <span style={btn}>−</span>
-        <span style={{ fontSize: size, fontWeight: 600, lineHeight: 1, color: numberColor, minWidth: "1.6em", textAlign: "center" }}>
-          {value}
-        </span>
-        <span style={btn}>+</span>
-      </div>
-    </div>
-  );
-}
-
 /* The "Track makes?" switch. Its own control because it is the one thing on the
-   assign screen that decides whether frame 4 ever gets a percentage. */
+   assign screen that decides whether a percentage is ever available to report. */
 function MiniToggle({ on }: { on?: boolean }) {
   return (
     <span
@@ -366,7 +333,7 @@ function ScreenAssign() {
 
       {/* The toggle only renders on an attempts goal, and only where the
           category has something to make — shooting qualifies. It is what makes
-          frame 4's percentage possible. */}
+          the percentage step 4 reports possible. */}
       <div
         style={{
           display: "flex",
@@ -407,191 +374,6 @@ function ScreenAssign() {
   );
 }
 
-/* 2 — the SMS thread. Both bodies are real, verbatim from the code:
-     yesterday  src/app/instructor/student/[id]/actions.ts  (Resend link)
-     today      src/lib/notify-assignment.ts                (assignment sent)
-   The null-instructor_type branch is used for today's, so no sport is named.
-
-   ⚠️ The two differ by one word — "work" vs "homework" — because NEITHER
-   template names the exercise. There is no body in this codebase that says what
-   was assigned, so a thread cannot show "Free throws yesterday, Corner 3s
-   today" without inventing a message the app never sends. If the frame needs
-   visibly distinct messages, the fix is upstream: put the exercise in the SMS.
-
-   The thread fills from the bottom, the way a messages app stacks off its input
-   bar, and there is no inbound bubble — Reps sends outbound SMS only, with no
-   webhook or handler for replies anywhere in the codebase. */
-function ScreenText() {
-  const bubble = {
-    maxWidth: "96%",
-    background: T.raised,
-    borderRadius: "1.15em",
-    padding: "0.62em 0.8em",
-    fontSize: "0.72em",
-    lineHeight: 1.45,
-    color: T.ink,
-  } as const;
-  const receipt = { fontSize: "0.48em", color: T.sub, margin: "0.35em 0 0 0.4em" } as const;
-  const stamp = { fontSize: "0.52em", color: T.sub, textAlign: "center", marginBottom: "0.7em" } as const;
-  return (
-    <>
-      <div style={{ textAlign: "center" }}>
-        <div
-          style={{
-            width: "2em",
-            height: "2em",
-            borderRadius: "999px",
-            background: T.raised,
-            color: T.label,
-            fontSize: "0.7em",
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 0.45em",
-          }}
-        >
-          CM
-        </div>
-        <div style={{ fontSize: "0.66em", fontWeight: 500, color: T.ink }}>{CAST.coach}</div>
-      </div>
-
-      {/* Top-aligned, not pushed to the foot. These frames draw no compose
-          bar, so bottom-anchored bubbles sit against a bare edge with nothing
-          to rest on and read as unmoored — the stack needs the header above it
-          to anchor to instead. */}
-      <div>
-        <div style={{ ...stamp, marginTop: "1em" }}>Yesterday 5:02 PM</div>
-        <div style={bubble}>
-          Hey {CAST.loop.student} — {CAST.coach} assigned you work. Tap here:{" "}
-          <span style={{ color: T.blue }}>assignreps.com/student/…</span>
-        </div>
-        <div style={receipt}>Delivered</div>
-
-        <div style={{ ...stamp, marginTop: "0.9em" }}>Today 4:12 PM</div>
-        <div style={bubble}>
-          Hey {CAST.loop.student} — {CAST.coach} assigned you homework. Tap here:{" "}
-          <span style={{ color: T.blue }}>assignreps.com/student/…</span>
-        </div>
-        <div style={receipt}>Delivered</div>
-      </div>
-    </>
-  );
-}
-
-/* 3 — the log screen as it ships today: a stepper, not the +10/+25/+50 presets
-   that were retired. ATTEMPTS is the muted green precisely because a MAKES row is
-   on screen with it — a solo counter would take the bright green outright. */
-function ScreenLog() {
-  return (
-    <>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1em" }}>
-        <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
-        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.ink }}>{CAST.loop.exercise}</span>
-      </div>
-
-      <div style={{ fontSize: "0.58em", color: T.label, marginBottom: "0.45em" }}>{CAST.loop.target} of {CAST.loop.target} done</div>
-      <div style={{ marginBottom: "1.5em" }}>
-        <MiniBar2 pct={100} makesPct={56} />
-      </div>
-
-      <div style={{ textAlign: "center", marginBottom: "1em" }}>
-        <MiniStepper label="ATTEMPTS" value={String(CAST.loop.target)} size="2.1em" numberColor={T.attempts} />
-      </div>
-
-      <div style={{ height: "1px", background: T.line, marginBottom: "0.8em" }} />
-      <div style={{ textAlign: "center" }}>
-        <MiniStepper label="MAKES" value={String(CAST.loop.makes)} size="1.1em" numberColor={T.green} />
-      </div>
-
-      <div style={{ marginTop: "auto" }}>
-        <div
-          style={{
-            background: T.blue,
-            color: "#fff",
-            textAlign: "center",
-            borderRadius: "0.5em",
-            padding: "0.55em 0",
-            fontSize: "0.72em",
-            fontWeight: 600,
-          }}
-        >
-          Log progress
-        </div>
-      </div>
-    </>
-  );
-}
-
-/* 4 — the coach's student detail, which is where "made X/Y · Z%" actually
-   lives. The roster shows status groups but carries no percentage and no bar
-   (progress bars on roster rows are still unbuilt), so this is the only screen
-   that can honestly show the coach receiving the makes figure. */
-function ScreenDetail() {
-  return (
-    <>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1.1em" }}>
-        <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
-        <span style={{ fontSize: "0.62em", fontWeight: 500, color: T.sub }}>Players</span>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1.2em" }}>
-        <span
-          style={{
-            width: "1.9em",
-            height: "1.9em",
-            borderRadius: "999px",
-            background: T.raised,
-            color: T.label,
-            fontSize: "0.7em",
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          {CAST.loop.student.charAt(0)}
-        </span>
-        <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <span style={{ fontSize: "1.05em", fontWeight: 600, letterSpacing: "-0.3px", color: T.ink }}>{CAST.loop.student}</span>
-          <span style={{ fontSize: "0.56em", color: T.sub }}>Joined 1 month ago</span>
-        </span>
-      </div>
-
-      <div style={{ fontSize: "0.58em", fontWeight: 600, letterSpacing: "1px", color: T.sub, marginBottom: "0.7em" }}>
-        ASSIGNMENTS
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
-        {/* The receipt: attempts full, makes at 90%, and the line that names it. */}
-        <MiniCard name={CAST.loop.exercise} right="✓ Done" made={`made ${CAST.loop.makes}/${CAST.loop.target} · ${CAST.loop.pct}%`} pct={100} makesPct={CAST.loop.pct} done />
-        <MiniCard name="Mid-range jumpers" right="18/50" pct={36} />
-        <MiniCard name="Free throws" right="0/50" pct={0} />
-      </div>
-
-      {/* The real screen pins this to the bottom and swaps the label on state:
-          filled "+ Assign new work" once everything is done, outlined
-          "+ Assign more" while anything is outstanding — which is the case here,
-          with two of the three unfinished. */}
-      <div style={{ marginTop: "auto" }}>
-        <div
-          style={{
-            border: `1px solid ${T.blue}`,
-            color: T.blue,
-            textAlign: "center",
-            borderRadius: "0.5em",
-            padding: "0.5em 0",
-            fontSize: "0.68em",
-            fontWeight: 600,
-          }}
-        >
-          + Assign more
-        </div>
-      </div>
-    </>
-  );
-}
-
 /* ---------- The hero device ------------------------------------------------
    The coach's student-detail screen, and deliberately that one rather than the
    roster. It is the only screen in the app where all three things the hero
@@ -608,7 +390,7 @@ function ScreenDetail() {
    ⚠️ Every name here is invented. Real rosters are real children, and this page
    is public. Do not paste in anything from `rj_players`.
 
-   Shares the loop section's primitives and its em-scaling: every size is in `em`
+   Shares section 2's primitives and their em-scaling: every size is in `em`
    against the frame's own font-size, which is derived from its width, so one set
    of numbers renders at 178px on mobile and 280px on desktop.               */
 function ScreenHeroDetail() {
@@ -653,9 +435,10 @@ function ScreenHeroDetail() {
 
           ⚠️ These are MAYA's drills and figures and they deliberately share
           nothing with Jalen's loop story — different exercises, different
-          numbers. This screen used to be loop frame 4 byte-for-byte with the
-          name swapped, which made the page read as two disconnected mock sets
-          instead of one coach with a roster. Keep them distinct. */}
+          numbers. This screen used to be the product loop's fourth frame
+          byte-for-byte with the name swapped, which made the page read as two
+          disconnected mock sets instead of one coach with a roster. Keep them
+          distinct. */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
         <MiniCard name="Catch &amp; shoot" right="✓ Done" made="made 34/50 · 68%" pct={100} makesPct={68} done />
         <MiniCard name="Layups · Right" right="12/20" pct={60} note={CAST.hero.note} />
@@ -699,7 +482,7 @@ function ScreenHeroDetail() {
      detail and student home screens. Drawing either here would be inventing UI.
 
    Jalen and Maya carry the same state they show elsewhere on the page: one of
-   three done apiece, which is exactly what the hero and loop frame 4 render. */
+   three done apiece, which is exactly what the hero device renders for Maya. */
 const ROSTER_GROUPS = [
   { label: "Done",             color: "var(--reps-green)", rows: [
     { name: "Tariq", sub: "2 of 2 done", ago: "1d ago", recent: false } ] },
@@ -770,11 +553,58 @@ function ScreenRoster() {
   );
 }
 
-const loopSteps = [
-  { caption: "You assign it",   screen: <ScreenAssign /> },
-  { caption: "They get a text", screen: <ScreenText /> },
-  { caption: "They log it",     screen: <ScreenLog /> },
-  { caption: "You see it",      screen: <ScreenDetail /> },
+/* The one screen fragment section 3 keeps, and why this step earns it while the
+   other three do not: "they get a text" is the only step that makes a claim
+   about a surface the visitor never sees. Steps 1, 3 and 4 describe the coach's
+   own side of the app, which the hero and section 2 already show as full
+   screens — drawing them again is the repetition this redesign removed.
+
+   ⚠️ It is a CROP, not a device, and two things keep it from reading as one: a
+   wide, short box nowhere near a phone's 9/19, and a 14px radius against the
+   frames' 28px.
+
+   It carries the app's own message-screen background because the bubble token,
+   --reps-raised (#22252e), sits only a few steps off the band colour (#1c1f26)
+   and would vanish placed straight onto it. */
+function StepSms() {
+  return (
+    <div className="step-sms" aria-hidden="true">
+      <div className="step-sms-bubble">
+        Hey {CAST.loop.student} — {CAST.coach} assigned you homework. Tap here:{" "}
+        <span style={{ color: T.blue }}>assignreps.com/student/…</span>
+      </div>
+      <div className="step-sms-receipt">Delivered</div>
+    </div>
+  );
+}
+
+/* Section 3 — the product loop as numbered steps rather than four phone frames.
+   The copy carries the explanation now, which is why it names the MECHANISM the
+   same way the hero bullets do: a stranger should be able to repeat the loop
+   back after one read.
+
+   ⚠️ The numbers still CHAIN across the four steps, exactly as the frames they
+   replace did and for the same reason — Corner 3s assigned at 50 with makes
+   tracked (1), texted (2), logged (3), read back as 28 of 50 (4). They come
+   from CAST so one edit moves all four together. */
+const howItWorks = [
+  {
+    title: "You assign it",
+    copy: `Pick a drill and set the goal — ${CAST.loop.target} ${CAST.loop.exercise.toLowerCase()}, tracking makes.`,
+  },
+  {
+    title: "They get a text",
+    copy: "A link lands on their phone. No app to install, no account to create.",
+    visual: <StepSms />,
+  },
+  {
+    title: "They log it",
+    copy: "They tap in reps as they go — attempts, makes, and a note if they have something to say.",
+  },
+  {
+    title: "You see it",
+    copy: `${CAST.loop.student} made ${CAST.loop.makes} of ${CAST.loop.target} — ${CAST.loop.pct}%. You know what got done before the next session starts.`,
+  },
 ];
 
 export default function LandingPage() {
@@ -815,7 +645,7 @@ export default function LandingPage() {
 
             {/* Image — left on desktop, top on mobile. A single device showing
                 the coach's student-detail screen, replacing the two-circle photo
-                collage. Hand-drawn from the loop section's own primitives rather
+                collage. Hand-drawn from the shared device primitives rather
                 than a screenshot: a screenshot of the real app would put real
                 students' names on a public page, and would need 2x/3x assets to
                 stay crisp where drawn text is sharp at any density. */}
@@ -911,7 +741,8 @@ export default function LandingPage() {
             <div className="program-screen-item">
               {/* The frame is illustration; the caption below carries the
                   meaning, so screen readers get the label and skip the
-                  duplicated UI — the same split the loop section uses. */}
+                  duplicated UI — the same split the hero device and section
+                  3's SMS fragment use. */}
               <div className="program-phone" aria-hidden="true"><ScreenAssign /></div>
               <p className="program-caption">Assigning work</p>
             </div>
@@ -923,40 +754,45 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Product loop — four miniature screens, dark band under the hero */}
-      <section className="loop-section">
-        <h2 className="loop-heading">Here&apos;s how it works.</h2>
-        {/* The rest of the page is activity-agnostic — the hero photographs span
-            a court and a piano, and the SMS says "homework" with no sport — but
-            these four frames are unavoidably basketball: real exercise names,
-            real shooting percentages. This says so, rather than letting the
-            section quietly narrow the product to one sport.
+      {/* Section 3 — how it works, as numbered steps under the same dark band */}
+      <section className="steps-section">
+        <div className="steps-inner">
+          <h2 className="steps-heading">Here&apos;s how it works.</h2>
+          {/* The rest of the page is activity-agnostic — the hero photographs
+              span a court and a piano, and the SMS says "homework" with no
+              sport — but this section is unavoidably basketball: the copy names
+              a real exercise and a real shooting figure. This says so, rather
+              than letting the section quietly narrow the product to one sport.
 
-            Deliberately no claim about other activities. `activityTypes.ts` has
-            Basketball as the only ACTIVE entry; the other nine are listed but
-            not selectable, so "works for any sport" would break at the signup
-            picker one screen later. */}
-        <p className="loop-example">Example: basketball</p>
-        <div className="loop-track">
-          {loopSteps.map(({ caption, screen }, i) => (
-            <div className="loop-item" key={caption}>
-              {/* The frames are illustration — the caption carries the meaning,
-                  so screen-readers get the caption and skip the duplicated UI. */}
-              <div className="loop-phone" aria-hidden="true">
-                {screen}
-              </div>
-              <p className="loop-caption">{i + 1}. {caption}</p>
-            </div>
-          ))}
+              Deliberately no claim about other activities. `activityTypes.ts`
+              has Basketball as the only ACTIVE entry; the other nine are listed
+              but not selectable, so "works for any sport" would break at the
+              signup picker one screen later. */}
+          <p className="steps-example">Example: basketball</p>
+          {/* A real ordered list, so the sequence is in the semantics rather
+              than only in the rendered digits. The visible number is therefore
+              aria-hidden — the list element already announces the order, and
+              reading "one" twice is worse than not drawing it. */}
+          <ol className="steps-list">
+            {howItWorks.map(({ title, copy, visual }, i) => (
+              <li className="step-item" key={title}>
+                <span className="step-num" aria-hidden="true">{i + 1}</span>
+                <div className="step-body">
+                  <h3 className="step-title">{title}</h3>
+                  <p className="step-copy">{copy}</p>
+                  {visual}
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
-
       </section>
 
       {/* Footer */}
-      {/* Its own band now: #1a1d24 sits a step lighter than the loop section's
-          #111318, with a 1px rule on top. The two used to share one colour, so
-          the rule was carrying the separation alone and the footer read as the
-          tail of the section. Lighter-on-darker separates without a hard edge.
+      {/* Its own band now: #1a1d24 sits a step darker than section 3's #1c1f26,
+          with a 1px rule on top. The two used to share one colour, so the rule
+          was carrying the separation alone and the footer read as the tail of
+          the section. A tonal step separates without a hard edge.
           Greys and links are the dark-background set: #555 / #2d7bc4 were tuned
           for cream and go muddy here. */}
       <footer style={{ backgroundColor: "#1a1d24", borderTop: "1px solid #2a2d36", padding: "20px var(--page-pad) 28px" }}>
@@ -1017,7 +853,7 @@ export default function LandingPage() {
           flex-shrink: 0;
         }
         /* ---- Hero device ---------------------------------------------------
-           Same em-scaling contract as .loop-phone: font-size is derived from the
+           Same em-scaling contract as .program-phone: font-size is derived from the
            frame's own width, and everything inside ScreenHeroDetail is sized in
            em, so one set of numbers renders correctly at every breakpoint
            without a second scale or a transform.
@@ -1034,7 +870,7 @@ export default function LandingPage() {
              and centring is right there. Left-aligned once it becomes a column
              (see the 768 block), because a 268px device centred in a 420px
              column sat 76px inside the page's left edge while the header logo,
-             this section's heading and the loop's first frame all sat on it.
+             this section's heading and section 3's steps all sat on it.
              That was the "hero looks indented" — not a padding difference. */
           justify-content: center;
         }
@@ -1186,8 +1022,8 @@ export default function LandingPage() {
 
           /* ⚠️ Left-aligned once the hero is a ROW. Centred, a 268px device in a
              420px column sat 76px inside the page's left edge, while the header
-             logo, the "one place" heading and the loop's first frame all sat on
-             it — which is what read as "the hero is indented". It is not a
+             logo, the "one place" heading and section 3's steps all sat on it —
+             which is what read as "the hero is indented". It is not a
              padding difference; the padding was always identical. */
           .hero-device-wrap { justify-content: flex-start; }
           /* Side-by-side from here, so the device's height stops competing with
@@ -1223,11 +1059,11 @@ export default function LandingPage() {
            being unmistakably its own band, so the page reads cream -> warm ->
            dark as three deliberate steps. */
         .program-section {
-          /* A real shift from the cream hero, in the loop band's family rather
-             than a tan in between. Deliberately a step LIGHTER than the loop's
-             #1c1f26 so the page still descends — hero (cream) -> here -> loop
-             -> footer -> device frames — and the devices stay the darkest
-             objects on it. */
+          /* A real shift from the cream hero, in section 3's band family rather
+             than a tan in between. Deliberately a step LIGHTER than section 3's
+             #1c1f26 so the page still descends — hero (cream) -> here ->
+             section 3 -> footer -> device frames — and the devices stay the
+             darkest objects on it. */
           background: #252932;
           padding: 56px var(--page-pad) 60px;
         }
@@ -1369,8 +1205,8 @@ export default function LandingPage() {
           min-width: 0;
         }
         /* Identifying labels, not steps — deliberately not numbered, and in the
-           same quiet register as the loop section's "Example: basketball"
-           rather than its numbered 17px captions. */
+           same quiet register as section 3's "Example: basketball" caption
+           rather than its numbered step titles. */
         .program-caption {
           margin: 12px 0 0;
           font-size: 13px;
@@ -1480,140 +1316,175 @@ export default function LandingPage() {
           .program-screens { gap: 18px; }
         }
 
-        .loop-section {
+        /* ---- Section 3: how it works -------------------------------------
+           Numbered steps, not four phone screens. The frames were dropped
+           because the page already carries a device in the hero and two more in
+           section 2 — a fourth, fifth, sixth and seventh read as repetition
+           rather than as explanation, and each was hand-drawn JSX that had to
+           track the design system by hand. The copy carries the loop now.
+
+           One screen fragment survives, on step 2 only. See StepSms for why
+           that step and not the others. */
+        .steps-section {
           /* --reps-card (#1c1f26), the app's surface token — the colour cards
-             sit ON in the product. Used here for the same reason: the band is
-             the surface, the phones are the objects on it, so the surface has to
-             be the lighter of the two. It previously matched the frames' own
-             #111318 exactly, which left a 1px border doing all the separating
-             and made the frames sink into the band. Inverting it mirrors the
-             hero, where dark photographs sit on cream. */
+             sit ON in the product. The band is the surface and anything drawn
+             on it is darker, the same relationship the hero has putting dark
+             devices on cream. The page descends hero (cream) -> section 2
+             (#252932) -> here -> footer (#1a1d24). */
           background: #1c1f26;
-          padding: 40px 0 44px;
-          /* The page is a 100vh flex column. When the content is shorter than the
-             viewport the slack used to fall through to the cream body colour
-             below the footer; growing this band absorbs it, so the dark runs to
-             the bottom edge. No effect once the content is taller than 100vh. */
+          padding: 44px var(--page-pad) 48px;
+          /* The page is a 100vh flex column. When the content is shorter than
+             the viewport the slack used to fall through to the cream body
+             colour below the footer; growing this band absorbs it. No effect
+             once the content is taller than 100vh. */
           flex: 1 0 auto;
         }
-        .loop-heading {
-          /* The example caption below now carries the bulk of the gap down to
-             the frames; this is just the tight lead into it. */
-          margin: 0 auto 8px;
-          padding: 0 var(--page-pad);
-          text-align: center;
+        /* ⚠️ The shell, so this section measures the same left edge as the
+           header, the hero device, the section-2 heading and the footer. The
+           four-frame version centred its heading instead; the steps are
+           left-aligned copy, so they take the shell edge the way section 2
+           does. */
+        .steps-inner {
+          max-width: var(--page-max);
+          margin: 0 auto;
+        }
+        .steps-heading {
+          margin: 0 0 8px;
           color: #ffffff;
-          /* Stays under the hero headline (32px on mobile) so the hero keeps
-             the page's largest type; desktop reopens to 32px. */
-          font-size: 24px;
+          /* Tier 3 of the size hierarchy — see the ratio in the desktop rule
+             below, which is where the chain is actually written down. */
+          font-size: 22px;
           font-weight: 700;
           letter-spacing: -0.5px;
           line-height: 1.2;
+          text-wrap: balance;
         }
-        /* The old subline is gone — it restated the four captions word for word,
-           so the section said the same thing twice. What sits here now is a
-           different thing: a caption naming what the frames depict, not a
-           restatement of them. */
-        /* A caption, not a subhead: --reps-sub (#8a8fa8), the app's muted-text
-           token, at 13px against the heading's 24px. It sits tight under the
-           heading and owns the remaining space down to the frames, so the total
-           heading-to-frames distance stays where it was before the line existed. */
-        .loop-example {
-          margin: 0 auto 30px;
-          padding: 0 22px;
-          text-align: center;
+        /* A caption naming what the steps depict, not a restatement of them.
+           Kept from the four-frame version because the reason still holds: the
+           copy below names a real exercise and a real shooting figure, so the
+           section is still unavoidably basketball and still has to say so.
+           --reps-sub (#8a8fa8), the app's muted-text token. */
+        .steps-example {
+          margin: 0 0 28px;
           font-size: 13px;
           font-weight: 500;
           line-height: 1.4;
           color: #8a8fa8;
         }
-        .loop-item {
+        .steps-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          /* A reading measure, not the full 960px shell. These are sentences
+             now rather than captions under frames, and a 960px line is well
+             past comfortable. It is a max-width on a left-aligned block, so the
+             list still starts on the shell edge. */
+          max-width: 620px;
           display: flex;
           flex-direction: column;
-          align-items: center;
+          gap: 26px;
         }
-        /* One width drives everything: the frame, and — via font-size — every
-           type and spacing value inside it, which are all authored in em. */
-        .loop-phone {
-          --pw: 160px;
-          width: var(--pw);
-          font-size: calc(var(--pw) / 13);
-          aspect-ratio: 9 / 19;
-          flex-shrink: 0;
-          box-sizing: border-box;
+        .step-item {
           display: flex;
-          flex-direction: column;
-          padding: 1.1em 0.9em;
-          background: #111318;
-          border: 1px solid #2a2d36;
-          border-radius: 28px;
-          overflow: hidden;
+          align-items: flex-start;
+          gap: 14px;
         }
-        /* The captions carry the section's meaning now that the subline is gone,
-           so they read as labels rather than footnotes: white instead of the
-           muted #c8cdd8, 17px instead of 15px (19px on desktop, below the 32px
-           heading so the hierarchy still holds), and numbered so the four frames
-           read as an ordered sequence rather than four unrelated screens.
-           There is no type scale in this file — every size here is a literal px
-           with a desktop bump — so these follow the same pattern. */
-        .loop-caption {
-          margin: 14px 0 0;
-          text-align: center;
+        /* The numbers are the structure, so they get a fixed-width gutter every
+           step aligns to rather than sitting inline where they would shift with
+           the title. tabular-nums keeps 1-4 identically wide. */
+        .step-num {
+          flex: 0 0 auto;
+          width: 24px;
+          font-size: 18px;
+          font-weight: 700;
+          line-height: 1.35;
+          color: #8a8fa8;
+          font-variant-numeric: tabular-nums;
+        }
+        /* min-width: 0 so a long unbroken string in the copy cannot push the
+           flex item past its track and widen the page. */
+        .step-body { min-width: 0; }
+        .step-title {
+          margin: 0 0 5px;
           font-size: 17px;
           font-weight: 600;
-          line-height: 1.4;
+          line-height: 1.35;
           color: #ffffff;
-          white-space: nowrap;
+        }
+        .step-copy {
+          margin: 0;
+          font-size: 15px;
+          line-height: 1.55;
+          color: #a2a8b4;
+          /* A sentence, so only the LAST line needs protecting from a stranded
+             word — which is what pretty does. balance would even every line and
+             pull the measure in for no reason. Same call as .program-sub. */
+          text-wrap: pretty;
         }
 
-        /* Mobile: one phone per screen, snapped. */
-        .loop-track {
-          display: flex;
-          gap: 24px;
-          overflow-x: auto;
-          scroll-snap-type: x mandatory;
-          padding: 0 var(--page-pad) 4px;
-          /* Without this a snapped frame sits flush to the screen edge and
-             loses the gutter the first one has. */
-          scroll-padding-left: var(--page-pad);
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-        }
-        .loop-track::-webkit-scrollbar { display: none; }
-        .loop-item { scroll-snap-align: start; flex: 0 0 auto; }
-        /* Capped so a frame doesn't swallow the viewport — at 390px this is
-           240px, leaving the next frame peeking in to signal the row scrolls. */
-        .loop-phone { --pw: min(80vw, 240px); }
+        /* ---- The step 2 fragment -----------------------------------------
+           ⚠️ Deliberately OUTSIDE the device size tier, because it is not a
+           device. That tier — hero, then section 2, then here, each about 82%
+           of the one above — governs phone FRAMES. This is a crop of one
+           screen, and what keeps it subordinate is measured differently: it is
+           short, and its type is 13px against the step title's 17px, so it
+           reads as an illustration inside the copy rather than as a fifth
+           screen competing with section 2.
 
-        /* Desktop: the row spans the hero's container exactly. Rather than
-           spreading four fixed frames apart (which would open ~100px gaps), the
-           frames themselves grow to absorb the width, so the row stays tight at
-           16px while its outer edges land on the hero's. The width has to be an
-           explicit length — not a flex basis — because each phone's em scale is
-           derived from it, hence the calc rather than flex: 1.
-             container = min(1100, 100vw - 80)   [hero content box]
-             frame     = (container - 3 * 16px gaps) / 4                      */
+           Two details stop it reading as a phone: a wide, short box nowhere
+           near the frames' 9/19 ratio, and a 14px radius against their 28px. */
+        .step-sms {
+          margin: 12px 0 0;
+          max-width: 300px;
+          background: #111318;
+          border: 1px solid #2a2d36;
+          border-radius: 14px;
+          padding: 12px 13px;
+        }
+        /* --reps-raised (#22252e), the app's own bubble colour, which is why
+           the patch above exists: against the band's #1c1f26 the two are only a
+           few steps apart and the bubble would disappear. */
+        .step-sms-bubble {
+          background: var(--reps-raised);
+          border-radius: 14px;
+          padding: 9px 11px;
+          font-size: 13px;
+          line-height: 1.45;
+          color: #e8eaf0;
+        }
+        .step-sms-receipt {
+          margin: 5px 0 0 5px;
+          font-size: 10.5px;
+          color: #8a8fa8;
+        }
+
+        /* ⚠️ ONE min-width:768 block, placed AFTER every base rule above —
+           not a copy inside each breakpoint range. A "desktop and up" rule put
+           in a 768-1023 range block silently stops applying at 1024, which is
+           the bug this file has now had four times. */
         @media (min-width: 768px) {
-          .loop-section { padding: 80px 0; }
-          .loop-heading { font-size: 32px; }
-          .loop-caption { font-size: 19px; }
-          .loop-heading { margin: 0 auto 10px; }
-          .loop-example { margin: 0 auto 34px; font-size: 14px; }
-          .loop-track {
-            /* ⚠️ NOT drift, despite looking like it: the box is deliberately
-               wider than --page-max because its own padding is inside it, so
-               the CONTENT lands at exactly --page-max and its first frame lines
-               up with the header logo. Expressed in the shell's terms now so
-               that stays true if the shell moves. */
-            max-width: calc(var(--page-max) + 2 * var(--page-pad));
-            margin: 0 auto;
-            justify-content: center;
-            gap: 16px;
-            overflow-x: visible;
-            scroll-snap-type: none;
-            padding: 0 40px;
-          }
-          .loop-phone { --pw: calc((min(var(--page-max), 100vw - 2 * var(--page-pad)) - 48px) / 4); }
+          .steps-section { padding: 72px var(--page-pad) 76px; }
+          /* ⚠️ Tier 3 of the SIZE HIERARCHY, as a ratio rather than as fixed
+             numbers, so it holds at every width instead of at the two it was
+             checked at. The chain:
+               hero       clamp(38px, 4.5vw, 56px)
+               section 2  clamp(32px, 3.7vw, 46px)    about 82% of hero
+               here       clamp(26px, 3.03vw, 38px)   about 82% of section 2
+             which lands 81-83% across the range: 38/46 at 1280, 31/37.9 at
+             1024, 26/32 at 768.
+
+             ⚠️ The four-frame version this replaces was a FLAT 32px at every
+             width, which tied section 2 at 768 (32 against 32 — no hierarchy at
+             all) and sat at 70% at 1280. It was under its own tier at one width
+             and level with the section above it at another. */
+          .steps-heading { font-size: clamp(26px, 3.03vw, 38px); margin: 0 0 10px; }
+          .steps-example { margin: 0 0 34px; font-size: 14px; }
+          .steps-list { max-width: 660px; gap: 30px; }
+          .step-item { gap: 18px; }
+          .step-num { width: 28px; font-size: 20px; }
+          .step-title { font-size: 19px; }
+          .step-copy { font-size: 16px; }
+          .step-sms { max-width: 330px; }
         }
 
         .footer-desktop { display: none; }
