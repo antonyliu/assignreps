@@ -725,7 +725,7 @@ export default function LandingPage() {
                   }}
                   className="cta-primary hover:opacity-90 active:scale-[0.98] transition-all"
                 >
-                  Try Reps free
+                  Start free
                 </Link>
               </div>
 
@@ -828,7 +828,7 @@ export default function LandingPage() {
            ⚠️ The device is capped by WIDTH at each breakpoint rather than being
            a percentage of --hero-w. A 9/18 frame is far taller than the circle
            cluster it replaces, and on mobile — where the hero stacks — every
-           pixel of device height pushes "Try Reps free" further past the fold.
+           pixel of device height pushes "Start free" further past the fold.
            Mobile therefore gets both a narrower frame and a shorter ratio. */
         .hero-device-wrap {
           position: relative;
@@ -919,7 +919,7 @@ export default function LandingPage() {
         /* ⚠️ SHORT viewports, not narrow ones. A 375x812 phone fits the hero
            comfortably; a 375x667 (SE-class) does not, because the device is
            ~120px taller than the circle cluster it replaced and that pushed
-           "Try Reps free" 81px below the fold. Keyed on max-height so tall
+           "Start free" 81px below the fold. Keyed on max-height so tall
            phones keep the full-size device and only genuinely short screens
            pay. The headline and the stack gap give up a little as well, so the
            device does not absorb the whole deficit and shrink past legibility. */
