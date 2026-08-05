@@ -7,11 +7,18 @@
 
 **Start here tomorrow.** Everything below is committed on local `main`; nothing is in progress and the working tree is clean.
 
+Three threads moved today: **the billing gate** (built and verified), **the landing page** (hero rebuilt and a second section added, both now locked), and **housekeeping** (one real-data mistake corrected, three sets of gotchas written down).
+
 ### Git state at close
 
-`main` is **14 commits ahead of prod** and **8 ahead of staging**. Both remotes are ancestors, so either push is a clean fast-forward. (Verified against `git branch -r -v` on Aug 4, not carried over from the previous entry.)
+`main` is **34 commits ahead of prod** and **28 ahead of staging**. Both remotes are ancestors, so either push is a clean fast-forward. Verified with `git branch -r -v` at close — prod sits at `88de42a`, staging at `7e0660d`, local tip `1266b94`. ⚠️ Do not carry these numbers forward; re-run the command.
 
-⚠️ **Prod is held back deliberately, not by neglect.** `main` carries the "Upgrade to Pro" menu item, and prod has no Stripe env vars — so pushing would show RJ a button that errors. Two harmless landing-page commits (the soccer hero) are stuck behind that same gate; cherry-pick them onto a branch off `origin/main` if they're wanted sooner.
+⚠️ **Prod is held back deliberately, not by neglect — and the reason got STRONGER today, not weaker.** Prod has no Stripe env vars, and `main` now carries two things that depend on them:
+
+1. The **"Upgrade to Pro"** menu item, which would error on tap.
+2. The **add-student gate**, which is the serious one. `isEntitled()` reads `subscription_status`, which is NULL for every coach in live mode — so on prod RJ reads as free tier and is **blocked from adding his 11th student**. He is at ~10 and has never been told the limit exists. See the RJ section below; that conversation is the blocking item.
+
+⚠️ **The whole landing-page redesign is stuck behind that same gate** — the new hero, the "one place" section, the CTA and copy work, roughly thirty commits, none of which touch billing. If any of it is wanted on prod sooner, cherry-pick onto a branch off `origin/main` rather than pushing `main`. (The earlier version of this note said "two harmless landing-page commits"; that was true on Aug 3 and is badly out of date now.)
 
 ### Billing — where it actually stands
 
@@ -40,6 +47,24 @@ What was actually exercised, in order:
 **This is now the blocking item, and it changed character today.** Until the gate existed, the limit was theoretical. It is now real code on `main`: the day this reaches an environment RJ uses with live billing, he is stopped at his 11th student.
 
 He is at ~10 students and holds no live-mode subscription. He must either be told, or be provisioned in live mode first — ideally both, in that order. That conversation is still owed and is no longer safe to defer indefinitely.
+
+### ✅ Landing page — hero and section 2 both BUILT and LOCKED (Aug 4 2026)
+
+The largest thread of the day by commit count. Everything below is shipped on `main` and settled; see **Landing page (current)** for the full description and the reasoning behind each choice.
+
+- **The hero was rebuilt around a single device mock**, replacing the two-circle photo collage. It draws the coach's *student-detail* screen — the only screen where progress bars, a completed assignment and a student's note are all simultaneously real. Marked **LOCKED**: no further visual changes.
+- **A second section, "one place"**, sits between the hero and the product loop: heading, subtext, a contextual CTA, and two upright device mocks (assign screen + roster) with quiet captions. Warm-dark `#252932` band, a step lighter than the loop's `#1c1f26`, so the page descends hero → here → loop → footer → device frames.
+- ⚠️ **A dark hero was built and reverted the same day.** It read as muddy and brown. The cream hero is the shipped design; the groundwork is in `b739fda` if it is ever revisited. Recorded in *What was killed and why* so it is not re-attempted as though untried.
+- **One `CAST` constant now owns every invented person and number on the page.** The hero used to be loop frame 4 byte-for-byte with the name swapped — same three exercises, same three figures — so the page read as disconnected mock sets. Coach Mike, Jalen's loop story, Maya's hero screen, and the roster (Tariq, Sofia, Nico) all come from it.
+- **One page shell**: `--page-max` (960px) and `--page-pad` on `.paper-grain`, referenced by every band. There are no `1100px` literals left in the file. Header, hero device, section-2 heading, first loop frame and footer all measure the same left edge.
+- **A size-hierarchy ratio is now the rule**, not fixed numbers: section 2 sits at ~82% of the hero's equivalent heading and device sizes, expressed as the same clamp curve scaled. Any future section takes the next tier down the same way.
+- **Real CTAs have their own treatment** (`.cta-real`): brand blue, real elevation, larger type and radius than anything drawn inside a phone frame. ⚠️ The colour is the brand token deliberately — a separate deeper blue was tried and reverted for reading as off-brand rather than distinct. Copy is `Start free` in the hero (kept literal for a first-time stranger) and `Start your program` in section 2.
+
+### Housekeeping and documentation (Aug 4 2026)
+
+- ⚠️ **Real student names were removed from a committed file.** `docs/explorations/roster-weekly-summary-exploration.html` used Khloe, Caleb, Phoenix, Mason and Avery — five of RJ's actual students, lifted from this file while building a "realistic roster shape". No public exposure (`docs/` is not served), but they are children. Swapped for invented names in `e9eb574`. **The rule, now written into that file and into `CAST`: a realistic SHAPE is worth copying from real data; the names are not part of the shape.**
+- **Three sets of gotchas are now written down** rather than living in one session's memory: swapping a hero image (the Next 16 cache path, and why an image swap cannot be verified by eye), recovering hero sources from git, and editing `page.tsx` (breakpoint-scoped rules that look applied because they apply *somewhere* — four instances in one day — plus backticks terminating the `<style>` template literal).
+- **The auth user audit** is logged under Medium priority: 8 rows in `auth.users` against 3 in `coaches`.
 
 ### Parked, deliberately — not started
 
