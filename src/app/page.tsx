@@ -152,6 +152,23 @@ const CAST = {
     note: "Felt way better today.",
   },
 
+  /* Jalen's other two assignments, for the student section's own screens.
+     ⚠️ The count is NOT free. The roster in section 2 already says "Jalen —
+     1 of 3 done", so his student screens have to show exactly three, exactly
+     one of them finished. The finished one is Corner 3s and carries the loop
+     figures above; these two are what make up the rest of that claim.
+
+     `inProgress` is what the log screen draws, deliberately NOT Corner 3s:
+     showing the chained drill mid-log on one screen and finished on the other
+     would put two different states on one page for one assignment, which reads
+     as a mistake even though a log screen is a moment and a card is a result.
+     Its makes/attempts give 12/18 = 67%. */
+  student: {
+    inProgress: { exercise: "Free throws", target: 25, done: 18, makes: 12,
+                  note: "Left elbow felt off today." },
+    notStarted: { exercise: "Dribble series", target: 10, unit: "min" },
+  },
+
   /* The roster shown in the "one place" section — Coach Mike's whole roster,
      which is why Jalen and Maya are both in it. */
   roster: ["Jalen", "Maya", "Tariq", "Sofia", "Nico"],
@@ -183,6 +200,48 @@ function MiniBar2({ pct, makesPct }: { pct: number; makesPct: number }) {
             borderRadius: "999px",
           }}
         />
+      </div>
+    </div>
+  );
+}
+
+/* One stepper control: the round −/+ buttons flanking a number, as on the log
+   screen. `numberColor` carries the label/number pairing rule — attempts go
+   muted only when a MAKES row shares the screen. */
+function MiniStepper({
+  label,
+  value,
+  size,
+  numberColor,
+}: {
+  label: string;
+  value: string;
+  size: string;
+  numberColor: string;
+}) {
+  const btn = {
+    width: "1.5em",
+    height: "1.5em",
+    borderRadius: "999px",
+    background: T.line,
+    color: T.ink,
+    fontSize: "0.7em",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  } as const;
+  return (
+    <div>
+      <div style={{ fontSize: "0.56em", fontWeight: 600, letterSpacing: "1px", color: numberColor, marginBottom: "0.3em" }}>
+        {label}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.6em" }}>
+        <span style={btn}>−</span>
+        <span style={{ fontSize: size, fontWeight: 600, lineHeight: 1, color: numberColor, minWidth: "1.6em", textAlign: "center" }}>
+          {value}
+        </span>
+        <span style={btn}>+</span>
       </div>
     </div>
   );
@@ -555,6 +614,120 @@ function ScreenRoster() {
   );
 }
 
+/* ---------- The student section's two screens -------------------------------
+   The student's OWN surfaces, which appear nowhere else on the page: everything
+   above is the coach's side. Same primitives and the same em-scaling contract
+   as section 2's screens, since they share .program-phone's frame.
+
+   ⚠️ Both draw JALEN, and his state is fixed by section 2's roster, which
+   already says "Jalen — 1 of 3 done". Three assignments, one finished. Changing
+   either screen means changing ROSTER_GROUPS with it.                        */
+
+/* The log screen: a stepper, not the +10/+25/+50 presets that were retired.
+   ATTEMPTS takes the MUTED green precisely because a MAKES row is on screen
+   with it — a solo counter would take the bright green outright, which is the
+   pairing rule in the colour system.
+
+   Draws Free throws rather than Corner 3s on purpose — see CAST.student. */
+function ScreenStudentLog() {
+  const s = CAST.student.inProgress;
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1em" }}>
+        <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
+        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.ink }}>{s.exercise}</span>
+      </div>
+
+      <div style={{ fontSize: "0.58em", color: T.label, marginBottom: "0.45em" }}>
+        {s.done} of {s.target} done
+      </div>
+      <div style={{ marginBottom: "1.5em" }}>
+        {/* Two-tone: muted attempts underneath, bright makes over it. 18/25
+            attempts and 12/25 of the target made. */}
+        <MiniBar2 pct={Math.round((s.done / s.target) * 100)} makesPct={Math.round((s.makes / s.target) * 100)} />
+      </div>
+
+      <div style={{ textAlign: "center", marginBottom: "1em" }}>
+        <MiniStepper label="ATTEMPTS" value={String(s.done)} size="2.1em" numberColor={T.attempts} />
+      </div>
+
+      <div style={{ height: "1px", background: T.line, marginBottom: "0.8em" }} />
+      <div style={{ textAlign: "center" }}>
+        <MiniStepper label="MAKES" value={String(s.makes)} size="1.1em" numberColor={T.green} />
+      </div>
+
+      <div style={{ marginTop: "auto" }}>
+        <div
+          style={{
+            background: T.blue,
+            color: "#fff",
+            textAlign: "center",
+            borderRadius: "0.5em",
+            padding: "0.55em 0",
+            fontSize: "0.72em",
+            fontWeight: 600,
+          }}
+        >
+          Log progress
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* The student's home: their own list, split by the same New / Archive tabs the
+   coach sees. Read-only on the tabs — only the coach files and unfiles — so no
+   affordance here suggests otherwise.
+
+   The three cards ARE Jalen's "1 of 3 done": Corner 3s finished and carrying
+   the loop chain's figures, Free throws part-way with the note he left on it,
+   Dribble series untouched. */
+function ScreenStudentHome() {
+  const p = CAST.student.inProgress;
+  const n = CAST.student.notStarted;
+  const madePct = Math.round((p.makes / p.done) * 100);
+  return (
+    <>
+      <div style={{ marginBottom: "0.9em" }}>
+        <div style={{ fontSize: "0.92em", fontWeight: 600, letterSpacing: "-0.3px", color: T.ink }}>
+          Hey {CAST.loop.student}
+        </div>
+        <div style={{ fontSize: "0.58em", color: T.sub, marginTop: "0.15em" }}>From {CAST.coach}</div>
+      </div>
+
+      {/* The tab bar. New is active, which is where unfiled work lives — a
+          finished card stays here until the COACH archives it, so a done card
+          sitting in New is correct, not a bug. */}
+      <div style={{ display: "flex", gap: "0.9em", borderBottom: `1px solid ${T.line}`, marginBottom: "0.75em" }}>
+        <span style={{ fontSize: "0.6em", fontWeight: 600, color: T.ink, paddingBottom: "0.45em", borderBottom: `1.5px solid ${T.ink}`, marginBottom: "-1px" }}>
+          New
+        </span>
+        <span style={{ fontSize: "0.6em", fontWeight: 500, color: T.sub, paddingBottom: "0.45em" }}>Archive</span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
+        <MiniCard
+          name={CAST.loop.exercise}
+          right="✓ Done"
+          made={`made ${CAST.loop.makes}/${CAST.loop.target} · ${CAST.loop.pct}%`}
+          pct={100}
+          makesPct={CAST.loop.pct}
+          done
+        />
+        <MiniCard
+          name={p.exercise}
+          right={`${p.done}/${p.target}`}
+          made={`made ${p.makes}/${p.done} · ${madePct}%`}
+          pct={Math.round((p.done / p.target) * 100)}
+          makesPct={Math.round((p.makes / p.target) * 100)}
+          note={p.note}
+        />
+        <MiniCard name={n.exercise} right={`0/${n.target} ${n.unit}`} pct={0} />
+      </div>
+    </>
+  );
+}
+
 export default function LandingPage() {
   return (
     <div className="paper-grain" style={{ backgroundColor: "#ede9e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -711,8 +884,8 @@ export default function LandingPage() {
             <div className="program-screen-item">
               {/* The frame is illustration; the caption below carries the
                   meaning, so screen readers get the label and skip the
-                  duplicated UI — the same split the hero device and section
-                  3's SMS fragment use. */}
+                  duplicated UI — the same split the hero device and the
+                  student section's screens use. */}
               <div className="program-phone" aria-hidden="true"><ScreenAssign /></div>
               <p className="program-caption">Assigning work</p>
             </div>
@@ -724,8 +897,52 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Section 3 — the student side. Section 2's template, flipped: copy and
+          screens swap sides at desktop so the two read as a matched pair rather
+          than a repeat.
+
+          ⚠️ A LIGHT band, and that is structural rather than decorative —
+          without it the page runs section 2, this, and the footer as three dark
+          bands in a row. See .student-section for why it is not the hero's own
+          cream. */}
+      <section className="student-section">
+        <div className="student-inner">
+          <div className="student-copy">
+            <h2 className="student-heading">Nothing for your students to download.</h2>
+            <p className="student-sub">
+              A text, a link, a stepper — that&apos;s the whole thing. Younger students can
+              log on a parent&apos;s phone with the same link.
+            </p>
+            {/* Third CTA, third wording, same destination. The hero stays the
+                literal "Start free" for a stranger; section 2 echoes its own
+                heading; this one names what actually happens first after
+                signing up, which is the thing this section is about.
+
+                ⚠️ NOT "Get your students started" — the coach is the one
+                signing up, and every reader here has zero students. Same trap
+                section 2's CTA note records for "See your whole roster". */}
+            <Link href="/instructor/signup" className="cta-real student-cta">
+              Send your first assignment
+            </Link>
+          </div>
+          {/* The two screens a student actually touches. Decorative — the
+              heading and subtext carry the meaning, so screen readers get the
+              captions and skip the duplicated UI. */}
+          <div className="student-screens">
+            <div className="student-screen-item">
+              <div className="student-phone" aria-hidden="true"><ScreenStudentLog /></div>
+              <p className="student-caption">Logging a set</p>
+            </div>
+            <div className="student-screen-item">
+              <div className="student-phone" aria-hidden="true"><ScreenStudentHome /></div>
+              <p className="student-caption">Their own progress</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      {/* Its own band: #1a1d24, a step darker than section 2's #252932, with a
+      {/* Its own band: #1a1d24, darker than section 2's #262a39, with a
           1px rule on top. It once shared a colour with the band above it, so
           the rule was carrying the separation alone and the footer read as the
           tail of that section. A tonal step separates without a hard edge.
@@ -995,29 +1212,35 @@ export default function LandingPage() {
            being unmistakably its own band, so the page reads cream -> warm ->
            dark as three deliberate steps. */
         .program-section {
-          /* A real shift from the cream hero, in the dark band family rather
-             than a tan in between. Deliberately LIGHTER than the footer's
-             #1a1d24 so the page still descends — hero (cream) -> here ->
-             footer -> device frames — and the devices stay the darkest objects
-             on it.
+          /* ⚠️ #1f2740, not the old neutral #252932 (changed Aug 5 2026).
+             Saturating it into real blue widens the hue gap from the cream
+             hero — 226 degrees against the hero's 36 — so it reads as a
+             deliberate counterpart rather than as generic dark chrome, and it
+             puts this band in the SAME family as the student section's paper.
+             The two are siblings at opposite lightnesses: hsl(227, 20%, 18.6%)
+             here, hsl(229, 12%, 81.4%) there.
 
-             ⚠️ A #1c1f26 "how it works" band sat between this and the footer
-             until Aug 5 2026. Whatever lands in that slot next has to take a
-             value between this #252932 and the footer's #1a1d24, or the
-             descent breaks. */
-          background: #252932;
+             ⚠️ Desaturated on Aug 5 2026 from hsl(226, 35%) / #1f2740, a drop
+             of 14.7 points at identical hue and lightness. The saturated
+             version read as a colour choice; this reads as a tinted neutral,
+             which is what a background should do. 8-bit quantisation at 18.6%
+             lightness is coarse — #262a39 is the closest reachable value, and
+             it lands at exactly 20.0%.
+
+             The devices stay the darkest objects on it.
+
+             ⚠️ The page no longer runs one long descent, and that changed on
+             Aug 5 2026. It ALTERNATES: cream hero -> this dark band -> the
+             student section's lighter paper -> dark footer. Section 3 is
+             deliberately light because three dark bands in a row (here, there,
+             footer) read as one undifferentiated block. So the rule for a new
+             section is no longer "take the next value down" — it is "do not
+             leave two same-tone bands touching". */
+          background: #262a39;
           padding: 56px var(--page-pad) 60px;
-          /* The page is a 100vh flex column, so when the content is shorter
-             than the viewport the slack falls through to the cream body colour
-             and shows as a band BELOW the footer. This absorbs it.
-
-             ⚠️ It belongs on whichever band is LAST before the footer, not on
-             this one specifically. It moved here when the "how it works" band
-             that used to carry it was removed on Aug 5 2026; it has to move
-             again the moment a section lands below this one. Verified real,
-             not theoretical: with no grower at all, a 2200px-tall viewport
-             showed a 679px cream band under the footer. */
-          flex: 1 0 auto;
+          /* ⚠️ No flex-grow here any more. It moved to .student-section on
+             Aug 5 2026, because the slack-absorbing grower has to be whichever
+             band sits LAST before the footer, and that is no longer this one. */
         }
         .program-inner {
           max-width: var(--page-max);
@@ -1163,7 +1386,15 @@ export default function LandingPage() {
           font-size: 13px;
           font-weight: 500;
           line-height: 1.4;
-          color: #8a8fa8;
+          /* ⚠️ #8a8fa8 until Aug 5 2026, and it had to move. Desaturating the
+             band lifted its luminance from 0.02113 to 0.02363, which dropped
+             this caption from 4.62:1 to 4.46:1 — under AA for 13px text. Same
+             hue and saturation, 2 points lighter, back to 4.81:1.
+
+             It is deliberately NOT the app's --reps-sub token any more. That
+             value is tuned against the app's own dark surfaces, not against
+             this band, and matching it by eye is what put it under AA here. */
+          color: #9095ac;
           text-align: center;
         }
         .program-phone {
@@ -1196,9 +1427,23 @@ export default function LandingPage() {
           border: 1px solid #2a2d36;
           border-radius: 22px;
           overflow: hidden;
+          /* ⚠️ COOL and genuinely darker than the band, replacing a warm
+             brown pair on Aug 5 2026. The rule this page follows is that a
+             shadow is tinted from the surface it sits ON — warm on the cream
+             hero, so blue here. The old rgba(90,70,45) was LIGHTER than the
+             band in red and green, so it composited to rgb(45,46,59) over a
+             rgb(31,39,64) surround: a brown haze that lightened rather than
+             shadowed. Barely readable on the old neutral #252932, obvious
+             against blue. This composites to rgb(23,26,36) — darker than the
+             band, which is what a shadow is supposed to do.
+
+             ⚠️ Retinted with the band on Aug 5 2026, from rgba(6,10,22) at 57%
+             saturation to rgba(10,12,18) at 30%. The tint is DERIVED from the
+             surface, so desaturating the band without desaturating this would
+             leave a more saturated shadow than the thing casting it. */
           box-shadow:
-            0 2px 6px rgba(60, 45, 30, 0.07),
-            0 16px 40px -12px rgba(90, 70, 45, 0.26);
+            0 2px 6px rgba(10, 12, 18, 0.35),
+            0 16px 40px -12px rgba(10, 12, 18, 0.55);
         }
         /* Upright and side by side — no rotation, no negative margin. The
            tilt-and-overlap version cut controls off the back screen and made it
@@ -1265,6 +1510,210 @@ export default function LandingPage() {
           .program-sub     { font-size: 18px; }
           .program-phone   { --pw: 222px; border-radius: 28px; }
           .program-screens { gap: 18px; }
+        }
+
+        /* ---- Section 3: the student side ---------------------------------
+           Section 2's template, flipped. Same sizes, same frame, same copy
+           register — the difference is the audience and the side each half
+           sits on.
+
+           ⚠️ PEER-SIZED with section 2, which is a deliberate departure from
+           the descending-tier rule the hero and section 2 follow. That rule
+           exists to stop a LATER, lesser section outgrowing an earlier one. It
+           does not apply between siblings: these two are the same kind of thing
+           about two audiences, and shrinking this one to 82% would say the
+           student half matters less. Heading clamp, device widths and aspect
+           ratio are all identical to section 2's on purpose. */
+        .student-section {
+          /* The page needs a LIGHT band here, or section 2, this and the
+             footer stack as three darks and read as one undifferentiated
+             block. That requirement is structural; which light is the question
+             this value answers.
+
+             ⚠️ #c5c9da as of Aug 5 2026, replacing a warm #e6e1d8. That first
+             version was the hero's own paper one tone deeper, which made this
+             band a sibling of the HERO and left section 2 as the odd one out.
+             This is the blue family instead — hsl(229, 12%, 81.4%) against
+             section 2's hsl(227, 20%, 18.6%), two degrees apart — so the two
+             middle bands are one system at opposite lightnesses, and the cream
+             hero stands alone as the entry rather than being echoed halfway
+             down the page.
+
+             ⚠️ Desaturated on Aug 5 2026 from hsl(229, 22%) / #c5c9da, a drop
+             of 10.5 points at identical hue and lightness. The drop is smaller
+             than section 2's 14.7 because 8-bit quantisation at 81.4%
+             lightness is coarse: the next reachable step down (#cbcdd4, 9.5%)
+             undershoots the target band and swings the hue to 227.
+
+             Deep enough to read crisp rather than washed out, light enough to
+             be unambiguously the light band between two dark neighbours: 81.4%
+             lightness against section 2's 18.6% and the footer's 8%.
+
+             ⚠️ Its text is COOL. The warm greys an earlier #e6e1d8 version
+             used read as brown smudges on this, and its caption failed AA
+             outright at 3.78:1 — see each colour below. */
+          background: #caccd5;
+          padding: 56px var(--page-pad) 60px;
+          /* ⚠️ MOVED HERE from .program-section (Aug 5 2026). The page is a
+             100vh flex column and this is the only grower in it, so it absorbs
+             the slack when the content is shorter than the viewport — without
+             it the shell colour shows as a band BELOW the footer. It belongs to
+             whichever band is LAST before the footer, so it moves again when a
+             section lands under this one. */
+          flex: 1 0 auto;
+        }
+        .student-inner {
+          max-width: var(--page-max);
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          gap: 34px;
+          align-items: center;
+        }
+        .student-copy { width: 100%; }
+        .student-heading {
+          font-size: 27px;
+          line-height: 1.1;
+          font-weight: 700;
+          letter-spacing: -0.8px;
+          /* A COOL near-black, not the hero's warm #0f0f10 — this band is
+             blue paper now, and warm ink on it reads dirty. 11.9:1. */
+          color: #121620;
+          margin: 0 0 14px;
+          /* Same rule as section 2: wrapping is fine, a stranded last word is
+             not. balance evens the lines instead of leaving a runt. */
+          text-wrap: balance;
+        }
+        .student-sub {
+          font-size: 16px;
+          line-height: 1.55;
+          /* Cool slate, in the band's own hue family. The warm #54504a this
+             replaces still cleared AA here (4.86:1) but read brown against the
+             blue. 5.7:1, comfortably clear as body text. */
+          color: #3f465a;
+          margin: 0;
+          /* A sentence, so only the LAST line needs a widow guard — pretty,
+             not balance. Same call as .program-sub. */
+          text-wrap: pretty;
+        }
+        .student-screens {
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          gap: 14px;
+          width: 100%;
+        }
+        .student-screen-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-width: 0;
+        }
+        .student-caption {
+          margin: 12px 0 0;
+          font-size: 13px;
+          font-weight: 500;
+          line-height: 1.4;
+          /* ⚠️ Darkened as well as cooled. The warm #65605a this replaces
+             measured 4.78:1 on the old #e6e1d8 and dropped to 3.78:1 on this
+             darker band — a real AA FAILURE at 13px, not a near miss. 5.1:1
+             now. */
+          color: #474d60;
+          text-align: center;
+        }
+        .student-cta {
+          display: block;
+          width: 100%;
+          margin-top: 26px;
+        }
+        .student-phone {
+          /* Section 2's numbers exactly — see the peer-sizing note above. The
+             two-up bound at 375 is the same one, and so is the 9/19.5 ratio:
+             the home screen carries three cards and a tab bar, which is the
+             taller of this pair, and the log screen takes the slack in its
+             bottom button the way the assign screen does. */
+          --pw: 146px;
+          width: var(--pw);
+          font-size: calc(var(--pw) / 13);
+          aspect-ratio: 9 / 19.5;
+          flex-shrink: 0;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          padding: 1em 0.85em;
+          background: #111318;
+          border: 1px solid #2a2d36;
+          border-radius: 22px;
+          overflow: hidden;
+          /* ⚠️ Tinted from THIS band, never black — the hero's two-layer
+             treatment with the hue swapped to follow the surface, which is the
+             actual rule (the hero is warm because the hero's paper is warm).
+             A warm brown haze on blue paper reads as a stain; black greys it
+             and makes the device look like a hole punched in the page.
+             Composites to rgb(155,158,170) on #caccd5 — same family, clearly
+             darker.
+
+             ⚠️ Retinted with the band on Aug 5 2026, from rgba(35,45,80) at
+             39% saturation to rgba(46,50,69) at 20%, so the shadow stays about
+             as saturated as the surface it is derived from. */
+          box-shadow:
+            0 2px 6px rgba(46, 50, 69, 0.10),
+            0 18px 50px -12px rgba(46, 50, 69, 0.30);
+        }
+
+        /* Same 375 two-up squeeze section 2 has: two 146px frames plus a 14px
+           gap come to 306 in a 331px box, and the smaller gap buys the margin
+           out of the space between rather than out of the devices. */
+        @media (max-width: 479px) {
+          .student-screens { gap: 10px; }
+        }
+
+        /* ⚠️ ONE min-width:768 block for the heading curve, placed AFTER every
+           base rule above. Section 2's equivalent was put in a 768-1023 range
+           block first and silently stopped applying at 1024, dropping the
+           heading back to its 27px mobile size. Same curve as section 2's, as
+           peers: clamp(32px, 3.7vw, 46px). */
+        @media (min-width: 768px) {
+          .student-cta { display: inline-block; width: auto; }
+          .student-heading { font-size: clamp(32px, 3.7vw, 46px); }
+        }
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .student-section { padding: 72px var(--page-pad) 76px; }
+          .student-heading { margin: 0 0 16px; }
+          .student-sub     { font-size: 18px; }
+          .student-phone   { --pw: 196px; border-radius: 26px; }
+          .student-screens { gap: 18px; }
+        }
+
+        @media (min-width: 1024px) {
+          /* ⚠️ THE FLIP, and it is the only structural difference from section
+             2. Section 2 runs copy-left / screens-right; row-reverse puts the
+             screens left and the copy right here.
+
+             That keeps the page zig-zagging on which side the DEVICES sit:
+             hero left, section 2 right, here left again. Two identical layouts
+             back to back would read as one long section instead of two.
+
+             ⚠️ DOM order stays copy-first so the stacked mobile layout reads
+             heading -> subtext -> CTA -> screens. Only the desktop row is
+             reversed, visually. */
+          .student-section { padding: 84px 40px 88px; }
+          .student-inner {
+            flex-direction: row-reverse;
+            gap: 72px;
+            align-items: center;
+          }
+          .student-copy    { flex: 1; }
+          /* ⚠️ width: auto is load-bearing, exactly as in section 2. The mobile
+             rule sets width: 100% so the screens centre when stacked; carried
+             into the row it makes them claim the full inner width and crush the
+             copy column. flex: 0 0 auto alone does not undo it — the basis is
+             auto, so the declared width still wins. */
+          .student-screens { flex: 0 0 auto; width: auto; gap: 18px; }
+          .student-heading { letter-spacing: -1.2px; margin: 0 0 18px; }
+          .student-sub     { font-size: 18px; }
+          .student-phone   { --pw: 222px; border-radius: 28px; }
         }
 
         .footer-desktop { display: none; }
