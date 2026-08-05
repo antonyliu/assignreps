@@ -984,7 +984,7 @@ export default function LandingPage() {
            repeated across the header, hero, this section, the loop and the
            footer — which is how the footer quietly ended up on 28px while
            everything else used 22px. Change the shell here, not per section. */
-        .paper-grain { --page-max: 1100px; --page-pad: 22px; }
+        .paper-grain { --page-max: 960px; --page-pad: 22px; }
 
         .page-header { padding: 20px var(--page-pad) 0; }
         .page-main   { padding: 48px var(--page-pad) 24px; }
@@ -1216,23 +1216,32 @@ export default function LandingPage() {
         .program-copy { width: 100%; }
         .program-heading {
           font-size: 26px;
-          line-height: 1.12;
+          line-height: 1.14;
           font-weight: 700;
           letter-spacing: -0.8px;
           color: #eef0f4;
           margin: 0 0 14px;
-          /* ⚠️ NO text-wrap: balance here, unlike the hero headline. The intent
-             is that this holds ONE line. balance is for tidying a line that has
-             already broken, so it would quietly make a two-line wrap look
-             deliberate. If this wraps, it should be obvious. */
+          /* ⚠️ Wrapping is FINE here and is not what is being guarded against.
+             An earlier pass forced one line with a clamp() tuned to the widest
+             string, which meant the type size was decided by the copy's length
+             rather than by the design — and it could not hold a line below 414
+             at any readable size anyway. The only rule is no single word
+             stranded on the last line, which is exactly what balance prevents:
+             it evens the lines instead of leaving a runt. */
+          text-wrap: balance;
         }
         .program-sub {
           font-size: 16px;
           line-height: 1.55;
           color: #a2a8b4;
           margin: 0;
-          max-width: 42ch;
-          /* The subtext is the one thing here allowed to wrap as a sentence. */
+          /* No max-width and no forced break — it wraps to whatever the column
+             is. text-wrap: pretty rather than balance, because this is a
+             sentence: only the LAST line needs protecting from a stranded word,
+             where balance would even every line and pull the measure in for no
+             reason. Browsers without it wrap normally, which is the same shape
+             minus the widow guard. */
+          text-wrap: pretty;
         }
         /* The two screens overlap slightly so they read as one object rather
            than two unrelated frames — the roster in front, since it is the one
@@ -1245,7 +1254,11 @@ export default function LandingPage() {
           width: 100%;
         }
         .program-phone {
-          --pw: 136px;
+          /* ⚠️ Two side by side, so the ceiling is (container - gap) / 2, not
+             taste. At 375 the content box is 331px: 150 + 14 + 150 = 314 fits,
+             184 would overflow by 51. Hence the extra step at 480 rather than
+             one mobile size. */
+          --pw: 150px;
           width: var(--pw);
           font-size: calc(var(--pw) / 13);
           /* ⚠️ 9/19.5, not 9/18. Both the frame height and its contents scale
@@ -1276,11 +1289,15 @@ export default function LandingPage() {
 
         /* Stacked but bigger: at 768 the copy column has the full width, so the
            headline can hold one line at a proper size. */
+        @media (min-width: 480px) and (max-width: 767px) {
+          .program-phone { --pw: 184px; }
+        }
+
         @media (min-width: 768px) and (max-width: 1023px) {
           .program-section { padding: 72px var(--page-pad) 76px; }
           .program-heading { font-size: 34px; margin: 0 0 14px; }
           .program-sub     { font-size: 18px; }
-          .program-phone   { --pw: 156px; border-radius: 24px; }
+          .program-phone   { --pw: 210px; border-radius: 28px; }
           .program-screens { gap: 18px; }
         }
 
@@ -1314,14 +1331,9 @@ export default function LandingPage() {
              headline needs 668px at 38px, so a fixed 38 wraps everywhere below
              ~1270. Scaling with the viewport keeps it on one line across the
              whole range and only reaches 38px where there is room for it. */
-          /* ⚠️ Tuned for SLACK, not to the edge. clamp(30px, 2.9vw, 38px) held
-             one line at 1024 by a single pixel — 525 needed in a 526 box — which
-             is one font-rendering difference away from wrapping and is not what
-             "reliably one line" means. This leaves ~50px spare at 1024, ~88 at
-             1280 and ~49 at 1440. */
-          .program-heading { font-size: clamp(27px, 2.6vw, 36px); margin: 0 0 16px; }
-          .program-sub     { font-size: 18px; max-width: 34ch; }
-          .program-phone   { --pw: 164px; border-radius: 24px; }
+          .program-heading { font-size: 38px; margin: 0 0 16px; }
+          .program-sub     { font-size: 18px; }
+          .program-phone   { --pw: 221px; border-radius: 30px; }
           .program-screens { gap: 18px; }
         }
 
