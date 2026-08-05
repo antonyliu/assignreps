@@ -904,6 +904,14 @@ export default function LandingPage() {
             <p className="program-sub">
               Every assignment, every check-in — not scattered across texts and memory.
             </p>
+            {/* Same destination as the hero's button, deliberately different
+                words. The hero's stays the literal "Start free" because it is
+                the first thing a stranger meets and has to be unambiguous; by
+                here they know what the product does, so the CTA can name the
+                thing they would actually get. */}
+            <Link href="/instructor/signup" className="program-cta">
+              See your whole roster
+            </Link>
           </div>
           {/* Two screens: the moment work is created, and the roster it lands
               on. Decorative — the heading and subtext carry the meaning. */}
@@ -1159,7 +1167,14 @@ export default function LandingPage() {
           .page-main   { padding: 80px var(--page-pad) 60px; }
           .landing-layout {
             flex-direction: row;
-            gap: 80px;
+            /* ⚠️ This is now the WHOLE device-to-copy gap, because the image
+               column hugs the device rather than padding it out to --hero-w.
+               So it is the only number to change if that gap needs tuning, and
+               it is declared ONCE — an earlier pass left a second
+               .landing-layout gap further down this same block quietly
+               overriding it. Checked: the 1024 block does not touch
+               .landing-layout at all. */
+            gap: 96px;
             align-items: center;
           }
           .landing-image-wrap {
@@ -1176,7 +1191,6 @@ export default function LandingPage() {
              Only the copy moves left, which is exactly widening the copy column.
              --hero-w still drives the STACKED layout below 768. */
           .landing-image-wrap { flex: 0 0 auto; width: auto; }
-          .landing-layout { gap: 56px; }
 
           /* ⚠️ Left-aligned once the hero is a ROW. Centred, a 268px device in a
              420px column sat 76px inside the page's left edge, while the header
@@ -1235,10 +1249,10 @@ export default function LandingPage() {
         }
         .program-copy { width: 100%; }
         .program-heading {
-          font-size: 26px;
-          line-height: 1.14;
+          font-size: 30px;
+          line-height: 1.1;
           font-weight: 700;
-          letter-spacing: -0.8px;
+          letter-spacing: -1px;
           color: #eef0f4;
           margin: 0 0 14px;
           /* ⚠️ Wrapping is FINE here and is not what is being guarded against.
@@ -1273,6 +1287,30 @@ export default function LandingPage() {
           gap: 14px;
           width: 100%;
         }
+        .program-cta {
+          display: block;
+          width: 100%;
+          margin-top: 26px;
+          text-align: center;
+          text-decoration: none;
+          background-color: #2d7bc4;
+          color: #fff;
+          font-weight: 700;
+          font-size: 16px;
+          letter-spacing: -0.2px;
+          padding: 15px 36px;
+          border-radius: 10px;
+        }
+        /* ⚠️ ONE rule for every width at or above 768, not a copy inside each
+           breakpoint block. The first attempt put this in the 768-1023 block
+           alone, so at 1280 the base display:block/width:100% still applied and
+           the button ran the full width of the copy column. Same shape as the
+           bugs this file has already had twice: a rule that looks applied
+           because it is applied SOMEWHERE. */
+        @media (min-width: 768px) {
+          .program-cta { display: inline-block; width: auto; }
+        }
+
         .program-screen-item {
           display: flex;
           flex-direction: column;
@@ -1344,7 +1382,7 @@ export default function LandingPage() {
 
         @media (min-width: 768px) and (max-width: 1023px) {
           .program-section { padding: 72px var(--page-pad) 76px; }
-          .program-heading { font-size: 34px; margin: 0 0 14px; }
+          .program-heading { font-size: 42px; margin: 0 0 16px; }
           .program-sub     { font-size: 18px; }
           .program-phone   { --pw: 241px; border-radius: 30px; }
           .program-screens { gap: 18px; }
@@ -1380,7 +1418,7 @@ export default function LandingPage() {
              headline needs 668px at 38px, so a fixed 38 wraps everywhere below
              ~1270. Scaling with the viewport keeps it on one line across the
              whole range and only reaches 38px where there is room for it. */
-          .program-heading { font-size: 38px; margin: 0 0 16px; }
+          .program-heading { font-size: 48px; letter-spacing: -1.4px; margin: 0 0 18px; }
           .program-sub     { font-size: 18px; }
           .program-phone   { --pw: 254px; border-radius: 32px; }
           .program-screens { gap: 18px; }
