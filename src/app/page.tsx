@@ -783,7 +783,7 @@ export default function LandingPage() {
 
       {/* Top bar */}
       <header className="page-header">
-        <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <TallyMark />
             <span style={{ fontSize: "20px", fontWeight: 800, letterSpacing: "-0.5px", color: "#0f0f10" }}>
@@ -807,7 +807,7 @@ export default function LandingPage() {
           hero, because this element doesn't grow into that space. */}
       <main className="page-main" style={{ display: "flex", alignItems: "center" }}>
         <div
-          style={{ maxWidth: "1100px", margin: "0 auto", width: "100%" }}
+          style={{ maxWidth: "var(--page-max)", margin: "0 auto", width: "100%" }}
           className="landing-inner"
         >
 
@@ -950,7 +950,7 @@ export default function LandingPage() {
           tail of the section. Lighter-on-darker separates without a hard edge.
           Greys and links are the dark-background set: #555 / #2d7bc4 were tuned
           for cream and go muddy here. */}
-      <footer style={{ backgroundColor: "#1a1d24", borderTop: "1px solid #2a2d36", padding: "20px 28px 28px" }}>
+      <footer style={{ backgroundColor: "#1a1d24", borderTop: "1px solid #2a2d36", padding: "20px var(--page-pad) 28px" }}>
         {/* Desktop: single line */}
         <div className="footer-desktop">
           <span style={{ color: "#8a8fa8" }}>© 2026 Reps</span>
@@ -978,8 +978,16 @@ export default function LandingPage() {
           first paint (fixing Safari's unstyled flash) instead of loading late
           from the end of <body>. Rules are unchanged. */}
       <style href="landing" precedence="default">{`
-        .page-header { padding: 20px 22px 0; }
-        .page-main   { padding: 48px 22px 24px; }
+        /* ---- The page shell ------------------------------------------------
+           ⚠️ ONE definition of how wide the page is and how far its content sits
+           from the edge. Every band referenced these as literals — 1100/22/40
+           repeated across the header, hero, this section, the loop and the
+           footer — which is how the footer quietly ended up on 28px while
+           everything else used 22px. Change the shell here, not per section. */
+        .paper-grain { --page-max: 1100px; --page-pad: 22px; }
+
+        .page-header { padding: 20px var(--page-pad) 0; }
+        .page-main   { padding: 48px var(--page-pad) 24px; }
         .landing-layout {
           display: flex;
           flex-direction: column;
@@ -1013,6 +1021,12 @@ export default function LandingPage() {
         .hero-device-wrap {
           position: relative;
           display: flex;
+          /* Centred while the hero is STACKED — the device sits above the copy
+             and centring is right there. Left-aligned once it becomes a column
+             (see the 768 block), because a 268px device centred in a 420px
+             column sat 76px inside the page's left edge while the header logo,
+             this section's heading and the loop's first frame all sat on it.
+             That was the "hero looks indented" — not a padding difference. */
           justify-content: center;
         }
         /* Warm ambient glow, behind the device and purely decorative.
@@ -1131,8 +1145,9 @@ export default function LandingPage() {
         }
 
         @media (min-width: 768px) {
-          .page-header { padding: 24px 40px 0; }
-          .page-main   { padding: 80px 40px 60px; }
+          .paper-grain { --page-pad: 40px; }
+          .page-header { padding: 24px var(--page-pad) 0; }
+          .page-main   { padding: 80px var(--page-pad) 60px; }
           .landing-layout {
             flex-direction: row;
             gap: 80px;
@@ -1143,6 +1158,12 @@ export default function LandingPage() {
             flex: 0 0 var(--hero-w);
             width: var(--hero-w);
           }
+          /* ⚠️ Left-aligned once the hero is a ROW. Centred, a 268px device in a
+             420px column sat 76px inside the page's left edge, while the header
+             logo, the "one place" heading and the loop's first frame all sat on
+             it — which is what read as "the hero is indented". It is not a
+             padding difference; the padding was always identical. */
+          .hero-device-wrap { justify-content: flex-start; }
           /* Side-by-side from here, so the device's height stops competing with
              the CTA and it can take its full ratio. */
           .hero-device {
@@ -1176,8 +1197,13 @@ export default function LandingPage() {
            being unmistakably its own band, so the page reads cream -> warm ->
            dark as three deliberate steps. */
         .program-section {
-          background: #d6cbb9;
-          padding: 56px 22px 60px;
+          /* A real shift from the cream hero, in the loop band's family rather
+             than a tan in between. Deliberately a step LIGHTER than the loop's
+             #1c1f26 so the page still descends — hero (cream) -> here -> loop
+             -> footer -> device frames — and the devices stay the darkest
+             objects on it. */
+          background: #252932;
+          padding: 56px var(--page-pad) 60px;
         }
         .program-inner {
           max-width: 1100px;
@@ -1189,21 +1215,24 @@ export default function LandingPage() {
         }
         .program-copy { width: 100%; }
         .program-heading {
-          font-size: 28px;
-          line-height: 1.16;
-          font-weight: 600;
-          letter-spacing: -0.5px;
-          color: #0f0f10;
-          margin: 0 0 12px;
-          text-wrap: balance;
+          font-size: 26px;
+          line-height: 1.12;
+          font-weight: 700;
+          letter-spacing: -0.8px;
+          color: #eef0f4;
+          margin: 0 0 14px;
+          /* ⚠️ NO text-wrap: balance here, unlike the hero headline. The intent
+             is that this holds ONE line. balance is for tidying a line that has
+             already broken, so it would quietly make a two-line wrap look
+             deliberate. If this wraps, it should be obvious. */
         }
         .program-sub {
           font-size: 16px;
-          line-height: 1.5;
-          color: #55504a;
+          line-height: 1.55;
+          color: #a2a8b4;
           margin: 0;
-          max-width: 30ch;
-          text-wrap: balance;
+          max-width: 42ch;
+          /* The subtext is the one thing here allowed to wrap as a sentence. */
         }
         /* The two screens overlap slightly so they read as one object rather
            than two unrelated frames — the roster in front, since it is the one
@@ -1212,10 +1241,11 @@ export default function LandingPage() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
+          gap: 14px;
           width: 100%;
         }
         .program-phone {
-          --pw: 148px;
+          --pw: 136px;
           width: var(--pw);
           font-size: calc(var(--pw) / 13);
           /* ⚠️ 9/19.5, not 9/18. Both the frame height and its contents scale
@@ -1239,16 +1269,28 @@ export default function LandingPage() {
             0 2px 6px rgba(60, 45, 30, 0.07),
             0 16px 40px -12px rgba(90, 70, 45, 0.26);
         }
-        .program-phone-back  { transform: translateY(14px) rotate(-2deg); }
-                /* ⚠️ A SMALL overlap. At -22px the front frame covered 17% of the back
-           one, which cut "In a row", "200" and "Right" mid-control and made the
-           assign screen read as broken rather than layered. Enough to connect
-           the two, not enough to eat a control. */
-        .program-phone-front { margin-left: -10px; z-index: 1; }
+        /* Upright and side by side — no rotation, no negative margin. The
+           tilt-and-overlap version cut controls off the back screen and made it
+           read as broken rather than layered; two plain frames with a gap say
+           "two screens" without any of that. */
 
-        @media (min-width: 768px) {
+        /* Stacked but bigger: at 768 the copy column has the full width, so the
+           headline can hold one line at a proper size. */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .program-section { padding: 72px var(--page-pad) 76px; }
+          .program-heading { font-size: 34px; margin: 0 0 14px; }
+          .program-sub     { font-size: 18px; }
+          .program-phone   { --pw: 156px; border-radius: 24px; }
+          .program-screens { gap: 18px; }
+        }
+
+        @media (min-width: 1024px) {
           /* Zig-zag against the hero: it puts the device left and copy right,
              so this reverses to copy left, screens right.
+             ⚠️ 1024, NOT 768. Going side-by-side at 768 left the copy column
+             270px wide against two 156px phones — narrow enough that the
+             headline wrapped to three lines. The row needs real width to exist
+             at all.
              ⚠️ This block must stay AFTER the base .program-* rules. It first
              lived in the earlier 768 media query further up the stylesheet,
              where the base rules — declared later at equal specificity — simply
@@ -1267,10 +1309,20 @@ export default function LandingPage() {
              short lines. flex: 0 0 auto alone does not undo it — the basis is
              auto, so the declared width still wins. */
           .program-screens { flex: 0 0 auto; width: auto; }
-          .program-heading { font-size: 38px; margin: 0 0 14px; }
+          /* ⚠️ FLUID, and the ceiling is set by the one-line rule rather than
+             taste. The copy column is ~526px at 1024 and ~682px at 1280; this
+             headline needs 668px at 38px, so a fixed 38 wraps everywhere below
+             ~1270. Scaling with the viewport keeps it on one line across the
+             whole range and only reaches 38px where there is room for it. */
+          /* ⚠️ Tuned for SLACK, not to the edge. clamp(30px, 2.9vw, 38px) held
+             one line at 1024 by a single pixel — 525 needed in a 526 box — which
+             is one font-rendering difference away from wrapping and is not what
+             "reliably one line" means. This leaves ~50px spare at 1024, ~88 at
+             1280 and ~49 at 1440. */
+          .program-heading { font-size: clamp(27px, 2.6vw, 36px); margin: 0 0 16px; }
           .program-sub     { font-size: 18px; max-width: 34ch; }
-          .program-phone   { --pw: 176px; border-radius: 26px; }
-          .program-phone-front { margin-left: -12px; }
+          .program-phone   { --pw: 164px; border-radius: 24px; }
+          .program-screens { gap: 18px; }
         }
 
         .loop-section {
@@ -1293,7 +1345,7 @@ export default function LandingPage() {
           /* The example caption below now carries the bulk of the gap down to
              the frames; this is just the tight lead into it. */
           margin: 0 auto 8px;
-          padding: 0 22px;
+          padding: 0 var(--page-pad);
           text-align: center;
           color: #ffffff;
           /* Stays under the hero headline (32px on mobile) so the hero keeps
@@ -1365,10 +1417,10 @@ export default function LandingPage() {
           gap: 24px;
           overflow-x: auto;
           scroll-snap-type: x mandatory;
-          padding: 0 22px 4px;
+          padding: 0 var(--page-pad) 4px;
           /* Without this a snapped frame sits flush to the screen edge and
-             loses the 22px gutter the first one has. */
-          scroll-padding-left: 22px;
+             loses the gutter the first one has. */
+          scroll-padding-left: var(--page-pad);
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
         }
@@ -1393,7 +1445,12 @@ export default function LandingPage() {
           .loop-heading { margin: 0 auto 10px; }
           .loop-example { margin: 0 auto 34px; font-size: 14px; }
           .loop-track {
-            max-width: 1180px;
+            /* ⚠️ NOT drift, despite looking like it: the box is deliberately
+               wider than --page-max because its own padding is inside it, so
+               the CONTENT lands at exactly --page-max and its first frame lines
+               up with the header logo. Expressed in the shell's terms now so
+               that stays true if the shell moves. */
+            max-width: calc(var(--page-max) + 2 * var(--page-pad));
             margin: 0 auto;
             justify-content: center;
             gap: 16px;
