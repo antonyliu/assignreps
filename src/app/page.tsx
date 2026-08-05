@@ -69,9 +69,9 @@ const bullets = [
    numbers renders correctly at every breakpoint without a second scale.
    Colours are the shipped tokens from globals.css, not approximations.
 
-   ⚠️ These also fed a four-frame "how it works" row until Aug 5 2026. Section 3
-   is numbered copy now, so the only consumers left are the hero device and
-   section 2's two screens — which is why MiniStepper went with it.            */
+   ⚠️ These also fed a four-frame "how it works" row, removed Aug 5 2026 as
+   redundant against section 2 and the student section. The only consumers left
+   are the hero device and section 2's two screens.                           */
 
 const T = {
   // ⚠️ These two are NOT the app's tokens and must not be "corrected" into them.
@@ -112,7 +112,7 @@ const T = {
    clone of the product loop's fourth frame — same three exercises, same three
    figures, same three states — with only the student's name swapped, so the page
    read as two disconnected mock sets rather than one coach's roster. Those four
-   frames are gone (section 3 is copy now); the rule they taught is not.
+   frames are gone; the rule they taught is not.
 
    ⚠️ EVERY NAME HERE IS INVENTED and must stay that way. This page is public and
    real rosters are real children. Checked against both live rosters; do not
@@ -123,15 +123,17 @@ const T = {
 const CAST = {
   coach: "Coach Mike",
 
-  /* The product loop — section 3's four steps — and the numbers CHAIN across
-     them: Corner 3s is assigned at 50 attempts with makes tracked (1), texted to
-     Jalen (2), logged as 50 attempts / 28 makes (3), and read back as 28 of 50
-     at 56% (4). 28/50 = 56%. Change one and every step has to move with it,
-     which is exactly why they come from one object.
+  /* The product loop, as one CHAINED set of figures: Corner 3s assigned at 50
+     attempts with makes tracked, texted to Jalen, logged as 50 attempts / 28
+     makes, read back as 28 of 50 at 56%. 28/50 = 56%, so moving one figure
+     means moving the rest — which is the whole reason they live in one object.
 
-     ⚠️ Section 3 drew these as four phone frames until Aug 5 2026. It is copy
-     now, and only the SMS bubble on step 2 survives as a drawn fragment — so
-     the chain is stated in WORDS, where a mismatch is more visible, not less. */
+     ⚠️ Only `exercise` and `student` are READ today, both by section 2's assign
+     screen. The rest carried the four-frame "how it works" row removed on Aug 5
+     2026, and are kept deliberately rather than left stranded: the student
+     section replacing it covers the texted-and-logged half of this same loop
+     and needs these exact figures. They stay so it inherits the chain instead
+     of inventing a second set of numbers. */
   loop: {
     student: "Jalen",
     exercise: "Corner 3s",
@@ -333,7 +335,7 @@ function ScreenAssign() {
 
       {/* The toggle only renders on an attempts goal, and only where the
           category has something to make — shooting qualifies. It is what makes
-          the percentage step 4 reports possible. */}
+          a shooting percentage possible at all. */}
       <div
         style={{
           display: "flex",
@@ -381,8 +383,8 @@ function ScreenAssign() {
    makes bar, a completed assignment, and a student's own note. The roster shows
    none of those — its rows are avatar, first name, subline, timestamp, chevron,
    and progress bars on roster rows are not built. Drawing a note on a roster row
-   would be inventing UI, which is precisely what the "Example: basketball"
-   caption further down this page exists to avoid.
+   would be inventing UI, which is the one thing a mock on this page must never
+   do — every frame here draws only what the app actually renders.
 
    It is also the payoff screen, which is what the third bullet now promises:
    "You see it happen live."
@@ -553,60 +555,6 @@ function ScreenRoster() {
   );
 }
 
-/* The one screen fragment section 3 keeps, and why this step earns it while the
-   other three do not: "they get a text" is the only step that makes a claim
-   about a surface the visitor never sees. Steps 1, 3 and 4 describe the coach's
-   own side of the app, which the hero and section 2 already show as full
-   screens — drawing them again is the repetition this redesign removed.
-
-   ⚠️ It is a CROP, not a device, and two things keep it from reading as one: a
-   wide, short box nowhere near a phone's 9/19, and a 14px radius against the
-   frames' 28px.
-
-   It carries the app's own message-screen background because the bubble token,
-   --reps-raised (#22252e), sits only a few steps off the band colour (#1c1f26)
-   and would vanish placed straight onto it. */
-function StepSms() {
-  return (
-    <div className="step-sms" aria-hidden="true">
-      <div className="step-sms-bubble">
-        Hey {CAST.loop.student} — {CAST.coach} assigned you homework. Tap here:{" "}
-        <span style={{ color: T.blue }}>assignreps.com/student/…</span>
-      </div>
-      <div className="step-sms-receipt">Delivered</div>
-    </div>
-  );
-}
-
-/* Section 3 — the product loop as numbered steps rather than four phone frames.
-   The copy carries the explanation now, which is why it names the MECHANISM the
-   same way the hero bullets do: a stranger should be able to repeat the loop
-   back after one read.
-
-   ⚠️ The numbers still CHAIN across the four steps, exactly as the frames they
-   replace did and for the same reason — Corner 3s assigned at 50 with makes
-   tracked (1), texted (2), logged (3), read back as 28 of 50 (4). They come
-   from CAST so one edit moves all four together. */
-const howItWorks = [
-  {
-    title: "You assign it",
-    copy: `Pick a drill and set the goal — ${CAST.loop.target} ${CAST.loop.exercise.toLowerCase()}, tracking makes.`,
-  },
-  {
-    title: "They get a text",
-    copy: "A link lands on their phone. No app to install, no account to create.",
-    visual: <StepSms />,
-  },
-  {
-    title: "They log it",
-    copy: "They tap in reps as they go — attempts, makes, and a note if they have something to say.",
-  },
-  {
-    title: "You see it",
-    copy: `${CAST.loop.student} made ${CAST.loop.makes} of ${CAST.loop.target} — ${CAST.loop.pct}%. You know what got done before the next session starts.`,
-  },
-];
-
 export default function LandingPage() {
   return (
     <div className="paper-grain" style={{ backgroundColor: "#ede9e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -754,45 +702,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Section 3 — how it works, as numbered steps under the same dark band */}
-      <section className="steps-section">
-        <div className="steps-inner">
-          <h2 className="steps-heading">Here&apos;s how it works.</h2>
-          {/* The rest of the page is activity-agnostic — the hero photographs
-              span a court and a piano, and the SMS says "homework" with no
-              sport — but this section is unavoidably basketball: the copy names
-              a real exercise and a real shooting figure. This says so, rather
-              than letting the section quietly narrow the product to one sport.
-
-              Deliberately no claim about other activities. `activityTypes.ts`
-              has Basketball as the only ACTIVE entry; the other nine are listed
-              but not selectable, so "works for any sport" would break at the
-              signup picker one screen later. */}
-          <p className="steps-example">Example: basketball</p>
-          {/* A real ordered list, so the sequence is in the semantics rather
-              than only in the rendered digits. The visible number is therefore
-              aria-hidden — the list element already announces the order, and
-              reading "one" twice is worse than not drawing it. */}
-          <ol className="steps-list">
-            {howItWorks.map(({ title, copy, visual }, i) => (
-              <li className="step-item" key={title}>
-                <span className="step-num" aria-hidden="true">{i + 1}</span>
-                <div className="step-body">
-                  <h3 className="step-title">{title}</h3>
-                  <p className="step-copy">{copy}</p>
-                  {visual}
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
       {/* Footer */}
-      {/* Its own band now: #1a1d24 sits a step darker than section 3's #1c1f26,
-          with a 1px rule on top. The two used to share one colour, so the rule
-          was carrying the separation alone and the footer read as the tail of
-          the section. A tonal step separates without a hard edge.
+      {/* Its own band: #1a1d24, a step darker than section 2's #252932, with a
+          1px rule on top. It once shared a colour with the band above it, so
+          the rule was carrying the separation alone and the footer read as the
+          tail of that section. A tonal step separates without a hard edge.
           Greys and links are the dark-background set: #555 / #2d7bc4 were tuned
           for cream and go muddy here. */}
       <footer style={{ backgroundColor: "#1a1d24", borderTop: "1px solid #2a2d36", padding: "20px var(--page-pad) 28px" }}>
@@ -870,7 +784,7 @@ export default function LandingPage() {
              and centring is right there. Left-aligned once it becomes a column
              (see the 768 block), because a 268px device centred in a 420px
              column sat 76px inside the page's left edge while the header logo,
-             this section's heading and section 3's steps all sat on it.
+             this section's heading and the footer all sat on it.
              That was the "hero looks indented" — not a padding difference. */
           justify-content: center;
         }
@@ -1022,8 +936,8 @@ export default function LandingPage() {
 
           /* ⚠️ Left-aligned once the hero is a ROW. Centred, a 268px device in a
              420px column sat 76px inside the page's left edge, while the header
-             logo, the "one place" heading and section 3's steps all sat on it —
-             which is what read as "the hero is indented". It is not a
+             logo, the "one place" heading and the footer all sat on it — which
+             is what read as "the hero is indented". It is not a
              padding difference; the padding was always identical. */
           .hero-device-wrap { justify-content: flex-start; }
           /* Side-by-side from here, so the device's height stops competing with
@@ -1059,13 +973,29 @@ export default function LandingPage() {
            being unmistakably its own band, so the page reads cream -> warm ->
            dark as three deliberate steps. */
         .program-section {
-          /* A real shift from the cream hero, in section 3's band family rather
-             than a tan in between. Deliberately a step LIGHTER than section 3's
-             #1c1f26 so the page still descends — hero (cream) -> here ->
-             section 3 -> footer -> device frames — and the devices stay the
-             darkest objects on it. */
+          /* A real shift from the cream hero, in the dark band family rather
+             than a tan in between. Deliberately LIGHTER than the footer's
+             #1a1d24 so the page still descends — hero (cream) -> here ->
+             footer -> device frames — and the devices stay the darkest objects
+             on it.
+
+             ⚠️ A #1c1f26 "how it works" band sat between this and the footer
+             until Aug 5 2026. Whatever lands in that slot next has to take a
+             value between this #252932 and the footer's #1a1d24, or the
+             descent breaks. */
           background: #252932;
           padding: 56px var(--page-pad) 60px;
+          /* The page is a 100vh flex column, so when the content is shorter
+             than the viewport the slack falls through to the cream body colour
+             and shows as a band BELOW the footer. This absorbs it.
+
+             ⚠️ It belongs on whichever band is LAST before the footer, not on
+             this one specifically. It moved here when the "how it works" band
+             that used to carry it was removed on Aug 5 2026; it has to move
+             again the moment a section lands below this one. Verified real,
+             not theoretical: with no grower at all, a 2200px-tall viewport
+             showed a 679px cream band under the footer. */
+          flex: 1 0 auto;
         }
         .program-inner {
           max-width: var(--page-max);
@@ -1204,9 +1134,8 @@ export default function LandingPage() {
           align-items: center;
           min-width: 0;
         }
-        /* Identifying labels, not steps — deliberately not numbered, and in the
-           same quiet register as section 3's "Example: basketball" caption
-           rather than its numbered step titles. */
+        /* Identifying labels, not steps — deliberately not numbered, and in a
+           quiet register well under the heading they sit beneath. */
         .program-caption {
           margin: 12px 0 0;
           font-size: 13px;
@@ -1314,177 +1243,6 @@ export default function LandingPage() {
           .program-sub     { font-size: 18px; }
           .program-phone   { --pw: 222px; border-radius: 28px; }
           .program-screens { gap: 18px; }
-        }
-
-        /* ---- Section 3: how it works -------------------------------------
-           Numbered steps, not four phone screens. The frames were dropped
-           because the page already carries a device in the hero and two more in
-           section 2 — a fourth, fifth, sixth and seventh read as repetition
-           rather than as explanation, and each was hand-drawn JSX that had to
-           track the design system by hand. The copy carries the loop now.
-
-           One screen fragment survives, on step 2 only. See StepSms for why
-           that step and not the others. */
-        .steps-section {
-          /* --reps-card (#1c1f26), the app's surface token — the colour cards
-             sit ON in the product. The band is the surface and anything drawn
-             on it is darker, the same relationship the hero has putting dark
-             devices on cream. The page descends hero (cream) -> section 2
-             (#252932) -> here -> footer (#1a1d24). */
-          background: #1c1f26;
-          padding: 44px var(--page-pad) 48px;
-          /* The page is a 100vh flex column. When the content is shorter than
-             the viewport the slack used to fall through to the cream body
-             colour below the footer; growing this band absorbs it. No effect
-             once the content is taller than 100vh. */
-          flex: 1 0 auto;
-        }
-        /* ⚠️ The shell, so this section measures the same left edge as the
-           header, the hero device, the section-2 heading and the footer. The
-           four-frame version centred its heading instead; the steps are
-           left-aligned copy, so they take the shell edge the way section 2
-           does. */
-        .steps-inner {
-          max-width: var(--page-max);
-          margin: 0 auto;
-        }
-        .steps-heading {
-          margin: 0 0 8px;
-          color: #ffffff;
-          /* Tier 3 of the size hierarchy — see the ratio in the desktop rule
-             below, which is where the chain is actually written down. */
-          font-size: 22px;
-          font-weight: 700;
-          letter-spacing: -0.5px;
-          line-height: 1.2;
-          text-wrap: balance;
-        }
-        /* A caption naming what the steps depict, not a restatement of them.
-           Kept from the four-frame version because the reason still holds: the
-           copy below names a real exercise and a real shooting figure, so the
-           section is still unavoidably basketball and still has to say so.
-           --reps-sub (#8a8fa8), the app's muted-text token. */
-        .steps-example {
-          margin: 0 0 28px;
-          font-size: 13px;
-          font-weight: 500;
-          line-height: 1.4;
-          color: #8a8fa8;
-        }
-        .steps-list {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          /* A reading measure, not the full 960px shell. These are sentences
-             now rather than captions under frames, and a 960px line is well
-             past comfortable. It is a max-width on a left-aligned block, so the
-             list still starts on the shell edge. */
-          max-width: 620px;
-          display: flex;
-          flex-direction: column;
-          gap: 26px;
-        }
-        .step-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 14px;
-        }
-        /* The numbers are the structure, so they get a fixed-width gutter every
-           step aligns to rather than sitting inline where they would shift with
-           the title. tabular-nums keeps 1-4 identically wide. */
-        .step-num {
-          flex: 0 0 auto;
-          width: 24px;
-          font-size: 18px;
-          font-weight: 700;
-          line-height: 1.35;
-          color: #8a8fa8;
-          font-variant-numeric: tabular-nums;
-        }
-        /* min-width: 0 so a long unbroken string in the copy cannot push the
-           flex item past its track and widen the page. */
-        .step-body { min-width: 0; }
-        .step-title {
-          margin: 0 0 5px;
-          font-size: 17px;
-          font-weight: 600;
-          line-height: 1.35;
-          color: #ffffff;
-        }
-        .step-copy {
-          margin: 0;
-          font-size: 15px;
-          line-height: 1.55;
-          color: #a2a8b4;
-          /* A sentence, so only the LAST line needs protecting from a stranded
-             word — which is what pretty does. balance would even every line and
-             pull the measure in for no reason. Same call as .program-sub. */
-          text-wrap: pretty;
-        }
-
-        /* ---- The step 2 fragment -----------------------------------------
-           ⚠️ Deliberately OUTSIDE the device size tier, because it is not a
-           device. That tier — hero, then section 2, then here, each about 82%
-           of the one above — governs phone FRAMES. This is a crop of one
-           screen, and what keeps it subordinate is measured differently: it is
-           short, and its type is 13px against the step title's 17px, so it
-           reads as an illustration inside the copy rather than as a fifth
-           screen competing with section 2.
-
-           Two details stop it reading as a phone: a wide, short box nowhere
-           near the frames' 9/19 ratio, and a 14px radius against their 28px. */
-        .step-sms {
-          margin: 12px 0 0;
-          max-width: 300px;
-          background: #111318;
-          border: 1px solid #2a2d36;
-          border-radius: 14px;
-          padding: 12px 13px;
-        }
-        /* --reps-raised (#22252e), the app's own bubble colour, which is why
-           the patch above exists: against the band's #1c1f26 the two are only a
-           few steps apart and the bubble would disappear. */
-        .step-sms-bubble {
-          background: var(--reps-raised);
-          border-radius: 14px;
-          padding: 9px 11px;
-          font-size: 13px;
-          line-height: 1.45;
-          color: #e8eaf0;
-        }
-        .step-sms-receipt {
-          margin: 5px 0 0 5px;
-          font-size: 10.5px;
-          color: #8a8fa8;
-        }
-
-        /* ⚠️ ONE min-width:768 block, placed AFTER every base rule above —
-           not a copy inside each breakpoint range. A "desktop and up" rule put
-           in a 768-1023 range block silently stops applying at 1024, which is
-           the bug this file has now had four times. */
-        @media (min-width: 768px) {
-          .steps-section { padding: 72px var(--page-pad) 76px; }
-          /* ⚠️ Tier 3 of the SIZE HIERARCHY, as a ratio rather than as fixed
-             numbers, so it holds at every width instead of at the two it was
-             checked at. The chain:
-               hero       clamp(38px, 4.5vw, 56px)
-               section 2  clamp(32px, 3.7vw, 46px)    about 82% of hero
-               here       clamp(26px, 3.03vw, 38px)   about 82% of section 2
-             which lands 81-83% across the range: 38/46 at 1280, 31/37.9 at
-             1024, 26/32 at 768.
-
-             ⚠️ The four-frame version this replaces was a FLAT 32px at every
-             width, which tied section 2 at 768 (32 against 32 — no hierarchy at
-             all) and sat at 70% at 1280. It was under its own tier at one width
-             and level with the section above it at another. */
-          .steps-heading { font-size: clamp(26px, 3.03vw, 38px); margin: 0 0 10px; }
-          .steps-example { margin: 0 0 34px; font-size: 14px; }
-          .steps-list { max-width: 660px; gap: 30px; }
-          .step-item { gap: 18px; }
-          .step-num { width: 28px; font-size: 20px; }
-          .step-title { font-size: 19px; }
-          .step-copy { font-size: 16px; }
-          .step-sms { max-width: 330px; }
         }
 
         .footer-desktop { display: none; }
