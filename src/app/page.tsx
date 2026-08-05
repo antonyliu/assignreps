@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Send, CheckCircle, Layers } from "lucide-react";
+import { Send, CheckCircle, Layers, Check } from "lucide-react";
 
 export const metadata: Metadata = {
   // Resolves the relative og:image below to an absolute (canonical) URL.
@@ -728,6 +728,49 @@ function ScreenStudentHome() {
   );
 }
 
+/* ---------- Pricing --------------------------------------------------------
+   ⚠️ EVERY feature here belongs to BOTH plans, and the section is built to say
+   so. The only difference between Free and Pro is the student count — that is
+   the actual product rule (FREE_STUDENT_LIMIT gates the 4th student and nothing
+   else), and the free tier is 3 students FOREVER with full features, no card
+   and no clock.
+
+   ⚠️ So this must never become a per-column comparison table. A tick-per-tier
+   grid implies Pro unlocks capability, which would be a straightforward lie
+   about what the app does — and it would undercut the free tier, which is
+   deliberately generous positioning rather than a trial. One shared list under
+   both cards is the honest shape.
+
+   ⚠️ Terse LABELS, not sentences. Anything long enough to wrap breaks the two
+   column grid, and the longest of these ("Attempts, makes, or streaks") is the
+   one that sets the column width — check it first if the list is ever edited. */
+const PRICING_FEATURES = [
+  /* ⚠️ Plain, literal feature NAMES — the register is TeuxDeux's ("Week view",
+     "Undo delete"), not marketing copy. An earlier set tried to interpret each
+     one ("Notes in their own words", "Every log, kept") and read as a pitch;
+     naming the thing and stopping is more confident and ages better.
+
+     Each verified against shipped behaviour, not the roadmap:
+       Custom drills          custom_exercises, live
+       Attempts/makes/streaks the three goal_type values
+       No login for students  token link, no signup required
+       Student notes          logs.note, live since Aug 1
+       Full roster view       the instructor roster screen
+       Log history            logs are kept; NO trend or analysis claim
+       Parent phone option    the shipped Player/Parent toggle
+       Cancel anytime         monthly, no contract
+     ⚠️ "Log history" deliberately does not promise progress-over-time views.
+     Nothing reads logs longitudinally yet. */
+  "Custom drills",
+  "Attempts, makes, or streaks",
+  "No login for students",
+  "Student notes",
+  "Full roster view",
+  "Log history",
+  "Parent phone option",
+  "Cancel anytime",
+];
+
 export default function LandingPage() {
   return (
     <div className="paper-grain" style={{ backgroundColor: "#ede9e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -938,6 +981,108 @@ export default function LandingPage() {
               <p className="student-caption">Their own progress</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Pricing — the last band before the footer.
+
+          ⚠️ CENTRED, not zig-zagged. Sections 2 and 3 alternate sides because
+          they are a directional story being told about two audiences. Pricing
+          is a fair comparison between two options, and putting one of them on
+          a side would weight it. */}
+      <section className="pricing-section">
+        <div className="pricing-inner">
+          <h2 className="pricing-heading">Straightforward pricing.</h2>
+          {/* ⚠️ "STUDENTS" is load-bearing — without the noun this reads as
+              "free for your first three" and leaves a stranger guessing three
+              of what: months, drills, sessions. Three students is the free
+              tier's actual rule (FREE_STUDENT_LIMIT = 3).
+
+              ⚠️ "forever" is a real claim and it is true: the free tier has no
+              time limit and is explicitly not a trial — a 14-day unlimited
+              trial was considered and rejected. If that ever changes, this word
+              is the first thing that has to go.
+
+              ⚠️ The price is deliberately NOT restated here. The Pro card two
+              rows down carries $10/mo, and saying it twice made the heading's
+              promise of straightforwardness do the opposite. This also absorbs
+              the standalone "no card to start" line that used to sit under the
+              Free CTA — note that absorption is IMPLICIT: "free forever" is
+              read as no-payment, but the words card and payment now appear
+              nowhere in this section. */}
+          <p className="pricing-sub">
+            Free forever with your first three students.
+          </p>
+
+          <div className="pricing-cards">
+            <div className="pricing-card pricing-card-free">
+              <p className="pricing-plan">Free</p>
+              <p className="pricing-price">$0</p>
+              <p className="pricing-limit">up to 3 students</p>
+              {/* Quiet rather than filled, reusing the outlined treatment the
+                  hero's sign-in button already establishes. ⚠️ NOT a second
+                  blue — the rule is one brand blue everywhere, and hierarchy
+                  between two real CTAs comes from fill and elevation.
+
+                  ⚠️ BOTH cards say "Start free", and that identical wording is
+                  the point rather than an oversight. Both buttons target
+                  /instructor/signup — there is no "start Pro" path anywhere in
+                  the app, because Pro is only reachable AFTER signup via the
+                  add-student gate or the profile menu. Wording them
+                  differently implied a commitment distinction that does not
+                  exist at the moment of the click. The light-card/dark-card
+                  contrast already tells the two-tier story; the labels must not
+                  claim something the routing does not do. */}
+              <Link href="/instructor/signup" className="signin-btn pricing-cta">
+                Start free
+              </Link>
+              {/* ⚠️ A "No card to start" line lived here and was removed once
+                  the subtext became "Free forever with your first three
+                  students" — the two were making the same promise a few rows
+                  apart. Removing it also re-levels the cards: it was the only
+                  content either card had below its button, so the Pro card was
+                  carrying an equivalent slug of empty space to stay the same
+                  height. Both cards now end on their CTA. */}
+            </div>
+
+            <div className="pricing-card pricing-card-pro">
+              <p className="pricing-plan">Pro</p>
+              <p className="pricing-price">
+                $10<span className="pricing-per">/mo</span>
+              </p>
+              <p className="pricing-limit">unlimited students</p>
+              <Link href="/instructor/signup" className="cta-real pricing-cta">
+                Start free
+              </Link>
+            </div>
+          </div>
+
+          {/* ⚠️ NO container — deliberately open on the band. A white panel was
+              tried here and removed: housing the list gave it presence but made
+              it a boxed unit sitting after two boxed units, which is the exact
+              third-object problem the panel's own width was supposed to avoid.
+              Presence comes from the type and the marks now, not from a box.
+
+              ⚠️ This statement is doing real work — it is what stops the list
+              being read as Pro's feature set, so it sits above BOTH cards'
+              worth of features and belongs to neither card. */}
+          <p className="pricing-included">Everything included, always</p>
+          <ul className="pricing-features">
+            {PRICING_FEATURES.map((f) => (
+              <li className="pricing-feature" key={f}>
+                {/* ⚠️ A filled badge, NOT a bare glyph, and this supersedes the
+                    earlier "quiet icon, no coloured blocks" direction — the
+                    thin check read as a bullet point rather than as assurance.
+                    The circle is the brand blue and the check inside it is
+                    white, so the mark carries weight without introducing a
+                    colour. */}
+                <span className="pricing-badge" aria-hidden>
+                  <Check size={15} strokeWidth={3} color="#378add" />
+                </span>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -1554,13 +1699,9 @@ export default function LandingPage() {
              outright at 3.78:1 — see each colour below. */
           background: #caccd5;
           padding: 56px var(--page-pad) 60px;
-          /* ⚠️ MOVED HERE from .program-section (Aug 5 2026). The page is a
-             100vh flex column and this is the only grower in it, so it absorbs
-             the slack when the content is shorter than the viewport — without
-             it the shell colour shows as a band BELOW the footer. It belongs to
-             whichever band is LAST before the footer, so it moves again when a
-             section lands under this one. */
-          flex: 1 0 auto;
+          /* ⚠️ No flex-grow here any more. It moved on to .pricing-section
+             when that landed below this one (Aug 5 2026) — the slack-absorbing
+             grower has to be whichever band sits LAST before the footer. */
         }
         .student-inner {
           max-width: var(--page-max);
@@ -1714,6 +1855,277 @@ export default function LandingPage() {
           .student-heading { letter-spacing: -1.2px; margin: 0 0 18px; }
           .student-sub     { font-size: 18px; }
           .student-phone   { --pw: 222px; border-radius: 28px; }
+        }
+
+        /* ---- Pricing ------------------------------------------------------
+           The resting, decided moment after two look-closer sections, and the
+           colour says so: its own calm neutral rather than a fourth voice in
+           either of the page's two colour conversations. */
+        .pricing-section {
+          /* ⚠️ REUSED, not invented — #f8f7f5 is already the page background on
+             /privacy and /terms, so this is the site's existing near-white
+             rather than a new value. Deliberately outside both families: the
+             hero's cream is warm (hue 36) and sections 2 and 3 are blue (227
+             and 229). This is effectively neutral, which is what makes it read
+             as a resting point instead of another step in a sequence. */
+          background: #f8f7f5;
+          padding: 56px var(--page-pad) 64px;
+          /* ⚠️ MOVED HERE from .student-section (Aug 5 2026). The page is a
+             100vh flex column and this is its only grower, so it absorbs the
+             slack when the content is shorter than the viewport — without it
+             the shell colour shows as a band BELOW the footer. It belongs to
+             whichever band is LAST before the footer, so it moves again if any
+             section ever lands under this one. */
+          flex: 1 0 auto;
+        }
+        /* Centred throughout — see the note on the section element for why this
+           one does not zig-zag. */
+        .pricing-inner {
+          max-width: var(--page-max);
+          margin: 0 auto;
+          text-align: center;
+        }
+        .pricing-heading {
+          font-size: 27px;
+          line-height: 1.1;
+          font-weight: 700;
+          letter-spacing: -0.8px;
+          color: #0f0f10;
+          margin: 0 0 14px;
+          text-wrap: balance;
+        }
+        .pricing-sub {
+          font-size: 16px;
+          line-height: 1.55;
+          color: #55555c;
+          margin: 0 auto;
+          /* A measure, so the sentence does not run the full 960px shell when
+             everything under it is a centred column. */
+          max-width: 460px;
+          text-wrap: pretty;
+        }
+
+        /* STACKED below 768, side by side above.
+
+           ⚠️ The ORIGINAL reason no longer applies, and this note says so
+           rather than quietly keeping a number whose justification has gone.
+           The Pro CTA used to read "Start your program", which needed about
+           160px of text plus padding — more than the roughly 170px of inner
+           card width two cards get inside a 480px viewport, so the button
+           would have wrapped. Both buttons now read "Start free" (about 85px),
+           which clears that bound easily.
+
+           768 stays anyway, on card PROPORTION rather than on the button: two
+           cards at 480 are about 210px wide each, which is cramped for a price,
+           a limit and a CTA no matter how short the label. That is a judgment,
+           not a measurement — so if this is ever revisited, it is now a real
+           choice rather than a constraint. */
+        .pricing-cards {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          margin: 32px 0 0;
+        }
+        .pricing-card {
+          box-sizing: border-box;
+          width: 100%;
+          max-width: 380px;
+          border-radius: 16px;
+          padding: 26px 24px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          /* Neutral-tinted, because this band is neutral — the same
+             tint-from-the-surface rule the warm hero and the blue sections
+             follow, which here resolves to a plain grey rather than a hue. */
+          box-shadow:
+            0 1px 3px rgba(20, 20, 24, 0.05),
+            0 12px 32px -10px rgba(20, 20, 24, 0.14);
+        }
+        /* White on near-white: subtle on purpose. The card is defined by its
+           hairline and shadow, and its job is to be the quiet half of a pair
+           whose other half is nearly black. */
+        .pricing-card-free {
+          background: #ffffff;
+          border: 1px solid rgba(15, 15, 16, 0.10);
+        }
+        /* ⚠️ #262a39 — section 2's band colour, so the paid tier is visibly
+           part of the product's own palette rather than a fifth colour.
+           It must be kept in step with .program-section if that ever moves. */
+        .pricing-card-pro {
+          background: #262a39;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .pricing-plan {
+          margin: 0;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 1.4px;
+          text-transform: uppercase;
+        }
+        .pricing-card-free .pricing-plan { color: #6b6b73; }
+        .pricing-card-pro  .pricing-plan { color: #9095ac; }
+        .pricing-price {
+          margin: 10px 0 0;
+          font-size: 40px;
+          font-weight: 700;
+          letter-spacing: -1.5px;
+          line-height: 1;
+        }
+        .pricing-card-free .pricing-price { color: #0f0f10; }
+        .pricing-card-pro  .pricing-price { color: #ffffff; }
+        /* Rides with the number rather than sitting beside it at full size. */
+        .pricing-per {
+          font-size: 17px;
+          font-weight: 600;
+          letter-spacing: -0.3px;
+        }
+        .pricing-limit {
+          margin: 10px 0 0;
+          font-size: 15px;
+          line-height: 1.4;
+        }
+        .pricing-card-free .pricing-limit { color: #55555c; }
+        .pricing-card-pro  .pricing-limit { color: #a2a8b4; }
+        /* ⚠️ Full width inside the card and with its own horizontal padding.
+           .cta-real ships 38px of side padding for a button sitting free on a
+           page; inside a card that is what pushes the label past the edge. The
+           card decides the width here, not the text.
+
+           ⚠️ This block also NORMALISES the two buttons to one size, and it has
+           to restate every metric that differs. .cta-real and .signin-btn were
+           built for different jobs elsewhere on the page — a page-level primary
+           and a small header link — so inheriting them here rendered 57.5px
+           against 41px, a 16.5px mismatch from three separate sources at once:
+           17px/700 against 14px/600, 16px against 9px of vertical padding, and
+           a border on one but not the other.
+
+           Two buttons offering a straight either/or must be the same object at
+           two weights. The ONLY difference is the fill. */
+        .pricing-cta {
+          display: block;
+          width: 100%;
+          box-sizing: border-box;
+          margin-top: 22px;
+          font-size: 17px;
+          font-weight: 700;
+          letter-spacing: -0.2px;
+          line-height: 1.5;
+          padding: 16px 14px;
+          border-radius: 12px;
+          text-align: center;
+          /* ⚠️ A transparent border on BOTH, so the outlined one does not end
+             up 2px taller than the filled one. box-sizing is border-box, so
+             this costs no height — it just makes the two boxes identical. */
+          border: 1px solid transparent;
+        }
+        /* Two classes, so it beats the transparent border above regardless of
+           source order — the outline is the whole point of the quiet variant. */
+        .pricing-card-free .pricing-cta { border-color: rgba(15, 15, 16, 0.22); }
+
+        /* ---- The included-features block -----------------------------------
+           ⚠️ NO container. A white panel lived here briefly and came out: it
+           bought presence at the cost of becoming a third boxed object on a
+           band that already has two. This sits open on the background, and its
+           weight comes from type size and the badges instead.
+
+           So there is deliberately no background, border, radius or shadow on
+           any of these rules. Adding one puts the third-object problem back. */
+
+        /* ⚠️ A short confident STATEMENT, not a section label — that is the
+           whole point of this treatment. It was 13px, then 15px/600 with +0.4px
+           tracking, and the tracking was what made it read as legal fine print:
+           letterspaced small caps-ish text is the visual language of terms and
+           conditions. Now 20px/700 with NEGATIVE tracking, which is the
+           page's own headline idiom.
+
+           ⚠️ The brand blue is only legible here because of its SIZE. White-ish
+           backgrounds put #378add at 3.36:1, which fails AA for normal text and
+           passes only under the large-text allowance — that needs >= 18.66px AND
+           bold. Drop this below 20px, or to weight 600, and it silently fails.
+           If it ever needs to be smaller, it has to stop being blue. */
+        .pricing-included {
+          margin: 52px 0 0;
+          font-size: 20px;
+          font-weight: 700;
+          letter-spacing: -0.3px;
+          color: #378add;
+        }
+        /* ⚠️ ONE column below 768, two above, and NO white-space: nowrap
+           anywhere near it. Pinning these open is exactly the bug .bullet-text
+           already had: an unbreakable line sets a min-content floor, and the
+           PAGE widens instead of the line breaking. The columns change instead,
+           so a long label can never push the document sideways.
+
+           minmax(0, max-content) lets each column size to its longest label but
+           still shrink rather than overflow. */
+        .pricing-features {
+          list-style: none;
+          margin: 22px 0 0;
+          padding: 0;
+          display: grid;
+          grid-template-columns: repeat(1, minmax(0, max-content));
+          justify-content: center;
+          /* ⚠️ Row gap was 11px against a 48px column gap, which packed the
+             rows into a dense block while holding the columns far apart — the
+             single biggest reason this read as small print rather than as eight
+             separate things. The two gaps are now in a sane relationship. */
+          gap: 18px 48px;
+          text-align: left;
+        }
+        .pricing-feature {
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          /* ⚠️ 16px was BELOW this section's own subtext (18px), which is what
+             made it read as secondary regardless of anything else. 17px sits
+             just under the subtext rather than beneath it. */
+          font-size: 17px;
+          line-height: 1.45;
+          color: #2e2e33;
+        }
+        /* ⚠️ A TINTED disc, not a solid one, and the distinction is about
+           repetition rather than any single badge. A solid brand-blue fill at
+           this size looked right once and read as a wall of blue dots eight
+           times over — the marks stopped supporting the labels and started
+           competing with them, and with the CTAs.
+
+           ⚠️ It also must not fall back to the thin glyph this replaced, which
+           read as a bullet. The landing point between the two is: keep the
+           SCALE (24px, 1.4x the label) and the chunky stroke, drop only the
+           colour weight. Size carries the presence, tint carries the calm.
+
+           ⚠️ #e8effa is a NEW value, despite looking like a token — it appears
+           nowhere else in src/. It is a pale wash of the brand blue and exists
+           only to seat these checks. Do not reach for it as a general surface
+           without deciding that separately. */
+        .pricing-badge {
+          flex-shrink: 0;
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          background: #e8effa;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+          .pricing-section  { padding: 76px var(--page-pad) 84px; }
+          /* Peer with sections 2 and 3 — the same curve, for the same reason
+             they are peers with each other: these are co-equal sections, not a
+             descending hierarchy. */
+          .pricing-heading  { font-size: clamp(32px, 3.7vw, 46px); margin: 0 0 16px; }
+          .pricing-sub      { font-size: 18px; max-width: 520px; }
+          .pricing-cards    { flex-direction: row; align-items: stretch; justify-content: center; gap: 20px; margin-top: 40px; }
+          .pricing-card     { max-width: 330px; flex: 1 1 0; }
+          /* Stays >= 18.66px and bold at every width — see the AA note on the
+             base rule, which is load-bearing for the blue. */
+          .pricing-included { margin-top: 68px; font-size: 22px; }
+          .pricing-features { grid-template-columns: repeat(2, minmax(0, max-content)); gap: 22px 64px; margin-top: 26px; }
+          .pricing-feature  { font-size: 17px; }
+          .pricing-badge    { width: 26px; height: 26px; }
         }
 
         .footer-desktop { display: none; }
