@@ -792,8 +792,7 @@ export default function LandingPage() {
           </div>
           <Link
             href="/instructor/signup/email"
-            style={{ fontSize: "14px", fontWeight: 500, color: "#666", textDecoration: "underline", textUnderlineOffset: "3px" }}
-            className="hover:text-[#0f0f10] transition-colors"
+            className="signin-btn"
           >
             Sign in
           </Link>
@@ -870,19 +869,7 @@ export default function LandingPage() {
               <div className="cta-section" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
                 <Link
                   href="/instructor/signup"
-                  style={{
-                    display: "block",
-                    backgroundColor: "#2d7bc4",
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: "16px",
-                    letterSpacing: "-0.2px",
-                    padding: "15px 36px",
-                    borderRadius: "10px",
-                    textDecoration: "none",
-                    textAlign: "center",
-                  }}
-                  className="cta-primary hover:opacity-90 active:scale-[0.98] transition-all"
+                  className="cta-real cta-primary hover:opacity-90 active:scale-[0.98] transition-all"
                 >
                   Start free
                 </Link>
@@ -909,7 +896,7 @@ export default function LandingPage() {
                 the first thing a stranger meets and has to be unambiguous; by
                 here they know what the product does, so the CTA can name the
                 thing they would actually get. */}
-            <Link href="/instructor/signup" className="program-cta">
+            <Link href="/instructor/signup" className="cta-real program-cta">
               See your whole roster
             </Link>
           </div>
@@ -1249,10 +1236,10 @@ export default function LandingPage() {
         }
         .program-copy { width: 100%; }
         .program-heading {
-          font-size: 30px;
+          font-size: 27px;
           line-height: 1.1;
           font-weight: 700;
-          letter-spacing: -1px;
+          letter-spacing: -0.8px;
           color: #eef0f4;
           margin: 0 0 14px;
           /* ⚠️ Wrapping is FINE here and is not what is being guarded against.
@@ -1287,19 +1274,59 @@ export default function LandingPage() {
           gap: 14px;
           width: 100%;
         }
+        /* ---- REAL, clickable calls to action ------------------------------
+           ⚠️ These must never be mistakable for a button drawn INSIDE a phone
+           mock. Before this they were #2d7bc4 flat against the mocks' #378add
+           flat — near-identical fills at the same weight and radius, so "Send
+           to Jalen" and "See your whole roster" read as the same kind of
+           object, one of which does nothing. Three things separate them now,
+           and the shadow does most of the work:
+
+             - a deeper, less sky-ish blue than the app accent
+             - real elevation: mock buttons are flat because they sit on a
+               screen; these lift off the page
+             - a larger type size and radius than anything inside a frame
+
+           Every future marketing CTA should take this class rather than
+           restating the values. */
+        .cta-real {
+          display: inline-block;
+          background-color: #1f66b8;
+          color: #fff;
+          font-weight: 700;
+          font-size: 17px;
+          letter-spacing: -0.2px;
+          padding: 16px 38px;
+          border-radius: 12px;
+          text-decoration: none;
+          text-align: center;
+          box-shadow:
+            0 10px 22px -8px rgba(31, 102, 184, 0.55),
+            0 1px 2px rgba(0, 0, 0, 0.16);
+        }
+        /* Outlined, not plain text — it sat as a bare underlined link next to
+           buttons that have since grown, which read as unfinished. Same radius
+           as .cta-real so the two are obviously a pair at different weights. */
+        .signin-btn {
+          display: inline-block;
+          font-size: 14px;
+          font-weight: 600;
+          color: #0f0f10;
+          border: 1px solid rgba(15, 15, 16, 0.22);
+          border-radius: 12px;
+          padding: 9px 18px;
+          text-decoration: none;
+          transition: border-color 0.15s, background-color 0.15s;
+        }
+        .signin-btn:hover {
+          border-color: rgba(15, 15, 16, 0.42);
+          background-color: rgba(15, 15, 16, 0.04);
+        }
+
         .program-cta {
           display: block;
           width: 100%;
           margin-top: 26px;
-          text-align: center;
-          text-decoration: none;
-          background-color: #2d7bc4;
-          color: #fff;
-          font-weight: 700;
-          font-size: 16px;
-          letter-spacing: -0.2px;
-          padding: 15px 36px;
-          border-radius: 10px;
         }
         /* ⚠️ ONE rule for every width at or above 768, not a copy inside each
            breakpoint block. The first attempt put this in the 768-1023 block
@@ -1309,6 +1336,21 @@ export default function LandingPage() {
            because it is applied SOMEWHERE. */
         @media (min-width: 768px) {
           .program-cta { display: inline-block; width: auto; }
+
+          /* ⚠️ The SIZE HIERARCHY rule, expressed as a ratio rather than as
+             fixed numbers, so it holds at every width instead of at the two
+             where it was checked. The hero headline is clamp(38px, 4.5vw, 56px);
+             this is the same curve at ~0.82 of it — clamp(32px, 3.7vw, 46px) —
+             which keeps section 2 in the 80-85% band across the whole range:
+             46/56 at 1280, 37.9/46.1 at 1024, 32/38 at 768.
+
+             ⚠️ It lives in a min-width:768 block on purpose. Put in the
+             768-1023 block, as it first was, it silently stopped applying at
+             1024 and the heading fell back to the 27px mobile size — 48% of the
+             hero rather than 82%. That is the fourth time in this file a
+             breakpoint-scoped rule has looked applied because it applied
+             somewhere; check the widest width, not just the one you are on. */
+          .program-heading { font-size: clamp(32px, 3.7vw, 46px); }
         }
 
         .program-screen-item {
@@ -1333,7 +1375,12 @@ export default function LandingPage() {
              taste. At 375 the content box is 331px: 150 + 14 + 150 = 314 fits,
              184 would overflow by 51. Hence the extra step at 480 rather than
              one mobile size. */
-          --pw: 158px;
+          /* ⚠️ Sized from the HERO's device, not from the space available.
+             The hero's is 172px below 768, so at 205 these were 19% LARGER
+             than the hero's — the hierarchy inverted, which is the thing the
+             ratio exists to stop. 146 is ~85% of 172 and still clears the
+             two-up bound with room. */
+          --pw: 146px;
           width: var(--pw);
           font-size: calc(var(--pw) / 13);
           /* ⚠️ 9/19.5, not 9/18. Both the frame height and its contents scale
@@ -1374,17 +1421,17 @@ export default function LandingPage() {
         }
 
         @media (min-width: 480px) and (max-width: 767px) {
-          /* ⚠️ 205, not 211. Two 211s plus the 14px gap come to exactly 436,
-             which is the content box at 480 — a precise fit with no room for a
-             scrollbar or a rounding difference. 205 leaves 12px. */
-          .program-phone { --pw: 205px; }
+          /* Same 146 as below 480 now — the old 205 made these bigger than the
+             hero's own 172px device. The two-up bound that used to decide this
+             number is no longer the binding constraint; the hierarchy is. */
+          .program-phone { --pw: 146px; }
         }
 
         @media (min-width: 768px) and (max-width: 1023px) {
           .program-section { padding: 72px var(--page-pad) 76px; }
-          .program-heading { font-size: 42px; margin: 0 0 16px; }
+          .program-heading { margin: 0 0 16px; }
           .program-sub     { font-size: 18px; }
-          .program-phone   { --pw: 241px; border-radius: 30px; }
+          .program-phone   { --pw: 196px; border-radius: 26px; }
           .program-screens { gap: 18px; }
         }
 
@@ -1418,9 +1465,9 @@ export default function LandingPage() {
              headline needs 668px at 38px, so a fixed 38 wraps everywhere below
              ~1270. Scaling with the viewport keeps it on one line across the
              whole range and only reaches 38px where there is room for it. */
-          .program-heading { font-size: 48px; letter-spacing: -1.4px; margin: 0 0 18px; }
+          .program-heading { letter-spacing: -1.2px; margin: 0 0 18px; }
           .program-sub     { font-size: 18px; }
-          .program-phone   { --pw: 254px; border-radius: 32px; }
+          .program-phone   { --pw: 222px; border-radius: 28px; }
           .program-screens { gap: 18px; }
         }
 
