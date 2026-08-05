@@ -907,9 +907,18 @@ export default function LandingPage() {
           </div>
           {/* Two screens: the moment work is created, and the roster it lands
               on. Decorative — the heading and subtext carry the meaning. */}
-          <div className="program-screens" aria-hidden="true">
-            <div className="program-phone program-phone-back"><ScreenAssign /></div>
-            <div className="program-phone program-phone-front"><ScreenRoster /></div>
+          <div className="program-screens">
+            <div className="program-screen-item">
+              {/* The frame is illustration; the caption below carries the
+                  meaning, so screen readers get the label and skip the
+                  duplicated UI — the same split the loop section uses. */}
+              <div className="program-phone" aria-hidden="true"><ScreenAssign /></div>
+              <p className="program-caption">Assigning work</p>
+            </div>
+            <div className="program-screen-item">
+              <div className="program-phone" aria-hidden="true"><ScreenRoster /></div>
+              <p className="program-caption">Your roster</p>
+            </div>
           </div>
         </div>
       </section>
@@ -1158,6 +1167,17 @@ export default function LandingPage() {
             flex: 0 0 var(--hero-w);
             width: var(--hero-w);
           }
+          /* ⚠️ The image column HUGS the device from here up, instead of
+             holding a fixed --hero-w. It was 420px wide around a 268px device,
+             so 152px of it was empty and the copy column started 152px further
+             right than it needed to — that dead space, plus the 80px flex gap,
+             was the whole 232px hero gap. The device itself does not move: it
+             is left-aligned on the page edge either way, and --pw is untouched.
+             Only the copy moves left, which is exactly widening the copy column.
+             --hero-w still drives the STACKED layout below 768. */
+          .landing-image-wrap { flex: 0 0 auto; width: auto; }
+          .landing-layout { gap: 56px; }
+
           /* ⚠️ Left-aligned once the hero is a ROW. Centred, a 268px device in a
              420px column sat 76px inside the page's left edge, while the header
              logo, the "one place" heading and the loop's first frame all sat on
@@ -1206,7 +1226,7 @@ export default function LandingPage() {
           padding: 56px var(--page-pad) 60px;
         }
         .program-inner {
-          max-width: 1100px;
+          max-width: var(--page-max);
           margin: 0 auto;
           display: flex;
           flex-direction: column;
@@ -1253,12 +1273,29 @@ export default function LandingPage() {
           gap: 14px;
           width: 100%;
         }
+        .program-screen-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-width: 0;
+        }
+        /* Identifying labels, not steps — deliberately not numbered, and in the
+           same quiet register as the loop section's "Example: basketball"
+           rather than its numbered 17px captions. */
+        .program-caption {
+          margin: 12px 0 0;
+          font-size: 13px;
+          font-weight: 500;
+          line-height: 1.4;
+          color: #8a8fa8;
+          text-align: center;
+        }
         .program-phone {
           /* ⚠️ Two side by side, so the ceiling is (container - gap) / 2, not
              taste. At 375 the content box is 331px: 150 + 14 + 150 = 314 fits,
              184 would overflow by 51. Hence the extra step at 480 rather than
              one mobile size. */
-          --pw: 150px;
+          --pw: 158px;
           width: var(--pw);
           font-size: calc(var(--pw) / 13);
           /* ⚠️ 9/19.5, not 9/18. Both the frame height and its contents scale
@@ -1289,15 +1326,27 @@ export default function LandingPage() {
 
         /* Stacked but bigger: at 768 the copy column has the full width, so the
            headline can hold one line at a proper size. */
+        /* ⚠️ At 375 the content box is 331px and two 158px frames plus the
+           base 14px gap come to exactly 331 — it fits with ZERO slack, which is
+           one rounding difference from overflowing. Buying the margin out of the
+           gap rather than the frames keeps the devices at the size that made
+           them legible. */
+        @media (max-width: 479px) {
+          .program-screens { gap: 10px; }
+        }
+
         @media (min-width: 480px) and (max-width: 767px) {
-          .program-phone { --pw: 184px; }
+          /* ⚠️ 205, not 211. Two 211s plus the 14px gap come to exactly 436,
+             which is the content box at 480 — a precise fit with no room for a
+             scrollbar or a rounding difference. 205 leaves 12px. */
+          .program-phone { --pw: 205px; }
         }
 
         @media (min-width: 768px) and (max-width: 1023px) {
           .program-section { padding: 72px var(--page-pad) 76px; }
           .program-heading { font-size: 34px; margin: 0 0 14px; }
           .program-sub     { font-size: 18px; }
-          .program-phone   { --pw: 210px; border-radius: 28px; }
+          .program-phone   { --pw: 241px; border-radius: 30px; }
           .program-screens { gap: 18px; }
         }
 
@@ -1333,7 +1382,7 @@ export default function LandingPage() {
              whole range and only reaches 38px where there is room for it. */
           .program-heading { font-size: 38px; margin: 0 0 16px; }
           .program-sub     { font-size: 18px; }
-          .program-phone   { --pw: 221px; border-radius: 30px; }
+          .program-phone   { --pw: 254px; border-radius: 32px; }
           .program-screens { gap: 18px; }
         }
 
@@ -1470,7 +1519,7 @@ export default function LandingPage() {
             scroll-snap-type: none;
             padding: 0 40px;
           }
-          .loop-phone { --pw: calc((min(1100px, 100vw - 80px) - 48px) / 4); }
+          .loop-phone { --pw: calc((min(var(--page-max), 100vw - 2 * var(--page-pad)) - 48px) / 4); }
         }
 
         .footer-desktop { display: none; }
@@ -1498,7 +1547,7 @@ export default function LandingPage() {
             align-items: center;
             justify-content: center;
             gap: 12px;
-            max-width: 1100px;
+            max-width: var(--page-max);
             margin: 0 auto;
           }
           .footer-desktop a, .footer-desktop span {
@@ -1507,10 +1556,16 @@ export default function LandingPage() {
           }
         }
         @media (min-width: 1024px) {
+          /* ⚠️ Still hugs the device here. This block used to re-declare
+             flex/width from --hero-w AFTER the 768 override, which quietly put
+             the 420px column back and left 152px of dead space between the
+             device and the copy — the override at 768 looked like it worked and
+             did nothing above 1023. --hero-w stays defined for the stacked
+             layout below 768 and is deliberately not used at this width. */
           .landing-image-wrap {
             --hero-w: 420px;
-            flex: 0 0 var(--hero-w);
-            width: var(--hero-w);
+            flex: 0 0 auto;
+            width: auto;
           }
           .hero-device { --pw: 268px; }
         }
