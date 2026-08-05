@@ -58,7 +58,7 @@ function TallyMark() {
 // good look.
 const bullets = [
   { icon: Send,        text: "Assign homework to a student" },
-  { icon: CheckCircle, text: "They get a text, log it there" },
+  { icon: CheckCircle, text: "They get a text, tap to log it" },
   { icon: Layers,      text: "You know exactly what got done" },
 ];
 
@@ -894,10 +894,15 @@ export default function LandingPage() {
             {/* Same destination as the hero's button, deliberately different
                 words. The hero's stays the literal "Start free" because it is
                 the first thing a stranger meets and has to be unambiguous; by
-                here they know what the product does, so the CTA can name the
-                thing they would actually get. */}
+                here they know what the product does, so the CTA can echo the
+                heading above it.
+
+                ⚠️ NOT "See your whole roster", which was tried and dropped: it
+                promises a roster the signup does not have yet. Every person who
+                taps this has zero students. "Start your program" describes the
+                action they are actually taking. */}
             <Link href="/instructor/signup" className="cta-real program-cta">
-              See your whole roster
+              Start your program
             </Link>
           </div>
           {/* Two screens: the moment work is created, and the roster it lands
@@ -1276,22 +1281,23 @@ export default function LandingPage() {
         }
         /* ---- REAL, clickable calls to action ------------------------------
            ⚠️ These must never be mistakable for a button drawn INSIDE a phone
-           mock. Before this they were #2d7bc4 flat against the mocks' #378add
-           flat — near-identical fills at the same weight and radius, so "Send
-           to Jalen" and "See your whole roster" read as the same kind of
-           object, one of which does nothing. Three things separate them now,
-           and the shadow does most of the work:
+           mock. What separates them is SHAPE, not hue:
 
-             - a deeper, less sky-ish blue than the app accent
-             - real elevation: mock buttons are flat because they sit on a
-               screen; these lift off the page
+             - real elevation. Mock buttons are flat because they sit on a
+               screen; these lift off the page, and this does most of the work
              - a larger type size and radius than anything inside a frame
+
+           ⚠️ The colour is the brand token and must stay that way. A separate
+           deeper blue (#1f66b8) was tried here and reverted: a near-miss of the
+           brand colour reads as off-brand rather than as deliberately distinct,
+           which is worse than not differentiating at all. If these ever need to
+           separate further, take it out of size or elevation — not hue.
 
            Every future marketing CTA should take this class rather than
            restating the values. */
         .cta-real {
           display: inline-block;
-          background-color: #1f66b8;
+          background-color: var(--reps-orange);
           color: #fff;
           font-weight: 700;
           font-size: 17px;
@@ -1300,8 +1306,11 @@ export default function LandingPage() {
           border-radius: 12px;
           text-decoration: none;
           text-align: center;
+          /* Tinted from the button's own colour rather than neutral black, so
+             the lift reads as the button glowing rather than as a drop shadow
+             sitting under it. */
           box-shadow:
-            0 10px 22px -8px rgba(31, 102, 184, 0.55),
+            0 10px 22px -8px rgba(55, 138, 221, 0.55),
             0 1px 2px rgba(0, 0, 0, 0.16);
         }
         /* Outlined, not plain text — it sat as a bare underlined link next to
