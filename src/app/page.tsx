@@ -102,6 +102,50 @@ const T = {
   green: "var(--reps-green)",
 };
 
+/* ---------- The cast --------------------------------------------------------
+   ⚠️ ONE source of truth for every invented person and number on this page,
+   because there used to be three and they drifted. The hero was a byte-identical
+   clone of loop frame 4 — same three exercises, same three figures, same three
+   states — with only the student's name swapped, so the page read as two
+   disconnected mock sets rather than one coach's roster.
+
+   ⚠️ EVERY NAME HERE IS INVENTED and must stay that way. This page is public and
+   real rosters are real children. Checked against both live rosters; do not
+   paste from `rj_players` or the dashboard views, and do not reach for a
+   "realistic" name by looking one up. A realistic SHAPE — mixed completion
+   states, a plausible spread of activity — is the thing worth copying from real
+   data. The names are not part of the shape.                                  */
+const CAST = {
+  coach: "Coach Mike",
+
+  /* The product loop, frames 1-4, and the numbers CHAIN across them: Corner 3s
+     is assigned at 50 attempts with makes tracked (1), texted to Jalen (2),
+     logged as 50 attempts / 28 makes (3), and read back as "made 28/50 · 56%"
+     (4). 28/50 = 56%. Change one of these and all four frames have to move
+     together, which is exactly why they now come from one object. */
+  loop: {
+    student: "Jalen",
+    exercise: "Corner 3s",
+    target: 50,
+    makes: 28,
+    get pct() { return Math.round((this.makes / this.target) * 100); },
+  },
+
+  /* The hero. A DIFFERENT student on the SAME coach's roster, deliberately —
+     see the note above. Her drills and figures share nothing with Jalen's, so
+     the two screens read as two students rather than one screen relabelled.
+     She keeps what the hero actually needs to show: a two-tone makes bar, a
+     finished assignment, and a note in the student's own words. */
+  hero: {
+    student: "Maya",
+    note: "Felt way better today.",
+  },
+
+  /* The roster shown in the "one place" section — Coach Mike's whole roster,
+     which is why Jalen and Maya are both in it. */
+  roster: ["Jalen", "Maya", "Tariq", "Sofia", "Nico"],
+};
+
 /* A progress bar. `pct` is 0-100, `color` a token. */
 function MiniBar({ pct, color }: { pct: number; color: string }) {
   return (
@@ -302,7 +346,7 @@ function ScreenAssign() {
     <>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1.1em" }}>
         <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
-        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.ink }}>Corner 3s</span>
+        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.ink }}>{CAST.loop.exercise}</span>
       </div>
 
       <div style={{ fontSize: "0.6em", fontWeight: 500, color: T.label, marginBottom: "0.4em" }}>Goal</div>
@@ -356,7 +400,7 @@ function ScreenAssign() {
             fontWeight: 600,
           }}
         >
-          Send to Jalen
+          Send to {CAST.loop.student}
         </div>
       </div>
     </>
@@ -409,7 +453,7 @@ function ScreenText() {
         >
           CM
         </div>
-        <div style={{ fontSize: "0.66em", fontWeight: 500, color: T.ink }}>Coach Mike</div>
+        <div style={{ fontSize: "0.66em", fontWeight: 500, color: T.ink }}>{CAST.coach}</div>
       </div>
 
       {/* Top-aligned, not pushed to the foot. These frames draw no compose
@@ -419,14 +463,14 @@ function ScreenText() {
       <div>
         <div style={{ ...stamp, marginTop: "1em" }}>Yesterday 5:02 PM</div>
         <div style={bubble}>
-          Hey Jalen — Coach Mike assigned you work. Tap here:{" "}
+          Hey {CAST.loop.student} — {CAST.coach} assigned you work. Tap here:{" "}
           <span style={{ color: T.blue }}>assignreps.com/student/…</span>
         </div>
         <div style={receipt}>Delivered</div>
 
         <div style={{ ...stamp, marginTop: "0.9em" }}>Today 4:12 PM</div>
         <div style={bubble}>
-          Hey Jalen — Coach Mike assigned you homework. Tap here:{" "}
+          Hey {CAST.loop.student} — {CAST.coach} assigned you homework. Tap here:{" "}
           <span style={{ color: T.blue }}>assignreps.com/student/…</span>
         </div>
         <div style={receipt}>Delivered</div>
@@ -443,21 +487,21 @@ function ScreenLog() {
     <>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5em", marginBottom: "1em" }}>
         <span style={{ fontSize: "0.8em", color: T.sub }}>←</span>
-        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.ink }}>Corner 3s</span>
+        <span style={{ fontSize: "0.64em", fontWeight: 500, color: T.ink }}>{CAST.loop.exercise}</span>
       </div>
 
-      <div style={{ fontSize: "0.58em", color: T.label, marginBottom: "0.45em" }}>50 of 50 done</div>
+      <div style={{ fontSize: "0.58em", color: T.label, marginBottom: "0.45em" }}>{CAST.loop.target} of {CAST.loop.target} done</div>
       <div style={{ marginBottom: "1.5em" }}>
         <MiniBar2 pct={100} makesPct={56} />
       </div>
 
       <div style={{ textAlign: "center", marginBottom: "1em" }}>
-        <MiniStepper label="ATTEMPTS" value="50" size="2.1em" numberColor={T.attempts} />
+        <MiniStepper label="ATTEMPTS" value={String(CAST.loop.target)} size="2.1em" numberColor={T.attempts} />
       </div>
 
       <div style={{ height: "1px", background: T.line, marginBottom: "0.8em" }} />
       <div style={{ textAlign: "center" }}>
-        <MiniStepper label="MAKES" value="28" size="1.1em" numberColor={T.green} />
+        <MiniStepper label="MAKES" value={String(CAST.loop.makes)} size="1.1em" numberColor={T.green} />
       </div>
 
       <div style={{ marginTop: "auto" }}>
@@ -507,10 +551,10 @@ function ScreenDetail() {
             flexShrink: 0,
           }}
         >
-          J
+          {CAST.loop.student.charAt(0)}
         </span>
         <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <span style={{ fontSize: "1.05em", fontWeight: 600, letterSpacing: "-0.3px", color: T.ink }}>Jalen</span>
+          <span style={{ fontSize: "1.05em", fontWeight: 600, letterSpacing: "-0.3px", color: T.ink }}>{CAST.loop.student}</span>
           <span style={{ fontSize: "0.56em", color: T.sub }}>Joined 1 month ago</span>
         </span>
       </div>
@@ -520,7 +564,7 @@ function ScreenDetail() {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
         {/* The receipt: attempts full, makes at 90%, and the line that names it. */}
-        <MiniCard name="Corner 3s" right="✓ Done" made="made 28/50 · 56%" pct={100} makesPct={56} done />
+        <MiniCard name={CAST.loop.exercise} right="✓ Done" made={`made ${CAST.loop.makes}/${CAST.loop.target} · ${CAST.loop.pct}%`} pct={100} makesPct={CAST.loop.pct} done />
         <MiniCard name="Mid-range jumpers" right="18/50" pct={36} />
         <MiniCard name="Free throws" right="0/50" pct={0} />
       </div>
@@ -591,10 +635,10 @@ function ScreenHeroDetail() {
             flexShrink: 0,
           }}
         >
-          M
+          {CAST.hero.student.charAt(0)}
         </span>
         <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <span style={{ fontSize: "1.05em", fontWeight: 600, letterSpacing: "-0.3px", color: T.ink }}>Maya</span>
+          <span style={{ fontSize: "1.05em", fontWeight: 600, letterSpacing: "-0.3px", color: T.ink }}>{CAST.hero.student}</span>
           <span style={{ fontSize: "0.56em", color: T.sub }}>Last logged 2h ago</span>
         </span>
       </div>
@@ -605,11 +649,17 @@ function ScreenHeroDetail() {
 
       {/* Three states on purpose: finished with makes recorded, underway with a
           note, and untouched. A hero showing three green ✓ would be claiming a
-          product nobody's students ever fall behind in. */}
+          product nobody's students ever fall behind in.
+
+          ⚠️ These are MAYA's drills and figures and they deliberately share
+          nothing with Jalen's loop story — different exercises, different
+          numbers. This screen used to be loop frame 4 byte-for-byte with the
+          name swapped, which made the page read as two disconnected mock sets
+          instead of one coach with a roster. Keep them distinct. */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.45em" }}>
-        <MiniCard name="Corner 3s · Left" right="✓ Done" made="made 28/50 · 56%" pct={100} makesPct={56} done />
-        <MiniCard name="Mid-range jumpers" right="18/50" pct={36} note="Felt way better today." />
-        <MiniCard name="Free throws" right="0/50" pct={0} />
+        <MiniCard name="Catch &amp; shoot" right="✓ Done" made="made 34/50 · 68%" pct={100} makesPct={68} done />
+        <MiniCard name="Layups · Right" right="12/20" pct={60} note={CAST.hero.note} />
+        <MiniCard name="Elbow jumpers" right="0/25" pct={0} />
       </div>
 
       <div style={{ marginTop: "auto" }}>
