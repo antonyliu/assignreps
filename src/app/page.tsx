@@ -681,6 +681,95 @@ function ScreenHeroDetail() {
   );
 }
 
+/* ---------- The roster overview -------------------------------------------
+   Coach Mike's whole roster, for the "one place" section. Drawn from the real
+   screen (src/app/instructor/students/page.tsx) rather than invented:
+
+   - grouped by completion, in the real order — Done, In progress, Not started,
+     Nothing assigned — each with a dot in its own colour, and dot and label
+     always share that colour
+   - ⚠️ green is Done and NOTHING else here. "In progress" is neutral grey; it
+     is active but unearned, and colouring it would imply an outcome it has not
+     reached
+   - within a group, most recent activity first, which is why Jalen (20m) sits
+     above Maya (2h)
+   - timestamps take the accent blue under 24h and go grey after
+   - ⚠️ NO progress bars and NO notes on these rows. Neither exists on the real
+     roster — bars on roster rows are unbuilt, and notes live on the student
+     detail and student home screens. Drawing either here would be inventing UI.
+
+   Jalen and Maya carry the same state they show elsewhere on the page: one of
+   three done apiece, which is exactly what the hero and loop frame 4 render. */
+const ROSTER_GROUPS = [
+  { label: "Done",             color: "var(--reps-green)", rows: [
+    { name: "Tariq", sub: "2 of 2 done", ago: "1d ago", recent: false } ] },
+  { label: "In progress",      color: T.sub,               rows: [
+    { name: "Jalen", sub: "1 of 3 done", ago: "20m ago", recent: true },
+    { name: "Maya",  sub: "1 of 3 done", ago: "2h ago",  recent: true } ] },
+  { label: "Not started",      color: "#6b7080",           rows: [
+    { name: "Sofia", sub: "2 waiting",   ago: "",        recent: false } ] },
+  { label: "Nothing assigned", color: "#6b7080",           rows: [
+    { name: "Nico",  sub: "no assignments", ago: "",     recent: false } ] },
+];
+
+function ScreenRoster() {
+  return (
+    <>
+      {/* App chrome: wordmark and profile control, with the hairline that
+          separates chrome from the page title on the real screen. */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                    paddingBottom: "0.6em", borderBottom: `1px solid ${T.line}`, marginBottom: "0.8em" }}>
+        <span style={{ fontSize: "0.6em", fontWeight: 600, color: T.blue }}>Reps</span>
+        <span style={{ width: "1.15em", height: "1.15em", borderRadius: "999px",
+                       background: T.raised, border: `1px solid ${T.line}` }} />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "0.8em" }}>
+        <span style={{ fontSize: "0.92em", fontWeight: 600, letterSpacing: "-0.3px", color: T.ink }}>
+          Your players
+        </span>
+        <span style={{ fontSize: "0.55em", fontWeight: 500, color: T.ink,
+                       border: `1px solid ${T.line}`, borderRadius: "0.4em", padding: "0.25em 0.5em" }}>
+          + Add
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.85em" }}>
+        {ROSTER_GROUPS.map((g) => (
+          <div key={g.label}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.35em", marginBottom: "0.4em" }}>
+              <span style={{ width: "0.32em", height: "0.32em", borderRadius: "999px", background: g.color, flexShrink: 0 }} />
+              <span style={{ fontSize: "0.55em", fontWeight: 600, color: g.color }}>{g.label}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.3em" }}>
+              {g.rows.map((r) => (
+                <div key={r.name} style={{ display: "flex", alignItems: "center", gap: "0.5em",
+                                           background: "#111620", borderRadius: "0.5em", padding: "0.38em 0.5em" }}>
+                  <span style={{ width: "1.55em", height: "1.55em", borderRadius: "999px", background: T.raised,
+                                 border: `1px solid ${T.line}`, color: T.sub, fontSize: "0.6em", fontWeight: 600,
+                                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {r.name.charAt(0)}
+                  </span>
+                  <span style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
+                    <span style={{ fontSize: "0.66em", fontWeight: 500, color: T.ink }}>{r.name}</span>
+                    <span style={{ fontSize: "0.53em", color: "#7d8494" }}>{r.sub}</span>
+                  </span>
+                  {r.ago && (
+                    <span style={{ fontSize: "0.53em", color: r.recent ? T.blue : "#7d8494", flexShrink: 0 }}>
+                      {r.ago}
+                    </span>
+                  )}
+                  <span style={{ fontSize: "0.7em", color: "#6b7080", flexShrink: 0 }}>›</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 const loopSteps = [
   { caption: "You assign it",   screen: <ScreenAssign /> },
   { caption: "They get a text", screen: <ScreenText /> },
@@ -803,6 +892,27 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
+
+      {/* "One place" — zig-zag against the hero: copy LEFT, screens RIGHT,
+          where the hero puts its device on the left. A warm mid-tone band, so
+          the page steps cream -> warm -> dark rather than jumping straight from
+          the hero into the product loop. */}
+      <section className="program-section">
+        <div className="program-inner">
+          <div className="program-copy">
+            <h2 className="program-heading">Your whole program, finally in one place.</h2>
+            <p className="program-sub">
+              Every assignment, every check-in — not scattered across texts and memory.
+            </p>
+          </div>
+          {/* Two screens: the moment work is created, and the roster it lands
+              on. Decorative — the heading and subtext carry the meaning. */}
+          <div className="program-screens" aria-hidden="true">
+            <div className="program-phone program-phone-back"><ScreenAssign /></div>
+            <div className="program-phone program-phone-front"><ScreenRoster /></div>
+          </div>
+        </div>
+      </section>
 
       {/* Product loop — four miniature screens, dark band under the hero */}
       <section className="loop-section">
@@ -1058,6 +1168,111 @@ export default function LandingPage() {
         /* ---- Product loop ---- */
         /* Mobile runs tight — the hero, the heading and the row sit close
            together; desktop reopens the spacing further down. */
+        /* ---- "One place" band ---------------------------------------------
+           ⚠️ A warm step DOWN from the cream hero, not a mid-grey. A true
+           mid-tone between #ede9e3 and the loop band's #1c1f26 lands around
+           L 0.35, which is the muddy brown territory the dark-hero experiment
+           was rejected for. This stays light enough to read as paper while
+           being unmistakably its own band, so the page reads cream -> warm ->
+           dark as three deliberate steps. */
+        .program-section {
+          background: #d6cbb9;
+          padding: 56px 22px 60px;
+        }
+        .program-inner {
+          max-width: 1100px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          gap: 34px;
+          align-items: center;
+        }
+        .program-copy { width: 100%; }
+        .program-heading {
+          font-size: 28px;
+          line-height: 1.16;
+          font-weight: 600;
+          letter-spacing: -0.5px;
+          color: #0f0f10;
+          margin: 0 0 12px;
+          text-wrap: balance;
+        }
+        .program-sub {
+          font-size: 16px;
+          line-height: 1.5;
+          color: #55504a;
+          margin: 0;
+          max-width: 30ch;
+          text-wrap: balance;
+        }
+        /* The two screens overlap slightly so they read as one object rather
+           than two unrelated frames — the roster in front, since it is the one
+           the heading is actually about. */
+        .program-screens {
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          width: 100%;
+        }
+        .program-phone {
+          --pw: 148px;
+          width: var(--pw);
+          font-size: calc(var(--pw) / 13);
+          /* ⚠️ 9/19.5, not 9/18. Both the frame height and its contents scale
+             off --pw, so width cancels out and only the RATIO decides whether a
+             screen overflows its own frame — the same trap the hero device hit.
+             The roster is the taller of the two (five rows across four groups)
+             and needs ~19 to clear; at 9/18 it clipped Nico's row off the
+             bottom. The assign screen simply gets slack, which its bottom CTA
+             absorbs. */
+          aspect-ratio: 9 / 19.5;
+          flex-shrink: 0;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          padding: 1em 0.85em;
+          background: #111318;
+          border: 1px solid #2a2d36;
+          border-radius: 22px;
+          overflow: hidden;
+          box-shadow:
+            0 2px 6px rgba(60, 45, 30, 0.07),
+            0 16px 40px -12px rgba(90, 70, 45, 0.26);
+        }
+        .program-phone-back  { transform: translateY(14px) rotate(-2deg); }
+                /* ⚠️ A SMALL overlap. At -22px the front frame covered 17% of the back
+           one, which cut "In a row", "200" and "Right" mid-control and made the
+           assign screen read as broken rather than layered. Enough to connect
+           the two, not enough to eat a control. */
+        .program-phone-front { margin-left: -10px; z-index: 1; }
+
+        @media (min-width: 768px) {
+          /* Zig-zag against the hero: it puts the device left and copy right,
+             so this reverses to copy left, screens right.
+             ⚠️ This block must stay AFTER the base .program-* rules. It first
+             lived in the earlier 768 media query further up the stylesheet,
+             where the base rules — declared later at equal specificity — simply
+             overrode it, so the devices silently stayed at their mobile size. */
+          .program-section { padding: 84px 40px 88px; }
+          .program-inner {
+            flex-direction: row;
+            gap: 72px;
+            align-items: center;
+          }
+          .program-copy    { flex: 1; }
+          /* ⚠️ width: auto is load-bearing. The mobile rule sets width: 100% so
+             the screens centre under the copy when stacked; carried into the
+             row layout that made the screens claim the FULL inner width and
+             squeezed the copy column to 148px, wrapping the heading into five
+             short lines. flex: 0 0 auto alone does not undo it — the basis is
+             auto, so the declared width still wins. */
+          .program-screens { flex: 0 0 auto; width: auto; }
+          .program-heading { font-size: 38px; margin: 0 0 14px; }
+          .program-sub     { font-size: 18px; max-width: 34ch; }
+          .program-phone   { --pw: 176px; border-radius: 26px; }
+          .program-phone-front { margin-left: -12px; }
+        }
+
         .loop-section {
           /* --reps-card (#1c1f26), the app's surface token — the colour cards
              sit ON in the product. Used here for the same reason: the band is
