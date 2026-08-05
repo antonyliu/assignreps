@@ -36,10 +36,37 @@ function TallyMark() {
   );
 }
 
+// ⚠️ These name the MECHANISM, not the feeling, and that is the point of the
+// wording. The previous set — "Assign it in seconds" / "Students log it from
+// anywhere" / "You see it happen live" — described outcomes but never said what
+// "it" was or why "live" mattered, so a first-time reader could not repeat back
+// what Reps does. This set walks the actual loop: assign -> text -> log ->
+// certainty, so a stranger can explain the product to someone else after one
+// read.
+//
+// ⚠️ `.bullet-text` is `white-space: nowrap`, so these never wrap — they widen
+// the layout instead. `.landing-text` is `flex: 1` with the default
+// `min-width: auto`, so the longest bullet sets a MIN-CONTENT FLOOR for the
+// whole text column: it cannot shrink below that, and the page scrolls
+// sideways rather than the line breaking.
+//
+// Measured slack on the longest ("You know exactly what got done"):
+//   375px  270px text in a 297px box — 27px spare
+//   768px  295px text in a 295px box — 0px spare, and the page overflows 25px
+//   820px+ comfortable
+//
+// ⚠️ The 768px overflow is PRE-EXISTING, not introduced here: the old copy
+// overflowed 5px at that width too. This copy is ~20px wider at 20px type, so
+// it deepens 5px -> 25px and widens the affected band from ~768-772 to
+// ~768-793. Everything at 790px+ and every mobile width is clean.
+//
+// The fix, if it is ever wanted, is to drop `white-space: nowrap` — the bullets
+// would then wrap only in the pinched band and render identically everywhere
+// else. Not done here because the hero is locked against visual changes.
 const bullets = [
-  { icon: Send,        text: "Assign it in seconds" },
-  { icon: CheckCircle, text: "Students log it from anywhere" },
-  { icon: Layers,      text: "You see it happen live" },
+  { icon: Send,        text: "Assign homework to a student" },
+  { icon: CheckCircle, text: "They get a text, log it there" },
+  { icon: Layers,      text: "You know exactly what got done" },
 ];
 
 /* ---------- The product-loop section ----------------------------------------
