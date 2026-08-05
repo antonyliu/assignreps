@@ -44,25 +44,18 @@ function TallyMark() {
 // certainty, so a stranger can explain the product to someone else after one
 // read.
 //
-// ⚠️ `.bullet-text` is `white-space: nowrap`, so these never wrap — they widen
-// the layout instead. `.landing-text` is `flex: 1` with the default
-// `min-width: auto`, so the longest bullet sets a MIN-CONTENT FLOOR for the
-// whole text column: it cannot shrink below that, and the page scrolls
-// sideways rather than the line breaking.
-//
-// Measured slack on the longest ("You know exactly what got done"):
+// Slack on the longest of the three ("You know exactly what got done"):
 //   375px  270px text in a 297px box — 27px spare
-//   768px  295px text in a 295px box — 0px spare, and the page overflows 25px
+//   768px  295px text in a 295px box — 0px spare
 //   820px+ comfortable
 //
-// ⚠️ The 768px overflow is PRE-EXISTING, not introduced here: the old copy
-// overflowed 5px at that width too. This copy is ~20px wider at 20px type, so
-// it deepens 5px -> 25px and widens the affected band from ~768-772 to
-// ~768-793. Everything at 790px+ and every mobile width is clean.
-//
-// The fix, if it is ever wanted, is to drop `white-space: nowrap` — the bullets
-// would then wrap only in the pinched band and render identically everywhere
-// else. Not done here because the hero is locked against visual changes.
+// ⚠️ 768px is the tight one: the layout goes side-by-side there AND the type
+// grows to 20px at the same breakpoint, so the text column is at its narrowest
+// exactly when the copy is at its widest. `.bullet-text` no longer carries
+// `white-space: nowrap` (see the rule in the stylesheet) so a bullet that
+// outgrows the column wraps instead of widening the page. Keep new bullets
+// near or under ~30 characters anyway — wrapping is a safe failure, not a
+// good look.
 const bullets = [
   { icon: Send,        text: "Assign homework to a student" },
   { icon: CheckCircle, text: "They get a text, log it there" },
@@ -935,12 +928,20 @@ export default function LandingPage() {
           height: 25px; /* matches bullet-text line box, so icon centers on it */
         }
         .bullet-icon { width: 20px; height: 20px; }
+        /* ⚠️ NO white-space: nowrap, and its removal was a bug fix rather than
+           a style choice. With nowrap these lines could not break, so the
+           longest one set a min-content floor for .landing-text (flex: 1,
+           default min-width: auto) and the PAGE widened instead of the line
+           breaking — a horizontal scrollbar in a band around 768px, where the
+           layout goes side-by-side and the type grows to 20px at the same time.
+           Wrapping is the correct failure mode for a text line; widening the
+           document is not. Verified byte-identical at 375/390/414/1024/1280/1440
+           — at every width with room, these still render on one line. */
         .bullet-text {
           font-size: 18px;
           line-height: 1.4;
           color: #1a1a1a;
           font-weight: 600;
-          white-space: nowrap;
         }
 
         /* ⚠️ SHORT viewports, not narrow ones. A 375x812 phone fits the hero
