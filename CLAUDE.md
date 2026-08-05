@@ -1,77 +1,128 @@
 # Reps — CLAUDE.md
-*Last updated: Aug 4 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+*Last updated: Aug 5 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
 
 ---
 
-## 🔖 Where we left off — Aug 4 2026
+## 🔖 Where we left off — Aug 5 2026
 
 **Start here tomorrow.** Everything below is committed on local `main`; nothing is in progress and the working tree is clean.
 
-Three threads moved today: **the billing gate** (built and verified), **the landing page** (hero rebuilt and a second section added, both now locked), and **housekeeping** (one real-data mistake corrected, three sets of gotchas written down).
+Today was **one thread, all day: the landing page.** No billing, schema or app code was touched. The page went from hero → section 2 → *"how it works"* → footer, to **hero → section 2 (instructor) → section 3 (student) → pricing → footer**, and the colour system underneath it was rebuilt.
 
 ### Git state at close
 
-`main` is **34 commits ahead of prod** and **28 ahead of staging**. Both remotes are ancestors, so either push is a clean fast-forward. Verified with `git branch -r -v` at close — prod sits at `88de42a`, staging at `7e0660d`, local tip `1266b94`. ⚠️ Do not carry these numbers forward; re-run the command.
+**Counting this commit**, `main` is **41 commits ahead of prod** and **35 ahead of staging**. Both remotes are ancestors, so either push is a clean fast-forward. Prod sits at `88de42a`, staging at `7e0660d`.
 
-⚠️ **Prod is held back deliberately, not by neglect — and the reason got STRONGER today, not weaker.** Prod has no Stripe env vars, and `main` now carries two things that depend on them:
+⚠️ **Do not carry these numbers forward — re-run `git branch -r -v`.** Yesterday's close-out recorded 34/28 and was already 35/29 by the next morning, because the commit that writes this line also increments it. That is why the two remote SHAs are given and the local tip is not: those are stable, the count is not.
+
+### ⚠️ Carried forward from Aug 4 — NOTHING here moved today
+
+Today was a landing-page day and touched none of this. It is restated rather than pointed at, because it is the only blocking item on the project and it must not fade out of this section just because a different thread was active.
+
+⚠️ **Prod is held back deliberately, not by neglect.** Prod has no Stripe env vars, and `main` carries two things that depend on them:
 
 1. The **"Upgrade to Pro"** menu item, which would error on tap.
-2. The **add-student gate**, which is the serious one. `isEntitled()` reads `subscription_status`, which is NULL for every coach in live mode — so on prod RJ reads as free tier and is **blocked from adding his 11th student**. He is at ~10 and has never been told the limit exists. See the RJ section below; that conversation is the blocking item.
+2. The **add-student gate**, which is the serious one. `isEntitled()` reads `subscription_status`, which is NULL for every coach in live mode — so on prod RJ reads as free tier and is **blocked from adding his 11th student**.
 
-⚠️ **The whole landing-page redesign is stuck behind that same gate** — the new hero, the "one place" section, the CTA and copy work, roughly thirty commits, none of which touch billing. If any of it is wanted on prod sooner, cherry-pick onto a branch off `origin/main` rather than pushing `main`. (The earlier version of this note said "two harmless landing-page commits"; that was true on Aug 3 and is badly out of date now.)
+⚠️ **RJ still has not been told about the 3-student limit, and that conversation is the blocking item.** He is at ~10 students and holds no live-mode subscription. It is real code on `main`: the day this reaches an environment he uses with live billing, he is stopped. He must either be told, or be provisioned in live mode first — ideally both, in that order. Still owed, and no longer safe to defer indefinitely.
 
-### Billing — where it actually stands
+⚠️ **The whole landing-page redesign is stuck behind that same gate** — now roughly thirty-five commits, none of which touch billing. If any of it is wanted on prod sooner, cherry-pick onto a branch off `origin/main` rather than pushing `main`.
 
-The whole loop **including the add-student gate** is built and verified end to end locally (see Billing architecture). ⚠️ **What remains is live mode**, which does not exist at all — see Stripe status.
+### The day's arc, in order
 
-⚠️ **RJ is provisioned as Pro in TEST MODE ONLY.** On Aug 3 his Stripe customer (`cus_V0bVdpHROg0RE1`) and subscription (`sub_1U0aJ6JoxKRCY55iGi5HfZ3l`, $0/mo via `COACHRJ`) were created **directly through the Stripe API — not through the app's checkout button** — and his `coaches` row was updated by firing a real `customer.subscription.updated` through the webhook rather than by editing the database.
-- **None of this exists in live mode and must be redone at launch.** New customer, new subscription, and the coupon recreated uncapped against a `sk_live_` key. Test and live share nothing.
-- Why it was done: so neither real coach is the one blocked while the gate was being built and tested. ✅ **Resolved Aug 4** — testing the block needed a third, non-Pro coach, and one was created for exactly that (`tonyliu34+gate@gmail.com`, "ZZ Test — gate"). ⚠️ It lives in the **same shared Supabase project as prod**, so delete it when it has served its purpose; `players.coach_id` is CASCADE, so its players go with it.
-- ⚠️ RJ has still not been told about the 3-student limit — see its own section below, which is now the blocking item.
+Five commits, each verified with `tsc`, a real `next build`, and a measured width sweep (375/414/768/1024/1280/1440) before the next began.
 
-### ✅ The add-student gate — BUILT and VERIFIED end to end (Aug 4 2026)
+1. **`b57a7ee` — rebuilt "how it works" as numbered steps.** Replaced four cramped phone frames with an ordered list, and fixed a measured hierarchy inversion: the old heading was a flat 32px that *tied* section 2 at 768 and sat at 70% at 1280, and the frames were 228px against section 2's 222px.
+2. **`5f2faad` — then removed that section entirely.** Not a reversal of the work but a scope decision: section 2 and the incoming student section cover the same ground at full size, split by audience. Redundant rather than wrong, so it came out whole.
+3. **`5bef362` — eyebrow copy**, in two steps: instructors → coaches → **"For coaches & trainers"**.
+4. **`1bce6c0` — section 3, the student side, plus the colour system.**
+5. **`a101285` — the pricing section.**
 
-**Done, and proven against a real coach in a real browser — not just compiled.** `FREE_STUDENT_LIMIT` is now read by both the mutation and the page. See **The add-student gate** under Billing architecture for the design and the two deliberate asymmetries in it.
+### ✅ Section 3 — the student side (BUILT)
 
-What was actually exercised, in order:
+Section 2's template, flipped: copy and screens swap sides at 1024, so the device side alternates down the page (hero left, section 2 right, here left). Two new screens, both Jalen's — the log screen and his own home with New/Archive tabs.
 
-1. A third, non-Pro test coach (`tonyliu34+gate@gmail.com`, named "ZZ Test — gate") was blocked at the 4th player. The gate fired at exactly 3.
-2. **Upgrade was started from the gate screen itself**, not the ProfileMenu — so the shared `useUpgrade()` handler is confirmed working from **both** entry points, which is the whole reason it was extracted.
-3. ⚠️ **The first checkout silently did nothing, because `stripe listen` was not running** — it had died in a reboot. See the gotcha under *To resume local billing work*; this cost real time.
-4. After restarting `stripe listen` and taking the **fresh** `STRIPE_WEBHOOK_SECRET` into `.env.local`, checkout completed, the webhook fired, `isPro` flipped, and a 4th player ("Nanna") was added.
+⚠️ **Jalen's state is not free.** Section 2's roster already says *"Jalen — 1 of 3 done"*, so his screens must show exactly three assignments with exactly one finished. `CAST` gained his other two drills to satisfy that. The log screen deliberately draws **Free throws, not Corner 3s** — showing the chained assignment mid-log on one screen and finished on the other would put two states of one thing on one page.
 
-⚠️ **Live mode is still untouched by all of this.** The gate works against `sk_test_`; nothing about it has run against a live key, and there is no live product, price or coupon to run it against yet.
+⚠️ **Peer-sized with section 2, a deliberate departure from the 82% tier rule.** That rule stops a later, *lesser* section outgrowing an earlier one; it does not apply between siblings. This matters for the flow pass below — the sameness is partly on purpose.
 
-### ⚠️ RJ still has not been told about the 3-student limit
+### ✅ Colour system — sections 2 and 3 locked (BUILT)
 
-**This is now the blocking item, and it changed character today.** Until the gate existed, the limit was theoretical. It is now real code on `main`: the day this reaches an environment RJ uses with live billing, he is stopped at his 11th student.
+Both middle bands are now **one blue family at opposite lightnesses**, two degrees apart:
 
-He is at ~10 students and holds no live-mode subscription. He must either be told, or be provisioned in live mode first — ideally both, in that order. That conversation is still owed and is no longer safe to defer indefinitely.
+| Band | Hex | HSL |
+|---|---|---|
+| Hero | `#ede9e3` *(untouched)* | 36°, 22%, 91% |
+| Section 2 | `#262a39` | 227°, 20%, 18.6% |
+| Section 3 | `#caccd5` | 229°, 12%, 81.4% |
+| Pricing | `#f8f7f5` | effectively neutral |
+| Footer | `#1a1d24` *(untouched)* | — |
 
-### ✅ Landing page — hero and section 2 both BUILT and LOCKED (Aug 4 2026)
+Arrived at over three passes: section 2 off the old neutral `#252932`, both saturated into real blue, then both **desaturated ~12–15 points** at identical hue and lightness. Section 3 is deliberately light — without it the page runs section 2, section 3 and the footer as three darks in a row.
 
-The largest thread of the day by commit count. Everything below is shipped on `main` and settled; see **Landing page (current)** for the full description and the reasoning behind each choice.
+⚠️ **Two things broke as a side effect and were fixed, both found by measuring rather than looking:**
+- **`.program-caption` failed AA.** Desaturating section 2 lifted its luminance and dropped the caption to **4.46:1**, under the 4.5 floor for 13px. Now `#9095ac` at 4.81:1, and deliberately **no longer the app's `--reps-sub` token** — that value is tuned against the app's own surfaces, not this band, and matching it by eye is what put it under AA.
+- **Section 2's device shadow was lightening, not shadowing.** The warm brown was *lighter* than the band in red and green. Both device shadows are now tinted from the surface they sit on — the rule the warm hero already followed — and both are verified to darken their band.
 
-- **The hero was rebuilt around a single device mock**, replacing the two-circle photo collage. It draws the coach's *student-detail* screen — the only screen where progress bars, a completed assignment and a student's note are all simultaneously real. Marked **LOCKED**: no further visual changes.
-- **A second section, "one place"**, sits between the hero and the product loop: heading, subtext, a contextual CTA, and two upright device mocks (assign screen + roster) with quiet captions. Warm-dark `#252932` band, a step lighter than the loop's `#1c1f26`, so the page descends hero → here → loop → footer → device frames.
-- ⚠️ **A dark hero was built and reverted the same day.** It read as muddy and brown. The cream hero is the shipped design; the groundwork is in `b739fda` if it is ever revisited. Recorded in *What was killed and why* so it is not re-attempted as though untried.
-- **One `CAST` constant now owns every invented person and number on the page.** The hero used to be loop frame 4 byte-for-byte with the name swapped — same three exercises, same three figures — so the page read as disconnected mock sets. Coach Mike, Jalen's loop story, Maya's hero screen, and the roster (Tariq, Sofia, Nico) all come from it.
-- **One page shell**: `--page-max` (960px) and `--page-pad` on `.paper-grain`, referenced by every band. There are no `1100px` literals left in the file. Header, hero device, section-2 heading, first loop frame and footer all measure the same left edge.
-- **A size-hierarchy ratio is now the rule**, not fixed numbers: section 2 sits at ~82% of the hero's equivalent heading and device sizes, expressed as the same clamp curve scaled. Any future section takes the next tier down the same way.
-- **Real CTAs have their own treatment** (`.cta-real`): brand blue, real elevation, larger type and radius than anything drawn inside a phone frame. ⚠️ The colour is the brand token deliberately — a separate deeper blue was tried and reverted for reading as off-brand rather than distinct. Copy is `Start free` in the hero (kept literal for a first-time stranger) and `Start your program` in section 2.
+### ✅ Pricing section (BUILT)
 
-### Housekeeping and documentation (Aug 4 2026)
+Centred, not zig-zagged: sections 2 and 3 alternate because they tell a directional story; pricing is a fair comparison and putting either plan on a side would weight it. Background `#f8f7f5`, reused from `/privacy` and `/terms` rather than invented, and outside both existing families so it reads as a resting point.
 
-- ⚠️ **Real student names were removed from a committed file.** `docs/explorations/roster-weekly-summary-exploration.html` used Khloe, Caleb, Phoenix, Mason and Avery — five of RJ's actual students, lifted from this file while building a "realistic roster shape". No public exposure (`docs/` is not served), but they are children. Swapped for invented names in `e9eb574`. **The rule, now written into that file and into `CAST`: a realistic SHAPE is worth copying from real data; the names are not part of the shape.**
-- **Three sets of gotchas are now written down** rather than living in one session's memory: swapping a hero image (the Next 16 cache path, and why an image swap cannot be verified by eye), recovering hero sources from git, and editing `page.tsx` (breakpoint-scoped rules that look applied because they apply *somewhere* — four instances in one day — plus backticks terminating the `<style>` template literal).
-- **The auth user audit** is logged under Medium priority: 8 rows in `auth.users` against 3 in `coaches`.
+⚠️ **Every feature belongs to BOTH plans, and the section is built to say so** — one shared list under both cards, headed *"Everything included, always"*. The only real difference is the student count, since `FREE_STUDENT_LIMIT` gates the 4th student and nothing else. **Never rebuild this as a per-column tick grid**; it would be a straightforward lie about what the app does, and it would undercut a free tier that is deliberately generous positioning rather than a trial.
+
+Copy is literal feature names in TeuxDeux's register, each checked against shipped behaviour. ⚠️ **"Log history" claims logs are kept and nothing more** — nothing reads them longitudinally yet, so any progress-over-time wording would promise a view that does not exist. An earlier draft said *"Full history, always"* and was pulled for exactly that.
+
+⚠️ **Both CTAs read "Start free", identically, and that is the point.** Both target `/instructor/signup`; there is no "start Pro" path anywhere, because Pro is only reachable *after* signup via the add-student gate or the profile menu. Wording them differently implied a commitment distinction that does not exist at the click.
+
+Subtext is **"Free forever with your first three students."** — one line at every standard width, wrapping cleanly below ~348px. It absorbs a standalone "No card to start" line that was removed. ⚠️ That absorption is **implicit**: "free forever" reads as no-payment, but the words *card* and *payment* now appear nowhere in the section.
+
+**Two visual iterations worth not repeating:**
+- A **white housed panel** around the feature list was built and removed — it bought presence at the cost of being a third boxed object on a band that already has two.
+- **Solid brand-blue badges** were built and backed off to a tint: at eight repetitions they read as a wall of blue dots. Presence now comes from scale (24px badges at 1.5× the label, a 22px/700 statement) rather than from colour.
+
+⚠️ **The pricing statement is brand blue only because it is large.** `#378add` is 3.36:1 there, which passes *only* under the large-text allowance — that needs **≥18.66px AND bold**. Smaller or lighter and it silently fails.
+
+### ⚠️ `flex: 1 0 auto` has moved three times in one day
+
+The page is a 100vh flex column, and this is its **only** grower. It has to sit on **whichever band is last before the footer**, or the shell colour shows as a band *below* the footer. Verified real, not theoretical: with no grower at all, a 2200px viewport showed a **679px** band under the footer.
+
+It went `.program-section` → `.student-section` → `.pricing-section` today. **Move it again the moment a new section lands at the bottom.**
+
+### ⚠️ OPEN — `.cta-real` fails AA, on all four CTAs
+
+**Found today, deliberately not fixed, and it predates today.** White text on the brand blue `#378add` is **3.59:1**. At 17px/700 that is under the 18.66px-bold threshold for large text, so it needs 4.5:1.
+
+It affects **every** `.cta-real` on the page — hero, section 2, section 3 and pricing — so it is not a pricing bug. Left alone because the brand blue has been locked twice and this reaches well past the scope it surfaced in. Three ways out:
+
+1. **CTA text to 19px/700** — crosses the large-text threshold, so 3.59:1 then passes against a 3.0 requirement. No colour change; every CTA grows.
+2. **Darken the fill** to roughly `#2f7ac4` — reaches 4.5:1, but changes the brand blue.
+3. **Accept it** — large, high-elevation, unambiguous buttons, and the miss is narrow.
+
+⚠️ Note that both pricing buttons now read "Start free", so option 1 grows them together.
+
+### Next session — the organic flow pass
+
+**This is the planned next piece of work**, and it is written up in full under *Parked, deliberately* below: the page is five bands with a hard colour cut at every seam, and the direction is to explore gradients and bleed — content crossing a boundary rather than each band starting and stopping cleanly. That entry also records what must **survive** the pass (the deliberate peer-sizing of sections 2 and 3), what has already been **tried and reverted** (tilting the device mocks), and the two load-bearing things bleed will fight (the shared left edge, and the flex grower above).
+
+### Housekeeping from today
+
+- ⚠️ **The eyebrow no longer matches the page metadata.** The eyebrow reads "For coaches & trainers"; the `<title>`, description and og tags still pair **"Coaches & Instructors"**. Left divergent on purpose — those strings are search-facing and carry a term people query — but it is a real inconsistency and worth its own decision rather than being discovered later.
+- **Four components were deleted and one restored.** `ScreenText`, `ScreenLog` and `ScreenDetail` went with the four-frame row; `MiniStepper` went with them and came back hours later for the student log screen. Anything needed again is in `b57a7ee`'s parent.
+- **`CAST` keeps `coach` and the loop's `target`/`makes`/`pct`** even though only `exercise` and `student` are read today. Deliberate, not stranded — documented at the constant.
+- ⚠️ **`CAST.roster` is unread**, and has been since before this session. Pre-existing, left alone.
 
 ### Parked, deliberately — not started
 
 - **Activity picker narrowing** — basketball live, soccer/tennis/"create your own" hinted as Soon, everything else removed from what a coach sees at signup. Still only a captured plan; `activityTypes.ts` carries all ten. The homepage half shipped Aug 3 (soccer hero photo); the picker half has not started. See *Queued for next session* item 2.
 - **Landing page copy — empty state and permission language.** Reviewed and **deliberately left unchanged**; the existing copy was judged already correct. ⚠️ The specific strings and reasoning were not captured at the time, so this entry records the decision but not its detail — worth writing down properly if it is ever revisited, rather than re-deriving it.
 - **Roster weekly summary stat (RJ's consistency + active players)** — explored in depth, not shipped, see `docs/explorations/roster-weekly-summary-exploration.html` for reasoning and visual variations.
-- **"How it works" section redesign** — move away from four full dark phone screens in a row, which read as repetitive once the new hero carries a single device mock. Direction: numbered steps (1–4) as the primary structure with short human copy per step, using small contextual screen snippets only where they genuinely help, rather than a full flow. Different section background colour to separate it visually from the hero. **Not started — direction only, no design work done.**
+- ~~**"How it works" section redesign**~~ — ✅ **CLOSED Aug 5 2026, and not by being built.** It was rebuilt as numbered steps that day (commit `b57a7ee`), then the whole section was **removed** (commit `5f2faad`): section 2 (instructor) and the new student section cover the same ground between them, at full size and split by audience. ⚠️ Do not resurrect this entry as a to-do — the section is gone deliberately, not pending.
+- ⚠️ **Landing page flow feels rigid/boxy top-to-bottom** — ✅ **this is the NEXT SESSION'S work.** Written down mid-day Aug 5 as "revisit after the pricing section is built"; pricing shipped that evening, so the trigger has fired.
+  - **The symptom:** the page is five bands stacked with a hard colour cut at every seam, and section 2 → section 3 is the worst of it — same shape, same vertical mock pairs, only mirrored. It reads mechanical rather than organic.
+  - **The direction (added at close of Aug 5):** stop treating each seam as a hard edge. Explore **gradients and bleed** — content crossing a section boundary rather than every band starting and stopping cleanly, in the way TeuxDeux lets screenshots break out of their section. Also still open from the earlier capture: organic background shapes, and a slight tilt on the device mocks.
+  - ⚠️ **The sameness is partly deliberate, and that part must survive.** Sections 2 and 3 are peer-sized *on purpose* — identical heading clamp, identical device widths — so they read as a matched pair about two audiences. See the peer-sizing note in `page.tsx`. What was never a decision is that both are literally "copy block beside two upright phones". Fix the second without destroying the first.
+  - ⚠️ **The tilt has already been tried and reverted once**, in section 2: it cut controls off the back screen and read as broken. See the "Upright and side by side" note in `page.tsx` before re-attempting it.
+  - ⚠️ **Bleed fights two things currently load-bearing**, and whoever picks this up has to deal with both rather than discover them: (1) the shell's shared left edge — header, hero device, section 2 and section 3 all measure the same edge at every width ≥768, verified repeatedly; (2) `flex: 1 0 auto`, which sits on whichever band is *last before the footer* and has moved three times in one day. Content crossing a seam breaks the first assumption and probably complicates the second.
 
 ### To resume local billing work
 
