@@ -619,7 +619,29 @@ export default function LandingPage() {
                 textTransform: "uppercase",
                 color: "#2d7bc4",
               }}>
-                For instructors
+                {/* ⚠️ "Coaches & trainers", not "instructors" (Aug 5 2026, in
+                    two steps: instructors -> coaches -> coaches & trainers).
+                    "Instructor" was a neutral umbrella chosen when the audience
+                    was still abstract, and it reads as institutional to the
+                    people actually being addressed. The pair is deliberate:
+                    the near-term audience is private basketball, soccer and
+                    tennis coaching, and the two words are not reliably the same
+                    person — naming only one silently excludes the other.
+
+                    ⚠️ This does NOT match the page metadata, which still pairs
+                    "Coaches & Instructors" in the title, description and og
+                    tags. Left divergent on purpose: those strings are
+                    search-facing and carry a term people actually query, where
+                    this one is read by a human who has already arrived. Worth
+                    revisiting as its own decision, not as a side effect.
+
+                    ⚠️ Deliberately NOT propagated into the app. Its vocabulary
+                    is still instructor — `instructor_type` on coaches, the
+                    whole /instructor route tree, getActivityLabels — and this
+                    is a marketing-copy change, not a rename. Same rule the app
+                    already follows for "Repeat" -> "Assign again": UI labels
+                    may change without renaming code. */}
+                For coaches &amp; trainers
               </p>
 
               {/* Headline */}
