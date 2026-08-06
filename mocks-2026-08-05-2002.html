@@ -1,0 +1,3234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reps — Landing page as shipped, 5 Aug 2026</title>
+<!--
+  Reps landing page, captured 5 Aug 2026.
+
+  HOW THIS WAS MADE, so it can be regenerated rather than hand-edited:
+    1. dev server running, then:  curl -s http://localhost:3000/ -o ssr.html
+    2. pull the <style data-href="landing"> block out of ssr.html verbatim
+    3. pull the <div class="paper-grain"> subtree out by tag-depth match
+    4. curl the linked globals.css chunk and inline it
+    5. concatenate: globals.css, landing css, gallery chrome, then the markup
+    6. no <script> is copied across, so it opens standalone
+
+  DO NOT hand-edit the captured markup below the rule. Regenerate it.
+  Hand-editing is exactly how the older mocks-*.html files drifted from the app.
+-->
+<style>
+/* ============ globals.css, inlined verbatim ============ */
+/* [project]/src/app/globals.css [app-client] (css) */
+*, :before, :after, ::backdrop {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: #3b82f680;
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}
+
+*, :before, :after {
+  box-sizing: border-box;
+  border: 0 solid #e5e7eb;
+}
+
+:before, :after {
+  --tw-content: "";
+}
+
+html, :host {
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  -webkit-tap-highlight-color: transparent;
+  font-family: ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  line-height: 1.5;
+}
+
+body {
+  line-height: inherit;
+  margin: 0;
+}
+
+hr {
+  height: 0;
+  color: inherit;
+  border-top-width: 1px;
+}
+
+abbr:where([title]) {
+  -webkit-text-decoration: underline dotted;
+  text-decoration: underline dotted;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+a {
+  color: inherit;
+  -webkit-text-decoration: inherit;
+  text-decoration: inherit;
+}
+
+b, strong {
+  font-weight: bolder;
+}
+
+code, kbd, samp, pre {
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+  font-size: 1em;
+}
+
+small {
+  font-size: 80%;
+}
+
+sub, sup {
+  vertical-align: baseline;
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+}
+
+sub {
+  bottom: -.25em;
+}
+
+sup {
+  top: -.5em;
+}
+
+table {
+  text-indent: 0;
+  border-color: inherit;
+  border-collapse: collapse;
+}
+
+button, input, optgroup, select, textarea {
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+button, select {
+  text-transform: none;
+}
+
+button, input:where([type="button"]), input:where([type="reset"]), input:where([type="submit"]) {
+  -webkit-appearance: button;
+  background-color: #0000;
+  background-image: none;
+}
+
+:-moz-focusring {
+  outline: auto;
+}
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+progress {
+  vertical-align: baseline;
+}
+
+::-webkit-inner-spin-button {
+  height: auto;
+}
+
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+[type="search"] {
+  -webkit-appearance: textfield;
+  outline-offset: -2px;
+}
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button;
+  font: inherit;
+}
+
+summary {
+  display: list-item;
+}
+
+blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre {
+  margin: 0;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+ol, ul, menu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+dialog {
+  padding: 0;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input::placeholder, textarea::placeholder {
+  opacity: 1;
+  color: #9ca3af;
+}
+
+button, [role="button"] {
+  cursor: pointer;
+}
+
+:disabled {
+  cursor: default;
+}
+
+img, svg, video, canvas, audio, iframe, embed, object {
+  vertical-align: middle;
+  display: block;
+}
+
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+[hidden]:where(:not([hidden="until-found"])) {
+  display: none;
+}
+
+.container {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
+  }
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.visible {
+  visibility: visible;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+.collapse {
+  visibility: collapse;
+}
+
+.static {
+  position: static;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.relative {
+  position: relative;
+}
+
+.sticky {
+  position: sticky;
+}
+
+.inset-0 {
+  inset: 0;
+}
+
+.inset-x-0 {
+  left: 0;
+  right: 0;
+}
+
+.inset-y-0 {
+  top: 0;
+  bottom: 0;
+}
+
+.bottom-0 {
+  bottom: 0;
+}
+
+.bottom-6 {
+  bottom: 1.5rem;
+}
+
+.left-0 {
+  left: 0;
+}
+
+.left-1\/2 {
+  left: 50%;
+}
+
+.left-\[3px\] {
+  left: 3px;
+}
+
+.right-0 {
+  right: 0;
+}
+
+.top-0 {
+  top: 0;
+}
+
+.top-8 {
+  top: 2rem;
+}
+
+.top-\[3px\] {
+  top: 3px;
+}
+
+.top-full {
+  top: 100%;
+}
+
+.z-10 {
+  z-index: 10;
+}
+
+.z-20 {
+  z-index: 20;
+}
+
+.z-30 {
+  z-index: 30;
+}
+
+.z-40 {
+  z-index: 40;
+}
+
+.z-50 {
+  z-index: 50;
+}
+
+.z-\[60\] {
+  z-index: 60;
+}
+
+.z-\[70\] {
+  z-index: 70;
+}
+
+.-mx-\[1\.25rem\] {
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
+}
+
+.-my-\[9px\] {
+  margin-top: -9px;
+  margin-bottom: -9px;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.-ml-2 {
+  margin-left: -.5rem;
+}
+
+.-ml-4 {
+  margin-left: -1rem;
+}
+
+.-mr-\[9px\] {
+  margin-right: -9px;
+}
+
+.-mt-10 {
+  margin-top: -2.5rem;
+}
+
+.-mt-4 {
+  margin-top: -1rem;
+}
+
+.mb-1 {
+  margin-bottom: .25rem;
+}
+
+.mb-1\.5 {
+  margin-bottom: .375rem;
+}
+
+.mb-10 {
+  margin-bottom: 2.5rem;
+}
+
+.mb-11 {
+  margin-bottom: 2.75rem;
+}
+
+.mb-12 {
+  margin-bottom: 3rem;
+}
+
+.mb-14 {
+  margin-bottom: 3.5rem;
+}
+
+.mb-2 {
+  margin-bottom: .5rem;
+}
+
+.mb-3 {
+  margin-bottom: .75rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-5 {
+  margin-bottom: 1.25rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-7 {
+  margin-bottom: 1.75rem;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.ml-1 {
+  margin-left: .25rem;
+}
+
+.ml-auto {
+  margin-left: auto;
+}
+
+.mt-0\.5 {
+  margin-top: .125rem;
+}
+
+.mt-1 {
+  margin-top: .25rem;
+}
+
+.mt-1\.5 {
+  margin-top: .375rem;
+}
+
+.mt-2 {
+  margin-top: .5rem;
+}
+
+.mt-3 {
+  margin-top: .75rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mt-5 {
+  margin-top: 1.25rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.mt-8 {
+  margin-top: 2rem;
+}
+
+.mt-auto {
+  margin-top: auto;
+}
+
+.block {
+  display: block;
+}
+
+.inline {
+  display: inline;
+}
+
+.flex {
+  display: flex;
+}
+
+.inline-flex {
+  display: inline-flex;
+}
+
+.table {
+  display: table;
+}
+
+.grid {
+  display: grid;
+}
+
+.contents {
+  display: contents;
+}
+
+.hidden {
+  display: none;
+}
+
+.h-1\.5 {
+  height: .375rem;
+}
+
+.h-10 {
+  height: 2.5rem;
+}
+
+.h-11 {
+  height: 2.75rem;
+}
+
+.h-2\.5 {
+  height: .625rem;
+}
+
+.h-3 {
+  height: .75rem;
+}
+
+.h-5 {
+  height: 1.25rem;
+}
+
+.h-7 {
+  height: 1.75rem;
+}
+
+.h-8 {
+  height: 2rem;
+}
+
+.h-9 {
+  height: 2.25rem;
+}
+
+.h-\[100dvh\] {
+  height: 100dvh;
+}
+
+.h-\[26px\] {
+  height: 26px;
+}
+
+.h-\[2px\] {
+  height: 2px;
+}
+
+.h-\[30px\] {
+  height: 30px;
+}
+
+.h-\[50px\] {
+  height: 50px;
+}
+
+.h-\[52px\] {
+  height: 52px;
+}
+
+.h-\[67px\] {
+  height: 67px;
+}
+
+.h-\[72px\] {
+  height: 72px;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.h-px {
+  height: 1px;
+}
+
+.min-h-0 {
+  min-height: 0;
+}
+
+.min-h-\[16px\] {
+  min-height: 16px;
+}
+
+.min-h-\[44px\] {
+  min-height: 44px;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.w-11 {
+  width: 2.75rem;
+}
+
+.w-16 {
+  width: 4rem;
+}
+
+.w-24 {
+  width: 6rem;
+}
+
+.w-5 {
+  width: 1.25rem;
+}
+
+.w-8 {
+  width: 2rem;
+}
+
+.w-9 {
+  width: 2.25rem;
+}
+
+.w-\[22px\] {
+  width: 22px;
+}
+
+.w-\[46px\] {
+  width: 46px;
+}
+
+.w-\[50px\] {
+  width: 50px;
+}
+
+.w-\[52px\] {
+  width: 52px;
+}
+
+.w-\[60px\] {
+  width: 60px;
+}
+
+.w-\[67px\] {
+  width: 67px;
+}
+
+.w-\[72px\] {
+  width: 72px;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.w-max {
+  width: max-content;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+.min-w-\[180px\] {
+  min-width: 180px;
+}
+
+.min-w-\[190px\] {
+  min-width: 190px;
+}
+
+.max-w-\[160px\] {
+  max-width: 160px;
+}
+
+.max-w-\[240px\] {
+  max-width: 240px;
+}
+
+.max-w-\[300px\] {
+  max-width: 300px;
+}
+
+.max-w-\[320px\] {
+  max-width: 320px;
+}
+
+.max-w-\[390px\] {
+  max-width: 390px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-shrink, .shrink {
+  flex-shrink: 1;
+}
+
+.shrink-0 {
+  flex-shrink: 0;
+}
+
+.flex-grow, .grow {
+  flex-grow: 1;
+}
+
+.-translate-x-1\/2 {
+  --tw-translate-x: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.-translate-y-full {
+  --tw-translate-y: -100%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.translate-x-5 {
+  --tw-translate-x: 1.25rem;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.scale-100 {
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.scale-90 {
+  --tw-scale-x: .9;
+  --tw-scale-y: .9;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.transform {
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.cursor-default {
+  cursor: default;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.select-none {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.resize-none {
+  resize: none;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-baseline {
+  align-items: baseline;
+}
+
+.items-stretch {
+  align-items: stretch;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-0 {
+  gap: 0;
+}
+
+.gap-1 {
+  gap: .25rem;
+}
+
+.gap-1\.5 {
+  gap: .375rem;
+}
+
+.gap-2 {
+  gap: .5rem;
+}
+
+.gap-2\.5 {
+  gap: .625rem;
+}
+
+.gap-3 {
+  gap: .75rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.gap-5 {
+  gap: 1.25rem;
+}
+
+.gap-\[14px\] {
+  gap: 14px;
+}
+
+.gap-\[2px\] {
+  gap: 2px;
+}
+
+.self-start {
+  align-self: flex-start;
+}
+
+.self-stretch {
+  align-self: stretch;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.truncate {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.whitespace-normal {
+  white-space: normal;
+}
+
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.text-wrap {
+  text-wrap: wrap;
+}
+
+.\!rounded-\[10px\] {
+  border-radius: 10px !important;
+}
+
+.\!rounded-\[12px\] {
+  border-radius: 12px !important;
+}
+
+.\!rounded-\[6px\] {
+  border-radius: 6px !important;
+}
+
+.\!rounded-\[8px\] {
+  border-radius: 8px !important;
+}
+
+.rounded {
+  border-radius: .25rem;
+}
+
+.rounded-\[10px\] {
+  border-radius: 10px;
+}
+
+.rounded-\[12px\] {
+  border-radius: 12px;
+}
+
+.rounded-\[14px\] {
+  border-radius: 14px;
+}
+
+.rounded-\[16px\] {
+  border-radius: 16px;
+}
+
+.rounded-\[2px\] {
+  border-radius: 2px;
+}
+
+.rounded-\[5px\] {
+  border-radius: 5px;
+}
+
+.rounded-\[6px\] {
+  border-radius: 6px;
+}
+
+.rounded-\[7px\] {
+  border-radius: 7px;
+}
+
+.rounded-\[8px\] {
+  border-radius: 8px;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+.rounded-l-\[10px\] {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.border {
+  border-width: 1px;
+}
+
+.border-0 {
+  border-width: 0;
+}
+
+.border-t {
+  border-top-width: 1px;
+}
+
+.border-dashed {
+  border-style: dashed;
+}
+
+.border-\[\#2a2d36\] {
+  --tw-border-opacity: 1;
+  border-color: rgb(42 45 54 / var(--tw-border-opacity, 1));
+}
+
+.border-\[rgba\(42\,45\,54\,0\.4\)\] {
+  border-color: #2a2d3666;
+}
+
+.border-red-500\/30 {
+  border-color: #ef44444d;
+}
+
+.border-reps-line {
+  --tw-border-opacity: 1;
+  border-color: rgb(42 45 54 / var(--tw-border-opacity, 1));
+}
+
+.border-reps-line-hi {
+  --tw-border-opacity: 1;
+  border-color: rgb(58 61 70 / var(--tw-border-opacity, 1));
+}
+
+.border-reps-line\/40 {
+  border-color: #2a2d3666;
+}
+
+.border-reps-orange {
+  --tw-border-opacity: 1;
+  border-color: rgb(55 138 221 / var(--tw-border-opacity, 1));
+}
+
+.border-reps-orange\/30 {
+  border-color: #378add4d;
+}
+
+.bg-\[\#080b0f\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(8 11 15 / var(--tw-bg-opacity, 1));
+}
+
+.bg-\[\#111620\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(17 22 32 / var(--tw-bg-opacity, 1));
+}
+
+.bg-\[\#161a20\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(22 26 32 / var(--tw-bg-opacity, 1));
+}
+
+.bg-\[\#1c1f26\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(28 31 38 / var(--tw-bg-opacity, 1));
+}
+
+.bg-\[\#2a2d36\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(42 45 54 / var(--tw-bg-opacity, 1));
+}
+
+.bg-\[\#378add\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(55 138 221 / var(--tw-bg-opacity, 1));
+}
+
+.bg-\[rgba\(28\,31\,38\,0\.3\)\] {
+  background-color: #1c1f264d;
+}
+
+.bg-black\/70 {
+  background-color: #000000b3;
+}
+
+.bg-red-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
+}
+
+.bg-red-900\/20 {
+  background-color: #7f1d1d33;
+}
+
+.bg-reps-bg {
+  --tw-bg-opacity: 1;
+  background-color: rgb(8 11 15 / var(--tw-bg-opacity, 1));
+}
+
+.bg-reps-card {
+  --tw-bg-opacity: 1;
+  background-color: rgb(28 31 38 / var(--tw-bg-opacity, 1));
+}
+
+.bg-reps-card\/50 {
+  background-color: #1c1f2680;
+}
+
+.bg-reps-ink {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+
+.bg-reps-line {
+  --tw-bg-opacity: 1;
+  background-color: rgb(42 45 54 / var(--tw-bg-opacity, 1));
+}
+
+.bg-reps-orange {
+  --tw-bg-opacity: 1;
+  background-color: rgb(55 138 221 / var(--tw-bg-opacity, 1));
+}
+
+.bg-reps-orange\/10 {
+  background-color: #378add1a;
+}
+
+.bg-reps-raised {
+  --tw-bg-opacity: 1;
+  background-color: rgb(34 37 46 / var(--tw-bg-opacity, 1));
+}
+
+.bg-transparent {
+  background-color: #0000;
+}
+
+.bg-white {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+
+.bg-gradient-to-b {
+  background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
+}
+
+.bg-gradient-to-t {
+  background-image: linear-gradient(to top, var(--tw-gradient-stops));
+}
+
+.from-reps-bg {
+  --tw-gradient-from: #080b0f var(--tw-gradient-from-position);
+  --tw-gradient-to: #080b0f00 var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.from-transparent {
+  --tw-gradient-from: transparent var(--tw-gradient-from-position);
+  --tw-gradient-to: #0000 var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.to-\[\#080b0f\] {
+  --tw-gradient-to: #080b0f var(--tw-gradient-to-position);
+}
+
+.to-transparent {
+  --tw-gradient-to: transparent var(--tw-gradient-to-position);
+}
+
+.p-1 {
+  padding: .25rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.p-\[0_1\.25rem_1\.75rem\] {
+  padding: 0 1.25rem 1.75rem;
+}
+
+.p-\[1\.75rem_1\.25rem\] {
+  padding: 1.75rem 1.25rem;
+}
+
+.p-\[3px\] {
+  padding: 3px;
+}
+
+.px-2\.5 {
+  padding-left: .625rem;
+  padding-right: .625rem;
+}
+
+.px-3 {
+  padding-left: .75rem;
+  padding-right: .75rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.px-5 {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.px-7 {
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
+}
+
+.px-\[1\.25rem\] {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.px-\[10px\] {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.px-\[14px\] {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.px-\[16px\] {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.px-\[7px\] {
+  padding-left: 7px;
+  padding-right: 7px;
+}
+
+.py-1 {
+  padding-top: .25rem;
+  padding-bottom: .25rem;
+}
+
+.py-1\.5 {
+  padding-top: .375rem;
+  padding-bottom: .375rem;
+}
+
+.py-10 {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+.py-2 {
+  padding-top: .5rem;
+  padding-bottom: .5rem;
+}
+
+.py-3 {
+  padding-top: .75rem;
+  padding-bottom: .75rem;
+}
+
+.py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.py-6 {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.py-\[13px\] {
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+.py-\[14px\] {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.py-\[3px\] {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+.py-\[7px\] {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.pb-1\.5 {
+  padding-bottom: .375rem;
+}
+
+.pb-10 {
+  padding-bottom: 2.5rem;
+}
+
+.pb-12 {
+  padding-bottom: 3rem;
+}
+
+.pb-2 {
+  padding-bottom: .5rem;
+}
+
+.pb-3 {
+  padding-bottom: .75rem;
+}
+
+.pb-4 {
+  padding-bottom: 1rem;
+}
+
+.pb-5 {
+  padding-bottom: 1.25rem;
+}
+
+.pb-8 {
+  padding-bottom: 2rem;
+}
+
+.pl-0 {
+  padding-left: 0;
+}
+
+.pl-4 {
+  padding-left: 1rem;
+}
+
+.pr-2\.5 {
+  padding-right: .625rem;
+}
+
+.pr-3 {
+  padding-right: .75rem;
+}
+
+.pt-1\.5 {
+  padding-top: .375rem;
+}
+
+.pt-2 {
+  padding-top: .5rem;
+}
+
+.pt-3 {
+  padding-top: .75rem;
+}
+
+.pt-4 {
+  padding-top: 1rem;
+}
+
+.pt-5 {
+  padding-top: 1.25rem;
+}
+
+.pt-6 {
+  padding-top: 1.5rem;
+}
+
+.pt-7 {
+  padding-top: 1.75rem;
+}
+
+.pt-8 {
+  padding-top: 2rem;
+}
+
+.pt-9 {
+  padding-top: 2.25rem;
+}
+
+.pt-\[20px\] {
+  padding-top: 20px;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.text-\[10px\] {
+  font-size: 10px;
+}
+
+.text-\[11\.5px\] {
+  font-size: 11.5px;
+}
+
+.text-\[11px\] {
+  font-size: 11px;
+}
+
+.text-\[12px\] {
+  font-size: 12px;
+}
+
+.text-\[13px\] {
+  font-size: 13px;
+}
+
+.text-\[14px\] {
+  font-size: 14px;
+}
+
+.text-\[15px\] {
+  font-size: 15px;
+}
+
+.text-\[16px\] {
+  font-size: 16px;
+}
+
+.text-\[17px\] {
+  font-size: 17px;
+}
+
+.text-\[18px\] {
+  font-size: 18px;
+}
+
+.text-\[21px\] {
+  font-size: 21px;
+}
+
+.text-\[22px\] {
+  font-size: 22px;
+}
+
+.text-\[24px\] {
+  font-size: 24px;
+}
+
+.text-\[26px\] {
+  font-size: 26px;
+}
+
+.text-\[28px\] {
+  font-size: 28px;
+}
+
+.text-\[31px\] {
+  font-size: 31px;
+}
+
+.text-\[38px\] {
+  font-size: 38px;
+}
+
+.text-\[40px\] {
+  font-size: 40px;
+}
+
+.text-\[48px\] {
+  font-size: 48px;
+}
+
+.text-\[64px\] {
+  font-size: 64px;
+}
+
+.text-\[76px\] {
+  font-size: 76px;
+}
+
+.text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.text-sm {
+  font-size: .875rem;
+  line-height: 1.25rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.text-xs {
+  font-size: .75rem;
+  line-height: 1rem;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.tabular-nums {
+  --tw-numeric-spacing: tabular-nums;
+  font-variant-numeric: var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction);
+}
+
+.leading-none {
+  line-height: 1;
+}
+
+.leading-relaxed {
+  line-height: 1.625;
+}
+
+.leading-snug {
+  line-height: 1.375;
+}
+
+.tracking-\[-0\.5px\] {
+  letter-spacing: -.5px;
+}
+
+.tracking-\[0\.4em\] {
+  letter-spacing: .4em;
+}
+
+.tracking-\[1\.5px\] {
+  letter-spacing: 1.5px;
+}
+
+.tracking-\[1px\] {
+  letter-spacing: 1px;
+}
+
+.tracking-\[6px\] {
+  letter-spacing: 6px;
+}
+
+.tracking-wide {
+  letter-spacing: .025em;
+}
+
+.text-\[\#378add\] {
+  --tw-text-opacity: 1;
+  color: rgb(55 138 221 / var(--tw-text-opacity, 1));
+}
+
+.text-\[\#3d4252\] {
+  --tw-text-opacity: 1;
+  color: rgb(61 66 82 / var(--tw-text-opacity, 1));
+}
+
+.text-\[\#52576a\] {
+  --tw-text-opacity: 1;
+  color: rgb(82 87 106 / var(--tw-text-opacity, 1));
+}
+
+.text-\[\#5a5f72\] {
+  --tw-text-opacity: 1;
+  color: rgb(90 95 114 / var(--tw-text-opacity, 1));
+}
+
+.text-\[\#8a8fa8\] {
+  --tw-text-opacity: 1;
+  color: rgb(138 143 168 / var(--tw-text-opacity, 1));
+}
+
+.text-\[\#c8cdd8\] {
+  --tw-text-opacity: 1;
+  color: rgb(200 205 216 / var(--tw-text-opacity, 1));
+}
+
+.text-\[\#ffffff\] {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.text-\[var\(--reps-label\)\] {
+  color: var(--reps-label);
+}
+
+.text-red-400 {
+  --tw-text-opacity: 1;
+  color: rgb(248 113 113 / var(--tw-text-opacity, 1));
+}
+
+.text-reps-dim {
+  --tw-text-opacity: 1;
+  color: rgb(138 143 168 / var(--tw-text-opacity, 1));
+}
+
+.text-reps-dim\/50 {
+  color: #8a8fa880;
+}
+
+.text-reps-green {
+  --tw-text-opacity: 1;
+  color: rgb(62 214 138 / var(--tw-text-opacity, 1));
+}
+
+.text-reps-green-muted {
+  --tw-text-opacity: 1;
+  color: rgb(36 122 79 / var(--tw-text-opacity, 1));
+}
+
+.text-reps-ink {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.text-reps-orange {
+  --tw-text-opacity: 1;
+  color: rgb(55 138 221 / var(--tw-text-opacity, 1));
+}
+
+.text-reps-sub {
+  --tw-text-opacity: 1;
+  color: rgb(138 143 168 / var(--tw-text-opacity, 1));
+}
+
+.text-white {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.text-white\/70 {
+  color: #ffffffb3;
+}
+
+.underline {
+  text-decoration-line: underline;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+
+.opacity-100 {
+  opacity: 1;
+}
+
+.opacity-60 {
+  opacity: .6;
+}
+
+.shadow {
+  --tw-shadow: 0 1px 3px 0 #0000001a, 0 1px 2px -1px #0000001a;
+  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.shadow-lg {
+  --tw-shadow: 0 10px 15px -3px #0000001a, 0 4px 6px -4px #0000001a;
+  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.shadow-xl {
+  --tw-shadow: 0 20px 25px -5px #0000001a, 0 8px 10px -6px #0000001a;
+  --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.shadow-black\/40 {
+  --tw-shadow-color: #0006;
+  --tw-shadow: var(--tw-shadow-colored);
+}
+
+.outline-none {
+  outline-offset: 2px;
+  outline: 2px solid #0000;
+}
+
+.outline {
+  outline-style: solid;
+}
+
+.blur {
+  --tw-blur: blur(8px);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+.grayscale {
+  --tw-grayscale: grayscale(100%);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+.filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+.transition {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-backdrop-filter, backdrop-filter;
+  transition-duration: .15s;
+  transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+}
+
+.transition-all {
+  transition-property: all;
+  transition-duration: .15s;
+  transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+}
+
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: .15s;
+  transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+}
+
+.transition-opacity {
+  transition-property: opacity;
+  transition-duration: .15s;
+  transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+}
+
+.transition-transform {
+  transition-property: transform;
+  transition-duration: .15s;
+  transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+}
+
+.duration-300 {
+  transition-duration: .3s;
+}
+
+.ease-out {
+  transition-timing-function: cubic-bezier(0, 0, .2, 1);
+}
+
+:root {
+  --reps-bg: #080b0f;
+  --reps-card: #1c1f26;
+  --reps-raised: #22252e;
+  --reps-line: #2a2d36;
+  --reps-line-hi: #3a3d46;
+  --reps-ink: #fff;
+  --reps-sub: #8a8fa8;
+  --reps-dim: #8a8fa8;
+  --reps-label: #c8cdd8;
+  --reps-orange: #378add;
+  --reps-orange-hi: #4a9ae8;
+  --reps-green: #3ed68a;
+  --reps-green-muted: #247a4f;
+}
+
+body {
+  background-color: var(--reps-bg);
+  color: var(--reps-ink);
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+}
+
+.paper-grain {
+  isolation: isolate;
+  position: relative;
+}
+
+.paper-grain:before {
+  content: "";
+  z-index: -1;
+  pointer-events: none;
+  opacity: .55;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncA type='linear' slope='0' intercept='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 140px 140px;
+  position: fixed;
+  inset: 0;
+}
+
+@media print {
+  .paper-grain:before {
+    display: none;
+  }
+}
+
+.landscape-message {
+  display: none;
+}
+
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  body > :not(.landscape-message) {
+    display: none !important;
+  }
+
+  .landscape-message {
+    z-index: 9999;
+    text-align: center;
+    background: var(--reps-bg);
+    color: var(--reps-sub);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+    font-size: 15px;
+    display: flex;
+    position: fixed;
+    inset: 0;
+  }
+}
+
+@keyframes reps-sk-breathe {
+  0%, 100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: .72;
+  }
+}
+
+.sk-breathe {
+  animation: 1.8s ease-in-out infinite reps-sk-breathe;
+}
+
+@keyframes reps-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(-10vh)rotate(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(110vh)rotate(720deg);
+  }
+}
+
+input[type="number"]::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+  display: none;
+}
+
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+  display: none;
+}
+
+input[type="number"] {
+  appearance: textfield;
+}
+
+.placeholder\:italic::placeholder {
+  font-style: italic;
+}
+
+.placeholder\:tracking-normal::placeholder {
+  letter-spacing: 0;
+}
+
+.placeholder\:text-\[\#5a5f72\]::placeholder {
+  --tw-text-opacity: 1;
+  color: rgb(90 95 114 / var(--tw-text-opacity, 1));
+}
+
+.placeholder\:text-\[\#8a8fa8\]::placeholder, .placeholder\:text-reps-dim::placeholder {
+  --tw-text-opacity: 1;
+  color: rgb(138 143 168 / var(--tw-text-opacity, 1));
+}
+
+.placeholder\:text-reps-green::placeholder {
+  --tw-text-opacity: 1;
+  color: rgb(62 214 138 / var(--tw-text-opacity, 1));
+}
+
+.placeholder\:text-reps-green-muted::placeholder {
+  --tw-text-opacity: 1;
+  color: rgb(36 122 79 / var(--tw-text-opacity, 1));
+}
+
+.placeholder\:opacity-100::placeholder {
+  opacity: 1;
+}
+
+.hover\:border-\[\#4a4d57\]:hover {
+  --tw-border-opacity: 1;
+  border-color: rgb(74 77 87 / var(--tw-border-opacity, 1));
+}
+
+.hover\:border-reps-line-hi:hover {
+  --tw-border-opacity: 1;
+  border-color: rgb(58 61 70 / var(--tw-border-opacity, 1));
+}
+
+.hover\:bg-\[\#22252e\]:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(34 37 46 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-\[\#4a9ae8\]:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(74 154 232 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-\[rgba\(28\,31\,38\,0\.6\)\]:hover {
+  background-color: #1c1f2699;
+}
+
+.hover\:bg-red-400:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(248 113 113 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-reps-card:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(28 31 38 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-reps-line:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(42 45 54 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-reps-orange-hi:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(74 154 232 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:bg-reps-raised:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(34 37 46 / var(--tw-bg-opacity, 1));
+}
+
+.hover\:text-reps-ink:hover {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-reps-orange-hi:hover {
+  --tw-text-opacity: 1;
+  color: rgb(74 154 232 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-reps-sub:hover {
+  --tw-text-opacity: 1;
+  color: rgb(138 143 168 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-white:hover {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.hover\:opacity-90:hover {
+  opacity: .9;
+}
+
+.focus\:border-\[\#378add\]:focus, .focus\:border-reps-orange:focus {
+  --tw-border-opacity: 1;
+  border-color: rgb(55 138 221 / var(--tw-border-opacity, 1));
+}
+
+.active\:scale-\[0\.92\]:active {
+  --tw-scale-x: .92;
+  --tw-scale-y: .92;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.active\:scale-\[0\.98\]:active {
+  --tw-scale-x: .98;
+  --tw-scale-y: .98;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.active\:scale-\[0\.99\]:active {
+  --tw-scale-x: .99;
+  --tw-scale-y: .99;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.disabled\:pointer-events-none:disabled {
+  pointer-events: none;
+}
+
+.disabled\:text-\[\#555\]:disabled {
+  --tw-text-opacity: 1;
+  color: rgb(85 85 85 / var(--tw-text-opacity, 1));
+}
+
+.disabled\:opacity-40:disabled {
+  opacity: .4;
+}
+
+.disabled\:opacity-50:disabled {
+  opacity: .5;
+}
+
+.group:hover .group-hover\:text-reps-ink {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.group:active .group-active\:scale-\[0\.95\] {
+  --tw-scale-x: .95;
+  --tw-scale-y: .95;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+/*# sourceMappingURL=src_app_globals_162hn9o.css.map*/
+/* ============ the landing page's own stylesheet, inlined verbatim ============ */
+
+        /* ---- The page shell ------------------------------------------------
+           ⚠️ ONE definition of how wide the page is and how far its content sits
+           from the edge. Every band referenced these as literals — 1100/22/40
+           repeated across the header, hero, this section, the loop and the
+           footer — which is how the footer quietly ended up on 28px while
+           everything else used 22px. Change the shell here, not per section. */
+        .paper-grain { --page-max: 960px; --page-pad: 22px; }
+
+        .page-header { padding: 20px var(--page-pad) 0; }
+        .page-main   { padding: 48px var(--page-pad) 24px; }
+        .landing-layout {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          align-items: center;
+        }
+        /* The whole hero cluster is derived from one explicit width. Sizing the
+           circles with a percentage width + aspect-ratio (the obvious way) made
+           them render as ovals on iOS Safari: they are absolutely positioned
+           inside a parent whose own height also came from aspect-ratio, and
+           Safari does not reliably resolve the missing axis for an abspos box
+           in that case — the height fell back to stretch. Giving every circle an
+           explicit, equal width AND height in px removes the inference entirely.
+           aspect-ratio is kept only as a belt-and-braces guard. */
+        .landing-image-wrap {
+          --hero-w: 258px; /* 224 + 15%, mobile only */
+          width: var(--hero-w);
+          flex-shrink: 0;
+        }
+        /* ---- Hero device ---------------------------------------------------
+           Same em-scaling contract as .program-phone: font-size is derived from the
+           frame's own width, and everything inside ScreenHeroDetail is sized in
+           em, so one set of numbers renders correctly at every breakpoint
+           without a second scale or a transform.
+
+           ⚠️ The device is capped by WIDTH at each breakpoint rather than being
+           a percentage of --hero-w. A 9/18 frame is far taller than the circle
+           cluster it replaces, and on mobile — where the hero stacks — every
+           pixel of device height pushes "Start free" further past the fold.
+           Mobile therefore gets both a narrower frame and a shorter ratio. */
+        .hero-device-wrap {
+          position: relative;
+          display: flex;
+          /* Centred while the hero is STACKED — the device sits above the copy
+             and centring is right there. Left-aligned once it becomes a column
+             (see the 768 block), because a 268px device centred in a 420px
+             column sat 76px inside the page's left edge while the header logo,
+             this section's heading and the footer all sat on it.
+             That was the "hero looks indented" — not a padding difference. */
+          justify-content: center;
+        }
+        /* Warm ambient glow, behind the device and purely decorative.
+           ⚠️ Deliberately NOT a black shadow. Black on #ede9e3 greys the cream
+           and makes the device read as a hole punched in the page. This is the
+           background's own family pushed darker and warmer, so the device sits
+           ON the page rather than in front of it. The dark UI inside is
+           untouched — the softening happens entirely around it. */
+        .hero-glow {
+          position: absolute;
+          inset: -12% -22%;
+          z-index: 0;
+          pointer-events: none;
+          background: radial-gradient(
+            ellipse at 50% 48%,
+            rgba(150, 118, 82, 0.30) 0%,
+            rgba(150, 118, 82, 0.13) 42%,
+            rgba(150, 118, 82, 0) 72%
+          );
+          filter: blur(16px);
+        }
+        .hero-device {
+          --pw: 172px;
+          position: relative;
+          z-index: 1;
+          width: var(--pw);
+          font-size: calc(var(--pw) / 13);
+          aspect-ratio: 9 / 17.5;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          padding: 1.1em 0.9em;
+          background: #111318;
+          border: 1px solid #2a2d36;
+          border-radius: 26px;
+          overflow: hidden;
+          /* Two layers, both warm-tinted rather than black: a tight contact
+             shadow that seats the device, and a wide soft ambient one. */
+          box-shadow:
+            0 2px 6px rgba(60, 45, 30, 0.07),
+            0 18px 50px -12px rgba(90, 70, 45, 0.24);
+        }
+        .landing-text { width: 100%; }
+        .cta-primary  { width: 100%; }
+
+        /* Mobile type scale. Eyebrow, headline and bullet rows share the
+           same left edge — no extra indent on any of them. */
+        .eyebrow  { font-size: 13px; margin: 0 0 10px; }
+        /* ⚠️ text-wrap: balance replaces the literal <br /> this headline used
+           to carry. A hard break fixes one width and produces a widow at every
+           other; balance evens the lines out at whatever width the viewport
+           happens to be. Browsers without support fall back to ordinary
+           wrapping, which is what removing the <br /> gives anyway.
+
+           Removing the break is necessary but NOT sufficient — natural wrapping
+           still strands words. Measured at 900px: plain wrapping gives
+           "The work doesn't stop / when the session / does." with "does." alone
+           on the last line; balance gives "The work doesn't / stop when the /
+           session does." with no widow. */
+        .headline { font-size: 32px; line-height: 1.14; margin: 0 0 18px; text-wrap: balance; }
+        .bullets  { margin-bottom: 24px !important; }
+        .bullet-row {
+          display: grid;
+          grid-template-columns: 22px 1fr;
+          column-gap: 12px;
+          align-items: center;
+          padding: 3px 0;
+        }
+        .bullet-icon-wrap {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 25px; /* matches bullet-text line box, so icon centers on it */
+        }
+        .bullet-icon { width: 20px; height: 20px; }
+        /* ⚠️ NO white-space: nowrap, and its removal was a bug fix rather than
+           a style choice. With nowrap these lines could not break, so the
+           longest one set a min-content floor for .landing-text (flex: 1,
+           default min-width: auto) and the PAGE widened instead of the line
+           breaking — a horizontal scrollbar in a band around 768px, where the
+           layout goes side-by-side and the type grows to 20px at the same time.
+           Wrapping is the correct failure mode for a text line; widening the
+           document is not. Verified byte-identical at 375/390/414/1024/1280/1440
+           — at every width with room, these still render on one line. */
+        .bullet-text {
+          font-size: 18px;
+          line-height: 1.4;
+          color: #1a1a1a;
+          font-weight: 600;
+        }
+
+        /* ⚠️ SHORT viewports, not narrow ones. A 375x812 phone fits the hero
+           comfortably; a 375x667 (SE-class) does not, because the device is
+           ~120px taller than the circle cluster it replaced and that pushed
+           "Start free" 81px below the fold. Keyed on max-height so tall
+           phones keep the full-size device and only genuinely short screens
+           pay. The headline and the stack gap give up a little as well, so the
+           device does not absorb the whole deficit and shrink past legibility. */
+        @media (max-width: 767px) and (max-height: 700px) {
+          /* ⚠️ Narrowing the frame does NOT stop the screen inside overflowing
+             it. Both the frame height and the content scale off --pw, so width
+             cancels out: fitting is purely a question of the ASPECT RATIO
+             against the content's height in em. Shortening 9/17.5 to 9/15 at
+             the same width clipped "+ Assign more" straight off the bottom.
+             So the ratio only shortens to what the content actually needs
+             (~9/16.4 with the trimmed padding below), and the height comes down
+             by narrowing instead. */
+          .hero-device {
+            --pw: 140px;
+            aspect-ratio: 9 / 16.4;
+            padding: 0.85em 0.8em;
+            border-radius: 22px;
+          }
+          .headline { font-size: 28px; }
+          .landing-layout { gap: 10px; }
+        }
+
+        @media (min-width: 768px) {
+          .paper-grain { --page-pad: 40px; }
+          .page-header { padding: 24px var(--page-pad) 0; }
+          .page-main   { padding: 80px var(--page-pad) 60px; }
+          .landing-layout {
+            flex-direction: row;
+            /* ⚠️ This is now the WHOLE device-to-copy gap, because the image
+               column hugs the device rather than padding it out to --hero-w.
+               So it is the only number to change if that gap needs tuning, and
+               it is declared ONCE — an earlier pass left a second
+               .landing-layout gap further down this same block quietly
+               overriding it. Checked: the 1024 block does not touch
+               .landing-layout at all. */
+            gap: 96px;
+            align-items: center;
+          }
+          .landing-image-wrap {
+            --hero-w: 340px;
+            flex: 0 0 var(--hero-w);
+            width: var(--hero-w);
+          }
+          /* ⚠️ The image column HUGS the device from here up, instead of
+             holding a fixed --hero-w. It was 420px wide around a 268px device,
+             so 152px of it was empty and the copy column started 152px further
+             right than it needed to — that dead space, plus the 80px flex gap,
+             was the whole 232px hero gap. The device itself does not move: it
+             is left-aligned on the page edge either way, and --pw is untouched.
+             Only the copy moves left, which is exactly widening the copy column.
+             --hero-w still drives the STACKED layout below 768. */
+          .landing-image-wrap { flex: 0 0 auto; width: auto; }
+
+          /* ⚠️ Left-aligned once the hero is a ROW. Centred, a 268px device in a
+             420px column sat 76px inside the page's left edge, while the header
+             logo, the "one place" heading and the footer all sat on it — which
+             is what read as "the hero is indented". It is not a
+             padding difference; the padding was always identical. */
+          .hero-device-wrap { justify-content: flex-start; }
+          /* Side-by-side from here, so the device's height stops competing with
+             the CTA and it can take its full ratio. */
+          .hero-device {
+            --pw: 236px;
+            aspect-ratio: 9 / 19;
+            border-radius: 30px;
+          }
+          .landing-text { flex: 1; }
+          .cta-primary  { width: auto; }
+          .cta-section  { align-items: flex-start !important; }
+          .eyebrow  { font-size: 14px; margin: 0 0 10px; }
+          .headline { font-size: clamp(38px, 4.5vw, 56px); line-height: 1.1; margin: 0 0 24px; }
+          .bullets  { margin-bottom: 36px !important; }
+          .bullet-row {
+            grid-template-columns: 24px 1fr;
+            column-gap: 14px;
+            padding: 5px 0;
+          }
+          .bullet-icon-wrap { height: 28px; }
+          .bullet-icon { width: 22px; height: 22px; }
+          .bullet-text  { font-size: 20px; }
+        }
+        /* ---- Product loop ---- */
+        /* Mobile runs tight — the hero, the heading and the row sit close
+           together; desktop reopens the spacing further down. */
+        /* ---- "One place" band ---------------------------------------------
+           ⚠️ A warm step DOWN from the cream hero, not a mid-grey. A true
+           mid-tone between #ede9e3 and the loop band's #1c1f26 lands around
+           L 0.35, which is the muddy brown territory the dark-hero experiment
+           was rejected for. This stays light enough to read as paper while
+           being unmistakably its own band, so the page reads cream -> warm ->
+           dark as three deliberate steps. */
+        .program-section {
+          /* ⚠️ #1f2740, not the old neutral #252932 (changed Aug 5 2026).
+             Saturating it into real blue widens the hue gap from the cream
+             hero — 226 degrees against the hero's 36 — so it reads as a
+             deliberate counterpart rather than as generic dark chrome, and it
+             puts this band in the SAME family as the student section's paper.
+             The two are siblings at opposite lightnesses: hsl(227, 20%, 18.6%)
+             here, hsl(229, 12%, 81.4%) there.
+
+             ⚠️ Desaturated on Aug 5 2026 from hsl(226, 35%) / #1f2740, a drop
+             of 14.7 points at identical hue and lightness. The saturated
+             version read as a colour choice; this reads as a tinted neutral,
+             which is what a background should do. 8-bit quantisation at 18.6%
+             lightness is coarse — #262a39 is the closest reachable value, and
+             it lands at exactly 20.0%.
+
+             The devices stay the darkest objects on it.
+
+             ⚠️ The page no longer runs one long descent, and that changed on
+             Aug 5 2026. It ALTERNATES: cream hero -> this dark band -> the
+             student section's lighter paper -> dark footer. Section 3 is
+             deliberately light because three dark bands in a row (here, there,
+             footer) read as one undifferentiated block. So the rule for a new
+             section is no longer "take the next value down" — it is "do not
+             leave two same-tone bands touching". */
+          background: #262a39;
+          padding: 56px var(--page-pad) 60px;
+          /* ⚠️ No flex-grow here any more. It moved to .student-section on
+             Aug 5 2026, because the slack-absorbing grower has to be whichever
+             band sits LAST before the footer, and that is no longer this one. */
+        }
+        .program-inner {
+          max-width: var(--page-max);
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          gap: 34px;
+          align-items: center;
+        }
+        .program-copy { width: 100%; }
+        .program-heading {
+          font-size: 27px;
+          line-height: 1.1;
+          font-weight: 700;
+          letter-spacing: -0.8px;
+          color: #eef0f4;
+          margin: 0 0 14px;
+          /* ⚠️ Wrapping is FINE here and is not what is being guarded against.
+             An earlier pass forced one line with a clamp() tuned to the widest
+             string, which meant the type size was decided by the copy's length
+             rather than by the design — and it could not hold a line below 414
+             at any readable size anyway. The only rule is no single word
+             stranded on the last line, which is exactly what balance prevents:
+             it evens the lines instead of leaving a runt. */
+          text-wrap: balance;
+        }
+        .program-sub {
+          font-size: 16px;
+          line-height: 1.55;
+          color: #a2a8b4;
+          margin: 0;
+          /* No max-width and no forced break — it wraps to whatever the column
+             is. text-wrap: pretty rather than balance, because this is a
+             sentence: only the LAST line needs protecting from a stranded word,
+             where balance would even every line and pull the measure in for no
+             reason. Browsers without it wrap normally, which is the same shape
+             minus the widow guard. */
+          text-wrap: pretty;
+        }
+        /* The two screens overlap slightly so they read as one object rather
+           than two unrelated frames — the roster in front, since it is the one
+           the heading is actually about. */
+        .program-screens {
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          gap: 14px;
+          width: 100%;
+        }
+        /* ---- REAL, clickable calls to action ------------------------------
+           ⚠️ These must never be mistakable for a button drawn INSIDE a phone
+           mock. What separates them is SHAPE, not hue:
+
+             - real elevation. Mock buttons are flat because they sit on a
+               screen; these lift off the page, and this does most of the work
+             - a larger type size and radius than anything inside a frame
+
+           ⚠️ The colour is the brand token and must stay that way. A separate
+           deeper blue (#1f66b8) was tried here and reverted: a near-miss of the
+           brand colour reads as off-brand rather than as deliberately distinct,
+           which is worse than not differentiating at all. If these ever need to
+           separate further, take it out of size or elevation — not hue.
+
+           Every future marketing CTA should take this class rather than
+           restating the values. */
+        .cta-real {
+          display: inline-block;
+          background-color: var(--reps-orange);
+          color: #fff;
+          font-weight: 700;
+          /* ⚠️ 19px is an ACCESSIBILITY floor, not a size preference, and it is
+             load-bearing with the weight above it. White on the brand blue is
+             3.59:1 — under the 4.5:1 AA needs for normal text, which is what
+             this was at 17px, and comfortably over the 3:1 it needs as LARGE
+             text. WCAG counts bold type as large from 18.66px, so 19px/700 is
+             the first step that clears it.
+
+             Drop this below 18.66px, or the weight below 700, and all four
+             CTAs on this page silently fail AA again. Fixing it by darkening
+             the fill instead was considered and rejected: the brand blue is
+             fixed, and distinctness here comes from size and elevation rather
+             than hue. */
+          font-size: 19px;
+          letter-spacing: -0.2px;
+          padding: 16px 38px;
+          border-radius: 12px;
+          text-decoration: none;
+          text-align: center;
+          /* Tinted from the button's own colour rather than neutral black, so
+             the lift reads as the button glowing rather than as a drop shadow
+             sitting under it. */
+          box-shadow:
+            0 10px 22px -8px rgba(55, 138, 221, 0.55),
+            0 1px 2px rgba(0, 0, 0, 0.16);
+        }
+        /* Outlined, not plain text — it sat as a bare underlined link next to
+           buttons that have since grown, which read as unfinished. Same radius
+           as .cta-real so the two are obviously a pair at different weights. */
+        .signin-btn {
+          display: inline-block;
+          font-size: 14px;
+          font-weight: 600;
+          color: #0f0f10;
+          border: 1px solid rgba(15, 15, 16, 0.22);
+          border-radius: 12px;
+          padding: 9px 18px;
+          text-decoration: none;
+          transition: border-color 0.15s, background-color 0.15s;
+        }
+        .signin-btn:hover {
+          border-color: rgba(15, 15, 16, 0.42);
+          background-color: rgba(15, 15, 16, 0.04);
+        }
+
+        .program-cta {
+          display: block;
+          width: 100%;
+          margin-top: 26px;
+        }
+        /* ⚠️ ONE rule for every width at or above 768, not a copy inside each
+           breakpoint block. The first attempt put this in the 768-1023 block
+           alone, so at 1280 the base display:block/width:100% still applied and
+           the button ran the full width of the copy column. Same shape as the
+           bugs this file has already had twice: a rule that looks applied
+           because it is applied SOMEWHERE. */
+        @media (min-width: 768px) {
+          .program-cta { display: inline-block; width: auto; }
+
+          /* ⚠️ The SIZE HIERARCHY rule, expressed as a ratio rather than as
+             fixed numbers, so it holds at every width instead of at the two
+             where it was checked. The hero headline is clamp(38px, 4.5vw, 56px);
+             this is the same curve at ~0.82 of it — clamp(32px, 3.7vw, 46px) —
+             which keeps section 2 in the 80-85% band across the whole range:
+             46/56 at 1280, 37.9/46.1 at 1024, 32/38 at 768.
+
+             ⚠️ It lives in a min-width:768 block on purpose. Put in the
+             768-1023 block, as it first was, it silently stopped applying at
+             1024 and the heading fell back to the 27px mobile size — 48% of the
+             hero rather than 82%. That is the fourth time in this file a
+             breakpoint-scoped rule has looked applied because it applied
+             somewhere; check the widest width, not just the one you are on. */
+          .program-heading { font-size: clamp(32px, 3.7vw, 46px); }
+        }
+
+        .program-screen-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-width: 0;
+        }
+        /* Identifying labels, not steps — deliberately not numbered, and in a
+           quiet register well under the heading they sit beneath. */
+        .program-caption {
+          margin: 12px 0 0;
+          font-size: 13px;
+          font-weight: 500;
+          line-height: 1.4;
+          /* ⚠️ #8a8fa8 until Aug 5 2026, and it had to move. Desaturating the
+             band lifted its luminance from 0.02113 to 0.02363, which dropped
+             this caption from 4.62:1 to 4.46:1 — under AA for 13px text. Same
+             hue and saturation, 2 points lighter, back to 4.81:1.
+
+             It is deliberately NOT the app's --reps-sub token any more. That
+             value is tuned against the app's own dark surfaces, not against
+             this band, and matching it by eye is what put it under AA here. */
+          color: #9095ac;
+          text-align: center;
+        }
+        .program-phone {
+          /* ⚠️ Two side by side, so the ceiling is (container - gap) / 2, not
+             taste. At 375 the content box is 331px: 150 + 14 + 150 = 314 fits,
+             184 would overflow by 51. Hence the extra step at 480 rather than
+             one mobile size. */
+          /* ⚠️ Sized from the HERO's device, not from the space available.
+             The hero's is 172px below 768, so at 205 these were 19% LARGER
+             than the hero's — the hierarchy inverted, which is the thing the
+             ratio exists to stop. 146 is ~85% of 172 and still clears the
+             two-up bound with room. */
+          --pw: 146px;
+          width: var(--pw);
+          font-size: calc(var(--pw) / 13);
+          /* ⚠️ 9/19.5, not 9/18. Both the frame height and its contents scale
+             off --pw, so width cancels out and only the RATIO decides whether a
+             screen overflows its own frame — the same trap the hero device hit.
+             The roster is the taller of the two (five rows across four groups)
+             and needs ~19 to clear; at 9/18 it clipped Nico's row off the
+             bottom. The assign screen simply gets slack, which its bottom CTA
+             absorbs. */
+          aspect-ratio: 9 / 19.5;
+          flex-shrink: 0;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          padding: 1em 0.85em;
+          background: #111318;
+          border: 1px solid #2a2d36;
+          border-radius: 22px;
+          overflow: hidden;
+          /* ⚠️ COOL and genuinely darker than the band, replacing a warm
+             brown pair on Aug 5 2026. The rule this page follows is that a
+             shadow is tinted from the surface it sits ON — warm on the cream
+             hero, so blue here. The old rgba(90,70,45) was LIGHTER than the
+             band in red and green, so it composited to rgb(45,46,59) over a
+             rgb(31,39,64) surround: a brown haze that lightened rather than
+             shadowed. Barely readable on the old neutral #252932, obvious
+             against blue. This composites to rgb(23,26,36) — darker than the
+             band, which is what a shadow is supposed to do.
+
+             ⚠️ Retinted with the band on Aug 5 2026, from rgba(6,10,22) at 57%
+             saturation to rgba(10,12,18) at 30%. The tint is DERIVED from the
+             surface, so desaturating the band without desaturating this would
+             leave a more saturated shadow than the thing casting it. */
+          box-shadow:
+            0 2px 6px rgba(10, 12, 18, 0.35),
+            0 16px 40px -12px rgba(10, 12, 18, 0.55);
+        }
+        /* Upright and side by side — no rotation, no negative margin. The
+           tilt-and-overlap version cut controls off the back screen and made it
+           read as broken rather than layered; two plain frames with a gap say
+           "two screens" without any of that. */
+
+        /* Stacked but bigger: at 768 the copy column has the full width, so the
+           headline can hold one line at a proper size. */
+        /* ⚠️ At 375 the content box is 331px and two 158px frames plus the
+           base 14px gap come to exactly 331 — it fits with ZERO slack, which is
+           one rounding difference from overflowing. Buying the margin out of the
+           gap rather than the frames keeps the devices at the size that made
+           them legible. */
+        @media (max-width: 479px) {
+          .program-screens { gap: 10px; }
+        }
+
+        @media (min-width: 480px) and (max-width: 767px) {
+          /* Same 146 as below 480 now — the old 205 made these bigger than the
+             hero's own 172px device. The two-up bound that used to decide this
+             number is no longer the binding constraint; the hierarchy is. */
+          .program-phone { --pw: 146px; }
+        }
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .program-section { padding: 72px var(--page-pad) 76px; }
+          .program-heading { margin: 0 0 16px; }
+          .program-sub     { font-size: 18px; }
+          .program-phone   { --pw: 196px; border-radius: 26px; }
+          .program-screens { gap: 18px; }
+        }
+
+        @media (min-width: 1024px) {
+          /* Zig-zag against the hero: it puts the device left and copy right,
+             so this reverses to copy left, screens right.
+             ⚠️ 1024, NOT 768. Going side-by-side at 768 left the copy column
+             270px wide against two 156px phones — narrow enough that the
+             headline wrapped to three lines. The row needs real width to exist
+             at all.
+             ⚠️ This block must stay AFTER the base .program-* rules. It first
+             lived in the earlier 768 media query further up the stylesheet,
+             where the base rules — declared later at equal specificity — simply
+             overrode it, so the devices silently stayed at their mobile size. */
+          .program-section { padding: 84px 40px 88px; }
+          .program-inner {
+            flex-direction: row;
+            gap: 72px;
+            align-items: center;
+          }
+          .program-copy    { flex: 1; }
+          /* ⚠️ width: auto is load-bearing. The mobile rule sets width: 100% so
+             the screens centre under the copy when stacked; carried into the
+             row layout that made the screens claim the FULL inner width and
+             squeezed the copy column to 148px, wrapping the heading into five
+             short lines. flex: 0 0 auto alone does not undo it — the basis is
+             auto, so the declared width still wins. */
+          .program-screens { flex: 0 0 auto; width: auto; }
+          /* ⚠️ FLUID, and the ceiling is set by the one-line rule rather than
+             taste. The copy column is ~526px at 1024 and ~682px at 1280; this
+             headline needs 668px at 38px, so a fixed 38 wraps everywhere below
+             ~1270. Scaling with the viewport keeps it on one line across the
+             whole range and only reaches 38px where there is room for it. */
+          .program-heading { letter-spacing: -1.2px; margin: 0 0 18px; }
+          .program-sub     { font-size: 18px; }
+          .program-phone   { --pw: 222px; border-radius: 28px; }
+          .program-screens { gap: 18px; }
+        }
+
+        /* ---- Section 3: the student side ---------------------------------
+           Section 2's template, flipped. Same sizes, same frame, same copy
+           register — the difference is the audience and the side each half
+           sits on.
+
+           ⚠️ PEER-SIZED with section 2, which is a deliberate departure from
+           the descending-tier rule the hero and section 2 follow. That rule
+           exists to stop a LATER, lesser section outgrowing an earlier one. It
+           does not apply between siblings: these two are the same kind of thing
+           about two audiences, and shrinking this one to 82% would say the
+           student half matters less. Heading clamp, device widths and aspect
+           ratio are all identical to section 2's on purpose. */
+        .student-section {
+          /* The page needs a LIGHT band here, or section 2, this and the
+             footer stack as three darks and read as one undifferentiated
+             block. That requirement is structural; which light is the question
+             this value answers.
+
+             ⚠️ #c5c9da as of Aug 5 2026, replacing a warm #e6e1d8. That first
+             version was the hero's own paper one tone deeper, which made this
+             band a sibling of the HERO and left section 2 as the odd one out.
+             This is the blue family instead — hsl(229, 12%, 81.4%) against
+             section 2's hsl(227, 20%, 18.6%), two degrees apart — so the two
+             middle bands are one system at opposite lightnesses, and the cream
+             hero stands alone as the entry rather than being echoed halfway
+             down the page.
+
+             ⚠️ Desaturated on Aug 5 2026 from hsl(229, 22%) / #c5c9da, a drop
+             of 10.5 points at identical hue and lightness. The drop is smaller
+             than section 2's 14.7 because 8-bit quantisation at 81.4%
+             lightness is coarse: the next reachable step down (#cbcdd4, 9.5%)
+             undershoots the target band and swings the hue to 227.
+
+             Deep enough to read crisp rather than washed out, light enough to
+             be unambiguously the light band between two dark neighbours: 81.4%
+             lightness against section 2's 18.6% and the footer's 8%.
+
+             ⚠️ Its text is COOL. The warm greys an earlier #e6e1d8 version
+             used read as brown smudges on this, and its caption failed AA
+             outright at 3.78:1 — see each colour below. */
+          background: #caccd5;
+          padding: 56px var(--page-pad) 60px;
+          /* ⚠️ No flex-grow here any more. It moved on to .pricing-section
+             when that landed below this one (Aug 5 2026) — the slack-absorbing
+             grower has to be whichever band sits LAST before the footer. */
+        }
+        .student-inner {
+          max-width: var(--page-max);
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          gap: 34px;
+          align-items: center;
+        }
+        .student-copy { width: 100%; }
+        .student-heading {
+          font-size: 27px;
+          line-height: 1.1;
+          font-weight: 700;
+          letter-spacing: -0.8px;
+          /* A COOL near-black, not the hero's warm #0f0f10 — this band is
+             blue paper now, and warm ink on it reads dirty. 11.9:1. */
+          color: #121620;
+          margin: 0 0 14px;
+          /* Same rule as section 2: wrapping is fine, a stranded last word is
+             not. balance evens the lines instead of leaving a runt. */
+          text-wrap: balance;
+        }
+        .student-sub {
+          font-size: 16px;
+          line-height: 1.55;
+          /* Cool slate, in the band's own hue family. The warm #54504a this
+             replaces still cleared AA here (4.86:1) but read brown against the
+             blue. 5.7:1, comfortably clear as body text. */
+          color: #3f465a;
+          margin: 0;
+          /* A sentence, so only the LAST line needs a widow guard — pretty,
+             not balance. Same call as .program-sub. */
+          text-wrap: pretty;
+        }
+        .student-screens {
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          gap: 14px;
+          width: 100%;
+        }
+        .student-screen-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-width: 0;
+        }
+        .student-caption {
+          margin: 12px 0 0;
+          font-size: 13px;
+          font-weight: 500;
+          line-height: 1.4;
+          /* ⚠️ Darkened as well as cooled. The warm #65605a this replaces
+             measured 4.78:1 on the old #e6e1d8 and dropped to 3.78:1 on this
+             darker band — a real AA FAILURE at 13px, not a near miss. 5.1:1
+             now. */
+          color: #474d60;
+          text-align: center;
+        }
+        .student-cta {
+          display: block;
+          width: 100%;
+          margin-top: 26px;
+        }
+        .student-phone {
+          /* Section 2's numbers exactly — see the peer-sizing note above. The
+             two-up bound at 375 is the same one, and so is the 9/19.5 ratio:
+             the home screen carries three cards and a tab bar, which is the
+             taller of this pair, and the log screen takes the slack in its
+             bottom button the way the assign screen does. */
+          --pw: 146px;
+          width: var(--pw);
+          font-size: calc(var(--pw) / 13);
+          aspect-ratio: 9 / 19.5;
+          flex-shrink: 0;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          padding: 1em 0.85em;
+          background: #111318;
+          border: 1px solid #2a2d36;
+          border-radius: 22px;
+          overflow: hidden;
+          /* ⚠️ Tinted from THIS band, never black — the hero's two-layer
+             treatment with the hue swapped to follow the surface, which is the
+             actual rule (the hero is warm because the hero's paper is warm).
+             A warm brown haze on blue paper reads as a stain; black greys it
+             and makes the device look like a hole punched in the page.
+             Composites to rgb(155,158,170) on #caccd5 — same family, clearly
+             darker.
+
+             ⚠️ Retinted with the band on Aug 5 2026, from rgba(35,45,80) at
+             39% saturation to rgba(46,50,69) at 20%, so the shadow stays about
+             as saturated as the surface it is derived from. */
+          box-shadow:
+            0 2px 6px rgba(46, 50, 69, 0.10),
+            0 18px 50px -12px rgba(46, 50, 69, 0.30);
+        }
+
+        /* Same 375 two-up squeeze section 2 has: two 146px frames plus a 14px
+           gap come to 306 in a 331px box, and the smaller gap buys the margin
+           out of the space between rather than out of the devices. */
+        @media (max-width: 479px) {
+          .student-screens { gap: 10px; }
+        }
+
+        /* ⚠️ ONE min-width:768 block for the heading curve, placed AFTER every
+           base rule above. Section 2's equivalent was put in a 768-1023 range
+           block first and silently stopped applying at 1024, dropping the
+           heading back to its 27px mobile size. Same curve as section 2's, as
+           peers: clamp(32px, 3.7vw, 46px). */
+        @media (min-width: 768px) {
+          .student-cta { display: inline-block; width: auto; }
+          .student-heading { font-size: clamp(32px, 3.7vw, 46px); }
+        }
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .student-section { padding: 72px var(--page-pad) 76px; }
+          .student-heading { margin: 0 0 16px; }
+          .student-sub     { font-size: 18px; }
+          .student-phone   { --pw: 196px; border-radius: 26px; }
+          .student-screens { gap: 18px; }
+        }
+
+        @media (min-width: 1024px) {
+          /* ⚠️ THE FLIP, and it is the only structural difference from section
+             2. Section 2 runs copy-left / screens-right; row-reverse puts the
+             screens left and the copy right here.
+
+             That keeps the page zig-zagging on which side the DEVICES sit:
+             hero left, section 2 right, here left again. Two identical layouts
+             back to back would read as one long section instead of two.
+
+             ⚠️ DOM order stays copy-first so the stacked mobile layout reads
+             heading -> subtext -> CTA -> screens. Only the desktop row is
+             reversed, visually. */
+          .student-section { padding: 84px 40px 88px; }
+          .student-inner {
+            flex-direction: row-reverse;
+            gap: 72px;
+            align-items: center;
+          }
+          .student-copy    { flex: 1; }
+          /* ⚠️ width: auto is load-bearing, exactly as in section 2. The mobile
+             rule sets width: 100% so the screens centre when stacked; carried
+             into the row it makes them claim the full inner width and crush the
+             copy column. flex: 0 0 auto alone does not undo it — the basis is
+             auto, so the declared width still wins. */
+          .student-screens { flex: 0 0 auto; width: auto; gap: 18px; }
+          .student-heading { letter-spacing: -1.2px; margin: 0 0 18px; }
+          .student-sub     { font-size: 18px; }
+          .student-phone   { --pw: 222px; border-radius: 28px; }
+        }
+
+        /* ---- Pricing ------------------------------------------------------
+           The resting, decided moment after two look-closer sections, and the
+           colour says so: its own calm neutral rather than a fourth voice in
+           either of the page's two colour conversations. */
+        .pricing-section {
+          /* ⚠️ REUSED, not invented — #f8f7f5 is already the page background on
+             /privacy and /terms, so this is the site's existing near-white
+             rather than a new value. Deliberately outside both families: the
+             hero's cream is warm (hue 36) and sections 2 and 3 are blue (227
+             and 229). This is effectively neutral, which is what makes it read
+             as a resting point instead of another step in a sequence. */
+          background: #f8f7f5;
+          padding: 56px var(--page-pad) 64px;
+          /* ⚠️ MOVED HERE from .student-section (Aug 5 2026). The page is a
+             100vh flex column and this is its only grower, so it absorbs the
+             slack when the content is shorter than the viewport — without it
+             the shell colour shows as a band BELOW the footer. It belongs to
+             whichever band is LAST before the footer, so it moves again if any
+             section ever lands under this one. */
+          flex: 1 0 auto;
+        }
+        /* Centred throughout — see the note on the section element for why this
+           one does not zig-zag. */
+        .pricing-inner {
+          max-width: var(--page-max);
+          margin: 0 auto;
+          text-align: center;
+        }
+        .pricing-heading {
+          font-size: 27px;
+          line-height: 1.1;
+          font-weight: 700;
+          letter-spacing: -0.8px;
+          color: #0f0f10;
+          margin: 0 0 14px;
+          text-wrap: balance;
+        }
+        .pricing-sub {
+          font-size: 16px;
+          line-height: 1.55;
+          color: #55555c;
+          margin: 0 auto;
+          /* A measure, so the sentence does not run the full 960px shell when
+             everything under it is a centred column. */
+          max-width: 460px;
+          text-wrap: pretty;
+        }
+
+        /* STACKED below 768, side by side above.
+
+           ⚠️ The ORIGINAL reason no longer applies, and this note says so
+           rather than quietly keeping a number whose justification has gone.
+           The Pro CTA used to read "Start your program", which needed about
+           160px of text plus padding — more than the roughly 170px of inner
+           card width two cards get inside a 480px viewport, so the button
+           would have wrapped. Both buttons now read "Start free" (about 85px),
+           which clears that bound easily.
+
+           768 stays anyway, on card PROPORTION rather than on the button: two
+           cards at 480 are about 210px wide each, which is cramped for a price,
+           a limit and a CTA no matter how short the label. That is a judgment,
+           not a measurement — so if this is ever revisited, it is now a real
+           choice rather than a constraint. */
+        .pricing-cards {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          margin: 32px 0 0;
+        }
+        .pricing-card {
+          box-sizing: border-box;
+          width: 100%;
+          max-width: 380px;
+          border-radius: 16px;
+          padding: 26px 24px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          /* Neutral-tinted, because this band is neutral — the same
+             tint-from-the-surface rule the warm hero and the blue sections
+             follow, which here resolves to a plain grey rather than a hue. */
+          box-shadow:
+            0 1px 3px rgba(20, 20, 24, 0.05),
+            0 12px 32px -10px rgba(20, 20, 24, 0.14);
+        }
+        /* White on near-white: subtle on purpose. The card is defined by its
+           hairline and shadow, and its job is to be the quiet half of a pair
+           whose other half is nearly black. */
+        .pricing-card-free {
+          background: #ffffff;
+          border: 1px solid rgba(15, 15, 16, 0.10);
+        }
+        /* ⚠️ #262a39 — section 2's band colour, so the paid tier is visibly
+           part of the product's own palette rather than a fifth colour.
+           It must be kept in step with .program-section if that ever moves. */
+        .pricing-card-pro {
+          background: #262a39;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .pricing-plan {
+          margin: 0;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 1.4px;
+          text-transform: uppercase;
+        }
+        .pricing-card-free .pricing-plan { color: #6b6b73; }
+        .pricing-card-pro  .pricing-plan { color: #9095ac; }
+        .pricing-price {
+          margin: 10px 0 0;
+          font-size: 40px;
+          font-weight: 700;
+          letter-spacing: -1.5px;
+          line-height: 1;
+        }
+        .pricing-card-free .pricing-price { color: #0f0f10; }
+        .pricing-card-pro  .pricing-price { color: #ffffff; }
+        /* Rides with the number rather than sitting beside it at full size. */
+        .pricing-per {
+          font-size: 17px;
+          font-weight: 600;
+          letter-spacing: -0.3px;
+        }
+        .pricing-limit {
+          margin: 10px 0 0;
+          font-size: 15px;
+          line-height: 1.4;
+        }
+        .pricing-card-free .pricing-limit { color: #55555c; }
+        .pricing-card-pro  .pricing-limit { color: #a2a8b4; }
+        /* ⚠️ Full width inside the card and with its own horizontal padding.
+           .cta-real ships 38px of side padding for a button sitting free on a
+           page; inside a card that is what pushes the label past the edge. The
+           card decides the width here, not the text.
+
+           ⚠️ This block also NORMALISES the two buttons to one size, and it has
+           to restate every metric that differs. .cta-real and .signin-btn were
+           built for different jobs elsewhere on the page — a page-level primary
+           and a small header link — so inheriting them here rendered 57.5px
+           against 41px, a 16.5px mismatch from three separate sources at once:
+           17px/700 against 14px/600, 16px against 9px of vertical padding, and
+           a border on one but not the other.
+
+           Two buttons offering a straight either/or must be the same object at
+           two weights. The ONLY difference is the fill.
+
+           ⚠️ This is why the accessibility fix on .cta-real has to be repeated
+           here. This rule OVERRIDES .cta-real's font-size for the Pro button,
+           so leaving it at 17px would have quietly kept the failing size on the
+           one CTA that sits next to a price. Restating it also keeps the pair
+           identical: .pricing-cta is on BOTH buttons, so they grow together and
+           the size parity above survives. The Free button does not need 19px
+           for its own contrast — its ink is 19.16:1 on white — it needs it to
+           stay the same object as its neighbour. */
+        .pricing-cta {
+          display: block;
+          width: 100%;
+          box-sizing: border-box;
+          margin-top: 22px;
+          /* See the AA note on .cta-real. >= 18.66px AND bold, or it fails. */
+          font-size: 19px;
+          font-weight: 700;
+          letter-spacing: -0.2px;
+          line-height: 1.5;
+          padding: 16px 14px;
+          border-radius: 12px;
+          text-align: center;
+          /* ⚠️ A transparent border on BOTH, so the outlined one does not end
+             up 2px taller than the filled one. box-sizing is border-box, so
+             this costs no height — it just makes the two boxes identical. */
+          border: 1px solid transparent;
+        }
+        /* Two classes, so it beats the transparent border above regardless of
+           source order — the outline is the whole point of the quiet variant. */
+        .pricing-card-free .pricing-cta { border-color: rgba(15, 15, 16, 0.22); }
+
+        /* ---- The included-features block -----------------------------------
+           ⚠️ NO container. A white panel lived here briefly and came out: it
+           bought presence at the cost of becoming a third boxed object on a
+           band that already has two. This sits open on the background, and its
+           weight comes from type size and the badges instead.
+
+           So there is deliberately no background, border, radius or shadow on
+           any of these rules. Adding one puts the third-object problem back. */
+
+        /* ⚠️ A short confident STATEMENT, not a section label — that is the
+           whole point of this treatment. It was 13px, then 15px/600 with +0.4px
+           tracking, and the tracking was what made it read as legal fine print:
+           letterspaced small caps-ish text is the visual language of terms and
+           conditions. Now 20px/700 with NEGATIVE tracking, which is the
+           page's own headline idiom.
+
+           ⚠️ The brand blue is only legible here because of its SIZE. White-ish
+           backgrounds put #378add at 3.36:1, which fails AA for normal text and
+           passes only under the large-text allowance — that needs >= 18.66px AND
+           bold. Drop this below 20px, or to weight 600, and it silently fails.
+           If it ever needs to be smaller, it has to stop being blue. */
+        .pricing-included {
+          margin: 52px 0 0;
+          font-size: 20px;
+          font-weight: 700;
+          letter-spacing: -0.3px;
+          color: #378add;
+        }
+        /* ⚠️ ONE column below 768, two above, and NO white-space: nowrap
+           anywhere near it. Pinning these open is exactly the bug .bullet-text
+           already had: an unbreakable line sets a min-content floor, and the
+           PAGE widens instead of the line breaking. The columns change instead,
+           so a long label can never push the document sideways.
+
+           minmax(0, max-content) lets each column size to its longest label but
+           still shrink rather than overflow. */
+        .pricing-features {
+          list-style: none;
+          margin: 22px 0 0;
+          padding: 0;
+          display: grid;
+          grid-template-columns: repeat(1, minmax(0, max-content));
+          justify-content: center;
+          /* ⚠️ Row gap was 11px against a 48px column gap, which packed the
+             rows into a dense block while holding the columns far apart — the
+             single biggest reason this read as small print rather than as eight
+             separate things. The two gaps are now in a sane relationship. */
+          gap: 18px 48px;
+          text-align: left;
+        }
+        .pricing-feature {
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          /* ⚠️ 16px was BELOW this section's own subtext (18px), which is what
+             made it read as secondary regardless of anything else. 17px sits
+             just under the subtext rather than beneath it. */
+          font-size: 17px;
+          line-height: 1.45;
+          color: #2e2e33;
+        }
+        /* ⚠️ A TINTED disc, not a solid one, and the distinction is about
+           repetition rather than any single badge. A solid brand-blue fill at
+           this size looked right once and read as a wall of blue dots eight
+           times over — the marks stopped supporting the labels and started
+           competing with them, and with the CTAs.
+
+           ⚠️ It also must not fall back to the thin glyph this replaced, which
+           read as a bullet. The landing point between the two is: keep the
+           SCALE (24px, 1.4x the label) and the chunky stroke, drop only the
+           colour weight. Size carries the presence, tint carries the calm.
+
+           ⚠️ #e8effa is a NEW value, despite looking like a token — it appears
+           nowhere else in src/. It is a pale wash of the brand blue and exists
+           only to seat these checks. Do not reach for it as a general surface
+           without deciding that separately. */
+        .pricing-badge {
+          flex-shrink: 0;
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          background: #e8effa;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+          .pricing-section  { padding: 76px var(--page-pad) 84px; }
+          /* Peer with sections 2 and 3 — the same curve, for the same reason
+             they are peers with each other: these are co-equal sections, not a
+             descending hierarchy. */
+          .pricing-heading  { font-size: clamp(32px, 3.7vw, 46px); margin: 0 0 16px; }
+          .pricing-sub      { font-size: 18px; max-width: 520px; }
+          .pricing-cards    { flex-direction: row; align-items: stretch; justify-content: center; gap: 20px; margin-top: 40px; }
+          .pricing-card     { max-width: 330px; flex: 1 1 0; }
+          /* Stays >= 18.66px and bold at every width — see the AA note on the
+             base rule, which is load-bearing for the blue. */
+          .pricing-included { margin-top: 68px; font-size: 22px; }
+          .pricing-features { grid-template-columns: repeat(2, minmax(0, max-content)); gap: 22px 64px; margin-top: 26px; }
+          .pricing-feature  { font-size: 17px; }
+          .pricing-badge    { width: 26px; height: 26px; }
+        }
+
+        .footer-desktop { display: none; }
+        .footer-mobile {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+        }
+        .footer-line {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .footer-mobile a, .footer-mobile span {
+          font-size: 13px !important;
+          white-space: nowrap;
+        }
+        @media (min-width: 768px) {
+          .footer-mobile { display: none; }
+          .footer-desktop {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            max-width: var(--page-max);
+            margin: 0 auto;
+          }
+          .footer-desktop a, .footer-desktop span {
+            font-size: 12px !important;
+            white-space: nowrap;
+          }
+        }
+        @media (min-width: 1024px) {
+          /* ⚠️ Still hugs the device here. This block used to re-declare
+             flex/width from --hero-w AFTER the 768 override, which quietly put
+             the 420px column back and left 152px of dead space between the
+             device and the copy — the override at 768 looked like it worked and
+             did nothing above 1023. --hero-w stays defined for the stacked
+             layout below 768 and is deliberately not used at this width. */
+          .landing-image-wrap {
+            --hero-w: 420px;
+            flex: 0 0 auto;
+            width: auto;
+          }
+          .hero-device { --pw: 268px; }
+        }
+      
+/* ============ gallery chrome ============ */
+
+/* ---- gallery chrome only; nothing below this affects the captured page ---- */
+.mockdoc { background:#ffffff; color:#14161c; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding:32px 24px 8px; max-width:900px; margin:0 auto; line-height:1.55; }
+.mockdoc-h1 { font-size:30px; font-weight:700; letter-spacing:-0.6px; margin:0 0 4px; color:#0f0f10; }
+.mockdoc-date { margin:0 0 20px; font-size:14px; color:#6b6b73; }
+.mockdoc-h2 { font-size:18px; font-weight:700; margin:28px 0 10px; color:#0f0f10; }
+.mockdoc-p { font-size:14.5px; margin:12px 0; }
+.mockdoc-ul { font-size:14.5px; padding-left:20px; margin:10px 0; }
+.mockdoc-ul li { margin:7px 0; }
+.mockdoc-warn { background:#fff4f4; border:1px solid #f0c8c8; border-left:4px solid #c84848;
+  padding:13px 15px; border-radius:7px; font-size:14.5px; margin:16px 0; }
+.mockdoc-note { background:#f2f6fc; border:1px solid #cfdcf0; border-left:4px solid #378add;
+  padding:13px 15px; border-radius:7px; font-size:14.5px; margin:16px 0; }
+.mockdoc-table { border-collapse:collapse; width:100%; font-size:13.5px; margin:10px 0; }
+.mockdoc-table th, .mockdoc-table td { border:1px solid #e3e3e6; padding:7px 10px; text-align:left; vertical-align:top; }
+.mockdoc-table th { background:#f5f5f7; font-weight:700; }
+.mockdoc .sw { display:inline-block; width:13px; height:13px; border-radius:3px;
+  border:1px solid rgba(0,0,0,.22); vertical-align:-2px; margin-right:7px; }
+.mockdoc code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:#f2f2f4; padding:1px 5px; border-radius:4px; }
+.mockdoc-rule { margin-top:26px; padding-top:14px; border-top:2px solid #14161c;
+  font-weight:700; font-size:13px; letter-spacing:.4px; text-transform:uppercase; color:#14161c; }
+@media (max-width:700px){ .mockdoc { padding:22px 16px 6px; } .mockdoc-h1 { font-size:23px; } }
+
+</style>
+</head>
+<body>
+
+<div class="mockdoc">
+  <h1 class="mockdoc-h1">Reps — Landing page, as shipped</h1>
+  <p class="mockdoc-date">Captured 5 Aug 2026 · commit <code>335cde9</code></p>
+
+  <div class="mockdoc-warn">
+    <strong>&#9888; SCOPE: this file is the LANDING PAGE ONLY.</strong>
+    It does <em>not</em> replace <code>mocks-2026-07-27-1830.html</code>, which is the
+    app-screen gallery (70 phone frames: signup, roster, student detail, log screen,
+    celebrate, menus). That file is still the reference for app screens and is still
+    <strong>two releases behind</strong> — the Jul 30 navigation pass and all of Aug 1
+    are missing from it. Nothing here fixes that.
+  </div>
+
+  <div class="mockdoc-note">
+    <strong>This is a real capture, not a hand-drawn replica.</strong>
+    The markup below is the server-rendered HTML of <code>/</code>, and the styles are
+    the page's own stylesheet plus <code>globals.css</code>, both inlined verbatim.
+    Scripts are stripped, so it opens standalone with no server and no network.
+    The landing page uses <strong>zero images</strong> — every device mock is inline
+    SVG and CSS — so unlike the older <code>mocks-*.html</code> files this one has no
+    asset dependencies at all.
+    <br><br>
+    &#9888; It is therefore <strong>fully responsive and live</strong>: resize the window
+    and you get the real breakpoints, not a fixed frame. Standard checks used all day
+    were 375 / 414 / 768 / 1024 / 1280 / 1440.
+  </div>
+
+  <h2 class="mockdoc-h2">The five bands, top to bottom</h2>
+  <table class="mockdoc-table">
+    <tr><th>Band</th><th>Colour</th><th>HSL</th><th>Notes</th></tr>
+    <tr><td>Header + hero</td><td><span class="sw" style="background:#ede9e3"></span><code>#ede9e3</code></td><td>36&deg;, 22%, 91%</td><td>Warm cream. <strong>LOCKED</strong> — no further visual changes.</td></tr>
+    <tr><td>Section 2 &mdash; instructor</td><td><span class="sw" style="background:#262a39"></span><code>#262a39</code></td><td>227&deg;, 20%, 18.6%</td><td>&ldquo;Your whole program, finally in one place.&rdquo;</td></tr>
+    <tr><td>Section 3 &mdash; student</td><td><span class="sw" style="background:#caccd5"></span><code>#caccd5</code></td><td>229&deg;, 12%, 81.4%</td><td>&ldquo;Nothing for your students to download.&rdquo; Flipped layout.</td></tr>
+    <tr><td>Pricing</td><td><span class="sw" style="background:#f8f7f5"></span><code>#f8f7f5</code></td><td>near-neutral</td><td>Shared with <code>/privacy</code> and <code>/terms</code>. Carries <code>flex: 1 0 auto</code>.</td></tr>
+    <tr><td>Footer</td><td><span class="sw" style="background:#1a1d24"></span><code>#1a1d24</code></td><td>&mdash;</td><td>&mdash;</td></tr>
+  </table>
+  <p class="mockdoc-p">
+    &#9888; The page <strong>alternates</strong>, it does not descend. Sections 2 and 3 are one
+    blue family two degrees apart at opposite lightnesses; section 3 is light specifically so
+    section&nbsp;2, section&nbsp;3 and the footer are not three darks in a row. The rule recorded
+    at <code>.program-section</code> is <em>&ldquo;do not leave two same-tone bands touching&rdquo;</em>.
+  </p>
+
+  <h2 class="mockdoc-h2">What changed on 5 Aug 2026</h2>
+  <ul class="mockdoc-ul">
+    <li><strong>Removed entirely:</strong> the old &ldquo;Here&rsquo;s how it works&rdquo; section &mdash; four phone frames, then briefly numbered steps, then deleted. Section&nbsp;2 and the new student section cover it between them at full size.</li>
+    <li><strong>Added:</strong> section&nbsp;3 (student-facing, two screens: log screen + student home) and the pricing section (two cards, shared feature checklist).</li>
+    <li><strong>Colour system:</strong> sections 2 and 3 locked into one desaturated blue family.</li>
+    <li><strong>Eyebrow:</strong> &ldquo;For instructors&rdquo; &rarr; &ldquo;For coaches &amp; trainers&rdquo;, now matching the page metadata.</li>
+    <li><strong>CTAs:</strong> all four bumped 17px &rarr; 19px/700 to cross the WCAG large-text threshold, so white-on-brand-blue at 3.59:1 passes against a 3.0 requirement instead of failing 4.5. &#9888; Load-bearing &mdash; below 18.66px or under weight 700 they fail again.</li>
+  </ul>
+
+  <h2 class="mockdoc-h2">Known, deliberate, and recorded in CLAUDE.md</h2>
+  <ul class="mockdoc-ul">
+    <li>&#9888; <strong>Nothing on this page has ever been visually confirmed.</strong> The browser pane never painted during the session that built it, so every value was verified by measurement (<code>getBoundingClientRect</code> / <code>getComputedStyle</code>) rather than by eye. This capture is the first chance to actually look at it.</li>
+    <li>The rigid band-to-band seams are a known problem and the next planned pass (gradients / bleed). The pricing checklist dropping straight into the footer is the same issue at the final seam.</li>
+  </ul>
+  <p class="mockdoc-p mockdoc-rule">&darr; Everything below this line is the captured page, unmodified.</p>
+</div>
+
+<div class="paper-grain" style="background-color:#ede9e3;min-height:100vh;display:flex;flex-direction:column"><header class="page-header"><div style="max-width:var(--page-max);margin:0 auto;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="#378add"></rect><line x1="9" y1="8" x2="9" y2="24" stroke="white" stroke-width="2.4" stroke-linecap="round"></line><line x1="14" y1="8" x2="14" y2="24" stroke="white" stroke-width="2.4" stroke-linecap="round"></line><line x1="19" y1="8" x2="19" y2="24" stroke="white" stroke-width="2.4" stroke-linecap="round"></line><line x1="24" y1="8" x2="24" y2="24" stroke="white" stroke-width="2.4" stroke-linecap="round"></line><line x1="6" y1="23" x2="27" y2="9" stroke="white" stroke-width="2.4" stroke-linecap="round"></line></svg><span style="font-size:20px;font-weight:800;letter-spacing:-0.5px;color:#0f0f10">Reps</span></div><a class="signin-btn" href="/instructor/signup/email">Sign in</a></div></header><main class="page-main" style="display:flex;align-items:center"><div style="max-width:var(--page-max);margin:0 auto;width:100%" class="landing-inner"><div class="landing-layout"><div class="landing-image-wrap"><div class="hero-device-wrap"><div class="hero-glow" aria-hidden="true"></div><div class="hero-device" aria-hidden="true"><div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1em"><span style="font-size:0.8em;color:var(--reps-sub)">←</span><span style="font-size:0.62em;font-weight:500;color:var(--reps-sub)">Players</span></div><div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1.05em"><span style="width:1.9em;height:1.9em;border-radius:999px;background:var(--reps-raised);color:var(--reps-label);font-size:0.7em;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">M</span><span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:1.05em;font-weight:600;letter-spacing:-0.3px;color:#e8eaf0">Maya</span><span style="font-size:0.56em;color:var(--reps-sub)">Last logged 2h ago</span></span></div><div style="font-size:0.58em;font-weight:600;letter-spacing:1px;color:var(--reps-sub);margin-bottom:0.7em">ASSIGNMENTS</div><div style="display:flex;flex-direction:column;gap:0.45em"><div style="background:#161a20;border:1px solid var(--reps-line);border-radius:0.62em;padding:0.55em 0.62em"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.25em;gap:0.4em"><span style="font-size:0.74em;font-weight:500;color:#e8eaf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Catch &amp; shoot</span><span style="font-size:0.64em;color:var(--reps-green);white-space:nowrap;flex-shrink:0">✓ Done</span></div><div style="font-size:0.58em;color:var(--reps-green);margin-bottom:0.4em">made 34/50 · 68%</div><div style="height:0.28em;border-radius:999px;background:var(--reps-line);overflow:hidden"><div style="width:100%;height:100%;background:var(--reps-green-muted);border-radius:999px"><div style="width:68%;height:100%;background:var(--reps-green);border-radius:999px"></div></div></div></div><div style="background:#161a20;border:1px solid var(--reps-line);border-radius:0.62em;padding:0.55em 0.62em"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.45em;gap:0.4em"><span style="font-size:0.74em;font-weight:500;color:#e8eaf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Layups · Right</span><span style="font-size:0.64em;color:var(--reps-label);white-space:nowrap;flex-shrink:0">12/20</span></div><div style="height:0.28em;border-radius:999px;background:var(--reps-line);overflow:hidden"><div style="width:60%;height:100%;background:var(--reps-green-muted);border-radius:999px"></div></div><div style="border-top:1px solid var(--reps-line);margin-top:0.45em;padding-top:0.4em;font-size:0.56em;font-style:italic;line-height:1.35;color:var(--reps-sub)">“<!-- -->Felt way better today.<!-- -->”</div></div><div style="background:#161a20;border:1px solid var(--reps-line);border-radius:0.62em;padding:0.55em 0.62em"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.45em;gap:0.4em"><span style="font-size:0.74em;font-weight:500;color:#e8eaf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Elbow jumpers</span><span style="font-size:0.64em;color:var(--reps-label);white-space:nowrap;flex-shrink:0">0/25</span></div><div style="height:0.28em;border-radius:999px;background:var(--reps-line);overflow:hidden"><div style="width:0%;height:100%;background:var(--reps-green-muted);border-radius:999px"></div></div></div></div><div style="margin-top:auto"><div style="border:1px solid var(--reps-orange);color:var(--reps-orange);text-align:center;border-radius:0.5em;padding:0.5em 0;font-size:0.68em;font-weight:600">+ Assign more</div></div></div></div></div><div class="landing-text"><p class="eyebrow" style="font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2d7bc4">For coaches &amp; trainers</p><h1 class="headline" style="font-weight:600;letter-spacing:-0.5px;color:#0f0f10">The work doesn&#x27;t stop when the session does.</h1><ul class="bullets" style="list-style:none;padding:0;margin:0"><li class="bullet-row"><span class="bullet-icon-wrap" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send bullet-icon" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg></span><span class="bullet-text">Assign homework to a student</span></li><li class="bullet-row"><span class="bullet-icon-wrap" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check-big bullet-icon" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg></span><span class="bullet-text">They get a text, tap to log it</span></li><li class="bullet-row"><span class="bullet-icon-wrap" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layers bullet-icon" aria-hidden="true"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"></path><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"></path><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"></path></svg></span><span class="bullet-text">You know exactly what got done</span></li></ul><div class="cta-section" style="display:flex;flex-direction:column;align-items:center;gap:16px"><a class="cta-real cta-primary hover:opacity-90 active:scale-[0.98] transition-all" href="/instructor/signup">Start free</a></div></div></div></div></main><section class="program-section"><div class="program-inner"><div class="program-copy"><h2 class="program-heading">Your whole program, finally in one place.</h2><p class="program-sub">Every assignment, every check-in — not scattered across texts and memory.</p><a class="cta-real program-cta" href="/instructor/signup">Start your program</a></div><div class="program-screens"><div class="program-screen-item"><div class="program-phone" aria-hidden="true"><div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1.1em"><span style="font-size:0.8em;color:var(--reps-sub)">←</span><span style="font-size:0.64em;font-weight:500;color:#e8eaf0">Corner 3s</span></div><div style="font-size:0.6em;font-weight:500;color:var(--reps-label);margin-bottom:0.4em">Goal</div><div style="display:flex;gap:0.35em;margin-bottom:0.95em"><span style="flex:1;text-align:center;background:rgba(55,138,221,0.14);border:1px solid var(--reps-orange);border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:600;color:var(--reps-orange);white-space:nowrap">Attempts</span><span style="flex:1;text-align:center;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:var(--reps-label);white-space:nowrap">Makes</span><span style="flex:1;text-align:center;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:var(--reps-label);white-space:nowrap">In a row</span></div><div style="font-size:0.6em;font-weight:500;color:var(--reps-label);margin-bottom:0.4em">How many?</div><div style="display:flex;gap:0.35em;margin-bottom:0.95em"><span style="flex:1;text-align:center;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:var(--reps-label);white-space:nowrap">25</span><span style="flex:1;text-align:center;background:rgba(55,138,221,0.14);border:1px solid var(--reps-orange);border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:600;color:var(--reps-orange);white-space:nowrap">50</span><span style="flex:1;text-align:center;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:var(--reps-label);white-space:nowrap">100</span><span style="flex:1;text-align:center;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:var(--reps-label);white-space:nowrap">200</span></div><div style="display:flex;align-items:center;justify-content:space-between;gap:0.5em;margin-bottom:0.95em"><span style="font-size:0.6em;font-weight:500;color:#e8eaf0">Track makes?</span><span style="width:1.7em;height:1em;border-radius:999px;background:var(--reps-orange);display:inline-flex;align-items:center;justify-content:flex-end;padding:0.11em;flex-shrink:0"><span style="width:0.78em;height:0.78em;border-radius:999px;background:#fff"></span></span></div><div style="font-size:0.6em;font-weight:500;color:var(--reps-label);margin-bottom:0.4em">Side</div><div style="display:flex;gap:0.35em"><span style="flex:1;text-align:center;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:var(--reps-label);white-space:nowrap">Left</span><span style="flex:1;text-align:center;background:var(--reps-card);border:1px solid var(--reps-line);border-radius:0.5em;padding:0.4em 0;font-size:0.6em;font-weight:500;color:var(--reps-label);white-space:nowrap">Right</span></div><div style="margin-top:auto"><div style="background:var(--reps-orange);color:#fff;text-align:center;border-radius:0.5em;padding:0.55em 0;font-size:0.72em;font-weight:600">Send to <!-- -->Jalen</div></div></div><p class="program-caption">Assigning work</p></div><div class="program-screen-item"><div class="program-phone" aria-hidden="true"><div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:0.6em;border-bottom:1px solid var(--reps-line);margin-bottom:0.8em"><span style="font-size:0.6em;font-weight:600;color:var(--reps-orange)">Reps</span><span style="width:1.15em;height:1.15em;border-radius:999px;background:var(--reps-raised);border:1px solid var(--reps-line)"></span></div><div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:0.8em"><span style="font-size:0.92em;font-weight:600;letter-spacing:-0.3px;color:#e8eaf0">Your players</span><span style="font-size:0.55em;font-weight:500;color:#e8eaf0;border:1px solid var(--reps-line);border-radius:0.4em;padding:0.25em 0.5em">+ Add</span></div><div style="display:flex;flex-direction:column;gap:0.85em"><div><div style="display:flex;align-items:center;gap:0.35em;margin-bottom:0.4em"><span style="width:0.32em;height:0.32em;border-radius:999px;background:var(--reps-green);flex-shrink:0"></span><span style="font-size:0.55em;font-weight:600;color:var(--reps-green)">Done</span></div><div style="display:flex;flex-direction:column;gap:0.3em"><div style="display:flex;align-items:center;gap:0.5em;background:#111620;border-radius:0.5em;padding:0.38em 0.5em"><span style="width:1.55em;height:1.55em;border-radius:999px;background:var(--reps-raised);border:1px solid var(--reps-line);color:var(--reps-sub);font-size:0.6em;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">T</span><span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:0.66em;font-weight:500;color:#e8eaf0">Tariq</span><span style="font-size:0.53em;color:#7d8494">2 of 2 done</span></span><span style="font-size:0.53em;color:#7d8494;flex-shrink:0">1d ago</span><span style="font-size:0.7em;color:#6b7080;flex-shrink:0">›</span></div></div></div><div><div style="display:flex;align-items:center;gap:0.35em;margin-bottom:0.4em"><span style="width:0.32em;height:0.32em;border-radius:999px;background:var(--reps-sub);flex-shrink:0"></span><span style="font-size:0.55em;font-weight:600;color:var(--reps-sub)">In progress</span></div><div style="display:flex;flex-direction:column;gap:0.3em"><div style="display:flex;align-items:center;gap:0.5em;background:#111620;border-radius:0.5em;padding:0.38em 0.5em"><span style="width:1.55em;height:1.55em;border-radius:999px;background:var(--reps-raised);border:1px solid var(--reps-line);color:var(--reps-sub);font-size:0.6em;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">J</span><span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:0.66em;font-weight:500;color:#e8eaf0">Jalen</span><span style="font-size:0.53em;color:#7d8494">1 of 3 done</span></span><span style="font-size:0.53em;color:var(--reps-orange);flex-shrink:0">20m ago</span><span style="font-size:0.7em;color:#6b7080;flex-shrink:0">›</span></div><div style="display:flex;align-items:center;gap:0.5em;background:#111620;border-radius:0.5em;padding:0.38em 0.5em"><span style="width:1.55em;height:1.55em;border-radius:999px;background:var(--reps-raised);border:1px solid var(--reps-line);color:var(--reps-sub);font-size:0.6em;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">M</span><span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:0.66em;font-weight:500;color:#e8eaf0">Maya</span><span style="font-size:0.53em;color:#7d8494">1 of 3 done</span></span><span style="font-size:0.53em;color:var(--reps-orange);flex-shrink:0">2h ago</span><span style="font-size:0.7em;color:#6b7080;flex-shrink:0">›</span></div></div></div><div><div style="display:flex;align-items:center;gap:0.35em;margin-bottom:0.4em"><span style="width:0.32em;height:0.32em;border-radius:999px;background:#6b7080;flex-shrink:0"></span><span style="font-size:0.55em;font-weight:600;color:#6b7080">Not started</span></div><div style="display:flex;flex-direction:column;gap:0.3em"><div style="display:flex;align-items:center;gap:0.5em;background:#111620;border-radius:0.5em;padding:0.38em 0.5em"><span style="width:1.55em;height:1.55em;border-radius:999px;background:var(--reps-raised);border:1px solid var(--reps-line);color:var(--reps-sub);font-size:0.6em;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">S</span><span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:0.66em;font-weight:500;color:#e8eaf0">Sofia</span><span style="font-size:0.53em;color:#7d8494">2 waiting</span></span><span style="font-size:0.7em;color:#6b7080;flex-shrink:0">›</span></div></div></div><div><div style="display:flex;align-items:center;gap:0.35em;margin-bottom:0.4em"><span style="width:0.32em;height:0.32em;border-radius:999px;background:#6b7080;flex-shrink:0"></span><span style="font-size:0.55em;font-weight:600;color:#6b7080">Nothing assigned</span></div><div style="display:flex;flex-direction:column;gap:0.3em"><div style="display:flex;align-items:center;gap:0.5em;background:#111620;border-radius:0.5em;padding:0.38em 0.5em"><span style="width:1.55em;height:1.55em;border-radius:999px;background:var(--reps-raised);border:1px solid var(--reps-line);color:var(--reps-sub);font-size:0.6em;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">N</span><span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:0.66em;font-weight:500;color:#e8eaf0">Nico</span><span style="font-size:0.53em;color:#7d8494">no assignments</span></span><span style="font-size:0.7em;color:#6b7080;flex-shrink:0">›</span></div></div></div></div></div><p class="program-caption">Your roster</p></div></div></div></section><section class="student-section"><div class="student-inner"><div class="student-copy"><h2 class="student-heading">Nothing for your students to download.</h2><p class="student-sub">A text, a link, a stepper — that&#x27;s the whole thing. Younger students can log on a parent&#x27;s phone with the same link.</p><a class="cta-real student-cta" href="/instructor/signup">Send your first assignment</a></div><div class="student-screens"><div class="student-screen-item"><div class="student-phone" aria-hidden="true"><div style="display:flex;align-items:center;gap:0.5em;margin-bottom:1em"><span style="font-size:0.8em;color:var(--reps-sub)">←</span><span style="font-size:0.64em;font-weight:500;color:#e8eaf0">Free throws</span></div><div style="font-size:0.58em;color:var(--reps-label);margin-bottom:0.45em">18<!-- --> of <!-- -->25<!-- --> done</div><div style="margin-bottom:1.5em"><div style="height:0.28em;border-radius:999px;background:var(--reps-line);overflow:hidden"><div style="width:72%;height:100%;background:var(--reps-green-muted);border-radius:999px"><div style="width:66.66666666666666%;height:100%;background:var(--reps-green);border-radius:999px"></div></div></div></div><div style="text-align:center;margin-bottom:1em"><div><div style="font-size:0.56em;font-weight:600;letter-spacing:1px;color:var(--reps-green-muted);margin-bottom:0.3em">ATTEMPTS</div><div style="display:flex;align-items:center;justify-content:center;gap:0.6em"><span style="width:1.5em;height:1.5em;border-radius:999px;background:var(--reps-line);color:#e8eaf0;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0">−</span><span style="font-size:2.1em;font-weight:600;line-height:1;color:var(--reps-green-muted);min-width:1.6em;text-align:center">18</span><span style="width:1.5em;height:1.5em;border-radius:999px;background:var(--reps-line);color:#e8eaf0;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</span></div></div></div><div style="height:1px;background:var(--reps-line);margin-bottom:0.8em"></div><div style="text-align:center"><div><div style="font-size:0.56em;font-weight:600;letter-spacing:1px;color:var(--reps-green);margin-bottom:0.3em">MAKES</div><div style="display:flex;align-items:center;justify-content:center;gap:0.6em"><span style="width:1.5em;height:1.5em;border-radius:999px;background:var(--reps-line);color:#e8eaf0;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0">−</span><span style="font-size:1.1em;font-weight:600;line-height:1;color:var(--reps-green);min-width:1.6em;text-align:center">12</span><span style="width:1.5em;height:1.5em;border-radius:999px;background:var(--reps-line);color:#e8eaf0;font-size:0.7em;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</span></div></div></div><div style="margin-top:auto"><div style="background:var(--reps-orange);color:#fff;text-align:center;border-radius:0.5em;padding:0.55em 0;font-size:0.72em;font-weight:600">Log progress</div></div></div><p class="student-caption">Logging a set</p></div><div class="student-screen-item"><div class="student-phone" aria-hidden="true"><div style="margin-bottom:0.9em"><div style="font-size:0.92em;font-weight:600;letter-spacing:-0.3px;color:#e8eaf0">Hey <!-- -->Jalen</div><div style="font-size:0.58em;color:var(--reps-sub);margin-top:0.15em">From <!-- -->Coach Mike</div></div><div style="display:flex;gap:0.9em;border-bottom:1px solid var(--reps-line);margin-bottom:0.75em"><span style="font-size:0.6em;font-weight:600;color:#e8eaf0;padding-bottom:0.45em;border-bottom:1.5px solid #e8eaf0;margin-bottom:-1px">New</span><span style="font-size:0.6em;font-weight:500;color:var(--reps-sub);padding-bottom:0.45em">Archive</span></div><div style="display:flex;flex-direction:column;gap:0.45em"><div style="background:#161a20;border:1px solid var(--reps-line);border-radius:0.62em;padding:0.55em 0.62em"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.25em;gap:0.4em"><span style="font-size:0.74em;font-weight:500;color:#e8eaf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Corner 3s</span><span style="font-size:0.64em;color:var(--reps-green);white-space:nowrap;flex-shrink:0">✓ Done</span></div><div style="font-size:0.58em;color:var(--reps-green);margin-bottom:0.4em">made 28/50 · 56%</div><div style="height:0.28em;border-radius:999px;background:var(--reps-line);overflow:hidden"><div style="width:100%;height:100%;background:var(--reps-green-muted);border-radius:999px"><div style="width:56.00000000000001%;height:100%;background:var(--reps-green);border-radius:999px"></div></div></div></div><div style="background:#161a20;border:1px solid var(--reps-line);border-radius:0.62em;padding:0.55em 0.62em"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.25em;gap:0.4em"><span style="font-size:0.74em;font-weight:500;color:#e8eaf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Free throws</span><span style="font-size:0.64em;color:var(--reps-label);white-space:nowrap;flex-shrink:0">18/25</span></div><div style="font-size:0.58em;color:var(--reps-green);margin-bottom:0.4em">made 12/18 · 67%</div><div style="height:0.28em;border-radius:999px;background:var(--reps-line);overflow:hidden"><div style="width:72%;height:100%;background:var(--reps-green-muted);border-radius:999px"><div style="width:66.66666666666666%;height:100%;background:var(--reps-green);border-radius:999px"></div></div></div><div style="border-top:1px solid var(--reps-line);margin-top:0.45em;padding-top:0.4em;font-size:0.56em;font-style:italic;line-height:1.35;color:var(--reps-sub)">“<!-- -->Left elbow felt off today.<!-- -->”</div></div><div style="background:#161a20;border:1px solid var(--reps-line);border-radius:0.62em;padding:0.55em 0.62em"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.45em;gap:0.4em"><span style="font-size:0.74em;font-weight:500;color:#e8eaf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Dribble series</span><span style="font-size:0.64em;color:var(--reps-label);white-space:nowrap;flex-shrink:0">0/10 min</span></div><div style="height:0.28em;border-radius:999px;background:var(--reps-line);overflow:hidden"><div style="width:0%;height:100%;background:var(--reps-green-muted);border-radius:999px"></div></div></div></div></div><p class="student-caption">Their own progress</p></div></div></div></section><section class="pricing-section"><div class="pricing-inner"><h2 class="pricing-heading">Straightforward pricing.</h2><p class="pricing-sub">Free forever with your first three students.</p><div class="pricing-cards"><div class="pricing-card pricing-card-free"><p class="pricing-plan">Free</p><p class="pricing-price">$0</p><p class="pricing-limit">up to 3 students</p><a class="signin-btn pricing-cta" href="/instructor/signup">Start free</a></div><div class="pricing-card pricing-card-pro"><p class="pricing-plan">Pro</p><p class="pricing-price">$10<span class="pricing-per">/mo</span></p><p class="pricing-limit">unlimited students</p><a class="cta-real pricing-cta" href="/instructor/signup">Start free</a></div></div><p class="pricing-included">Everything included, always</p><ul class="pricing-features"><li class="pricing-feature"><span class="pricing-badge" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Custom drills</span></li><li class="pricing-feature"><span class="pricing-badge" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Attempts, makes, or streaks</span></li><li class="pricing-feature"><span class="pricing-badge" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><span>No login for students</span></li><li class="pricing-feature"><span class="pricing-badge" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Student notes</span></li><li class="pricing-feature"><span class="pricing-badge" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Full roster view</span></li><li class="pricing-feature"><span class="pricing-badge" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Log history</span></li><li class="pricing-feature"><span class="pricing-badge" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Parent phone option</span></li><li class="pricing-feature"><span class="pricing-badge" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#378add" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><span>Cancel anytime</span></li></ul></div></section><footer style="background-color:#1a1d24;border-top:1px solid #2a2d36;padding:20px var(--page-pad) 28px"><div class="footer-desktop"><span style="color:#8a8fa8">© 2026 Reps</span><a style="color:#378add;text-decoration:underline" href="/privacy">Privacy Policy</a><a style="color:#378add;text-decoration:underline" href="/terms">Terms of Service</a><span style="color:#8a8fa8">Questions? <a href="mailto:hello@assignreps.com" style="color:#378add;text-decoration:underline">hello@assignreps.com</a></span></div><div class="footer-mobile"><div class="footer-line"><a style="color:#378add;text-decoration:underline" href="/privacy">Privacy Policy</a><span style="color:#52576a">·</span><a style="color:#378add;text-decoration:underline" href="/terms">Terms of Service</a></div><div class="footer-line"><span style="color:#8a8fa8">© 2026 Reps</span><span style="color:#52576a">·</span><span style="color:#8a8fa8">Questions? <a href="mailto:hello@assignreps.com" style="color:#378add;text-decoration:underline">hello@assignreps.com</a></span></div></div></footer></div>
+</body>
+</html>
