@@ -9,7 +9,10 @@ export const metadata: Metadata = {
   // Mirrors the title in src/app/page.tsx. This one is only ever the fallback
   // for routes that set no title of their own, so if the two drift the app can
   // present two different names for itself depending on where you land.
-  title: "Reps — Practice Homework App for Coaches & Instructors",
+  // ⚠️ "Trainers" as of Aug 5 2026, tracking the landing page and its hero
+  // eyebrow. Updating page.tsx alone would have moved the divergence here
+  // rather than fixing it.
+  title: "Reps — Practice Homework App for Coaches & Trainers",
   description: "Reps keeps the work going between training sessions.",
 };
 

@@ -5,13 +5,18 @@ import { Send, CheckCircle, Layers, Check } from "lucide-react";
 export const metadata: Metadata = {
   // Resolves the relative og:image below to an absolute (canonical) URL.
   metadataBase: new URL("https://assignreps.com"),
-  title: "Reps — Practice Homework App for Coaches & Instructors",
+  // ⚠️ "Trainers", not "Instructors" (Aug 5 2026). This pairing has to stay in
+  // step with the hero eyebrow, which reads "For coaches & trainers" — the two
+  // were briefly divergent and it is not a difference worth carrying.
+  // ⚠️ The same title is duplicated in src/app/layout.tsx as the fallback for
+  // routes that set none. Change both or neither.
+  title: "Reps — Practice Homework App for Coaches & Trainers",
   description:
-    "Assign practice homework to your students, they log it on their phone. Built for coaches and instructors.",
+    "Assign practice homework to your students, they log it on their phone. Built for coaches and trainers.",
   openGraph: {
-    title: "Reps — Practice Homework App for Coaches & Instructors",
+    title: "Reps — Practice Homework App for Coaches & Trainers",
     description:
-      "Assign practice homework to your students, they log it on their phone. Built for coaches and instructors.",
+      "Assign practice homework to your students, they log it on their phone. Built for coaches and trainers.",
     images: [
       {
         url: "/og-basketball.jpg",
@@ -844,12 +849,12 @@ export default function LandingPage() {
                     tennis coaching, and the two words are not reliably the same
                     person — naming only one silently excludes the other.
 
-                    ⚠️ This does NOT match the page metadata, which still pairs
-                    "Coaches & Instructors" in the title, description and og
-                    tags. Left divergent on purpose: those strings are
-                    search-facing and carry a term people actually query, where
-                    this one is read by a human who has already arrived. Worth
-                    revisiting as its own decision, not as a side effect.
+                    ⚠️ The page metadata now MATCHES this — title, description
+                    and og tags all pair "Coaches & Trainers", as does the
+                    fallback title in layout.tsx. They diverged for part of
+                    Aug 5 and were reconciled the same day. Change this line and
+                    all five of those strings move with it, or the page starts
+                    calling itself two things again.
 
                     ⚠️ Deliberately NOT propagated into the app. Its vocabulary
                     is still instructor — `instructor_type` on coaches, the
