@@ -100,9 +100,16 @@ It affects **every** `.cta-real` on the page — hero, section 2, section 3 and 
 
 ⚠️ Note that both pricing buttons now read "Start free", so option 1 grows them together.
 
-### Next session — the organic flow pass
+### Next sessions — two distinct pieces of work, do not merge them
 
-**This is the planned next piece of work**, and it is written up in full under *Parked, deliberately* below: the page is five bands with a hard colour cut at every seam, and the direction is to explore gradients and bleed — content crossing a boundary rather than each band starting and stopping cleanly. That entry also records what must **survive** the pass (the deliberate peer-sizing of sections 2 and 3), what has already been **tried and reverted** (tilting the device mocks), and the two load-bearing things bleed will fight (the shared left edge, and the flex grower above).
+⚠️ **There are now two "next" threads and they are not the same job.** Keeping them apart is the point:
+
+1. **The pre-launch checklist** — see *🚪 Pre-launch checklist: strangers, not RJ* immediately below. This is the **gate** before the landing page and billing go live to anyone who is not RJ. Nothing ships to strangers until it is done.
+2. **The organic flow pass** — landing-page craft, described next. It is **not** a launch blocker; the page is shippable without it.
+
+If they compete for a session, the checklist wins — it contains promises to real people, where the flow pass is polish.
+
+**The flow pass** is written up in full under *Parked, deliberately* below: the page is five bands with a hard colour cut at every seam, and the direction is to explore gradients and bleed — content crossing a boundary rather than each band starting and stopping cleanly. That entry also records what must **survive** the pass (the deliberate peer-sizing of sections 2 and 3), what has already been **tried and reverted** (tilting the device mocks), and the two load-bearing things bleed will fight (the shared left edge, and the flex grower above).
 
 ### Housekeeping from today
 
@@ -186,6 +193,48 @@ The symptom is not an error. Checkout completes, Stripe takes the payment, the c
 ⚠️ Skipping step 2 or 3 fails differently but just as quietly — events arrive and are rejected `400 Invalid signature` at the webhook. That at least appears in the `stripe listen` output, where a dead listener shows nothing at all.
 
 **Check it is alive before assuming the code is wrong.** A live listener prints each forwarded event; silence during a checkout means the listener, not the app.
+
+---
+
+## 🚪 Pre-launch checklist: strangers, not RJ
+
+**This is the gate before the landing page and the billing flow go live together.** It is not part of the parked list and should not be picked at in the tail of another session — it wants **its own dedicated session, one item at a time**, the same discipline the Aug 5 landing work used.
+
+### Why the bar moved
+
+Everything shipped so far was validated by **RJ, who trusted Tony personally before he ever saw a screen.** Gaps that did not matter with him — no FAQ, no visible way to cancel, no statement of what the product even is — were covered by that relationship.
+
+The plan now is to invite **a small number of real basketball trainers, unconnected to RJ**, as genuine validation beyond a single user. **Strangers trust nothing by default.** They arrive with no context, no relationship, and every reason to close the tab. The experience has to be clear, thorough and error-free — **answering the questions a stranger would have before they would ever bother to ask them.** A stranger does not email to ask how to cancel; they simply never sign up.
+
+⚠️ **Nothing below is started.** Two items are already-known blockers carried from earlier work; the rest came out of the Aug 5 close discussion. Verified findings are marked as such — where this file says something was *checked*, it was checked against the code, not assumed.
+
+### The seven items
+
+**1. Live-mode Stripe.** Scoped in detail already (see **Stripe status** and **Billing architecture**), not done. Create the live product, price and an **uncapped** `COACHRJ`; add all three Stripe env vars to Vercel for staging *and* prod; re-provision RJ in live mode **before** the gate can reach him. ⚠️ Test and live share nothing — every id changes.
+
+**2. The RJ heads-up conversation.** Still owed, and still the actual blocking item for him specifically. He is at ~10 students with no live-mode subscription; the day the gate reaches an environment he uses with live billing, he is stopped at his 11th. Told first, or provisioned first — ideally both, in that order.
+
+**3. `/privacy` and `/terms` — confirm they are real, now that strangers will read them.** ✅ **Checked Aug 5: both are real prose, not placeholder** — no lorem, no TODO, no "coming soon". Privacy covers what is collected, how it is used, SMS consent, sharing, students and minors, and deletion; Terms covers what Reps is, responsibilities, payments, availability and termination. ⚠️ **Both are dated "Last updated: July 17, 2026"** and predate everything about billing, so the *accuracy* pass is the real work here, not existence. See also the standing *Final legal review of /privacy + /terms* item under Medium priority.
+
+**4. Trust and security messaging + an FAQ.** ⚠️ **Checked Aug 5: neither exists.** There is no FAQ route, and no page anywhere states what data is collected and why, what the security basics are, or how the subscription actually works, outside the legal pages. For RJ this was invisible; for a stranger it is the difference between signing up and not. **Direction only — not started, not designed.**
+
+**5. Subscription management — a coach has NO way to cancel in the product.** ⚠️ **Checked Aug 5, and this is worse than "unverified": it is confirmed missing and it contradicts two live public claims.**
+- No Stripe **billing portal** session is ever created and nothing links to one — `billingPortal` / `createPortalSession` appear nowhere in `src/`. The early plan to use Stripe's customer portal was never wired up.
+- The ProfileMenu offers `Sign out`, an editable name, and a `Pro` badge. There is **no billing row at all** once a coach is Pro.
+- ⚠️ Meanwhile the pricing section's own checklist says **"Cancel anytime"**, and `/terms` says paid plans **"can be cancelled anytime"**. Both are true of the *Stripe subscription*; neither is achievable *through the product*. A coach who wants to cancel has to email a human.
+- **This is the item most likely to burn a stranger**, and it is a promise-versus-reality gap rather than a missing nicety. Either wire up the portal or change the claims — preferably the former.
+
+**6. "This is basketball" — decide whether to say so outright.** RJ never needed telling. A stranger lands on a page whose device mocks carry real exercise names and a real shooting percentage, with **nothing on the page saying the product is basketball-only today**.
+- ⚠️ **Decide this together with the open `Example: basketball` question** from the Aug 5 audit, not separately — they are the same decision. That caption used to disclaim exactly this and was removed along with the "how it works" section; the page has carried the specificity without the disclaimer ever since. See **Landing page (current)**.
+- Basketball is still the only ACTIVE entry in `activityTypes.ts`, so any broader promise breaks at the signup picker one screen later.
+
+**7. Error and edge-case handling.** As far as is known, failure paths have never been exercised end to end: signup failures, payment failures, webhook-arrives-late, card declined, 3DS challenge, network drop mid-checkout. ⚠️ Two specific known-unseen states are already recorded under **Open — next session** in Billing architecture: the ProfileMenu panel's width at its widest item, and **the wrapping error line inside that 160px panel — no upgrade error has ever been made to occur there.** `useUpgrade()` has a `catch` and an `upgradeError` string, so the plumbing exists; what has never been seen is what a coach actually reads when something breaks. **Needs a real pass, not a code read.**
+
+### How to run this session
+
+One item at a time, in the order above — 1 and 2 gate everything (there is no point polishing trust copy for a flow that cannot bill), 5 is the highest-risk item that is purely our own doing, and 7 wants a real browser and deliberate breakage rather than reasoning about the code.
+
+⚠️ **Do not batch this with feature work.** Every item here is a promise made to someone who has no reason to give the benefit of the doubt.
 
 ---
 
