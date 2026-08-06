@@ -149,9 +149,7 @@ It affects **every** `.cta-real` on the page — hero, section 2, section 3 and 
   - This is the **same rigid-seam problem** as the flow-pass entry above, and will probably take the same fix. It is recorded separately because that entry is written around *section-to-section* transitions and the mid-page 2 → 3 seam in particular; the point here is that **the bottom edge has it too**, and a pass that only treats mid-page seams would leave it.
   - **Not started.**
 
-- **Eyebrow and page metadata disagree on one word.** The hero eyebrow reads **"For coaches & trainers"** (changed Aug 5); the `<title>`, description and og tags still pair **"Coaches & Instructors"**.
-  - Left divergent deliberately at the time — those strings are search-facing and carry a term people actually query, where the eyebrow is read by someone who has already arrived. Recorded so it is a decision rather than a discovery.
-  - **A one-line follow-up whenever it is addressed. Low priority.**
+- ~~**Eyebrow and page metadata disagree on one word.**~~ — ✅ **RESOLVED Aug 5 2026** (`eb30463`). Everything now pairs **"Coaches & Trainers"**. ⚠️ It was **five** strings, not two: `page.tsx`'s title, description, `og:title` and `og:description`, plus the root fallback title in `layout.tsx`, which mirrors the page's and would have kept the divergence alive on its own. Change one and change all five. The app's internal `instructor` vocabulary is deliberately untouched.
 
 ### To resume local billing work
 
