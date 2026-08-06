@@ -208,7 +208,7 @@ The plan now is to invite **a small number of real basketball trainers, unconnec
 
 ⚠️ **Nothing below is started.** Two items are already-known blockers carried from earlier work; the rest came out of the Aug 5 close discussion. Verified findings are marked as such — where this file says something was *checked*, it was checked against the code, not assumed.
 
-### The seven items
+### The eight items
 
 **1. Live-mode Stripe.** Scoped in detail already (see **Stripe status** and **Billing architecture**), not done. Create the live product, price and an **uncapped** `COACHRJ`; add all three Stripe env vars to Vercel for staging *and* prod; re-provision RJ in live mode **before** the gate can reach him. ⚠️ Test and live share nothing — every id changes.
 
@@ -223,6 +223,7 @@ The plan now is to invite **a small number of real basketball trainers, unconnec
 - The ProfileMenu offers `Sign out`, an editable name, and a `Pro` badge. There is **no billing row at all** once a coach is Pro.
 - ⚠️ Meanwhile the pricing section's own checklist says **"Cancel anytime"**, and `/terms` says paid plans **"can be cancelled anytime"**. Both are true of the *Stripe subscription*; neither is achievable *through the product*. A coach who wants to cancel has to email a human.
 - **This is the item most likely to burn a stranger**, and it is a promise-versus-reality gap rather than a missing nicety. Either wire up the portal or change the claims — preferably the former.
+- ⚠️ **Design this together with item 8 (player deactivation), not before it.** Both turn on the same question — what counts as an active student, and what happens when a coach drops back under the limit — and answering it twice is how the copy and `isEntitled()` drift apart.
 
 **6. "This is basketball" — decide whether to say so outright.** RJ never needed telling. A stranger lands on a page whose device mocks carry real exercise names and a real shooting percentage, with **nothing on the page saying the product is basketball-only today**.
 - ⚠️ **Decide this together with the open `Example: basketball` question** from the Aug 5 audit, not separately — they are the same decision. That caption used to disclaim exactly this and was removed along with the "how it works" section; the page has carried the specificity without the disclaimer ever since. See **Landing page (current)**.
@@ -230,9 +231,32 @@ The plan now is to invite **a small number of real basketball trainers, unconnec
 
 **7. Error and edge-case handling.** As far as is known, failure paths have never been exercised end to end: signup failures, payment failures, webhook-arrives-late, card declined, 3DS challenge, network drop mid-checkout. ⚠️ Two specific known-unseen states are already recorded under **Open — next session** in Billing architecture: the ProfileMenu panel's width at its widest item, and **the wrapping error line inside that 160px panel — no upgrade error has ever been made to occur there.** `useUpgrade()` has a `catch` and an `upgradeError` string, so the plumbing exists; what has never been seen is what a coach actually reads when something breaks. **Needs a real pass, not a code read.**
 
+**8. Player deactivation — a real feature, and it needs its own focused session.** ⚠️ **This is NOT a menu-label change.** It touches the schema, the roster UI and the billing gate at once, and it cannot be designed in isolation from item 5 or the downgrade/subscription work — the same vocabulary has to mean the same thing in the copy and in `isEntitled()` / `FREE_STUDENT_LIMIT`. Treat it with the care the Aug 5 landing builds got, not as a late add-on.
+
+*Decided on the night of Aug 5. Implementation design is deliberately NOT attempted here.*
+
+- **Terminology: "Deactivate" / "Activate", state language "Active" / "Inactive".** ⚠️ **Not "Archive"** — that word is already taken, and taking it twice would be the exact collision `filed_at` was named to avoid. Archive means *a finished assignment filed away*, on both the coach and student screens. A second meaning for players would make "archived" ambiguous in every conversation and every function name.
+  - ⚠️ **The vocabulary is shared with the billing logic on purpose.** `FREE_STUDENT_LIMIT` counts **active** students; the UI says **active**. One term end to end, no translation layer between what a coach reads and what the gate computes. This is the single most important decision in the item — get it wrong and every later question ("does an inactive player count?") has to be re-answered per surface.
+- **Roster UI: an "Inactive" group** alongside the existing status groups (Done / In progress / Not started / Nothing assigned). Visually quieter, likely collapsed or pinned to the bottom — one tap away rather than cluttering the working view.
+- **The player 3-dot menu: `Remove {name}` becomes `Deactivate {name}`** (or `Activate {name}` when already inactive). The confirm modal explains, in a friendly register, what deactivation means, how it affects the plan and billing, and reassures that nothing is lost — in the spirit of *"Taking a break? Deactivating keeps all their history safe."*
+- **Permanent delete becomes a separate, heavier action reachable ONLY from the deactivated state** — never directly from active. That forces the safe path first, and the irreversible one earns a heavier confirmation than a single button (a typed confirmation was the shape discussed).
+
+⚠️ **Two things were checked against the code on Aug 5, and one corrects a premise from the discussion.**
+
+- **This will NOT be the app's first fully irreversible action — that already exists, and it is the very thing being replaced.** `Remove {firstName}` in `PlayerManage.tsx` calls `players.delete()`, and both `assignments.player_id` and `logs.player_id` are **CASCADE**, so removing a player permanently destroys every assignment and every log that student ever wrote. It sits behind **one modal with one button**. So this work is not adding a dangerous new capability; it is **retrofitting a safe path in front of a destructive one that is already a single tap deep.** That makes the item more valuable than it sounds, and it is the strongest argument for the deactivate-first ordering above.
+- ⚠️ **It also resolves a contradiction in the locked product decisions.** *Product decisions locked* states flatly: *"Log history is never deleted — `ON DELETE SET NULL` preserves logs forever."* That is true when deleting an **assignment**, and false when deleting a **player**, where the cascade takes the logs with it. The current modal is honest about this (*"This deletes all their assignments and logs. This can't be undone."*), so nothing is deceptive — but the principle as written is not universally true, and whoever builds this should either make it true or narrow its wording.
+
+**Open questions, not decided tonight** — listed so the next session starts from them rather than rediscovering them:
+- Does an inactive player still receive assignment SMS, and can they still open their token link? (Their link is live today and nothing about deactivation implies revoking it.)
+- What happens to a coach already **over** the free limit who deactivates down to 3 — does the gate reopen immediately? This is the same shape as the downgrade question in item 5 and should be answered once, for both.
+- Schema: a nullable `deactivated_at` timestamp mirrors `assignments.filed_at`, which is the pattern this codebase already uses for exactly this kind of reversible state. Not decided, but it is the obvious candidate and it would keep "when" as well as "whether".
+- ⚠️ Any migration hits local, staging and prod at once — one shared Supabase project, no local-only schema change.
+
 ### How to run this session
 
 One item at a time, in the order above — 1 and 2 gate everything (there is no point polishing trust copy for a flow that cannot bill), 5 is the highest-risk item that is purely our own doing, and 7 wants a real browser and deliberate breakage rather than reasoning about the code.
+
+⚠️ **Item 8 is the odd one out and should not be squeezed in here.** Items 1–7 are configuration, verification and copy — things that can be worked through in a sitting. **8 is a feature build** touching schema, roster UI and the billing gate together, and it needs its own dedicated session with the same care the Aug 5 landing work got. Its only hard dependency on the rest is item 5: decide *what counts as an active student* once, and both fall out of it.
 
 ⚠️ **Do not batch this with feature work.** Every item here is a promise made to someone who has no reason to give the benefit of the doubt.
 
