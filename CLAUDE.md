@@ -124,6 +124,35 @@ It affects **every** `.cta-real` on the page — hero, section 2, section 3 and 
   - ⚠️ **The tilt has already been tried and reverted once**, in section 2: it cut controls off the back screen and read as broken. See the "Upright and side by side" note in `page.tsx` before re-attempting it.
   - ⚠️ **Bleed fights two things currently load-bearing**, and whoever picks this up has to deal with both rather than discover them: (1) the shell's shared left edge — header, hero device, section 2 and section 3 all measure the same edge at every width ≥768, verified repeatedly; (2) `flex: 1 0 auto`, which sits on whichever band is *last before the footer* and has moved three times in one day. Content crossing a seam breaks the first assumption and probably complicates the second.
 
+*The five below came from a final review pass at the close of Aug 5 2026. None is started; each records a direction, not a design.*
+
+- ⚠️ **First-touch trust at signup — a stranger hits a bare name field with no context.** Every CTA on the landing page lands on `/instructor/signup`, whose first screen is the heading **"What should students call you?"**, an input, and a Continue button. Nothing on it acknowledges that someone who has never met Tony is now typing personal information into an unknown product.
+  - **Why it did not matter until now:** the only real user was RJ, where personal trust was already established before he ever saw a screen. It stops holding the moment outreach targets actual strangers, which is the current plan.
+  - **Direction:** a quiet trust line in the **existing empty space on that first screen — not a new screen and not a new step.** The screen is `flex flex-col min-h-screen` with top-packed content, so there is real room below the "Already have an account? Sign in" line. Something in the register of *"Just your name to start — no card, nothing shared."*
+  - ⚠️ Any such line has to stay true: signup genuinely collects no card (verified Aug 5 — the whole signup tree contains no billing code), so that half is safe. **"Nothing shared" is a privacy claim and needs checking against `/privacy` before it ships**, not assumed.
+  - **Not built — direction only.**
+
+- **Section 2's copy undersells what RJ actually values.** It currently sells organisation and visibility: *"Your whole program, finally in one place."* That is real but generic.
+  - **What is on record, in his words:** Reps has become a **"template"** of his program and a **"record"** of it; it is **"streamlined"** and helps him **"stick to it"**. Separately he asked to **add exercises to the library without being in the middle of assigning** — see *RJ feedback captured* and Pending.
+  - **The reading, and it is an interpretation rather than a quote:** what he is describing is closer to **ownership** — his own drills, his own methodology, saved and reused — than to tidiness. That is a stronger and more specific claim than "one place", and the page does not make it anywhere.
+  - ⚠️ **This runs against a locked product decision** and cannot be actioned without reopening it: *"Default exercise libraries are the product experience. Custom creation is the escape hatch."* Selling a coach's own methodology promotes the escape hatch to the headline. That may well be right now, but it is a product decision, not a copy tweak.
+  - **Not started — needs a real copy pass against RJ's actual language.**
+
+- **Section 3's core claim may be the shallow one, and parent excitement is real, proven and entirely unused.** Two related threads, deliberately kept in one entry because a rewrite would likely touch both.
+  - **The headline claim.** *"Nothing for your students to download."* removes friction. It does not say why a student would care. The deeper truth is nearer *"someone is paying attention to you between sessions"* — which is the actual product thesis (see **Core insight**: the loop exists so a coach can verify follow-through).
+  - **The parent thread.** ⚠️ **Documented and real**, not a hunch: RJ confirmed by text on Aug 1 that parents are **"all in on it"** and **"think it's extremely useful"** — the people who pay for the coaching, reacting independently of RJ's own enthusiasm. Parent excitement drives retention and referrals for his business, and **none of it appears on the page**. Parents are currently implied once, mechanically, via *"log on a parent's phone"* — never as anyone with a reaction.
+  - **Direction:** revisit section 3's headline and framing, and consider whether a parent-facing line belongs there at all.
+  - ⚠️ **Careful what a parent line promises.** No digest is sent, nothing links to `/parent/[token]`, and the report-only `parent_phone` sits in *Decided, not built*. There is also already a **soft commitment to RJ** that a weekly parent digest is being worked on. A landing-page line implying parents receive anything would extend that promise to strangers.
+  - **Not started.**
+
+- **The feature checklist drops straight into the footer.** The pricing section ends on the last checklist row and the dark footer begins immediately, with no transition at the page's final boundary.
+  - This is the **same rigid-seam problem** as the flow-pass entry above, and will probably take the same fix. It is recorded separately because that entry is written around *section-to-section* transitions and the mid-page 2 → 3 seam in particular; the point here is that **the bottom edge has it too**, and a pass that only treats mid-page seams would leave it.
+  - **Not started.**
+
+- **Eyebrow and page metadata disagree on one word.** The hero eyebrow reads **"For coaches & trainers"** (changed Aug 5); the `<title>`, description and og tags still pair **"Coaches & Instructors"**.
+  - Left divergent deliberately at the time — those strings are search-facing and carry a term people actually query, where the eyebrow is read by someone who has already arrived. Recorded so it is a decision rather than a discovery.
+  - **A one-line follow-up whenever it is addressed. Low priority.**
+
 ### To resume local billing work
 
 `STRIPE_WEBHOOK_SECRET` is **local-only** and comes from `stripe listen`, which must be running for any webhook to arrive:
