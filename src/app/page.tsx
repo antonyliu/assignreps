@@ -1456,7 +1456,19 @@ export default function LandingPage() {
           background-color: var(--reps-orange);
           color: #fff;
           font-weight: 700;
-          font-size: 17px;
+          /* ⚠️ 19px is an ACCESSIBILITY floor, not a size preference, and it is
+             load-bearing with the weight above it. White on the brand blue is
+             3.59:1 — under the 4.5:1 AA needs for normal text, which is what
+             this was at 17px, and comfortably over the 3:1 it needs as LARGE
+             text. WCAG counts bold type as large from 18.66px, so 19px/700 is
+             the first step that clears it.
+
+             Drop this below 18.66px, or the weight below 700, and all four
+             CTAs on this page silently fail AA again. Fixing it by darkening
+             the fill instead was considered and rejected: the brand blue is
+             fixed, and distinctness here comes from size and elevation rather
+             than hue. */
+          font-size: 19px;
           letter-spacing: -0.2px;
           padding: 16px 38px;
           border-radius: 12px;
@@ -2002,13 +2014,23 @@ export default function LandingPage() {
            a border on one but not the other.
 
            Two buttons offering a straight either/or must be the same object at
-           two weights. The ONLY difference is the fill. */
+           two weights. The ONLY difference is the fill.
+
+           ⚠️ This is why the accessibility fix on .cta-real has to be repeated
+           here. This rule OVERRIDES .cta-real's font-size for the Pro button,
+           so leaving it at 17px would have quietly kept the failing size on the
+           one CTA that sits next to a price. Restating it also keeps the pair
+           identical: .pricing-cta is on BOTH buttons, so they grow together and
+           the size parity above survives. The Free button does not need 19px
+           for its own contrast — its ink is 19.16:1 on white — it needs it to
+           stay the same object as its neighbour. */
         .pricing-cta {
           display: block;
           width: 100%;
           box-sizing: border-box;
           margin-top: 22px;
-          font-size: 17px;
+          /* See the AA note on .cta-real. >= 18.66px AND bold, or it fails. */
+          font-size: 19px;
           font-weight: 700;
           letter-spacing: -0.2px;
           line-height: 1.5;
