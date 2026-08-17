@@ -144,3 +144,72 @@ export async function createCheckoutSession(): Promise<CheckoutResult> {
 
   return { ok: true, url: session.url };
 }
+
+// Opens the Stripe Billing Portal so a coach can manage or cancel their own
+// subscription. Hands back a URL for the client to redirect to, matching
+// createCheckoutSession above rather than redirecting from the server.
+//
+// ⚠️ Takes NO parameters, for the same reason checkout does not: the coach comes
+// from the session and the customer id from their own row. An action that
+// accepted a customer id would let a crafted request open somebody else's
+// billing portal, which is about as bad as this app gets.
+//
+// ⚠️ WHAT THIS DOES NOT DO: it does not decide whether cancelling takes effect
+// immediately or at period end. That is a PORTAL CONFIGURATION set in the
+// Stripe dashboard (Settings -> Billing -> Customer portal -> Cancellation),
+// not a parameter of the session created here, so it cannot be set or verified
+// from this file.
+//
+// It matters because /faq promises "You'll keep everything you already paid for
+// through the end of that period — it just won't renew after." That sentence is
+// only true if the portal is configured to cancel AT PERIOD END. If it is ever
+// switched to Immediately, the FAQ answer becomes false and this comment is the
+// trail back to why.
+//
+// ✅ Given at-period-end, no entitlement code changes are needed: Stripe keeps
+// the subscription `active` until the period actually ends, isEntitled() allows
+// `active`, and the existing webhook re-resolves at customer level on
+// customer.subscription.updated. The coach keeps Pro until the date they paid
+// through, then customer.subscription.deleted writes `canceled`.
+export async function createPortalSession(): Promise<CheckoutResult> {
+  const { supabase, user } = await requireCoach();
+
+  const { data: coach, error: readError } = await supabase
+    .from("coaches")
+    .select("id, stripe_customer_id")
+    .eq("id", user.id)
+    .single();
+
+  if (readError || !coach) return { ok: false, error: "Couldn't load your account." };
+
+  // ⚠️ Gated on HAVING A CUSTOMER, not on isEntitled(). A coach whose
+  // subscription lapsed or was cancelled still has invoices to read and a way
+  // back in, so entitlement is the wrong question here — the right one is
+  // whether Stripe knows who they are at all.
+  //
+  // Null means they never completed checkout, so there is no portal to open.
+  // The UI only offers this row to a Pro coach, but this action can be invoked
+  // directly, so it establishes its own precondition rather than borrowing one
+  // from whatever rendered the button — the same rule createCheckoutSession's
+  // already-subscribed guard follows.
+  if (!coach.stripe_customer_id) {
+    return { ok: false, error: "No billing set up on this account yet." };
+  }
+
+  const stripe = getStripe();
+  const origin = await originFromRequest();
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: coach.stripe_customer_id,
+    // Back to the roster, which is the only page ProfileMenu renders on.
+    // ⚠️ No ?cancelled=1 or similar: whatever the coach did in the portal, the
+    // truth arrives by webhook and may be seconds behind this redirect. Same
+    // race the checkout success_url comment describes — do not have the landing
+    // page assert an outcome it has not read.
+    return_url: `${origin}/instructor/students`,
+  });
+
+  if (!session.url) return { ok: false, error: "Couldn't open billing." };
+
+  return { ok: true, url: session.url };
+}

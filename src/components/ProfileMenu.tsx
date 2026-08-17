@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { User } from "lucide-react";
 import { useUpgrade } from "@/lib/use-upgrade";
+import { createPortalSession } from "@/app/instructor/billing/actions";
 
 // The display name is what students and parents see — "[Coach] assigned you
 // basketball homework" in the SMS, "[Coach] will see this" on the celebrate
@@ -42,6 +43,46 @@ export default function ProfileMenu({
   // drift in behaviour — see src/lib/use-upgrade.ts. The menu stays open while
   // it runs; the item reports progress rather than appearing to do nothing.
   const { startUpgrade, upgrading, upgradeError } = useUpgrade();
+
+  // ⚠️ Local state rather than a useBillingPortal hook, deliberately.
+  // useUpgrade is a hook because it has TWO call sites — this menu and the
+  // add-student paywall — and what must not drift between them is the handler.
+  // "Manage billing" has exactly one entry point, so there is nothing to keep
+  // in sync and a hook would be indirection for its own sake. If a second entry
+  // point ever appears (a billing screen, the paywall), extract it then, the
+  // same way and for the same reason.
+  const [portalPending, setPortalPending] = useState(false);
+  const [portalError, setPortalError] = useState("");
+
+  async function openBillingPortal() {
+    if (portalPending) return;
+    setPortalPending(true);
+    setPortalError("");
+
+    let result;
+    try {
+      result = await createPortalSession();
+    } catch {
+      setPortalPending(false);
+      setPortalError("Couldn't open billing. Try again in a moment.");
+      return;
+    }
+
+    if (!result.ok) {
+      setPortalPending(false);
+      setPortalError(result.error);
+      return;
+    }
+
+    // ⚠️ A full navigation, not router.push — Stripe's portal is a different
+    // origin and the Next router cannot route to it. Same reason useUpgrade
+    // uses window.location.href for Checkout.
+    //
+    // Deliberately does NOT clear portalPending on success: the tab is leaving,
+    // and resetting it would flash the row back to its idle label during the
+    // hand-off.
+    window.location.href = result.url;
+  }
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -222,6 +263,43 @@ export default function ProfileMenu({
                   {upgradeError && (
                     <p className="px-3 pb-1.5 text-[12px] leading-snug text-red-400 whitespace-normal">
                       {upgradeError}
+                    </p>
+                  )}
+                </>
+              )}
+              {/* The mirror of "Upgrade to Pro" above: that row shows to a coach
+                  WITHOUT a subscription, this one to a coach WITH one, so the
+                  menu always offers exactly one billing action and never both.
+                  Cancelling is only meaningful for a subscriber, which is why
+                  isPro is the right condition and no new prop has to be threaded
+                  through the roster page.
+
+                  ⚠️ isPro is a page-load-old RENDER HINT, not the guard. The
+                  action re-reads the coach's own row and refuses if there is no
+                  stripe_customer_id — the same rule createCheckoutSession's
+                  already-subscribed guard follows, since a server action can be
+                  invoked with no UI in front of it.
+
+                  "Manage billing" rather than "Cancel": the portal also carries
+                  invoices and the payment method, and an item reading "Cancel"
+                  would suggest it cancels on the spot rather than opening a
+                  screen where that is one of the options. */}
+              {isPro && (
+                <>
+                  <button
+                    role="menuitem"
+                    onClick={openBillingPortal}
+                    disabled={portalPending}
+                    className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {portalPending ? "Opening…" : "Manage billing"}
+                  </button>
+                  {/* Inline and wrapping, matching the upgrade error above — this
+                      panel has no toast, and a truncated message in a 160px
+                      panel is unreadable. */}
+                  {portalError && (
+                    <p className="px-3 pb-1.5 text-[12px] leading-snug text-red-400 whitespace-normal">
+                      {portalError}
                     </p>
                   )}
                 </>
