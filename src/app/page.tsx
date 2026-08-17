@@ -888,8 +888,18 @@ export default function LandingPage() {
               </p>
 
               {/* Headline */}
+              {/* ⚠️ 700, raised from 600 on Aug 17 2026 after real iPhone
+                  testing found the hero reading FLAT. The bullets are 18px/600,
+                  so the headline and the bullets carried the SAME WEIGHT and
+                  the only thing separating them was size. That is what made it
+                  flat, and it is why the fix is weight before size.
+
+                  ⚠️ This costs ZERO layout — measured. Weight changes neither
+                  the line count, the line break, nor the height at any width.
+                  The size bump in .headline is the half that costs fold
+                  clearance; this half is free. */}
               <h1 className="headline" style={{
-                fontWeight: 600,
+                fontWeight: 700,
                 letterSpacing: "-0.5px",
                 color: "#0f0f10",
               }}>
@@ -1453,7 +1463,36 @@ export default function LandingPage() {
            made the old copy work, and headline copy has changed four times —
            the next string may well need it again. Do not remove it on the
            grounds that it is currently doing nothing. */
-        .headline { font-size: 32px; line-height: 1.14; margin: 0 0 18px; text-wrap: balance; }
+        /* ⚠️ 32px -> 36px on Aug 17 2026, the second half of the flat-hero fix
+           (the first is the 700 weight at the call site). Against the bullets'
+           18px this is now exactly 2x the size AND a weight step above, where
+           before it was 1.8x at the same weight.
+
+           ⚠️ Grown rather than shrinking the bullets, deliberately: the bullets
+           are informational — they are the only place the page explains what
+           the product does — and they have to stay comfortably legible on a
+           phone. Hierarchy comes from raising the headline, not from making the
+           explanation harder to read.
+
+           ⚠️ It does NOT change the line break: measured at 32/34/36/38px the
+           headline holds "The work you give / them, gets done." at every one.
+
+           🛑 IT DOES SPEND MOST OF WHAT IS LEFT OF THE FOLD BUDGET, and this
+           number should be checked before anything in the hero grows again.
+           At 375x812 the CTA's clearance went 57.1px -> 15.0px when the device
+           grew to 206px, and this 36px takes it to 5.8px. Six pixels. Anything
+           further — a longer headline, a taller device, another line of copy —
+           pushes the CTA itself under the fold, and the CTA is the point of the
+           screen. Dial this to 34px (+4.6px) or --pw toward 190px before adding
+           anything else.
+
+           ⚠️ The max-height:700px block below overrides this to 28px, and that
+           value was set against the OLD 32px base. On an SE-class phone the
+           size ratio to the bullets is therefore 1.56x rather than 2x, so there
+           the hierarchy fix is carried by the 700 WEIGHT alone. Left as-is
+           because that override is fold protection; raise it only with the
+           clearance measured. */
+        .headline { font-size: 36px; line-height: 1.14; margin: 0 0 18px; text-wrap: balance; }
         .bullets  { margin-bottom: 24px !important; }
         .bullet-row {
           display: grid;
