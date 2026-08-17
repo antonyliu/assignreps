@@ -47,8 +47,19 @@ function UpgradeBlock({
       <h1 className="text-[17px] font-semibold leading-snug text-white">
         You&apos;ve got {shownCount} {studentsLabel} — nice work.
       </h1>
+      {/* ⚠️ COPY ONLY — nothing enforces 30. entitlement.ts defines
+          FREE_STUDENT_LIMIT = 3 and no Pro ceiling at all, so a Pro coach can
+          currently pass 30 freely. A real cap is a separate build (the gate,
+          downgrade behaviour, what happens to student 31).
+
+          ⚠️ It previously read "Pro unlocks unlimited, $10/month", which
+          contradicted the landing page's pricing card once that changed to
+          "up to 30 students". This is the surface a coach sees at the moment
+          they are asked to pay, so it was the more important of the two to
+          correct. Reuses studentsLabel so the noun still follows the coach's
+          activity, exactly as the heading above does. */}
       <p className="mt-2 text-[14px] leading-relaxed text-[#8a8fa8]">
-        Pro unlocks unlimited, $10/month.
+        Pro takes you up to 30 {studentsLabel}, $10/month.
       </p>
 
       {/* 32px above a full-width primary button, matching CountScreen,
