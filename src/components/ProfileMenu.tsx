@@ -47,7 +47,7 @@ export default function ProfileMenu({
   // ⚠️ Local state rather than a useBillingPortal hook, deliberately.
   // useUpgrade is a hook because it has TWO call sites — this menu and the
   // add-student paywall — and what must not drift between them is the handler.
-  // "Manage billing" has exactly one entry point, so there is nothing to keep
+  // "Manage subscription" has exactly one entry point, so there is nothing to keep
   // in sync and a hook would be indirection for its own sake. If a second entry
   // point ever appears (a billing screen, the paywall), extract it then, the
   // same way and for the same reason.
@@ -280,10 +280,26 @@ export default function ProfileMenu({
                   already-subscribed guard follows, since a server action can be
                   invoked with no UI in front of it.
 
-                  "Manage billing" rather than "Cancel": the portal also carries
-                  invoices and the payment method, and an item reading "Cancel"
-                  would suggest it cancels on the spot rather than opening a
-                  screen where that is one of the options. */}
+                  "Manage subscription" rather than "Cancel": the portal also
+                  carries invoices and the payment method, and an item reading
+                  "Cancel" would suggest it cancels on the spot rather than
+                  opening a screen where that is one of the options.
+
+                  ⚠️ IT IS THE WIDEST ITEM THIS MENU CAN RENDER, AND IT ONLY
+                  JUST FITS. Measured at 14px in the app's font stack: the label
+                  is 135.0px, plus px-3 on both sides = a 159.0px row against
+                  the panel's max-w-[160px] cap. ONE PIXEL of slack.
+
+                  For comparison: "Upgrade to Pro" is 122.4px and "Manage
+                  billing" (what this replaced) was 117.5px, so both had ~40px
+                  to spare. This does not.
+
+                  ⚠️ Measured in desktop Chrome. The row is whitespace-nowrap,
+                  so if a device's system font renders even ~1% wider — an
+                  iPhone, a different default face — the label overflows the
+                  capped panel rather than wrapping. If that shows up, widen the
+                  cap; do not shorten the label back without asking, it was
+                  chosen deliberately over "Manage billing". */}
               {isPro && (
                 <>
                   <button
@@ -292,7 +308,7 @@ export default function ProfileMenu({
                     disabled={portalPending}
                     className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors disabled:opacity-50 disabled:pointer-events-none"
                   >
-                    {portalPending ? "Opening…" : "Manage billing"}
+                    {portalPending ? "Opening…" : "Manage subscription"}
                   </button>
                   {/* Inline and wrapping, matching the upgrade error above — this
                       panel has no toast, and a truncated message in a 160px
