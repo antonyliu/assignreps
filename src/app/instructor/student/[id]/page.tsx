@@ -7,6 +7,8 @@ import type { Assignment } from "@/types/database";
 import PlayerManage from "./PlayerManage";
 import CoachAssignmentList from "./CoachAssignmentList";
 import type { CardRow } from "./CoachAssignmentList";
+import { isComplete } from "@/lib/exercises";
+import type { GoalType } from "@/lib/exercises";
 
 // Static title — deliberately does not include the student's name, which would
 // otherwise leak into the browser tab / history.
@@ -106,6 +108,27 @@ export default async function CoachPlayerPage({
     filed_at: a.filed_at ?? null,
   }));
 
+  // Same truthiness-safe read the rows above use: select("*") on a client whose
+  // schema cache predates the migration omits the column entirely.
+  const isActive = !player.deactivated_at;
+
+  // Unfinished work still in the New tab — what deactivating would actually
+  // pause. Finished cards are excluded because pausing them means nothing, and
+  // archived ones because the coach has already put them away.
+  //
+  // Computed with isComplete(), the same rule the cards and the roster use, so
+  // the number in the modal can never disagree with the badges on screen.
+  const openAssignmentCount = rows.filter(
+    (a) =>
+      !a.filed_at &&
+      !isComplete(
+        (a.goal_type ?? "reps") as GoalType,
+        a.target,
+        loggedByAssignment[a.id] ?? 0,
+        makesByAssignment[a.id]?.makes ?? 0,
+      ),
+  ).length;
+
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
@@ -157,20 +180,54 @@ export default async function CoachPlayerPage({
           playerToken={player.token}
           sendToParent={player.send_to_parent ?? false}
           studentLabel={labels.studentLabel}
+          deactivatedAt={player.deactivated_at ?? null}
+          openAssignmentCount={openAssignmentCount}
         />
       </div>
+
+      {/* The paused state, stated once at the top rather than by greying the
+          whole screen. Everything below stays fully readable — the coach can
+          still review history, which is the main reason to open an inactive
+          student's page at all. What changes is that no path to NEW work is
+          offered from here.
+
+          Quiet, not alarming: this is a state the coach chose, so it reads as a
+          label rather than a warning. */}
+      {!isActive && (
+        <div
+          className="rounded-[10px] px-[14px] py-3 mb-4"
+          style={{ background: "#161a20", border: "1px solid #2a2d36" }}
+        >
+          <div className="text-[13px] font-medium text-reps-ink">Inactive</div>
+          <div className="text-[12px] text-reps-sub mt-0.5 leading-relaxed">
+            {firstName} is paused — no new work, and they can&apos;t log. Nothing
+            is lost. Activate them from the menu above.
+          </div>
+        </div>
+      )}
 
       {assignmentList.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
           <p className="text-[15px] text-reps-sub mb-5">
-            Nothing assigned yet.<br />Give {firstName} some homework.
+            {isActive ? (
+              <>Nothing assigned yet.<br />Give {firstName} some homework.</>
+            ) : (
+              <>Nothing assigned.<br />Activate {firstName} to give them work.</>
+            )}
           </p>
-          <Link
-            href={`/instructor/student/${id}/assign`}
-            className="bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
-          >
-            + Assign homework
-          </Link>
+          {/* ⚠️ Suppressed rather than disabled while paused. A greyed button
+              invites a tap that explains nothing; the banner above has already
+              said why there is no button. The assign ROUTES redirect back here
+              too, and the three assign ACTIONS refuse outright — this is the
+              first of those three layers, and the only cosmetic one. */}
+          {isActive && (
+            <Link
+              href={`/instructor/student/${id}/assign`}
+              className="bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+            >
+              + Assign homework
+            </Link>
+          )}
         </div>
       ) : (
         <>
@@ -180,6 +237,7 @@ export default async function CoachPlayerPage({
             playerId={id}
             firstName={firstName}
             rows={rows}
+            isActive={isActive}
             loggedByAssignment={loggedByAssignment}
             makesByAssignment={makesByAssignment}
             // ⚠️ Deliberately unconsumed this step. The data layer lands first

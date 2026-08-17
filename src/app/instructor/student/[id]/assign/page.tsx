@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireCoach } from "@/lib/require-coach";
 import { CATEGORIES } from "@/lib/exercises";
 
@@ -15,7 +15,7 @@ export default async function AssignCategoriesPage({
   const { supabase, user } = await requireCoach();
 
   const [{ data: player }, { count: customCount }] = await Promise.all([
-    supabase.from("players").select("name").eq("id", id).eq("coach_id", user.id).single(),
+    supabase.from("players").select("name, deactivated_at").eq("id", id).eq("coach_id", user.id).single(),
     supabase
       .from("custom_exercises")
       .select("*", { count: "exact", head: true })
@@ -23,6 +23,12 @@ export default async function AssignCategoriesPage({
   ]);
 
   if (!player) notFound();
+
+  // ⚠️ CONVENIENCE, not protection. A paused student cannot be given new work,
+  // and the three assign ACTIONS each enforce that themselves — this only stops
+  // a coach walking a whole picker flow that would refuse at the end. Sent back
+  // to the student's own screen, which is where the Activate control lives.
+  if (player.deactivated_at) redirect(`/instructor/student/${id}`);
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">

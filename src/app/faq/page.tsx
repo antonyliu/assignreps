@@ -208,10 +208,12 @@ export default function FaqPage() {
             promise, nothing linking them — change one and the other two move by
             hand. Today: free covers 3, Pro is $10/mo up to 30.
 
-            ⚠️ "up to 30 students" is COPY ONLY. entitlement.ts defines
-            FREE_STUDENT_LIMIT = 3 and no Pro ceiling of any kind, so nothing
-            enforces 30 yet. This page repeats the claim the other two already
-            make rather than inventing a new one. */}
+            ⚠️ The 30 is ENFORCED as of Aug 17 2026 — entitlement.ts defines
+            PRO_STUDENT_LIMIT and both addPlayer() and activatePlayer() apply
+            it. AddPlayerForm now renders the constant; this page and the
+            pricing card still hold the number as a hand-written string, so
+            those two are what drift. This page repeats the claim the other two
+            already make rather than inventing a new one. */}
         <h2 style={heading}>Pricing</h2>
 
         <h3 style={question}>Is it actually free, what&apos;s the catch?</h3>

@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
-import { deletePlayer, updatePlayerPhone } from "./actions";
+import { activatePlayer, deactivatePlayer, deletePlayer, updatePlayerPhone } from "./actions";
+import { useUpgrade } from "@/lib/use-upgrade";
 
 type Props = {
   playerId: string;
@@ -12,9 +13,26 @@ type Props = {
   playerToken: string;
   sendToParent: boolean;
   studentLabel: string;
+  /** null = active, set = paused and when. Drives which of Deactivate/Activate
+   *  the menu offers, and every "paused" affordance on this screen. */
+  deactivatedAt: string | null;
+  /** Unfinished work still in the New tab. Shown as an informational line in the
+   *  deactivate modal — "Jalen has 2 open assignments" — so a coach knows what
+   *  they are pausing. NOT a second confirmation step: deactivation is fully
+   *  reversible, so the extra ceremony would imply a risk that does not exist. */
+  openAssignmentCount: number;
 };
 
-export default function PlayerManage({ playerId, playerName, playerPhone, playerToken, sendToParent, studentLabel }: Props) {
+export default function PlayerManage({
+  playerId,
+  playerName,
+  playerPhone,
+  playerToken,
+  sendToParent,
+  studentLabel,
+  deactivatedAt,
+  openAssignmentCount,
+}: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -23,9 +41,25 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
   const [phone, setPhone]                 = useState(playerPhone);
   const [toParent, setToParent]           = useState(sendToParent);
   const [phoneError, setPhoneError]       = useState("");
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // The typed confirmation for permanent delete. Compared against the student's
+  // first name rather than a generic word: typing "DELETE" proves you can read a
+  // prompt, typing "Jalen" proves you know WHOSE history you are destroying.
+  const [deleteTyped, setDeleteTyped]     = useState("");
+  // Set when activatePlayer() refuses on the seat gate. Carries the server's own
+  // message plus whether an upgrade is worth offering, so this modal never has
+  // to re-derive the plan rule the action just applied.
+  const [gate, setGate]                   = useState<{ error: string; canUpgrade: boolean } | null>(null);
   const [toast, setToast]                 = useState("");
 
+  // The third consumer of the shared upgrade handler, after ProfileMenu and the
+  // add-student paywall — reached when a free coach at 3 tries to bring someone
+  // back. Exactly the drift this hook exists to prevent: the reactivate gate and
+  // the add gate now start checkout identically.
+  const { startUpgrade, upgrading, upgradeError } = useUpgrade();
+
+  const isActive = !deactivatedAt;
   const firstName = playerName.trim().split(/\s+/)[0] || playerName.trim();
   const studentLabelCap = studentLabel.charAt(0).toUpperCase() + studentLabel.slice(1);
   const playerLink = `https://assignreps.com/student/${playerToken}`;
@@ -73,6 +107,40 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
     startTransition(async () => { await deletePlayer(playerId); });
   }
 
+  function handleDeactivate() {
+    startTransition(async () => {
+      const result = await deactivatePlayer(playerId);
+      if (result.ok) {
+        setConfirmDeactivate(false);
+        router.refresh();
+      } else {
+        // Deactivating is never seat-gated — it only ever frees a seat — so
+        // anything that fails here is a real error, not a limit.
+        setConfirmDeactivate(false);
+        setToast(result.error);
+        setTimeout(() => setToast(""), 3500);
+      }
+    });
+  }
+
+  function handleActivate() {
+    setMenuOpen(false);
+    startTransition(async () => {
+      const result = await activatePlayer(playerId);
+      if (result.ok) { router.refresh(); return; }
+
+      // ⚠️ No confirm on the way IN — activation is safe and reversible, so it
+      // runs on the tap like Archive does. The modal only appears when the gate
+      // refuses, which is the one outcome a coach has to read and act on.
+      if (result.code === "limit_reached" || result.code === "ceiling_reached") {
+        setGate({ error: result.error, canUpgrade: result.code === "limit_reached" });
+        return;
+      }
+      setToast(result.error);
+      setTimeout(() => setToast(""), 3500);
+    });
+  }
+
   return (
     <>
       <div className="relative shrink-0">
@@ -114,11 +182,36 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
               >
                 Edit phone number
               </button>
+              {/* ⚠️ The SUGGESTED path, listed above Delete and in the panel's
+                  normal ink rather than red. Deactivating is what a coach almost
+                  always means when a student stops for a season, and it is fully
+                  reversible; Delete below is the rare, irreversible one. Order
+                  and colour are the whole of that steer — Delete is NOT hidden
+                  behind deactivation, it stays one tap away from either state. */}
+              {isActive ? (
+                <button
+                  onClick={() => { setMenuOpen(false); setConfirmDeactivate(true); }}
+                  className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors border-t border-reps-line"
+                >
+                  Deactivate {firstName}
+                </button>
+              ) : (
+                <button
+                  onClick={handleActivate}
+                  disabled={isPending}
+                  className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors border-t border-reps-line disabled:opacity-50"
+                >
+                  {isPending ? "Activating…" : `Activate ${firstName}`}
+                </button>
+              )}
+              {/* "Delete", not "Remove" — matching Delete assignment and Delete
+                  exercise, and honest about what it does. The word changed; the
+                  action did not. */}
               <button
-                onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
+                onClick={() => { setMenuOpen(false); setDeleteTyped(""); setConfirmDelete(true); }}
                 className="w-full text-left px-4 py-3 text-[14px] text-red-400 hover:bg-reps-line transition-colors border-t border-reps-line"
               >
-                Remove {firstName}
+                Delete {firstName}
               </button>
             </div>
           </>
@@ -200,6 +293,126 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
         </div>
       )}
 
+      {/* DEACTIVATE — friendly, and explicit that nothing is lost. Warm before
+          mechanical, the same order the add-student paywall uses.
+
+          One modal, one step. The open-assignment line below is INFORMATIONAL,
+          not a second gate: deactivation is undone in one tap, so a second
+          confirmation would be ceremony over a decision that costs nothing. */}
+      {confirmDeactivate && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70"
+          onClick={() => setConfirmDeactivate(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="deactivate-student-title"
+            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="deactivate-student-title" className="text-[16px] font-semibold text-reps-ink mb-2">
+              Deactivate {firstName}?
+            </h2>
+            <p className="text-[13px] text-reps-sub leading-relaxed">
+              Taking a break? Deactivating keeps all their history safe. They
+              won&apos;t get new work and can&apos;t log while they&apos;re paused,
+              and they stop counting toward your plan.
+            </p>
+            {openAssignmentCount > 0 && (
+              <p className="text-[13px] text-reps-sub leading-relaxed mt-3">
+                {firstName} has {openAssignmentCount} open{" "}
+                {openAssignmentCount === 1 ? "assignment" : "assignments"} —
+                deactivating will pause {openAssignmentCount === 1 ? "it" : "them"}.
+              </p>
+            )}
+            <p className="text-[13px] text-reps-sub leading-relaxed mt-3">
+              You can bring them back anytime.
+            </p>
+            <div className="flex gap-3 mt-7">
+              <button
+                onClick={() => setConfirmDeactivate(false)}
+                className="flex-1 min-h-[44px] rounded-[10px] border border-reps-line text-reps-ink font-medium text-[15px] hover:bg-reps-raised transition-colors"
+              >
+                Cancel
+              </button>
+              {/* Deliberately NOT red. This is reversible and routine; red is
+                  reserved for the delete below, which is neither. */}
+              <button
+                onClick={handleDeactivate}
+                disabled={isPending}
+                className="flex-1 min-h-[44px] rounded-[10px] bg-[#378add] text-white font-semibold text-[15px] hover:bg-[#4a9ae8] disabled:opacity-50 transition-colors"
+              >
+                {isPending ? "Pausing…" : "Deactivate"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* THE REACTIVATE GATE. Only ever seen when activatePlayer() refused, and
+          it shows the SERVER'S OWN message rather than re-deriving the rule —
+          the action knows which limit it just enforced.
+
+          Two endings, matching the add-student gate exactly: a free coach gets
+          an Upgrade button (the same useUpgrade handler), a Pro coach at the
+          ceiling gets no button, because there is nothing to sell them. Both are
+          told the move that always works: deactivate someone else. */}
+      {gate && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70"
+          onClick={() => setGate(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="activate-gate-title"
+            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="activate-gate-title" className="text-[16px] font-semibold text-reps-ink mb-2">
+              No room for {firstName} right now
+            </h2>
+            <p className="text-[13px] text-reps-sub leading-relaxed">{gate.error}</p>
+            <p className="text-[13px] text-reps-sub leading-relaxed mt-3">
+              {firstName}&apos;s history is all still here either way.
+            </p>
+
+            {gate.canUpgrade && (
+              <button
+                onClick={startUpgrade}
+                disabled={upgrading}
+                className="mt-6 w-full min-h-[44px] rounded-[10px] bg-[#378add] text-white font-semibold text-[15px] hover:bg-[#4a9ae8] disabled:opacity-50 transition-colors"
+              >
+                {upgrading ? "Starting…" : "Upgrade to Pro"}
+              </button>
+            )}
+            {upgradeError && (
+              <p className="mt-3 text-[13px] leading-snug text-red-400">{upgradeError}</p>
+            )}
+
+            <button
+              onClick={() => setGate(null)}
+              className={`w-full min-h-[44px] rounded-[10px] border border-reps-line text-reps-ink font-medium text-[15px] hover:bg-reps-raised transition-colors ${gate.canUpgrade ? "mt-3" : "mt-7"}`}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE — the one genuinely irreversible action on this screen, and now
+          the only one behind a typed confirmation.
+
+          ⚠️ It was a single red button until the deactivation build. players
+          cascades to BOTH assignments and logs, so one tap destroyed every rep a
+          student had ever recorded — the app's most destructive act sitting
+          behind its lightest control. Deactivation gives the safe path a home;
+          this gives the dangerous one a cost.
+
+          ⚠️ Reachable directly from the ACTIVE state on purpose. Forcing
+          deactivate-first would make the safe action a step on the way to the
+          destructive one, which teaches a coach to tap through it. */}
       {confirmDelete && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70"
@@ -208,29 +421,56 @@ export default function PlayerManage({ playerId, playerName, playerPhone, player
           <div
             role="dialog"
             aria-modal="true"
-            aria-labelledby="remove-student-title"
+            aria-labelledby="delete-student-title"
             className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="remove-student-title" className="text-[16px] font-semibold text-reps-ink mb-2">
-              Remove {playerName}?
+            <h2 id="delete-student-title" className="text-[16px] font-semibold text-reps-ink mb-2">
+              Delete {playerName}?
             </h2>
-            <p className="text-[13px] text-reps-sub mb-7">
-              This deletes all their assignments and logs. This can&apos;t be undone.
+            <p className="text-[13px] text-reps-sub leading-relaxed">
+              This permanently deletes every assignment and every rep {firstName}{" "}
+              has ever logged. It can&apos;t be undone.
             </p>
-            <div className="flex gap-3">
+            {isActive && (
+              <p className="text-[13px] text-reps-sub leading-relaxed mt-3">
+                Just taking a break? Deactivate {firstName} instead — it frees the
+                same spot and keeps everything.
+              </p>
+            )}
+
+            <p className="text-[13px] text-reps-sub mt-5 mb-2">
+              Type <span className="text-reps-ink font-medium">{firstName}</span> to confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteTyped}
+              onChange={(e) => setDeleteTyped(e.target.value)}
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-label={`Type ${firstName} to confirm deletion`}
+              className="w-full bg-reps-bg border border-reps-line rounded-[10px] px-4 py-3 text-[15px] text-reps-ink placeholder:text-[#5a5f72] outline-none focus:border-red-500 transition-colors"
+              placeholder={firstName}
+            />
+
+            <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setConfirmDelete(false)}
                 className="flex-1 min-h-[44px] rounded-[10px] border border-reps-line text-reps-ink font-medium text-[15px] hover:bg-reps-raised transition-colors"
               >
                 Cancel
               </button>
+              {/* Case- and whitespace-insensitive: the typed word is a proof of
+                  attention, not a spelling test, and a coach on a phone keyboard
+                  should not be defeated by autocapitalisation. */}
               <button
                 onClick={handleDelete}
-                disabled={isPending}
-                className="flex-1 min-h-[44px] rounded-[10px] bg-red-500 text-white font-semibold text-[15px] hover:bg-red-400 disabled:opacity-50 transition-colors"
+                disabled={isPending || deleteTyped.trim().toLowerCase() !== firstName.toLowerCase()}
+                className="flex-1 min-h-[44px] rounded-[10px] bg-red-500 text-white font-semibold text-[15px] hover:bg-red-400 disabled:opacity-40 disabled:pointer-events-none transition-colors"
               >
-                {isPending ? "Removing…" : "Remove"}
+                {isPending ? "Deleting…" : "Delete"}
               </button>
             </div>
           </div>

@@ -42,5 +42,48 @@ export function isEntitled(subscriptionStatus: string | null | undefined): boole
   return ENTITLED_STATUSES.has(subscriptionStatus);
 }
 
-/** The free tier's student limit. The paywall is the 4th student. */
+/** The free tier's ACTIVE-student limit. The paywall is the 4th active student. */
 export const FREE_STUDENT_LIMIT = 3;
+
+/**
+ * The Pro plan's ACTIVE-student ceiling.
+ *
+ * ⚠️ NEW as of the deactivation build. Until then "up to 30" was copy on three
+ * unlinked surfaces — the landing pricing card, /faq, and the in-app paywall in
+ * AddPlayerForm — with nothing behind it, and a Pro coach could pass 30 freely.
+ * Those three strings and this constant now have to move together; changing one
+ * without the others puts the number a coach reads out of step with the number
+ * the gate enforces.
+ */
+export const PRO_STUDENT_LIMIT = 30;
+
+/**
+ * How many ACTIVE students this coach's current plan allows.
+ *
+ * ⚠️ ACTIVE, not total. A deactivated student (players.deactivated_at IS NOT
+ * NULL) is a full pause — no new work can be assigned to them and they cannot
+ * log — so they do not consume a seat. That is the whole reason deactivation
+ * closes the loophole it was built for: a Pro coach could otherwise add 30
+ * students, cancel, and keep all 30 running on Free forever.
+ *
+ * ⚠️ ONE HELPER, asked by every gate, for the same reason isEntitled() is one
+ * helper. Two places enforce a seat limit and must never disagree about what the
+ * limit IS:
+ *
+ *   1. addPlayer()      — adding a new student
+ *   2. activatePlayer() — bringing a paused student back
+ *
+ * Those are the same question from two directions: "does this coach have room
+ * for one more active student?" A coach blocked from reactivating someone they
+ * could have added fresh, or the reverse, is one bug seen from two ends.
+ *
+ * ⚠️ Routed through isEntitled() rather than comparing status strings here, so
+ * the plan question is answered in exactly one place and this helper inherits
+ * its fail-closed behaviour: an unrecognised Stripe status is unentitled, and an
+ * unentitled coach gets the free limit.
+ */
+export function activeStudentLimit(
+  subscriptionStatus: string | null | undefined
+): number {
+  return isEntitled(subscriptionStatus) ? PRO_STUDENT_LIMIT : FREE_STUDENT_LIMIT;
+}

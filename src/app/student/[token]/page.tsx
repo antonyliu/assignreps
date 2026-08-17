@@ -20,11 +20,49 @@ export default async function PlayerHomePage({
 
   const { data: player } = await supabase
     .from("players")
-    .select("id, name")
+    .select("id, name, deactivated_at")
     .eq("token", token)
     .single();
 
   if (!player) notFound();
+
+  // ⚠️ PAUSED — and the link still WORKS. A deactivated student's token is never
+  // revoked and this is never a 404: they did nothing wrong, and a dead link
+  // would read as "you've been removed" to a kid who has simply stopped for the
+  // season. They get a plain screen naming their coach and one thing to do.
+  //
+  // Branched BEFORE the three reads below, so a paused student's page costs one
+  // query rather than four. The coach-name RPC still runs, because "ask your
+  // coach" is much warmer with the coach's actual name in it.
+  if (player.deactivated_at) {
+    const pausedCoachRes = await supabase.rpc("coach_name_for_token", { p_token: token });
+    const pausedCoachName = (pausedCoachRes.data as string | null)?.trim() || "your coach";
+    const pausedFirstName = player.name?.trim().split(/\s+/)[0] || "there";
+
+    return (
+      <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
+        <div className="flex items-center mb-5">
+          <LogoMini />
+        </div>
+        {/* Same centred shape as the "all caught up" empty state below, so a
+            student who has seen this app before recognises the screen. No
+            action, no button: there is genuinely nothing for them to do here,
+            and offering a control that cannot help would be worse than none. */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
+          <p className="text-[21px] font-semibold text-reps-ink">
+            Hey {pausedFirstName} — you&apos;re on pause.
+          </p>
+          <p className="text-[14px] text-reps-sub mt-3 max-w-[260px] leading-relaxed">
+            {`Ask ${pausedCoachName} to activate your account to keep logging.`}
+          </p>
+          {/* Reassurance, because the obvious fear is that their work is gone. */}
+          <p className="text-[13px] text-reps-dim mt-4 max-w-[260px] leading-relaxed">
+            Everything you&apos;ve logged is saved.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   const [coachNameRes, { data: assignments }, { data: logs }] = await Promise.all([
     // The `coaches` table isn't readable by the anon role, so the coach name

@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { isComplete } from "@/lib/exercises";
 import type { GoalType } from "@/lib/exercises";
 import { notifyRepeatAssignment } from "@/lib/notify-assignment";
+import { getActivityLabels } from "@/config/activityTypes";
+import { activeStudentLimit, isEntitled, PRO_STUDENT_LIMIT } from "@/lib/entitlement";
+import { countActiveStudents, requireActivePlayer } from "@/lib/active-students";
 
 export async function deletePlayer(playerId: string): Promise<void> {
   const supabase = await createClient();
@@ -23,6 +26,114 @@ export async function deletePlayer(playerId: string): Promise<void> {
 
   await supabase.from("players").delete().eq("id", playerId);
   redirect("/instructor/students");
+}
+
+export type SetPlayerActiveResult =
+  | { ok: true }
+  // Same two-code shape as AddPlayerResult, for the same reason: reactivating
+  // and adding are the same question asked from two directions — "does this
+  // coach have room for one more active student?" — so they must fail in the
+  // same vocabulary. `limit_reached` has an upgrade to offer; `ceiling_reached`
+  // is a Pro coach at PRO_STUDENT_LIMIT, who does not.
+  | { ok: false; error: string; code?: "limit_reached" | "ceiling_reached" };
+
+/**
+ * Pause a student. Sets players.deactivated_at, and nothing else.
+ *
+ * ⚠️ TOUCHES NO DATA. No assignment is deleted, moved or filed; no log is
+ * touched. Everything the student has ever done is still there and comes back
+ * untouched on activation. This is the safe path that permanent delete never
+ * had, which is the whole reason it exists.
+ *
+ * ⚠️ Deactivating is NEVER gated. It only ever frees a seat, so there is no
+ * limit it could violate and nothing to check — the asymmetry with
+ * activatePlayer() below is deliberate, not an oversight. It is also a coach's
+ * escape hatch when they are over their ceiling after a downgrade, and gating
+ * the escape hatch would trap them.
+ *
+ * No confirm is enforced here; the modal does that. This is fully reversible in
+ * one tap the other way — the same reasoning that leaves setFiledAt() undialogued.
+ */
+export async function deactivatePlayer(playerId: string): Promise<SetPlayerActiveResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not authenticated." };
+
+  const { error } = await supabase
+    .from("players")
+    .update({ deactivated_at: new Date().toISOString() })
+    .eq("id", playerId)
+    .eq("coach_id", user.id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/**
+ * Bring a paused student back — and RE-CHECK THE SEAT GATE on the way.
+ *
+ * ⚠️ This is the half that makes deactivation safe for billing. Without it, a
+ * Pro coach could add 30 students, cancel, and keep all 30 running on Free
+ * forever: nothing else in the app re-examines the active count after a
+ * downgrade. Activation is the only moment a student re-enters the count, so it
+ * is the only place that gate can be applied.
+ *
+ * ⚠️ Asks activeStudentLimit(), the same helper addPlayer() asks, so the two can
+ * never disagree about what a plan allows. A coach blocked from reactivating
+ * someone they could have added fresh is one bug seen from two ends.
+ *
+ * ⚠️ FAILS CLOSED on an unreadable count, matching addPlayer(). Letting an
+ * activation through on a transient hiccup is exactly the silent give-away of
+ * paid capacity the add gate refuses to make.
+ */
+export async function activatePlayer(playerId: string): Promise<SetPlayerActiveResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not authenticated." };
+
+  const { data: coach } = await supabase
+    .from("coaches")
+    .select("id, instructor_type, subscription_status")
+    .eq("id", user.id)
+    .single();
+
+  if (!coach) return { ok: false, error: "Finish signing up first." };
+
+  const limit = activeStudentLimit(coach.subscription_status);
+  const count = await countActiveStudents(supabase, user.id);
+
+  if (count === null) {
+    return { ok: false, error: "Couldn't check your plan just now. Try again." };
+  }
+
+  // ⚠️ `>=`, not `>`. The student being activated is currently INACTIVE, so they
+  // are not in this count — a coach already at the limit would land one over it.
+  if (count >= limit) {
+    const labels = getActivityLabels(coach.instructor_type ?? null);
+
+    if (!isEntitled(coach.subscription_status)) {
+      return {
+        ok: false,
+        code: "limit_reached",
+        error: `Your free plan covers ${limit} active ${labels.studentsLabel}. Upgrade to Pro, or deactivate someone else first.`,
+      };
+    }
+
+    return {
+      ok: false,
+      code: "ceiling_reached",
+      error: `Pro covers ${PRO_STUDENT_LIMIT} active ${labels.studentsLabel}. Deactivate someone else to make room.`,
+    };
+  }
+
+  const { error } = await supabase
+    .from("players")
+    .update({ deactivated_at: null })
+    .eq("id", playerId)
+    .eq("coach_id", user.id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 export type UpdatePlayerResult = { ok: true } | { ok: false; error: string };
@@ -210,6 +321,18 @@ export async function repeatAssignment(assignmentId: string): Promise<RepeatAssi
 
   if (!original) return { ok: false, error: "Assignment not found." };
 
+  // ⚠️ A repeat CREATES NEW WORK, so it is an assign path and carries the same
+  // pause check the two assign actions do. The card's menu is hidden for an
+  // inactive student, but a stale tab or a direct call arrives with no page gate
+  // in front of it — the same lesson this file already learned twice, at
+  // fileFinishedAssignments() and at the completion re-check just below.
+  //
+  // Above the completion check on purpose: being paused is the cheaper and more
+  // fundamental refusal, and it also stops the SMS at the end of this function
+  // firing at a student the coach has explicitly paused.
+  const active = await requireActivePlayer(supabase, user.id, original.player_id);
+  if (!active.ok) return { ok: false, error: active.error };
+
   // ⚠️ Completion is re-established HERE, not inherited from the fact that the
   // menu only draws "Assign again" on a finished card. A render-time gate is not a
   // precondition: the coach can be holding a stale page (loaded when the work
@@ -299,7 +422,7 @@ export async function resendPlayerLink(playerId: string): Promise<ResendLinkResu
   const [{ data: player }, { data: coach }] = await Promise.all([
     supabase
       .from("players")
-      .select("name, phone, token")
+      .select("name, phone, token, deactivated_at")
       .eq("id", playerId)
       .eq("coach_id", user.id)
       .single(),
@@ -307,6 +430,14 @@ export async function resendPlayerLink(playerId: string): Promise<ResendLinkResu
   ]);
 
   if (!player) return { ok: false, error: "Student not found." };
+
+  // A paused student should not be texted their link — the link still opens, but
+  // it shows "ask your coach to activate you", so sending it would be an
+  // invitation to a dead end.
+  if (player.deactivated_at) {
+    const first = player.name?.trim().split(/\s+/)[0] || "That student";
+    return { ok: false, error: `${first} is deactivated. Activate them first.` };
+  }
 
   const coachName = coach?.name ?? "Coach";
   const smsBody = `Hey ${player.name} — ${coachName} assigned you work. Tap here: https://assignreps.com/student/${player.token}`;

@@ -31,6 +31,14 @@ type Props = {
   /** True while this card is an unconfirmed optimistic placeholder. Its id is
    *  local-only, so acting on it would target a row the server has never seen. */
   disabled?: boolean;
+  /** False when the student is deactivated. Hides "Assign again" ONLY — that is
+   *  the one item here that creates NEW work, and a paused student cannot be
+   *  given any. Archive, Move back, Edit amount and Delete all stay: they are
+   *  housekeeping on work that already exists, which a coach should still be
+   *  able to tidy while a student is away.
+   *
+   *  ⚠️ Cosmetic. repeatAssignment() refuses on its own for a paused student. */
+  canAssign?: boolean;
   /** ⚠️ These four no longer call the server here. CoachAssignmentList owns the
    *  row list, so it owns the optimistic edit, the mutation, the rollback and
    *  the error toast — all four have to happen together or the card and the
@@ -97,7 +105,7 @@ const EDIT_SUBTITLE: Record<GoalType, string> = {
 // gone — and matches "Delete exercise" in CustomExerciseMenu.
 export default function AssignmentMenu({
   assignmentId, exerciseName, target, presets, goalType, hasProgress, isDone, isFiled,
-  disabled = false, onArchive, onMoveToNew, onDelete, onAssignAgain,
+  disabled = false, canAssign = true, onArchive, onMoveToNew, onDelete, onAssignAgain,
 }: Props) {
   const router = useRouter();
   // Only "Edit amount" still calls the server from this component, so this is
@@ -194,23 +202,29 @@ export default function AssignmentMenu({
                 // Finished: reassign, or move between tabs. No delete — see the
                 // note on the component.
                 <>
-                  <button
-                    role="menuitem"
-                    onClick={handleRepeat}
-                    disabled={isPending}
-                    className={MENU_ITEM}
-                  >
-                    <RotateCcw {...ICON} />
-                    {isPending ? "Assigning…" : "Assign again"}
-                  </button>
+                  {canAssign && (
+                    <button
+                      role="menuitem"
+                      onClick={handleRepeat}
+                      disabled={isPending}
+                      className={MENU_ITEM}
+                    >
+                      <RotateCcw {...ICON} />
+                      {isPending ? "Assigning…" : "Assign again"}
+                    </button>
+                  )}
                   {/* Left/right arrows rather than an archive or file glyph: the
                       two tabs sit side by side with New on the left, so the
-                      direction of travel is the thing worth drawing. */}
+                      direction of travel is the thing worth drawing.
+
+                      ⚠️ The divider is conditional on the row ABOVE existing.
+                      With "Assign again" hidden this is the menu's first item,
+                      and a leading hairline would draw a rule against nothing. */}
                   <button
                     role="menuitem"
                     onClick={handleMove}
                     disabled={isPending}
-                    className={`${MENU_ITEM} ${MENU_DIVIDER}`}
+                    className={`${MENU_ITEM} ${canAssign ? MENU_DIVIDER : ""}`}
                   >
                     {isFiled ? <ArrowLeft {...ICON} /> : <ArrowRight {...ICON} />}
                     {isFiled ? "Move back to New" : "Archive"}

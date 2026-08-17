@@ -20,20 +20,25 @@
 - **`/privacy` heading contrast** fixed — was failing AA at 3.36:1, now matches `/faq`'s measured values.
 - **Testimonial removed** from `page.tsx`, saved verbatim to `docs/deferred/section-2-testimonial.md`. Waiting on RJ, low priority.
 - **Hero device mock scaled to 120%** (`--pw` 206px), header gap halved (48px → 24px).
+- **Deactivate/Activate students — BUILT.** Migration `20260817120000` adds `players.deactivated_at` (nullable timestamptz, mirroring `assignments.filed_at`). A full pause in both directions: the coach cannot assign, and the student cannot log. Their token link still opens and shows a "you're on pause" screen naming their coach. Roster gains a collapsed **Inactive** group; `PlayerManage` gains **Deactivate/Activate**, and **Delete** moves behind a typed confirmation. See *Deactivation* below.
+- **The 30-student Pro cap is now ENFORCED**, as a side effect of the above. `PRO_STUDENT_LIMIT = 30` and `activeStudentLimit()` are real code in `entitlement.ts`, asked by both the add gate and the reactivate gate.
 
 ### Still open, ranked
 
-1. **Deactivate/Activate students — not built.** Elevated tonight because it closes a real loophole, not just a UX gap: a Pro coach can add up to 30 students, cancel, and keep all 30 active on Free forever. **Nothing currently restricts the active count after a downgrade.** See pre-launch item 8 for the decided terminology and schema shape.
+1. ✅ **Deactivate/Activate students — BUILT Aug 17 2026.** The loophole it was elevated for is closed: `activatePlayer()` re-checks the seat gate, which is the only moment a student re-enters the active count, so a downgraded coach cannot quietly keep 30 running on Free. ⚠️ **The migration must be run by hand in the Supabase SQL editor** — see `supabase/migrations/20260817120000_add_deactivated_at_to_players.sql`. Nothing else in this build works until it is applied. ⚠️ **Not yet device-tested**, and the deactivate/activate/delete modals and the collapsed roster group have never been seen on a real phone.
 2. **Students and parents on token links have ZERO route to `/privacy`.** More serious than the coach-side version below — these are the people whose data is described there, and many are minors.
 3. **Signed-in coaches cannot reach `/faq`, `/privacy` or `/terms` at all.** Every link to them lives on the public landing page; the instructor app has no footer and `ProfileMenu` has no link out.
 4. **Desktop hero headline still reads "intense."** Mobile was addressed via tracking (now `normal`); desktop was not. Next lever is already scoped: colour `#0f0f10` → `#1a1a1a`, still 13.4:1 and zero layout cost. ⚠️ Do not drop the 700 weight — it is what carries the hierarchy against the 18px/600 bullets.
 5. **Mobile scroll rhythm** — hero CTA to the next section's CTA feels too fast. Proposed and undecided: swap §2/§3 stacking order on mobile to mocks-first rather than copy-first.
 6. **Fold clearance is thin.** 10.4px at 375×812, and the "Free, forever. No card." support line now sits **below the fold on tall phones**, not just SE-class. Flagged; not yet decided whether it matters. `--pw` toward 190px is worth ~30px if it does.
-7. **The 30-student Pro cap is decided but NOT enforced.** Staying at 30. It remains copy on three unlinked surfaces (pricing card, `/faq`, `AddPlayerForm`) with no code behind it. Making the line more prominent tonight raised the cost of that gap rather than closing it.
+7. ✅ **The 30-student Pro cap is now ENFORCED** (Aug 17 2026), closed as a side effect of item 1 — the reactivate gate needed a plan-aware limit, and having two gates disagree about what a plan allows was not an option. `PRO_STUDENT_LIMIT = 30` plus `activeStudentLimit(subscriptionStatus)` in `entitlement.ts`; both `addPlayer()` and `activatePlayer()` route through it and both fail closed.
+   - ⚠️ **A Pro coach at 30 now gets a DIFFERENT dead end from a free coach at 3**, and the distinction is load-bearing: they have already paid and there is no higher plan, so showing them an upgrade button would be a lie. `AddPlayerResult` carries `ceiling_reached` alongside `limit_reached` for exactly this, and `AddPlayerForm` renders `CeilingBlock` instead of `UpgradeBlock`.
+   - ⚠️ **`AddPlayerForm` now reads the number from the constant; the pricing card and `/faq` still hold hand-written 30s.** Two of the three surfaces still move by hand.
 8. **Remaining privacy-audit bundle:** Stripe absent from the vendor list, the thin minors section, `#888888` failing on the "Last updated" line, `/terms` still carrying the old failing blue heading, and the date bump — do the bump last, once the rest lands.
 9. **Landing page metadata** (title/description/OG — **five strings**, four in `page.tsx` plus the fallback in `layout.tsx`). Parked, needs real thought: SEO wants "practice/drills" keywords, but "practice" collides with basketball's team-session meaning.
-10. **CLAUDE.md restructure** — split current state from narrative history into `docs/`. Its own isolated pass.
-11. **Later, no urgency:** the signed-in app is capped at phone width on desktop/tablet; landing page modules feel rigid block-to-block (TeuxDeux-style overlap was the direction); an animated hero walkthrough.
+10. ⚠️ **`saveAssignment()` and `saveCustomAssignment()` do not verify the player belongs to the coach.** Both insert with `coach_id: user.id` and a **client-supplied `player_id`**, leaning on RLS alone rather than reading the row first — unlike `repeatAssignment()`, which is player-scoped, and `addPlayer()`, which counts server-side. **Found Aug 17 2026 while building deactivation and deliberately left**, to keep that build scoped; the pause check added to both actions goes through `requireActivePlayer()`, which *is* ownership-scoped, so it happens to close the gap for those two calls — but the insert itself is still unguarded and would remain so if that check were ever removed. Its own small pass: read the player scoped by `coach_id` and refuse if absent, in both actions.
+11. **CLAUDE.md restructure** — split current state from narrative history into `docs/`. Its own isolated pass.
+12. **Later, no urgency:** the signed-in app is capped at phone width on desktop/tablet; landing page modules feel rigid block-to-block (TeuxDeux-style overlap was the direction); an animated hero walkthrough.
 
 ### ⚠️ Going live is a separate task
 
@@ -325,7 +330,9 @@ The plan now is to invite **a small number of real basketball trainers, unconnec
 
 **7. Error and edge-case handling.** As far as is known, failure paths have never been exercised end to end: signup failures, payment failures, webhook-arrives-late, card declined, 3DS challenge, network drop mid-checkout. ⚠️ Two specific known-unseen states are already recorded under **Open — next session** in Billing architecture: the ProfileMenu panel's width at its widest item, and **the wrapping error line inside that 160px panel — no upgrade error has ever been made to occur there.** `useUpgrade()` has a `catch` and an `upgradeError` string, so the plumbing exists; what has never been seen is what a coach actually reads when something breaks. **Needs a real pass, not a code read.**
 
-**8. Player deactivation — a real feature, and it needs its own focused session.** ⚠️ **This is NOT a menu-label change.** It touches the schema, the roster UI and the billing gate at once, and it cannot be designed in isolation from item 5 or the downgrade/subscription work — the same vocabulary has to mean the same thing in the copy and in `isEntitled()` / `FREE_STUDENT_LIMIT`. Treat it with the care the Aug 5 landing builds got, not as a late add-on.
+**8. Player deactivation — ✅ BUILT Aug 17 2026.** Everything below was the plan; it shipped essentially as decided, with the deviations recorded under *Deactivation* in the app sections. ⚠️ **The migration still has to be run by hand in the Supabase SQL editor.** ⚠️ **Never device-tested.** The original entry is kept below as the record of what was decided and why.
+
+⚠️ **This is NOT a menu-label change.** It touches the schema, the roster UI and the billing gate at once, and it cannot be designed in isolation from item 5 or the downgrade/subscription work — the same vocabulary has to mean the same thing in the copy and in `isEntitled()` / `FREE_STUDENT_LIMIT`. Treat it with the care the Aug 5 landing builds got, not as a late add-on.
 
 *Decided on the night of Aug 5. Implementation design is deliberately NOT attempted here.*
 
@@ -443,7 +450,8 @@ coaches
   subscription_status (text, nullable)   -- Stripe's own status string, mirrored
 
 players
-  id, coach_id, name, phone, parent_phone, send_to_parent, token, last_texted_at, created_at
+  id, coach_id, name, phone, parent_phone, send_to_parent, token, last_texted_at, created_at,
+  deactivated_at (timestamptz, nullable)   -- null = Active, set = Inactive
 
 assignments
   id, coach_id, player_id, exercise_name, target, unit (reps/minutes), video_url,
@@ -480,6 +488,11 @@ Migrations live in `supabase/migrations/`. There is **no base schema migration**
 - **`filed_at`** — which tab an assignment sits in: NULL = **New**, set = **Archive**, and the value is when the coach moved it. Nullable, no default, no backfill; every pre-existing row reads as New, which is where they all were. Indexed as `(player_id, filed_at)` since every read on both list screens is "this player's cards, split by filed or not."
   - ⚠️ **Filing is independent of completion.** Nothing moves automatically. A finished assignment stays in New until a coach archives it, and archiving is reversible. `isComplete()` no longer decides tab membership at all — it only draws the ✓ badge and picks which menu actions a card offers.
   - ⚠️ **Deliberately NOT named `logged_at`.** `logs.logged_at` already means "when a STUDENT recorded reps", and the player detail page reads both tables into one aggregation. Two columns, one name, opposite actors. The small mismatch with the "Archive" tab label is the price; the collision would have been permanent.
+- **`deactivated_at`** — a student's reversible pause: NULL = **Active**, set = **Inactive**, and the value is when the coach deactivated them. Nullable, no default, no backfill; every pre-existing player reads as active, which they all are. Indexed as `(coach_id, deactivated_at)` — both readers filter by coach first and test this second. Migration `20260817120000_add_deactivated_at_to_players.sql`.
+  - ⚠️ **Deliberately NOT `archived_at`.** "Archive" already means *a finished assignment filed away* (`assignments.filed_at`) on both the coach's screen and the student's. A second meaning for players would make "archived" ambiguous in every conversation and every function name — the exact collision `filed_at` was named to avoid.
+  - ⚠️ **The vocabulary is shared with the billing gate on purpose.** `FREE_STUDENT_LIMIT` and `PRO_STUDENT_LIMIT` count **active** students — this column `IS NULL` — and the roster says "Inactive". One term end to end, no translation layer between what a coach reads and what the gate computes.
+  - ⚠️ **A full pause in BOTH directions, and that is the part that is easy to half-build.** The coach cannot assign (three write paths, all gated) and the student cannot log (`saveLog` refuses). Hiding it from the assign flow alone would leave a paused student still logging.
+  - ⚠️ **It touches NO data.** No assignment is deleted, moved or filed; no log changes. Reactivating restores everything untouched. It is not a soft delete and must never become one — `players.delete()` is still a real cascade and is still its own separate action.
 - `logs_amount_check` — a constraint requiring `amount > 0` exists on `logs` but is NOT in any migration file (created directly in the dashboard). Don't try to insert `amount: 0`.
 - `logs_makes_non_negative` — `makes IS NULL OR makes >= 0`.
 - Assignments are not time-bounded — they persist until the instructor archives them (or deletes them, which is only possible before the work is finished).
@@ -753,6 +766,62 @@ Only the **note field** has been moved (Aug 1 2026), and deliberately only that 
 - Two-tone: muted attempts fill + bright makes fill overlaid — **`reps` goal only**. On a makes goal the single bar is already measuring makes, so stacking would draw the same figure twice.
 - Single-tone (no makes): single muted fill
 - Complete: full bright
+
+---
+
+## Deactivation (Active / Inactive students)
+
+Built Aug 17 2026. A **reversible pause** on one student, driven by `players.deactivated_at` and nothing else. Closes the downgrade loophole that made it item 1: a Pro coach could add 30 students, cancel, and keep all 30 active on Free forever.
+
+⚠️ **The migration is NOT applied automatically.** `supabase/migrations/20260817120000_add_deactivated_at_to_players.sql` has to be run by hand in the Supabase SQL editor. Nothing below works until it is.
+
+### What a pause actually stops
+
+⚠️ **Both directions, and each has THREE layers.** Only the last of each is enforcement; the others exist so a coach never walks into a refusal.
+
+| | Coach side | Student side |
+|---|---|---|
+| Cosmetic | `+ Assign more` / `+ Assign homework` hidden, `Assign again` dropped from the card menu | — |
+| Convenience | all six `/assign/*` routes redirect back to the student's screen | `/student/[token]/log/[id]` redirects home |
+| **Enforcement** | `saveAssignment()`, `saveCustomAssignment()`, `repeatAssignment()` and `resendPlayerLink()` each refuse | **`saveLog()` refuses** |
+
+⚠️ **`saveLog()` is the one that genuinely matters.** `logs` has **no RLS policy at all** and `saveLog` takes `playerId` as an argument, so the log page's redirect proves nothing — a stale tab or a crafted request reaches the action directly. It reads `deactivated_at` by **player id**, not by token, because that is what the insert is keyed on.
+
+⚠️ Archive, Move back to New, Edit amount and Delete assignment all stay available while paused. They are housekeeping on work that already exists; only the item that *creates* work is withdrawn.
+
+### The seat gate
+
+`activeStudentLimit(subscriptionStatus)` in `entitlement.ts` — Free 3, Pro 30 — asked by **both** gates, because "can I add one?" and "can I bring one back?" are the same question:
+
+| | Counts | Fails closed | Codes |
+|---|---|---|---|
+| `addPlayer()` | active only | yes | `limit_reached` / `ceiling_reached` |
+| `activatePlayer()` | active only | yes | same two |
+
+⚠️ **`deactivatePlayer()` is deliberately UNGATED.** It only ever frees a seat, and it is a coach's escape hatch when a downgrade leaves them over the ceiling — gating the escape hatch would trap them.
+
+⚠️ **The comparison is `count >= limit`, not `>`.** The student being activated is currently inactive and therefore *not* in the count; `>` would land the coach one over.
+
+⚠️ **Two dead ends, not one.** A free coach at 3 sees the paywall with a real Upgrade button (`useUpgrade()`, its **third** consumer). A Pro coach at 30 sees `CeilingBlock` — no button, because there is nothing to sell them — and is told to deactivate someone instead.
+
+### Surfaces
+
+- **Roster** — a fifth group, **Inactive**, last after "Nothing assigned", **collapsed by default** with a count in the header (`Inactive · 2`). ⚠️ `InactiveGroup.tsx` is **the roster's only client component**, and only because the page is an async server component and a tap-to-expand header cannot live in one. Expand state is deliberately not persisted. ⚠️ `playerGroup()` now takes the **player**, not an id — Inactive comes from the player row and **wins over all four completion groups**. ⚠️ The row itself is byte-identical to an active one; only the header and subline (`paused · 4 kept`) differ, because dimming a student's row would make their record look degraded.
+- **Coach detail** — a quiet `Inactive` banner above the list. Everything below stays fully readable: reviewing history is the main reason to open a paused student's page.
+- **`PlayerManage`** — `Deactivate {name}` above `Delete {name}`, in normal ink against Delete's red. ⚠️ **Delete is reachable directly from the ACTIVE state**; deactivate-first was rejected because making the safe action a step on the way to the destructive one teaches a coach to tap through it.
+- **Student** — their token link **still opens**, always. Never a 404: a dead link reads as "you've been removed" to a kid who has simply stopped for the season. They get *"Hey {name} — you're on pause"*, their coach's real name via `coach_name_for_token`, and *"Everything you've logged is saved."* No action, because there is genuinely nothing they can do.
+
+### Delete, now behind a typed confirmation
+
+⚠️ **It was one red button until this build**, and `players` cascades to **both** `assignments` and `logs` — so the app's single most destructive act sat behind its lightest control. The modal now requires typing the student's **first name** (case- and whitespace-insensitive: a proof of attention, not a spelling test). Typing their name rather than "DELETE" is the point — it proves you know *whose* history you are destroying.
+
+⚠️ This does **not** resolve the contradiction in *Product decisions locked* — *"Log history is never deleted"* is still false for a player delete. Deactivation now gives that principle a true path; the cascade itself is unchanged.
+
+### Not done
+
+⚠️ **Never seen on a device.** The three modals, the banner and the collapsed group have only been type-checked and built.
+
+⚠️ **The open questions from pre-launch item 8 that this build did NOT answer:** whether an inactive student should still receive assignment SMS (moot today — they cannot be assigned to), and what a coach already over the limit sees on the roster (nothing special; they simply cannot add or activate until they deactivate someone).
 
 ---
 
@@ -1067,7 +1136,8 @@ Every piece is built, and the loop is **verified end to end locally** (Aug 3 202
 | Service-role client | `src/lib/supabase-service.ts` | The only role allowed to write the billing columns |
 | Stripe client | `src/lib/stripe.ts` | Lazy `getStripe()`; no `apiVersion` pinned |
 | Checkout action | `src/app/instructor/billing/actions.ts` | Create-or-reuse customer, then a Checkout session |
-| Entitlement | `src/lib/entitlement.ts` | `isEntitled()` + `FREE_STUDENT_LIMIT` — the single source of truth |
+| Entitlement | `src/lib/entitlement.ts` | `isEntitled()`, `FREE_STUDENT_LIMIT`, `PRO_STUDENT_LIMIT`, `activeStudentLimit()` — the single source of truth |
+| Active-seat count | `src/lib/active-students.ts` | `countActiveStudents()` + `requireActivePlayer()` — the two reads every gate shares |
 | Upgrade handler | `src/lib/use-upgrade.ts` | `useUpgrade()` — shared by both upgrade entry points |
 | Upgrade button | `src/components/ProfileMenu.tsx` | First menu item, hidden when `isPro` |
 | **Add-student gate** | `add-student/actions.ts` + `page.tsx` + `AddPlayerForm.tsx` | Blocks the 4th player, offers the paywall |
@@ -1645,7 +1715,7 @@ The three at the top are the ones RJ has actually asked for and that now have a 
 - **Pricing** (Aug 5 2026, recopy Aug 6). Eyebrow **"Straightforward pricing"**, heading **"Give it a try."**, sub *"Free to try, no card needed. See if it fits in a few minutes."* Centred, not zig-zagged. Two cards — Free `$0` **"up to 3 students"** / Pro `$10/mo` **"up to 30 students"** — both CTAs reading **"Start free"** because both go to the same signup and no "start Pro" path exists. One shared feature checklist under both, headed *"Everything included, always"*. Band `#f8f7f5`, reused from `/privacy` and `/terms`. ⚠️ Carries `flex: 1 0 auto`. ⚠️ Carries `id="pricing"`.
   - ⚠️ **"Straightforward pricing" is now the EYEBROW, not the heading** — this entry had it as the heading. The heading became an invitation and the eyebrow carries the old words so they are not lost.
   - ⚠️ **"forever" appears NOWHERE on the landing page as of Aug 6.** The hero support line says "Try free. No card, no catch." and this sub says "free to try". The free tier genuinely IS forever (see **Pricing**), so re-adding the word would not be a lie — it is simply no longer claimed. `/faq` **does** say "forever", deliberately, in answer to "is it actually free".
-  - ⚠️ **"up to 30 students" is COPY ONLY and appears on THREE unlinked surfaces**: this card, the in-app paywall in `AddPlayerForm.tsx`, and `/faq`. `entitlement.ts` defines `FREE_STUDENT_LIMIT = 3` and **no Pro ceiling of any kind**, so nothing enforces 30 and a Pro coach can currently pass it freely. A real cap is a separate build (the gate, downgrade behaviour, what happens to student 31). Change one surface and the other two move by hand.
+  - ⚠️ **"up to 30 students" is COPY ONLY and appears on THREE unlinked surfaces**: this card, the in-app paywall in `AddPlayerForm.tsx`, and `/faq`. ⚠️ **The cap became REAL on Aug 17 2026** — `PRO_STUDENT_LIMIT = 30` in `entitlement.ts`, enforced by both `addPlayer()` and `activatePlayer()`. `AddPlayerForm` now reads the number from the constant, so **two** hand-written 30s remain: this card and `/faq`. Change one and the other moves by hand.
 - **In-app paywall string** (`AddPlayerForm.tsx`, Aug 6 2026): heading *"You've got {n} {studentsLabel} — nice work."*, body **"Pro takes you up to 30 {studentsLabel}, $10/month."** ⚠️ It read *"Pro unlocks unlimited, $10/month"* for part of Aug 6, which contradicted the pricing card. This is the surface a coach sees at the moment they are asked to pay, so it was the more important of the two to correct. `studentsLabel` keeps the noun following the coach's activity.
 - **Footer:** `#262a39` — **the same value section 2's band uses**, not the old `#1a1d24`, and with **no top border**.
   - ⚠️ **This entry said `#1a1d24` with a `1px solid #2a2d36` top rule; both are wrong now.** The rule was removed, not forgotten: its documented job was separating the footer from a band it once shared a colour with, the band above is now the near-white `#f8f7f5` (13.32:1 away — emphatic on its own), and the rule measured 1.04:1 against the new background, so it was invisible and merely made the footer 1px taller.

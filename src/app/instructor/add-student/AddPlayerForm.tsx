@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { addPlayer } from "./actions";
 import { useUpgrade } from "@/lib/use-upgrade";
-import { FREE_STUDENT_LIMIT } from "@/lib/entitlement";
+import { PRO_STUDENT_LIMIT } from "@/lib/entitlement";
 
 const INPUT =
   "w-full rounded-[10px] border border-[#2a2d36] bg-[#1c1f26] px-[14px] py-[13px] text-base text-white outline-none transition-colors placeholder:text-[#5a5f72] focus:border-[#378add]";
@@ -15,9 +15,16 @@ type Recipient = "player" | "parent";
 type Props = {
   studentLabel: string;
   studentsLabel: string;
-  /** Free-tier coach already at the limit — show the paywall, not the form. */
+  /** Coach already at their plan's ACTIVE-student limit — show the block, not
+   *  the form. */
   atLimit: boolean;
+  /** Whether the block has an upgrade to offer. False for a Pro coach at 30,
+   *  who has no higher plan to sell and needs different copy. */
+  canUpgrade: boolean;
+  /** ACTIVE students, not total — a deactivated student consumes no seat. */
   playerCount: number;
+  /** This coach's plan ceiling: FREE_STUDENT_LIMIT or PRO_STUDENT_LIMIT. */
+  limit: number;
 };
 
 // The free-tier paywall, rendered in place of the form inside the SAME screen
@@ -47,10 +54,11 @@ function UpgradeBlock({
       <h1 className="text-[17px] font-semibold leading-snug text-white">
         You&apos;ve got {shownCount} {studentsLabel} — nice work.
       </h1>
-      {/* ⚠️ COPY ONLY — nothing enforces 30. entitlement.ts defines
-          FREE_STUDENT_LIMIT = 3 and no Pro ceiling at all, so a Pro coach can
-          currently pass 30 freely. A real cap is a separate build (the gate,
-          downgrade behaviour, what happens to student 31).
+      {/* ⚠️ NO LONGER COPY ONLY. entitlement.ts now defines PRO_STUDENT_LIMIT
+          and addPlayer() enforces it, so this number is read from the constant
+          rather than typed — the string a coach reads and the number the gate
+          computes cannot drift. The landing pricing card and /faq still hold
+          hand-written 30s; those two are unlinked and move by hand.
 
           ⚠️ It previously read "Pro unlocks unlimited, $10/month", which
           contradicted the landing page's pricing card once that changed to
@@ -59,7 +67,7 @@ function UpgradeBlock({
           correct. Reuses studentsLabel so the noun still follows the coach's
           activity, exactly as the heading above does. */}
       <p className="mt-2 text-[14px] leading-relaxed text-[#8a8fa8]">
-        Pro takes you up to 30 {studentsLabel}, $10/month.
+        Pro takes you up to {PRO_STUDENT_LIMIT} {studentsLabel}, $10/month.
       </p>
 
       {/* 32px above a full-width primary button, matching CountScreen,
@@ -84,11 +92,42 @@ function UpgradeBlock({
   );
 }
 
+// The PRO CEILING, which is a different dead end from the paywall above and must
+// not read like one. A Pro coach at 30 has already paid; there is no higher plan
+// to sell them, so offering an upgrade button here would be a lie dressed as a
+// solution. It names the move that actually works instead — deactivate someone —
+// which is exactly what deactivation exists for.
+//
+// Same shell, same warm-before-transactional order as UpgradeBlock, no CTA.
+function CeilingBlock({
+  shownCount,
+  studentsLabel,
+}: {
+  shownCount: number;
+  studentsLabel: string;
+}) {
+  return (
+    <div className="flex flex-1 flex-col">
+      <h1 className="text-[17px] font-semibold leading-snug text-white">
+        You&apos;ve got {shownCount} active {studentsLabel} — that&apos;s the Pro
+        limit.
+      </h1>
+      <p className="mt-2 text-[14px] leading-relaxed text-[#8a8fa8]">
+        Deactivate a {studentsLabel.replace(/s$/, "")} you&apos;re not working
+        with right now to free up a spot. Nothing of theirs is lost, and you can
+        bring them back anytime.
+      </p>
+    </div>
+  );
+}
+
 export default function AddPlayerForm({
   studentLabel,
   studentsLabel,
   atLimit,
+  canUpgrade,
   playerCount,
+  limit,
 }: Props) {
   const router = useRouter();
 
@@ -98,11 +137,19 @@ export default function AddPlayerForm({
   const [error, setError]         = useState("");
   const [loading, setLoading]     = useState(false);
 
-  // Seeded from the server's read, but able to flip on its own: the action is
-  // the real gate, so a coach whose page loaded under the limit (stale tab,
-  // second device, the race the action documents) gets the paywall on submit
-  // rather than a red validation box.
-  const [blocked, setBlocked] = useState(atLimit);
+  // Which block to show, or null for the form. Seeded from the server's read but
+  // able to flip on its own: the action is the real gate, so a coach whose page
+  // loaded under the limit (stale tab, second device, the race the action
+  // documents) gets the right block on submit rather than a red validation box.
+  //
+  // ⚠️ The KIND is tracked, not just a boolean, and it is re-set from the
+  // action's own code rather than from the page prop. A coach who upgraded in
+  // another tab would otherwise be shown the free paywall while the action was
+  // blocking them on the Pro ceiling — the action knows which dead end it just
+  // enforced, so it decides.
+  const [blockKind, setBlockKind] = useState<null | "upgrade" | "ceiling">(
+    atLimit ? (canUpgrade ? "upgrade" : "ceiling") : null,
+  );
 
   // Same handler the ProfileMenu's "Upgrade to Pro" item uses.
   const { startUpgrade, upgrading, upgradeError } = useUpgrade();
@@ -137,21 +184,22 @@ export default function AddPlayerForm({
     setLoading(false);
 
     if (!result.ok) {
-      // The paywall is not a validation failure and must not read as one —
-      // swap the whole screen for the upgrade prompt instead of reddening the
+      // A seat limit is not a validation failure and must not read as one —
+      // swap the whole screen for the matching block instead of reddening the
       // form the coach filled in correctly.
-      if (result.code === "limit_reached") { setBlocked(true); return; }
+      if (result.code === "limit_reached")   { setBlockKind("upgrade"); return; }
+      if (result.code === "ceiling_reached") { setBlockKind("ceiling"); return; }
       setError(result.error);
       return;
     }
     router.push("/instructor/students");
   }
 
-  // What the paywall claims the coach has. Normally the server's count, but a
+  // What the block claims the coach has. Normally the server's count, but a
   // stale page can arrive here reporting fewer than the limit — the action
   // blocked on a fresher number than this component was rendered with. Never
   // print a figure lower than the limit that was just enforced.
-  const shownCount = Math.max(playerCount, FREE_STUDENT_LIMIT);
+  const shownCount = Math.max(playerCount, limit);
 
   return (
     <main className="flex min-h-screen flex-col bg-[#080b0f] px-6 pb-10 pt-9">
@@ -181,14 +229,18 @@ export default function AddPlayerForm({
         </Link>
       </div>
 
-      {blocked ? (
-        <UpgradeBlock
-          shownCount={shownCount}
-          studentsLabel={studentsLabel}
-          onUpgrade={startUpgrade}
-          upgrading={upgrading}
-          upgradeError={upgradeError}
-        />
+      {blockKind ? (
+        blockKind === "upgrade" ? (
+          <UpgradeBlock
+            shownCount={shownCount}
+            studentsLabel={studentsLabel}
+            onUpgrade={startUpgrade}
+            upgrading={upgrading}
+            upgradeError={upgradeError}
+          />
+        ) : (
+          <CeilingBlock shownCount={shownCount} studentsLabel={studentsLabel} />
+        )
       ) : (
       <>
       {error && (

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { categoryKeyForExercise } from "@/lib/exercises";
 import type { GoalType, Side } from "@/lib/exercises";
@@ -18,11 +18,20 @@ export default async function LogPage({
   // Resolve player from token — no auth required
   const { data: player } = await supabase
     .from("players")
-    .select("id, name, coach_id")
+    .select("id, name, coach_id, deactivated_at")
     .eq("token", token)
     .single();
 
   if (!player) notFound();
+
+  // A paused student can reach this URL directly — a bookmark, an old SMS link,
+  // or the back button. Sent to their home screen, which carries the one
+  // explanation rather than duplicating it here.
+  //
+  // ⚠️ CONVENIENCE. saveLog() refuses on its own: `logs` has no RLS policy at
+  // all and saveLog takes playerId as an argument, so this page is not, and
+  // cannot be, the thing that stops a write.
+  if (player.deactivated_at) redirect(`/student/${token}`);
 
   // Fetch assignment (must belong to this player)
   const { data: assignment } = await supabase

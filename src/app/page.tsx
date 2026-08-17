@@ -1202,11 +1202,12 @@ export default function LandingPage() {
               <p className="pricing-price">
                 $10<span className="pricing-per">/mo</span>
               </p>
-              {/* ⚠️ COPY ONLY — nothing enforces this. entitlement.ts defines
-                  FREE_STUDENT_LIMIT = 3 and no Pro ceiling of any kind, so a Pro
-                  coach can currently add students without bound. A real 30-cap
-                  is a separate build (gate, downgrade behaviour, what happens to
-                  student 31), tracked outside this pass.
+              {/* ⚠️ ENFORCED as of Aug 17 2026 — entitlement.ts defines
+                  PRO_STUDENT_LIMIT = 30 and activeStudentLimit(), applied by
+                  both addPlayer() and activatePlayer(). The limit counts ACTIVE
+                  students, so a deactivated one frees a spot. AddPlayerForm
+                  renders the constant; this card and /faq still hold the number
+                  as hand-written strings, so those two are what can drift.
 
                   ✅ The in-app paywall AGREES as of Aug 6 2026. It read "Pro
                   unlocks unlimited, $10/month" for part of that day, which

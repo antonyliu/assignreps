@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase-server";
 import { notifyAssignmentOnce } from "@/lib/notify-assignment";
+import { requireActivePlayer } from "@/lib/active-students";
 import type { GoalType, Side, Unit } from "@/lib/exercises";
 
 export type SaveAssignmentResult = { ok: true } | { ok: false; error: string };
@@ -19,6 +20,14 @@ export async function saveAssignment(
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not authenticated." };
+
+  // ⚠️ A deactivated student cannot be given new work, and this is where that is
+  // ENFORCED. The assign screens refuse to open for a paused student, but that
+  // is convenience — a stale tab, a second device or a direct invocation all
+  // reach this action with no page gate in front of them. Same rule addPlayer()
+  // follows for the paywall.
+  const active = await requireActivePlayer(supabase, user.id, playerId);
+  if (!active.ok) return { ok: false, error: active.error };
 
   // Week start = Monday of current week (ISO date)
   const now = new Date();

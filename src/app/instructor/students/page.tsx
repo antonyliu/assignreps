@@ -3,6 +3,7 @@ import { requireCoach } from "@/lib/require-coach";
 import { LogoMini } from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import ScrollToTop from "./ScrollToTop";
+import InactiveGroup from "./InactiveGroup";
 import { getActivityLabels } from "@/config/activityTypes";
 import { isComplete } from "@/lib/exercises";
 import { isEntitled } from "@/lib/entitlement";
@@ -31,10 +32,16 @@ function timeAgo(iso: string): { text: string; recent: boolean } {
   return { text, recent: diffMs < 86400000 };
 }
 
-// Completion-based roster groups, in display order.
-type Group = "done" | "progress" | "notstarted" | "unassigned";
+// Roster groups, in display order.
+//
+// ⚠️ The first four are COMPLETION-based, derived from a player's assignments.
+// "inactive" is not: it comes from the player row itself (deactivated_at) and
+// WINS over all four, because a paused student's assignment state is beside the
+// point until they are back. It sits last, after "Nothing assigned", so the
+// working view is never pushed down by students the coach has set aside.
+type Group = "done" | "progress" | "notstarted" | "unassigned" | "inactive";
 
-const GROUP_ORDER: Group[] = ["done", "progress", "notstarted", "unassigned"];
+const GROUP_ORDER: Group[] = ["done", "progress", "notstarted", "unassigned", "inactive"];
 
 // Group label styling — a dot plus its label, no pill background. Dot and text
 // always share one color, so each group reads as a single mark rather than as a
@@ -48,6 +55,10 @@ const GROUP_STYLE: Record<Group, { title: string; text: string; dot: string }> =
   progress:   { title: "In progress",      text: "#8a8fa8", dot: "#8a8fa8" },
   notstarted: { title: "Not started",      text: "#6b7080", dot: "#6b7080" },
   unassigned: { title: "Nothing assigned", text: "#6b7080", dot: "#6b7080" },
+  // One step quieter again, extending the same ramp to a fifth rung. These
+  // students are deliberately set aside, so the label should be the faintest
+  // thing on the screen while still clearing AA against the page background.
+  inactive:   { title: "Inactive",         text: "#5a5f72", dot: "#5a5f72" },
 };
 
 export const metadata: Metadata = { title: "Students — Reps" };
@@ -137,8 +148,15 @@ export default async function RosterPage() {
   // Group by completion: all assignments complete → Done; some logged but not
   // all complete → In progress; assignments but no logs → Not started; no
   // assignments at all → Nothing assigned.
-  function playerGroup(playerId: string): Group {
-    const list = assignmentsByPlayer[playerId] ?? [];
+  //
+  // ⚠️ Takes the PLAYER, not just an id, because the first test is not about
+  // assignments at all. A deactivated student is Inactive whatever their work
+  // looks like — they cannot be given more and cannot log against what they
+  // have, so reporting them as "In progress" would describe a loop that is
+  // currently frozen.
+  function playerGroup(player: Player): Group {
+    if (player.deactivated_at) return "inactive";
+    const list = assignmentsByPlayer[player.id] ?? [];
     if (list.length === 0) return "unassigned";
     if (list.every(assignmentDone)) return "done";
     // "Started" is still any logged activity, whatever the goal is scored on —
@@ -153,13 +171,21 @@ export default async function RosterPage() {
   // count. Done and In progress keep the fuller "X of Y done".
   function subline(playerId: string, g: Group): string {
     const total = (assignmentsByPlayer[playerId] ?? []).length;
+    // The group header already says "Inactive", so the row says what is WAITING
+    // for them rather than repeating their state. Their work is paused, not
+    // gone, and this is the line that says so.
+    if (g === "inactive") {
+      return total === 0 ? "paused · no assignments" : `paused · ${total} kept`;
+    }
     if (g === "unassigned") return "no assignments";
     if (g === "notstarted") return `${total} waiting`;
     return `${doneCount(playerId)} of ${total} done`;
   }
 
-  const grouped: Record<Group, Player[]> = { done: [], progress: [], notstarted: [], unassigned: [] };
-  for (const p of playerList) grouped[playerGroup(p.id)].push(p);
+  const grouped: Record<Group, Player[]> = {
+    done: [], progress: [], notstarted: [], unassigned: [], inactive: [],
+  };
+  for (const p of playerList) grouped[playerGroup(p)].push(p);
 
   // Within a group, most recently active first. Reuses lastLoggedByPlayer — the
   // same MAX(logged_at) the row's timestamp already renders — so the order a
@@ -312,6 +338,78 @@ export default async function RosterPage() {
               const group = grouped[g];
               if (group.length === 0) return null;
               const style = GROUP_STYLE[g];
+
+              // ⚠️ ONE row renderer for all five groups, deliberately. An
+              // inactive student's row is IDENTICAL to an active one — same
+              // avatar, same name, same last-activity stamp — because it is the
+              // same person and the same history. Only the group header and the
+              // subline say they are paused. Dimming the row itself would make
+              // their record look degraded, which is the opposite of the promise
+              // deactivation makes.
+              const rows = group.map((player) => {
+                // Only shown when the student has logged at least once —
+                // no dash or placeholder otherwise.
+                const last = lastLoggedByPlayer[player.id]
+                  ? timeAgo(lastLoggedByPlayer[player.id])
+                  : null;
+                return (
+                  <Link
+                    key={player.id}
+                    href={`/instructor/student/${player.id}`}
+                    className="flex items-center gap-3 px-[14px] py-2 rounded-[10px] bg-[#111620] active:scale-[0.99]"
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                  >
+                    <div
+                      className="flex items-center justify-center shrink-0 rounded-full text-[13px] font-semibold"
+                      style={{
+                        width: 34,
+                        height: 34,
+                        background: "#252830",
+                        border: "0.5px solid #2a2d36",
+                        color: "#8a8fa8",
+                      }}
+                    >
+                      {initials(player.name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[15px] font-medium truncate" style={{ color: "#ffffff" }}>
+                        {firstName(player.name)}
+                      </div>
+                      {/* One step up from the #6b7080 used for the chevron
+                          and the group dots — enough to read at a glance
+                          without rivalling the white name above it. */}
+                      <div className="text-[12px] truncate" style={{ color: "#7d8494" }}>
+                        {subline(player.id, g)}
+                      </div>
+                    </div>
+                    {last && (
+                      <span
+                        className="text-[12px] shrink-0 tabular-nums"
+                        style={{ color: last.recent ? "#378add" : "#7d8494" }}
+                      >
+                        {last.text}
+                      </span>
+                    )}
+                    <span className="text-[18px]" style={{ color: "#6b7080" }}>›</span>
+                  </Link>
+                );
+              });
+
+              // The one collapsible group. Everything above it is the working
+              // view and stays open; this is the drawer under it.
+              if (g === "inactive") {
+                return (
+                  <InactiveGroup
+                    key={g}
+                    title={style.title}
+                    color={style.text}
+                    count={group.length}
+                  >
+                    {rows}
+                  </InactiveGroup>
+                );
+              }
+
               return (
                 <div key={g}>
                   <div className="mb-2">
@@ -329,56 +427,7 @@ export default async function RosterPage() {
                       {style.title}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    {group.map((player) => {
-                      // Only shown when the student has logged at least once —
-                      // no dash or placeholder otherwise.
-                      const last = lastLoggedByPlayer[player.id]
-                        ? timeAgo(lastLoggedByPlayer[player.id])
-                        : null;
-                      return (
-                      <Link
-                        key={player.id}
-                        href={`/instructor/student/${player.id}`}
-                        className="flex items-center gap-3 px-[14px] py-2 rounded-[10px] bg-[#111620] active:scale-[0.99]"
-                        style={{ WebkitTapHighlightColor: "transparent" }}
-                      >
-                        <div
-                          className="flex items-center justify-center shrink-0 rounded-full text-[13px] font-semibold"
-                          style={{
-                            width: 34,
-                            height: 34,
-                            background: "#252830",
-                            border: "0.5px solid #2a2d36",
-                            color: "#8a8fa8",
-                          }}
-                        >
-                          {initials(player.name)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[15px] font-medium truncate" style={{ color: "#ffffff" }}>
-                            {firstName(player.name)}
-                          </div>
-                          {/* One step up from the #6b7080 used for the chevron
-                              and the group dots — enough to read at a glance
-                              without rivalling the white name above it. */}
-                          <div className="text-[12px] truncate" style={{ color: "#7d8494" }}>
-                            {subline(player.id, g)}
-                          </div>
-                        </div>
-                        {last && (
-                          <span
-                            className="text-[12px] shrink-0 tabular-nums"
-                            style={{ color: last.recent ? "#378add" : "#7d8494" }}
-                          >
-                            {last.text}
-                          </span>
-                        )}
-                        <span className="text-[18px]" style={{ color: "#6b7080" }}>›</span>
-                      </Link>
-                      );
-                    })}
-                  </div>
+                  <div className="flex flex-col gap-1.5">{rows}</div>
                 </div>
               );
             })}

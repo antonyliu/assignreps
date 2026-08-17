@@ -24,6 +24,21 @@ export type Player = {
    *  and null does NOT prove the student was never texted. Anything wanting real
    *  last-contact needs its own column. */
   last_texted_at: string | null
+  /** Reversible pause on this student: null = ACTIVE, set = INACTIVE and when
+   *  the coach deactivated them.
+   *
+   *  ⚠️ Deliberately NOT named `archived_at`. "Archive" already means a finished
+   *  ASSIGNMENT filed away (assignments.filed_at) on both the coach's screen and
+   *  the student's; a second meaning for players would make "archived" ambiguous
+   *  everywhere. The UI says Deactivate / Activate, Active / Inactive.
+   *
+   *  ⚠️ Shared with the billing gate on purpose. FREE_STUDENT_LIMIT and
+   *  PRO_STUDENT_LIMIT count ACTIVE students — this column IS NULL — and the
+   *  roster uses the same word. One term end to end.
+   *
+   *  ⚠️ Touches no data. Assignments and logs are preserved untouched; this is
+   *  a pause, not a soft delete. Permanent delete stays its own heavier action. */
+  deactivated_at: string | null
 }
 
 /** What `target` measures. 'reps' = attempts, 'makes' = makes, 'consecutive' =

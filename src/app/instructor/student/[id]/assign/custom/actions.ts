@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase-server";
 import { notifyAssignmentOnce } from "@/lib/notify-assignment";
+import { requireActivePlayer } from "@/lib/active-students";
 import type { Unit } from "@/lib/exercises";
 
 export type SaveCustomResult = { ok: true } | { ok: false; error: string };
@@ -16,6 +17,12 @@ export async function saveCustomAssignment(
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not authenticated." };
+
+  // ⚠️ Enforced here for the same reason as the preset path — and BEFORE the
+  // custom_exercises write below, so a refused assignment does not still leave a
+  // new exercise in the coach's library as a side effect.
+  const active = await requireActivePlayer(supabase, user.id, playerId);
+  if (!active.ok) return { ok: false, error: active.error };
 
   // Save this as a reusable custom exercise for the coach's "My exercises"
   // list, deduped by name. Best-effort: never block the assignment on it.

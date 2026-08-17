@@ -43,6 +43,32 @@ export async function saveLog(
 
   const supabase = await createClient();
 
+  // ⚠️ THE PAUSE GATE, AND IT HAS TO BE HERE.
+  //
+  // `logs` has NO RLS POLICY AT ALL, and saveLog takes `playerId` as an
+  // argument, so the log page's redirect is convenience and nothing more — a
+  // stale tab, a bookmarked URL or a crafted request all arrive at this function
+  // with no page in front of them. This read is the only thing that actually
+  // stops a paused student's write.
+  //
+  // ⚠️ Reads deactivated_at by PLAYER ID rather than by token, because that is
+  // what the insert below is keyed on. Checking the token's player while writing
+  // a different playerId would be a gate that guards the wrong row.
+  //
+  // FAILS CLOSED: an unreadable player row blocks. The message is the student's,
+  // not the coach's, so it says what to do rather than naming a state they had
+  // no part in choosing.
+  const { data: playerRow } = await supabase
+    .from("players")
+    .select("deactivated_at")
+    .eq("id", playerId)
+    .single();
+
+  if (!playerRow) return { ok: false, error: "Couldn't save that. Try again." };
+  if (playerRow.deactivated_at) {
+    return { ok: false, error: "Logging is paused. Ask your coach to activate your account." };
+  }
+
   // The player's assignments, read BEFORE the insert so this one query serves
   // two purposes: the snapshot copied onto the new log row, and the completion
   // check further down. It used to run after the insert alongside the logs read;

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireCoach } from "@/lib/require-coach";
 import type { Unit } from "@/lib/exercises";
 import CountScreen from "../../[category]/[exercise]/CountScreen";
@@ -12,7 +12,7 @@ export default async function AssignCustomCountPage({
   const { supabase, user } = await requireCoach();
 
   const [{ data: player }, { data: ex }] = await Promise.all([
-    supabase.from("players").select("name").eq("id", id).eq("coach_id", user.id).single(),
+    supabase.from("players").select("name, deactivated_at").eq("id", id).eq("coach_id", user.id).single(),
     supabase
       .from("custom_exercises")
       .select("name, unit, default_amount")
@@ -22,6 +22,12 @@ export default async function AssignCustomCountPage({
   ]);
 
   if (!player) notFound();
+
+  // ⚠️ CONVENIENCE, not protection. A paused student cannot be given new work,
+  // and the three assign ACTIONS each enforce that themselves — this only stops
+  // a coach walking a whole picker flow that would refuse at the end. Sent back
+  // to the student's own screen, which is where the Activate control lives.
+  if (player.deactivated_at) redirect(`/instructor/student/${id}`);
   if (!ex) notFound();
 
   const unit = ex.unit as Unit;

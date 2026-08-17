@@ -70,6 +70,11 @@ type Props = {
   loggedByAssignment: LoggedMap;
   makesByAssignment: MakesMap;
   noteByAssignment: NoteMap;
+  /** False when the student is deactivated: no new work can be created from this
+   *  screen. Hides the bottom "+ Assign more" CTA and each card's "Assign
+   *  again". ⚠️ Cosmetic — the assign routes redirect and the assign actions
+   *  refuse on their own. */
+  isActive: boolean;
 };
 
 /** The four mutations, as optimistic edits to the row list. Each mirrors
@@ -107,6 +112,7 @@ export default function CoachAssignmentList({
   loggedByAssignment,
   makesByAssignment,
   noteByAssignment,
+  isActive,
 }: Props) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -173,10 +179,10 @@ export default function CoachAssignmentList({
         newCount={newList.length}
         archiveCount={archiveList.length}
         newList={newList.map((a) =>
-          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions),
+          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, isActive),
         )}
         archiveList={archiveList.map((a) =>
-          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions),
+          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, isActive),
         )}
         newTop={
           allDone && fileableCount > 0 ? (
@@ -210,6 +216,12 @@ export default function CoachAssignmentList({
 
           The fragment is transparent to flex layout, so mt-auto still resolves
           against <main> exactly as before. */}
+      {/* ⚠️ HIDDEN, not disabled, while paused — and `mt-auto` goes with it.
+          This block is the page's only grower; dropping it means the list is
+          the last thing on screen, which is correct for a read-only history
+          view. A greyed CTA would invite a tap that explains nothing, and the
+          banner above the list has already said why there is none. */}
+      {isActive && (
       <div
         className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
@@ -227,6 +239,7 @@ export default function CoachAssignmentList({
           {allDone ? "+ Assign new work" : "+ Assign more"}
         </Link>
       </div>
+      )}
 
       {/* Same toast treatment as PlayerManage and AllDoneActions — one per
           list rather than one per card, since only one action runs at a time. */}
@@ -270,6 +283,9 @@ function renderAssignmentCard(
   makesByAssignment: MakesMap,
   noteByAssignment: NoteMap,
   actions: CardActions,
+  /** Threaded through rather than read from a closure — this renderer sits at
+   *  module scope so both tabs share exactly one card implementation. */
+  canAssign: boolean,
 ) {
   const goalType = (a.goal_type ?? "reps") as GoalType;
   const logged = loggedByAssignment[a.id] ?? 0;
@@ -407,6 +423,9 @@ function renderAssignmentCard(
         // An optimistic row has no server id yet, so its menu would act on a
         // placeholder. Disabled until the real row arrives.
         disabled={Boolean(a.optimistic)}
+        // Paused students can't be given new work, so the one item that
+        // creates some is dropped. The rest of the menu stays usable.
+        canAssign={canAssign}
         onArchive={() => actions.archive(a)}
         onMoveToNew={() => actions.moveToNew(a)}
         onDelete={() => actions.remove(a)}
