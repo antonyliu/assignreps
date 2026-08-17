@@ -1299,7 +1299,12 @@ export default function LandingPage() {
         .paper-grain { --page-max: 960px; --page-pad: 22px; }
 
         .page-header { padding: 20px var(--page-pad) 0; }
-        .page-main   { padding: 48px var(--page-pad) 24px; }
+        /* ⚠️ Top padding halved 48px -> 24px on Aug 17 2026 from real iPhone
+           testing: the device mock sat too far below the header. This is the
+           ONLY thing separating the header from the hero device — .page-header
+           has no bottom padding and .landing-layout's gap sits BELOW the device,
+           not above it. Mobile only; >=768 re-declares its own padding. */
+        .page-main   { padding: 24px var(--page-pad) 24px; }
         .landing-layout {
           display: flex;
           flex-direction: column;
@@ -1361,7 +1366,23 @@ export default function LandingPage() {
           filter: blur(16px);
         }
         .hero-device {
-          --pw: 172px;
+          /* ⚠️ 172px -> 206px (120%) on Aug 17 2026, from real iPhone testing —
+             the mock read as too small on device. Everything inside scales with
+             it: font-size is calc(--pw / 13) and the screen's contents are in
+             em, so this one number is the whole scale.
+
+             ⚠️ It costs FOLD CLEARANCE, which is the trade to know about. The
+             frame is 9/17.5, so +34px of width is +66px of height, and
+             everything below the device moves down by that much. Halving
+             .page-main's top padding (48 -> 24) gives 24px back, for a net
+             +42px. Measured at 375x812: the CTA still clears the fold, but the
+             support line beneath it no longer does.
+
+             ⚠️ The short-screen override further down (max-height: 700px) is
+             deliberately NOT scaled with this. It exists to keep the CTA above
+             the fold on an SE-class phone, and growing it would defeat the one
+             thing it is for. */
+          --pw: 206px;
           position: relative;
           z-index: 1;
           width: var(--pw);
