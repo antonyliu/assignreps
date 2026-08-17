@@ -893,7 +893,7 @@ export default function LandingPage() {
                 letterSpacing: "-0.5px",
                 color: "#0f0f10",
               }}>
-                The work doesn&apos;t stop when the session does.
+                The work you give them, gets done.
               </h1>
 
               {/* Bullets */}
@@ -968,7 +968,15 @@ export default function LandingPage() {
                     margin hacks, so position changes stay reorders.
                     ⚠️ .cta-section flips to align-items: flex-start at >=768, so
                     it left-aligns with the button on desktop automatically. */}
-                <p className="cta-support">Try free. No card, no catch.</p>
+                {/* ⚠️ "Free, forever." puts the word FOREVER back on the landing
+                    page, where it had appeared nowhere since Aug 6. It is TRUE —
+                    the free tier is 3 students with no time limit, and CLAUDE.md
+                    records a 14-day trial being considered and rejected — so
+                    this is a claim the product keeps. It is also now the whole
+                    reason the page carries no "Try…" wording anywhere.
+                    ⚠️ If the free tier ever gains an expiry, this line and the
+                    pricing subhead are the two places that become false. */}
+                <p className="cta-support">Free, forever. No card.</p>
               </div>
 
             </div>
@@ -1098,24 +1106,33 @@ export default function LandingPage() {
               this band is a near-neutral #f8f7f5 and the value is re-checked
               against it rather than assumed to travel — see .pricing-eyebrow. */}
           <p className="pricing-eyebrow">Straightforward pricing</p>
-          <h2 className="pricing-heading">Give it a try.</h2>
+          <h2 className="pricing-heading">Free, genuinely.</h2>
           {/* ⚠️ "no card needed" is VERIFIED, not assumed: signup is name ->
               instructor type -> email + 6-digit code, and that whole tree
               contains no billing code. Checkout is reachable only after signup,
               from the add-student gate or the profile menu. If a card ever
               enters the signup flow, this line comes out.
 
-              ⚠️ "forever" was dropped here on Aug 6 and now appears NOWHERE on
-              the page — the hero's support line says "Free with your first 3
-              students" and this says "free to try". Both are true and neither
-              claims permanence, which is the safer direction. The free tier IS
-              forever (see Pricing), so re-adding the word would not be a lie —
-              it is simply no longer being claimed.
+              ⚠️ PERMANENCE IS NOW CLAIMED OUTRIGHT, reversing the Aug 6
+              position. That pass dropped "forever" from the whole page on the
+              grounds that not claiming permanence was safer; this line says "no
+              time limit" and the hero support line says "Free, forever." Both
+              are TRUE — the free tier is 3 students with no expiry, and a
+              14-day trial was considered and explicitly rejected (see Pricing
+              in CLAUDE.md). The page now states the thing rather than hinting
+              at it, which is also why no "Try…" wording survives anywhere.
+              ⚠️ These two lines are what become false if the free tier ever
+              gains an expiry.
+
+              ⚠️ "3 students" is restated here even though the Free card two
+              rows down also says "up to 3 students". Deliberate: this subhead
+              has to stand on its own for someone who reads the heading and
+              stops, and the number IS the offer.
 
               ⚠️ The price is still deliberately NOT restated here; the Pro card
               two rows down carries $10/mo. */}
           <p className="pricing-sub">
-            Free to try, no card needed. See if it fits in a few minutes.
+            3 students, no card, no time limit. Upgrade only if you need more room.
           </p>
 
           <div className="pricing-cards">
@@ -1381,11 +1398,18 @@ export default function LandingPage() {
            happens to be. Browsers without support fall back to ordinary
            wrapping, which is what removing the <br /> gives anyway.
 
-           Removing the break is necessary but NOT sufficient — natural wrapping
-           still strands words. Measured at 900px: plain wrapping gives
-           "The work doesn't stop / when the session / does." with "does." alone
-           on the last line; balance gives "The work doesn't / stop when the /
-           session does." with no widow. */
+           ⚠️ For the CURRENT headline ("The work you give them, gets done.")
+           balance is a NO-OP, and the earlier note claiming otherwise described
+           the previous copy. Re-measured across 21 column widths from 240px to
+           640px on Aug 17: balance and plain wrapping produce identical breaks
+           at every one, and plain wrapping strands no one-word last line
+           anywhere. The string is short enough to sit on two even lines by
+           itself.
+
+           The rule STAYS regardless. It costs nothing, it is the safeguard that
+           made the old copy work, and headline copy has changed four times —
+           the next string may well need it again. Do not remove it on the
+           grounds that it is currently doing nothing. */
         .headline { font-size: 32px; line-height: 1.14; margin: 0 0 18px; text-wrap: balance; }
         .bullets  { margin-bottom: 24px !important; }
         .bullet-row {
