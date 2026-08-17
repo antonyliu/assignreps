@@ -24,14 +24,70 @@ export default function PrivacyPage() {
           We collect your name, email address, and any student or parent phone numbers you add. We also store the practice assignments you create and the rep logs your students submit.
         </p>
 
+        {/* ⚠️ Two false statements were REMOVED from this paragraph on Aug 6
+            2026, both verified against the code rather than assumed:
+
+            1. "To send parents a weekly digest if you've added their number."
+               DELETED OUTRIGHT, not reworded. No digest has ever been sent:
+               there is no cron, no scheduled job, no vercel.json, and
+               /src/app/api contains only stripe/. Before this edit, the ONLY
+               occurrence of "digest" or "weekly" anywhere in src/ was this
+               sentence describing itself.
+               ⚠️ It goes back only when the feature actually ships — see the
+               parent contact model in CLAUDE.md, which is still Decided-not-
+               built. Do not restore it as an intention.
+
+            2. "Students and parents receive SMS notifications via Twilio."
+               Parents receive nothing. Both notify paths send only to
+               players.phone — notify-assignment.ts says so in a comment at the
+               send site — and parent_phone is written at add-student and read
+               NOWHERE in the codebase.
+               ⚠️ The replacement deliberately does NOT frame this as two
+               recipient types. The schema has ONE phone field per student and
+               the coach chooses whose number goes in it, so "students and
+               parents" described a routing split that does not exist.
+
+            ⚠️ "Reply STOP to opt out at any time." below is KEPT and is not the
+            claim that was wrong. It states a capability, which is true. The
+            false version — "Every SMS INCLUDES INSTRUCTIONS to reply STOP" —
+            was a claim about message CONTENT and lived only in the SMS consent
+            section, where it has been replaced.
+
+            ⚠️ Dropping "via Twilio" here does not undisclose the processor:
+            "Who we share it with" below still names Twilio explicitly, and the
+            new SMS consent wording refers to "our messaging provider". */}
         <h2 style={heading}>How we use it</h2>
         <p style={body}>
-          To send you a sign-in code. To send your students their assignment link via SMS. To send parents a weekly digest if you&apos;ve added their number. To show you your students&apos; progress. Students and parents receive SMS notifications via Twilio. Reply STOP to opt out at any time. Message and data rates may apply.
+          To send you a sign-in code. To send your students their assignment link via SMS. To show you your students&apos; progress. SMS goes to whichever phone number you add for each student — theirs or a parent&apos;s, whichever makes sense for that relationship. Reply STOP to opt out at any time. Message and data rates may apply.
         </p>
 
+        {/* ⚠️ The STOP sentence here was FALSE and is the third fix of Aug 6
+            2026. It read "Every SMS includes instructions to reply STOP to opt
+            out at any time" — a claim about message CONTENT, and no message
+            body contains STOP text.
+
+            Verified, not assumed: there is exactly one composed body in the
+            app — "Hey {name} — {coach} assigned you {activity} homework. Tap
+            here: {link}" in notify-assignment.ts — and sendSms() appends
+            nothing, posting only MessagingServiceSid, To and Body.
+
+            The new wording claims a CAPABILITY instead, which is true: the
+            number is toll-free and STOP handling is automatic at the
+            Twilio/carrier layer regardless of what a message says. It cannot be
+            disabled, so the claim does not depend on our copy staying in step.
+
+            ⚠️ DO NOT "fix" this by adding literal STOP text to the SMS body in
+            notify-assignment.ts. That is a separate compliance-posture decision
+            and was explicitly out of scope for this pass. If it is ever done,
+            this sentence can go back to describing content — but the capability
+            wording stays true either way, so there is no need.
+
+            ⚠️ "our messaging provider" rather than "Twilio" is deliberate — it
+            keeps the sentence about the mechanism rather than the vendor, and
+            "Who we share it with" already names Twilio outright. */}
         <h2 style={heading}>SMS consent</h2>
         <p style={body}>
-          Before a coach adds any student or parent phone number to Reps, they must obtain verbal consent. The recipient must agree to receive SMS messages before their number is entered. Every SMS includes instructions to reply STOP to opt out at any time. Message and data rates may apply.
+          Before a coach adds any student or parent phone number to Reps, they must obtain verbal consent. The recipient must agree to receive SMS messages before their number is entered. You can reply STOP at any time to stop receiving messages — this happens automatically through our messaging provider, not something written into every text. Message and data rates may apply.
         </p>
 
         <h2 style={heading}>Who we share it with</h2>
