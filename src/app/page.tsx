@@ -909,12 +909,30 @@ export default function LandingPage() {
               </ul>
 
               {/* CTAs */}
+              {/* ⚠️ "Try Reps free" was RESTORED on Aug 16 2026, reversing the
+                  Aug 4 retirement. Recorded so the earlier reasoning is not
+                  re-applied as though this were a drift:
+
+                  It was retired on Aug 4 because "Try" reads as a trial with an
+                  expiry, and the free tier is 3 students FOREVER — no card, no
+                  clock. See Pricing in CLAUDE.md, where a 14-day trial was
+                  considered and explicitly rejected.
+
+                  ⚠️ That objection still stands on its merits. If this ever
+                  reads as promising a time-limited trial, the fix is this
+                  string, not the pricing model. The support line below
+                  ("Try free. No card, no catch.") is what carries the
+                  no-commitment reassurance either way.
+
+                  ⚠️ 19px/700 on .cta-real is unchanged and is an ACCESSIBILITY
+                  FLOOR, not a size preference — white on #378add is 3.59:1,
+                  which passes only as LARGE text (>=18.66px AND bold). */}
               <div className="cta-section" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
                 <Link
                   href="/instructor/signup"
                   className="cta-real cta-primary hover:opacity-90 active:scale-[0.98] transition-all"
                 >
-                  Keep them improving
+                  Try Reps free
                 </Link>
                 {/* ⚠️ BELOW the button, and the 375x667 fold behaviour is KNOWN
                     AND ACCEPTED — do not re-raise it as an open bug.
@@ -971,7 +989,7 @@ export default function LandingPage() {
             {/* ⚠️ The CTAs on this page no longer all say the same thing, and
                 that is a reversal of the Aug 6 morning decision rather than a
                 drift. Each section's button now names that section's OWN payoff
-                — "Keep them improving" in the hero, "Get organized" here — so
+                — "Try Reps free" in the hero, "Get organized" here — so
                 the wording follows the argument being made rather than the
                 destination. All of them still go to /instructor/signup.
 
