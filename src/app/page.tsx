@@ -2353,13 +2353,39 @@ export default function LandingPage() {
           font-weight: 600;
           letter-spacing: -0.3px;
         }
+        /* ⚠️ THIS LINE IS THE ONLY REAL DIFFERENCE BETWEEN THE TWO PLANS, and
+           until Aug 17 2026 it was styled as the quietest content on the card.
+           The old values were 15px/400 — smaller AND lighter than the shared
+           feature list at 17px/400, so the block that is IDENTICAL on both plans
+           outweighed the one line that is not. A coach scanning the cards had to
+           hunt for the reason to upgrade.
+
+           Now 20px/600, which places it deliberately:
+
+             price        40px/700   the headline number
+             limit        20px/600   <- the actual differentiator
+             feature list 17px/400   shared by both plans
+             plan label   13px/600   identification only
+
+           Clearly under the price and clearly above the shared list, which is
+           the order of importance a coach actually reads in.
+
+           ⚠️ Both colours darkened with it, each measured on its OWN card
+           background — the cards are different surfaces and a value does not
+           travel between them:
+             Free  on #ffffff   #55555c  7.39:1 -> #2e2e33 13.51:1
+             Pro   on #d5e6fb   #2f4f70  6.69:1 -> #1c4b7c  7.05:1
+           Both were already passing AA; the darkening is for PROMINENCE, not
+           compliance. Neither goes to the price's near-black, so the price keeps
+           the top of the hierarchy. */
         .pricing-limit {
           margin: 10px 0 0;
-          font-size: 15px;
+          font-size: 20px;
+          font-weight: 600;
           line-height: 1.4;
         }
-        .pricing-card-free .pricing-limit { color: #55555c; }
-        .pricing-card-pro  .pricing-limit { color: #2f4f70; }  /* measured 6.69:1 on #d5e6fb */
+        .pricing-card-free .pricing-limit { color: #2e2e33; }  /* measured 13.51:1 on #ffffff */
+        .pricing-card-pro  .pricing-limit { color: #1c4b7c; }  /* measured  7.05:1 on #d5e6fb */
         /* ⚠️ Full width inside the card and with its own horizontal padding.
            .cta-real ships 38px of side padding for a button sitting free on a
            page; inside a card that is what pushes the label past the edge. The
