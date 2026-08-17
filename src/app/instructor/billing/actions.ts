@@ -154,23 +154,36 @@ export async function createCheckoutSession(): Promise<CheckoutResult> {
 // accepted a customer id would let a crafted request open somebody else's
 // billing portal, which is about as bad as this app gets.
 //
+// ✅ VERIFIED END TO END on Aug 17 2026, in test mode, against Coach Tony's
+// subscription: the portal opened from the ProfileMenu row, the cancellation
+// registered, Stripe reported status `active` with cancel_at set to the exact
+// current_period_end and canceled_at stamped, the webhook forwarded two
+// customer.subscription.updated events and returned 200 to both, and no other
+// coach's row was touched.
+//
 // ⚠️ WHAT THIS DOES NOT DO: it does not decide whether cancelling takes effect
 // immediately or at period end. That is a PORTAL CONFIGURATION set in the
 // Stripe dashboard (Settings -> Billing -> Customer portal -> Cancellation),
 // not a parameter of the session created here, so it cannot be set or verified
-// from this file.
+// from this file. Confirmed set to "At end of billing period" on Aug 17.
 //
 // It matters because /faq promises "You'll keep everything you already paid for
 // through the end of that period — it just won't renew after." That sentence is
-// only true if the portal is configured to cancel AT PERIOD END. If it is ever
-// switched to Immediately, the FAQ answer becomes false and this comment is the
-// trail back to why.
+// only true while the portal stays on at-period-end. If it is ever switched to
+// Immediately, the FAQ answer becomes false and NOTHING IN THE CODE WILL CATCH
+// IT — this comment is the trail back.
 //
-// ✅ Given at-period-end, no entitlement code changes are needed: Stripe keeps
-// the subscription `active` until the period actually ends, isEntitled() allows
-// `active`, and the existing webhook re-resolves at customer level on
-// customer.subscription.updated. The coach keeps Pro until the date they paid
-// through, then customer.subscription.deleted writes `canceled`.
+// ⚠️ On API version 2026-07-29.dahlia a scheduled cancellation shows up as
+// `cancel_at`, and `cancel_at_period_end` reads FALSE even when the
+// cancellation is correctly scheduled for period end. Compare cancel_at against
+// current_period_end; do not trust the boolean.
+//
+// ✅ No entitlement or webhook changes were needed, which the verification
+// confirmed rather than assumed: Stripe keeps the subscription `active` until
+// the period actually ends, isEntitled() allows `active`, and the existing
+// handler re-resolves at customer level on customer.subscription.updated. The
+// coach keeps Pro until the date they paid through, then
+// customer.subscription.deleted writes `canceled`.
 export async function createPortalSession(): Promise<CheckoutResult> {
   const { supabase, user } = await requireCoach();
 

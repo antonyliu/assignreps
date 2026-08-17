@@ -236,65 +236,38 @@ export default function FaqPage() {
           No. Try it free and see for yourself if it&apos;s actually useful — nothing to enter, nothing to cancel if it&apos;s not for you.
         </p>
 
-        {/* ⚠️⚠️ PENDING — THIS ANSWER DESCRIBES A FEATURE THAT DOES NOT EXIST.
-            IT MUST NOT REACH REAL STRANGERS UNTIL THE FEATURE IS LIVE. ⚠️⚠️
+        {/* ✅ BUILT AND VERIFIED END TO END — Aug 17 2026. This answer was
+            written ahead of the feature and carried a 🛑 gate for eleven days;
+            the gate is cleared, not forgotten.
 
-            Treat this with the same seriousness as the landing page's
-            unapproved testimonial: both are text that makes a claim the product
-            cannot currently back up, and this one is a PROMISE ABOUT MONEY.
+            The Stripe Customer Portal is live: createPortalSession() in
+            instructor/billing/actions.ts, reached from the "Manage
+            subscription" row in ProfileMenu, which a coach finds exactly where
+            this answer says — in their profile.
 
-            Written deliberately ahead of the build, on Aug 6 2026, and REWORDED
-            the same day — the flag stays because nothing about the build
-            changed. The Stripe Customer Portal self-cancel flow is NOT built:
+            Both claims in the answer are now true, and both were checked
+            against a real cancellation rather than assumed:
 
-              - No portal session is created anywhere in src/. `billingPortal`
-                and `createPortalSession` appear nowhere in the codebase.
-              - The ProfileMenu offers Sign out, an editable name and a Pro
-                badge. There is no billing row of any kind once a coach is Pro.
-              - So there is nothing in "your profile" to cancel from. A coach
-                who reads this answer today, goes looking, and finds nothing is
-                a worse outcome than the honest version this replaced, which
-                said "no button yet, just a real person, fast" and pointed at
-                hello@assignreps.com.
+              1. "Cancel anytime from your profile" — the portal opens from the
+                 profile menu and the cancellation registers.
+              2. The period-end behaviour — verified on Coach Tony's test
+                 subscription: after cancelling, Stripe reported status `active`
+                 with cancel_at set to the exact current_period_end, and
+                 canceled_at stamped. The coach keeps Pro until the date they
+                 paid through, then customer.subscription.deleted writes
+                 `canceled`.
 
-            ⚠️ The current wording makes TWO claims, and the second one is new
-            as of the reword — it now describes what happens to the time already
-            paid for ("you'll keep everything you already paid for through the
-            end of that period — it just won't renew after").
+            ⚠️ The period-end behaviour depends on a DASHBOARD SETTING, not on
+            anything in this repo: Stripe Dashboard -> Settings -> Billing ->
+            Customer portal -> Cancellation must stay on "At end of billing
+            period". Confirmed set on Aug 17. If it is ever switched to
+            Immediately, the second sentence of this answer becomes false and
+            nothing in the code will catch it.
 
-              1. "Cancel anytime from your profile" — UNBUILT, as above.
-              2. The period-end behaviour — TRUE OF STRIPE BY DEFAULT, but only
-                 if the eventual implementation cancels at period end
-                 (`cancel_at_period_end: true`) rather than immediately. An
-                 immediate cancellation would end access on the spot and make
-                 this sentence false.
-
-            ⚠️ So the copy now CONSTRAINS the build, not just anticipates it.
-            Whoever wires up the portal has to configure it to cancel at period
-            end, or change this sentence. Note the entitlement side already
-            behaves correctly for (2): isEntitled() allows `active`, and Stripe
-            keeps a subscription `active` until the period actually ends when
-            cancel_at_period_end is set — so a coach who cancels keeps Pro until
-            the date they paid through with no extra code. Nothing enforces the
-            configuration, though.
-
-            ⚠️ This is pre-launch checklist item 5, and item 5 is already flagged
-            as "the item most likely to burn a stranger". Shipping this answer
-            before the portal turns that from a missing feature into a broken
-            promise.
-
-            TWO WAYS TO CLEAR THIS, and one must happen before /faq is shown to
-            anyone who is not RJ:
-              (a) build the portal, cancelling at period end — then delete this
-                  comment, not the answer;
-              (b) revert the answer to the email version until (a) lands.
-
-            ⚠️ Do NOT quietly resolve this by deciding the copy is "close
-            enough". The pricing checklist already says "Cancel anytime" and
-            /terms already says paid plans "can be cancelled anytime" — both are
-            true of the Stripe subscription and neither is achievable through
-            the product. This answer would be the third surface making that
-            claim and the first one to name a specific place to do it. */}
+            ⚠️ On API version 2026-07-29.dahlia the scheduled cancellation shows
+            up as `cancel_at` rather than `cancel_at_period_end`, which reads
+            false even when the cancellation IS scheduled for period end. Check
+            cancel_at against current_period_end, not the boolean. */}
         <h3 style={question}>How do I cancel?</h3>
         <p style={body}>
           Cancel anytime from your profile. You&apos;ll keep everything you already paid for through the end of that period — it just won&apos;t renew after.

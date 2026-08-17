@@ -221,7 +221,7 @@ Tony is stepping away to focus on other work for an unknown stretch. This sectio
 
 **Terms** — not touched in this audit cycle beyond what privacy fixes implied. Cancellation language ("can be cancelled anytime") is vague rather than false, and is deliberately being left as-is until self-serve cancellation is real, at which point it becomes true without editing.
 
-**Self-serve Stripe cancellation — SCOPED, NOT BUILT.** A full CC build prompt for this exists earlier in this session's history (Customer Portal integration, "Manage billing" row in ProfileMenu, cancel-at-period-end configuration). This is the natural next build whenever work resumes — it unblocks the FAQ's cancel answer, closes pre-launch checklist item 5, and is fully scoped already, just never executed.
+**Self-serve Stripe cancellation — ✅ BUILT AND VERIFIED Aug 17 2026** (`41ea622`). Stripe Customer Portal integration, a "Manage subscription" row in `ProfileMenu`, cancelling at period end. Verified end to end in test mode against a real cancellation: portal opens, cancellation registers, the coach keeps Pro to `current_period_end`, the webhook processes both events, and no other coach is affected. This unblocked the FAQ's cancel answer and closes pre-launch checklist item 5. ⚠️ Test mode only — live mode still needs its own portal configuration in the Stripe dashboard.
 
 **RJ's actual open asks — corrected this session, several prior attributions were wrong:**
 
@@ -263,17 +263,19 @@ The plan now is to invite **a small number of real basketball trainers, unconnec
 
 **4. Trust and security messaging + an FAQ.** ⚠️ **Was "neither exists" on Aug 5. The FAQ half SHIPPED locally on Aug 6** — `/faq`, **19 questions** in five groups, linked from the landing header, with **three** content passes already applied the same day. See the `/faq` section under Landing page. It answers what data is collected, who sees a roster, whether data is sold, what happens on cancellation, whether a coach has to build their own drill library, and how the free tier and the 4th-student prompt work.
 - ⚠️ **This is a first draft and Tony expects to revise it after seeing it live.** It is not signed off.
-- 🛑 **And it is currently GATED ON ITEM 5**, not free to show: its cancel answer describes a self-serve flow that has not been built. Do not treat this item as done for stranger-facing purposes until that is resolved.
+- ✅ **The item-5 gate is CLEARED (Aug 17 2026).** Its cancel answer described a self-serve flow that did not exist; the Stripe Customer Portal is now built and verified, so that answer is true. `/faq` is no longer blocked from being shown to strangers on this count. ⚠️ It is still a first draft Tony has not signed off.
 - ⚠️ **The trust-and-security half is still open.** There is still no page stating the security basics, and no trust line on the signup screen — that last one is its own parked entry (*First-touch trust at signup*) and did not move.
 - ⚠️ **It surfaced a real finding about the legal pages:** `/privacy` and `/terms` set their headings and links in `#378add`, which is **3.36:1** on their own `#f8f7f5` background and fails AA for normal text. `/faq` uses passing values; the two older pages were out of scope and still carry the failure. Fold this into item 3's accuracy pass rather than treating it as separate.
 
-**5. Subscription management — a coach has NO way to cancel in the product.** ⚠️ **Checked Aug 5, and this is worse than "unverified": it is confirmed missing and it contradicts two live public claims.**
-- No Stripe **billing portal** session is ever created and nothing links to one — `billingPortal` / `createPortalSession` appear nowhere in `src/`. The early plan to use Stripe's customer portal was never wired up.
-- The ProfileMenu offers `Sign out`, an editable name, and a `Pro` badge. There is **no billing row at all** once a coach is Pro.
-- ⚠️ Meanwhile the pricing section's own checklist says **"Cancel anytime"**, and `/terms` says paid plans **"can be cancelled anytime"**. Both are true of the *Stripe subscription*; neither is achievable *through the product*. A coach who wants to cancel has to email a human.
-- **This is the item most likely to burn a stranger**, and it is a promise-versus-reality gap rather than a missing nicety. Either wire up the portal or change the claims — preferably the former.
-- 🛑 **ESCALATED Aug 6 2026 — `/faq` now names a place to cancel that does not exist.** Its answer reads *"Cancel anytime from your profile — no emails, no calls."*, written ahead of the build on purpose. That takes this from a vague overpromise on two surfaces to a **specific, checkable false statement** on a third: a coach can follow that instruction, find no billing row in the ProfileMenu, and conclude they cannot stop being charged. ⚠️ **This item is now a hard gate on showing `/faq` to anyone who is not RJ** — either build the portal, or revert that answer to the email version first. See the 🛑 block under `/faq`.
-- ⚠️ **Design this together with item 8 (player deactivation), not before it.** Both turn on the same question — what counts as an active student, and what happens when a coach drops back under the limit — and answering it twice is how the copy and `isEntitled()` drift apart.
+**5. Subscription management.** ✅ **DONE — built and verified end to end on Aug 17 2026** (`41ea622`, test mode). This was the item most likely to burn a stranger; it is closed.
+- **`createPortalSession()`** in `src/app/instructor/billing/actions.ts` creates a Stripe Billing Portal session for the coach's own customer, returning to `/instructor/students`. Gated on having a `stripe_customer_id`, not on `isEntitled()` — a lapsed coach still has invoices and a way back.
+- **"Manage subscription"** row in `ProfileMenu`, shown when `isPro`, mirroring the `!isPro` "Upgrade to Pro" row so the menu offers exactly one billing action.
+- ✅ **Verified against a real cancellation**, not assumed: the portal opened, the cancellation registered, Stripe reported status `active` with `cancel_at` equal to the exact `current_period_end`, the listener forwarded two `customer.subscription.updated` events and the webhook returned 200 to both, and **RJ's row was untouched on both sides** — the customer-level resolution held, which is the specific regression from the Aug 3 finding.
+- ✅ **No entitlement or webhook changes were needed**, and that was confirmed rather than assumed. Stripe keeps the subscription `active` until the period ends, `isEntitled()` allows `active`, and the existing handler re-resolves at customer level.
+- ⚠️ **The period-end behaviour depends on a DASHBOARD SETTING that no code can enforce:** Stripe Dashboard → Settings → Billing → Customer portal → Cancellation must stay on **"At end of billing period"**. Confirmed set Aug 17. Switch it to Immediately and `/faq`'s cancel answer silently becomes false.
+- ⚠️ **On API version `2026-07-29.dahlia`, `cancel_at_period_end` reads FALSE even when the cancellation IS scheduled for period end** — the flag moved to `cancel_at`. Compare `cancel_at` against `current_period_end`; do not trust the boolean. This cost a moment of false alarm during verification.
+- ⚠️ **Live mode is still untested**, as with everything else billing — item 1 covers it. The code is mode-agnostic; only the dashboard portal configuration has to be set up again in live.
+- ⚠️ **Still leaves item 8 (player deactivation) sharing the "what counts as an active student" question.** That was flagged here as a reason to design them together; item 5 is now done without touching the free-tier gate, so item 8 inherits the question unchanged rather than resolved.
 
 **6. "This is basketball" — decide whether to say so outright.** RJ never needed telling. A stranger lands on a page whose device mocks carry real exercise names and a real shooting percentage, with **nothing on the page saying the product is basketball-only today**.
 - ⚠️ **Decide this together with the open `Example: basketball` question** from the Aug 5 audit, not separately — they are the same decision. That caption used to disclaim exactly this and was removed along with the "how it works" section; the page has carried the specificity without the disclaimer ever since. See **Landing page (current)**.
@@ -1504,7 +1506,7 @@ Design resolved — these need building, not deciding.
 - Coach roster view ✅
 - Landing page ✅ — hero, instructor section, student section, pricing (Aug 5–6 2026). ⚠️ The old "product loop" / "how it works" section was **removed** Aug 5, not renamed. ⚠️ The §2 testimonial was **removed Aug 16** pending RJ's sign-off — deferred, not cancelled; see `docs/deferred/section-2-testimonial.md`
 - Header nav — Pricing · FAQ · Sign in ✅ (Aug 6 2026, landing page only)
-- `/faq` ✅ (Aug 6 2026) — 19 questions, five groups, no accordion, no images. First draft, not signed off. 🛑 **Its cancel answer promises a self-serve flow that does not exist** — gated on pre-launch item 5 before any stranger sees it
+- `/faq` ✅ (Aug 6 2026) — 19 questions, five groups, no accordion, no images. First draft, not signed off. ✅ **Its cancel answer is TRUE as of Aug 17** — the Stripe Customer Portal is built and verified, so the item-5 gate that blocked showing this page to strangers is cleared
 - Staging environment ✅
 - Resend email delivery ✅
 - SMS on assignment ✅
@@ -1635,28 +1637,34 @@ A standalone page at `src/app/faq/page.tsx`, linked from the landing header. **P
 - ⚠️ **The headings and links are NOT the brand blue, and that is an accessibility fix rather than a style choice.** `/privacy` and `/terms` set their `h2`s and links in `#378add`, which measures **3.36:1** on this `#f8f7f5` band — under AA for normal text, passing only under the large-text allowance (≥18.66px **and** bold), which 17px/600 headings and 15px links are not. `/faq` uses measured values instead: `#1a1a1a` 16.26:1 (group headings, questions), `#333` 11.80:1 (answers), **`#2a6fb5` 4.86:1** (links — the brand blue darkened until it passes), `#6b6b6b` 4.98:1 (intro and closing lines). **All 48 text elements audited against their actual painted background: zero AA failures, minimum 4.86:1.**
 - ⚠️ **`/privacy` and `/terms` still carry that failure.** It was found while building this page and deliberately **not** fixed — those pages were out of scope. It is a real open item, not a false alarm; see the standing *Final legal review of /privacy + /terms* entry.
 
-### 🛑 `/faq`'s cancel answer is a PROMISE THE PRODUCT DOES NOT KEEP
+### ✅ `/faq`'s cancel answer is now TRUE (built and verified Aug 17 2026)
 
-⚠️ **This is the single most important thing to know about this page, and it is deliberate rather than an oversight.** The answer to *"How do I cancel?"* now reads:
+This section carried a 🛑 gate for eleven days. The answer to *"How do I cancel?"* reads:
 
 > **Cancel anytime from your profile. You'll keep everything you already paid for through the end of that period — it just won't renew after.**
 
-**No such thing exists.** `billingPortal` / `createPortalSession` appear nowhere in `src/`, no Stripe Customer Portal session is ever created, and the ProfileMenu offers only Sign out, an editable name and a Pro badge — there is no billing row of any kind. A coach who reads this, goes to their profile, and finds nothing has been told something untrue about their money.
+**Both claims are now backed by shipped, verified behaviour.** `createPortalSession()` lives in `src/app/instructor/billing/actions.ts` and is reached from the **"Manage subscription"** row in `ProfileMenu` — exactly where the answer says, in the coach's profile.
 
-⚠️ **The reword on Aug 6 made this answer CONSTRAIN the build rather than merely anticipate it.** It now carries two claims, not one:
+Verified end to end in test mode on Coach Tony's subscription, not assumed:
 
-1. **"Cancel anytime from your profile"** — unbuilt, as above.
-2. **The period-end behaviour** — true of Stripe *by default*, but **only if the eventual implementation cancels at period end** (`cancel_at_period_end: true`). An immediate cancellation would end access on the spot and make this sentence false.
+| Claim | How it was checked |
+|---|---|
+| "Cancel anytime from your profile" | The portal opened from the ProfileMenu row and the cancellation registered at Stripe |
+| The period-end behaviour | Stripe reported status `active` with `cancel_at` equal to the exact `current_period_end`, and `canceled_at` stamped — the coach keeps Pro until the date they paid through |
+| Nothing else broke | Two `customer.subscription.updated` events forwarded, both returned **200**, and **RJ's row was untouched on both sides** — the customer-level resolution held, which is the Aug 3 regression |
 
-So whoever wires up the portal has to **configure it to cancel at period end, or change this sentence**. ✅ The entitlement side already behaves correctly for (2) with no extra code: `isEntitled()` allows `active`, and Stripe keeps a subscription `active` until the period actually ends when `cancel_at_period_end` is set — so a coach who cancels keeps Pro through the date they paid for. ⚠️ Nothing *enforces* that configuration, though, and it is a dashboard/portal setting rather than something in this repo.
+✅ **No entitlement or webhook changes were needed**, confirmed rather than assumed: `isEntitled()` allows `active`, Stripe keeps the subscription `active` until the period ends, and the existing handler re-resolves at customer level.
 
-- It was written **ahead of the build, on purpose**, and it replaced an honest answer (*"Email us and we'll cancel it for you — no button yet, just a real person, fast."*) that pointed at `hello@assignreps.com`.
-- ⚠️ **Treat this exactly like the landing page's unapproved testimonial** — which was **pulled from the page on Aug 16** for precisely this reason. Both are text making a claim that cannot be backed up; this one is about **billing**, which makes it the more serious of the two, and it is still live where the testimonial is not.
-- ⚠️ It compounds a gap that already exists: the pricing checklist says *"Cancel anytime"* and `/terms` says paid plans *"can be cancelled anytime"*. Both are true of the **Stripe subscription** and neither is achievable **through the product**. This answer is the third surface making that claim and **the first to name a specific place to do it** — which is what turns a vague overpromise into a checkable false one.
-- **This is pre-launch item 5**, already flagged there as *"the item most likely to burn a stranger"*. ⚠️ **`/faq` must not be shown to anyone who is not RJ until one of these happens:**
-  1. **Build the portal** (item 5), **cancelling at period end** — then delete the warning comment in the file, not the answer; or
-  2. **Revert the answer** to the email version until (1) lands.
-- The full reasoning is duplicated in a block comment above the answer in `src/app/faq/page.tsx`. Do not delete that comment as tidy-up.
+⚠️ **TWO THINGS THAT CAN STILL MAKE THIS ANSWER FALSE, and neither is visible from the code:**
+
+1. **The portal's cancellation mode is a DASHBOARD SETTING.** Stripe Dashboard → Settings → Billing → Customer portal → Cancellation must stay on **"At end of billing period"**. Confirmed set on Aug 17. Switch it to Immediately and the second sentence of the answer becomes false with nothing in the repo to catch it.
+2. **Live mode has its own portal configuration.** The code is mode-agnostic, but the dashboard setting has to be made again in live — see pre-launch item 1.
+
+⚠️ **On API version `2026-07-29.dahlia`, `cancel_at_period_end` reads FALSE even when the cancellation IS correctly scheduled for period end** — the flag effectively moved to `cancel_at`. Compare `cancel_at` against `current_period_end`; do not trust the boolean. This caused a moment of false alarm during verification and will again.
+
+⚠️ The reasoning is duplicated in a block comment above the answer in `src/app/faq/page.tsx` and above `createPortalSession()`. Do not delete either as tidy-up — they are the trail back if the dashboard setting ever changes.
+
+⚠️ **The related over-claims elsewhere are NOT resolved by this.** The pricing checklist's *"Cancel anytime"* and `/terms`' *"can be cancelled anytime"* were vague rather than false, and are now simply true. But `/terms` still has no refund policy and no statement of what happens to time already paid for — that period-end behaviour is a **billing term** and still lives only in marketing copy. See the legal-pages audit.
 
 ### The rest of `/faq`
 
@@ -1720,7 +1728,7 @@ All three lived in the SMS/data-use sections. Each was verified against the code
 - ⚠️ **`/faq` over-points here.** It says *"Never sold, never shared with advertisers. The full detail is in the privacy policy"* — privacy says *"We don't sell your data"* and names three vendors, with **no advertiser statement at all**. The FAQ promises more detail than exists.
 
 **`/terms`:**
-- ⚠️ **"Paid plans… can be cancelled anytime"** is true of the Stripe subscription and false of the product — no portal exists. ⚠️ **Less urgent than the FAQ's version**, which names *"from your profile"* and is therefore the falsifiable one; fix that first. See the 🛑 block under `/faq`.
+- ✅ **"Paid plans… can be cancelled anytime" is now TRUE of the product too**, as of Aug 17 — the Stripe Customer Portal ships and a coach can cancel from their profile. It was the vaguer of the two claims and needed no edit to become accurate. ⚠️ What is STILL missing here is the other half: `/terms` has no refund policy and no statement of what happens to time already paid for. That period-end behaviour is a **billing term** and currently lives only in `/faq` and marketing copy.
 - **No refund policy, and no statement of what happens to time already paid for.** The FAQ now promises period-end access — a **billing term** that belongs here and currently lives only in marketing copy.
 - **No user-termination clause.** Only *"We can suspend accounts that violate these terms."* Nothing grants a coach the right to close their own account, though privacy promises deletion on request.
 - **Silent on the 3-student limit.** A coach reading Terms gets no notice of the gate that will actually stop them at their 4th student.
