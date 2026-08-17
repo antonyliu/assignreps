@@ -1463,10 +1463,12 @@ export default function LandingPage() {
            made the old copy work, and headline copy has changed four times —
            the next string may well need it again. Do not remove it on the
            grounds that it is currently doing nothing. */
-        /* ⚠️ 32px -> 36px on Aug 17 2026, the second half of the flat-hero fix
-           (the first is the 700 weight at the call site). Against the bullets'
-           18px this is now exactly 2x the size AND a weight step above, where
-           before it was 1.8x at the same weight.
+        /* ⚠️ 32px -> 36px -> 34px, both moves on Aug 17 2026. This is the
+           second half of the flat-hero fix (the first is the 700 weight at the
+           call site): against the bullets' 18px it is 1.89x the size AND a
+           weight step above, where before it was 1.8x at the SAME weight. The
+           weight is what carries the hierarchy; 36px was tried and trimmed to
+           34px to buy back fold clearance.
 
            ⚠️ Grown rather than shrinking the bullets, deliberately: the bullets
            are informational — they are the only place the page explains what
@@ -1474,25 +1476,33 @@ export default function LandingPage() {
            phone. Hierarchy comes from raising the headline, not from making the
            explanation harder to read.
 
-           ⚠️ It does NOT change the line break: measured at 32/34/36/38px the
-           headline holds "The work you give / them, gets done." at every one.
+           ⚠️ It does NOT change the line break, and that has now been swept
+           twice. At 34px, balance and PLAIN wrapping produce identical output
+           at every column width from 280px to 420px — always "The work you give
+           / them, gets done." with a three-word last line. There is no width at
+           which "gets done." strands on its own, so no manual <br /> is needed
+           and none should be added.
 
-           🛑 IT DOES SPEND MOST OF WHAT IS LEFT OF THE FOLD BUDGET, and this
-           number should be checked before anything in the hero grows again.
-           At 375x812 the CTA's clearance went 57.1px -> 15.0px when the device
-           grew to 206px, and this 36px takes it to 5.8px. Six pixels. Anything
-           further — a longer headline, a taller device, another line of copy —
-           pushes the CTA itself under the fold, and the CTA is the point of the
-           screen. Dial this to 34px (+4.6px) or --pw toward 190px before adding
-           anything else.
+           🛑 THE FOLD BUDGET IS THE CONSTRAINT ON THIS RULE. At 375x812 the
+           CTA's clearance ran 57.1px -> 15.0px when the device grew to 206px,
+           -> 5.8px at 36px, and back to 10.4px at this 34px. Ten pixels. Check
+           it before anything in the hero grows again — a longer headline, a
+           taller device, another line of copy — because past this the CTA
+           itself goes under the fold, and the CTA is the point of the screen.
+           --pw toward 190px is the next lever, worth ~30px.
+
+           ⚠️ The support line beneath the CTA is ALREADY below the fold at
+           375x812 (by 25.2px) and has been since the device grew. CLAUDE.md
+           records it falling below at 375x667 as known and accepted; that now
+           extends to taller phones.
 
            ⚠️ The max-height:700px block below overrides this to 28px, and that
            value was set against the OLD 32px base. On an SE-class phone the
-           size ratio to the bullets is therefore 1.56x rather than 2x, so there
-           the hierarchy fix is carried by the 700 WEIGHT alone. Left as-is
-           because that override is fold protection; raise it only with the
-           clearance measured. */
-        .headline { font-size: 36px; line-height: 1.14; margin: 0 0 18px; text-wrap: balance; }
+           size ratio to the bullets is therefore 1.56x rather than 1.89x, so
+           there the hierarchy fix is carried by the 700 WEIGHT alone. Left
+           as-is because that override is fold protection; raise it only with
+           the clearance measured. */
+        .headline { font-size: 34px; line-height: 1.14; margin: 0 0 18px; text-wrap: balance; }
         .bullets  { margin-bottom: 24px !important; }
         .bullet-row {
           display: grid;
