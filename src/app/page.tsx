@@ -789,12 +789,34 @@ export default function LandingPage() {
               Reps
             </span>
           </div>
-          <Link
-            href="/instructor/signup/email"
-            className="signin-btn"
-          >
-            Sign in
-          </Link>
+          {/* ⚠️ The nav order is Pricing -> FAQ -> Sign in, and Sign in stays
+              LAST because it is the only destination that leaves the marketing
+              site. The two new links are plain text on purpose: one button per
+              header, so "Sign in" keeps its outlined chrome at desktop and the
+              nav reads as two labels beside one control rather than three
+              competing controls.
+
+              ⚠️ "/#pricing" rather than a bare "#pricing". This header only
+              renders on the landing page today, so the two behave identically
+              here — but the FAQ page it now links to sits on its own route, and
+              if this header is ever lifted onto /faq or the legal pages a bare
+              hash would scroll to nothing. The leading slash means "home,
+              scrolled to pricing" from anywhere. */}
+          <nav className="header-nav">
+            <Link href="/#pricing" className="header-link">Pricing</Link>
+            <Link href="/faq" className="header-link">FAQ</Link>
+            {/* ⚠️ .header-signin exists ONLY so the mobile rule that strips this
+                button's chrome can be scoped to the header. .signin-btn is also
+                on the pricing section's Free card, and an unscoped
+                max-width:767px override would silently flatten that button too
+                — which is a pricing-section change nobody asked for. */}
+            <Link
+              href="/instructor/signup/email"
+              className="signin-btn header-signin"
+            >
+              Sign in
+            </Link>
+          </nav>
         </div>
       </header>
 
@@ -892,8 +914,34 @@ export default function LandingPage() {
                   href="/instructor/signup"
                   className="cta-real cta-primary hover:opacity-90 active:scale-[0.98] transition-all"
                 >
-                  Start free
+                  Keep them improving
                 </Link>
+                {/* ⚠️ BELOW the button, and the 375x667 fold behaviour is KNOWN
+                    AND ACCEPTED — do not re-raise it as an open bug.
+
+                    The full history, so it is not re-litigated: this line began
+                    below the button and fell 32px under the fold on an SE-class
+                    375x667 screen. It was moved above the button to fix that,
+                    which pushed the BUTTON 32px under the fold instead — a
+                    strictly worse trade, since the button matters more. It is
+                    back below, and the original behaviour is accepted.
+
+                    ⚠️ Shortening the copy does NOT fix it and was not intended
+                    to. The cost is the line's HEIGHT plus the column's 16px gap
+                    (36px total), which is fixed no matter how few words it
+                    holds; shorter text only changes its width. The real cause is
+                    total stack height in the hero at 667px, so any real fix is
+                    structural — moving it out of the CTA stack entirely (beside
+                    the eyebrow was the candidate), or reclaiming height in the
+                    short-viewport media query. Neither is in scope.
+
+                    Everything at or above ~768px tall shows it normally.
+
+                    Still a plain sibling in .cta-section's flex column with no
+                    margin hacks, so position changes stay reorders.
+                    ⚠️ .cta-section flips to align-items: flex-start at >=768, so
+                    it left-aligns with the button on desktop automatically. */}
+                <p className="cta-support">Try free. No card, no catch.</p>
               </div>
 
             </div>
@@ -908,22 +956,31 @@ export default function LandingPage() {
       <section className="program-section">
         <div className="program-inner">
           <div className="program-copy">
-            <h2 className="program-heading">Your whole program, finally in one place.</h2>
+            <h2 className="program-heading">All in one place.</h2>
+            {/* The heading is now short enough to carry no detail at all, so the
+                subtext does the explaining. It names the LOOP — send work, then
+                see who did it and how it went — rather than listing nouns, which
+                is what "every assignment, every check-in" was doing.
+                ⚠️ This sub is LONGER than the one it replaces (113 chars against
+                73), so it sets more lines, not fewer. That is the trade for the
+                shorter heading, and the line counts are in the report. */}
             <p className="program-sub">
-              Every assignment, every check-in — not scattered across texts and memory.
+              Send practice work between sessions, then see who did it and how it went — not
+              scattered across texts and memory.
             </p>
-            {/* Same destination as the hero's button, deliberately different
-                words. The hero's stays the literal "Start free" because it is
-                the first thing a stranger meets and has to be unambiguous; by
-                here they know what the product does, so the CTA can echo the
-                heading above it.
+            {/* ⚠️ The CTAs on this page no longer all say the same thing, and
+                that is a reversal of the Aug 6 morning decision rather than a
+                drift. Each section's button now names that section's OWN payoff
+                — "Keep them improving" in the hero, "Get organized" here — so
+                the wording follows the argument being made rather than the
+                destination. All of them still go to /instructor/signup.
 
-                ⚠️ NOT "See your whole roster", which was tried and dropped: it
-                promises a roster the signup does not have yet. Every person who
-                taps this has zero students. "Start your program" describes the
-                action they are actually taking. */}
+                ⚠️ Still NOT "See your whole roster", which was tried and dropped
+                for promising a roster the signup does not have yet — every
+                person who taps this has zero students. That trap is unrelated to
+                the wording above and still applies. */}
             <Link href="/instructor/signup" className="cta-real program-cta">
-              Start your program
+              Get organized
             </Link>
           </div>
           {/* Two screens: the moment work is created, and the roster it lands
@@ -956,15 +1013,21 @@ export default function LandingPage() {
       <section className="student-section">
         <div className="student-inner">
           <div className="student-copy">
-            <h2 className="student-heading">Nothing for your students to download.</h2>
+            <h2 className="student-heading">Your students just show up more.</h2>
             <p className="student-sub">
-              A text, a link, a stepper — that&apos;s the whole thing. Younger students can
-              log on a parent&apos;s phone with the same link.
+              {/* ⚠️ "log", not "log in". Students never authenticate — they tap a
+                  token link — and the pricing checklist says "No login for
+                  students" outright. "Log in on a parent's phone" contradicted
+                  that on the same page. */}
+              A text, a link, a tap — that&apos;s the whole thing. Just enough to keep them
+              accountable. Younger students can log on a parent&apos;s phone with the
+              same link.
             </p>
-            {/* Third CTA, third wording, same destination. The hero stays the
-                literal "Start free" for a stranger; section 2 echoes its own
-                heading; this one names what actually happens first after
-                signing up, which is the thing this section is about.
+            {/* ⚠️ This is now the ONLY CTA on the page that does not read "Start
+                free" — the hero, section 2 and both pricing buttons all match as
+                of Aug 6 2026. Kept different on purpose: it names what actually
+                happens first after signing up, which is the thing this section
+                is about.
 
                 ⚠️ NOT "Get your students started" — the coach is the one
                 signing up, and every reader here has zero students. Same trap
@@ -995,28 +1058,37 @@ export default function LandingPage() {
           they are a directional story being told about two audiences. Pricing
           is a fair comparison between two options, and putting one of them on
           a side would weight it. */}
-      <section className="pricing-section">
+      {/* ⚠️ id="pricing" is the target of the header's "Pricing" link and of
+          /faq's link back here. It is the ONLY change to this section in this
+          pass — nothing visual, nothing about the cards or the copy. Renaming
+          or removing it breaks a link on two pages with no build error. */}
+      <section className="pricing-section" id="pricing">
         <div className="pricing-inner">
-          <h2 className="pricing-heading">Straightforward pricing.</h2>
-          {/* ⚠️ "STUDENTS" is load-bearing — without the noun this reads as
-              "free for your first three" and leaves a stranger guessing three
-              of what: months, drills, sessions. Three students is the free
-              tier's actual rule (FREE_STUDENT_LIMIT = 3).
+          {/* Eyebrow, added Aug 6 2026, carrying the words the heading used to
+              say so "Straightforward pricing" is not lost when the heading turns
+              into an invitation.
+              ⚠️ NOT the hero's .eyebrow class. That one is #2d7bc4 on warm cream;
+              this band is a near-neutral #f8f7f5 and the value is re-checked
+              against it rather than assumed to travel — see .pricing-eyebrow. */}
+          <p className="pricing-eyebrow">Straightforward pricing</p>
+          <h2 className="pricing-heading">Give it a try.</h2>
+          {/* ⚠️ "no card needed" is VERIFIED, not assumed: signup is name ->
+              instructor type -> email + 6-digit code, and that whole tree
+              contains no billing code. Checkout is reachable only after signup,
+              from the add-student gate or the profile menu. If a card ever
+              enters the signup flow, this line comes out.
 
-              ⚠️ "forever" is a real claim and it is true: the free tier has no
-              time limit and is explicitly not a trial — a 14-day unlimited
-              trial was considered and rejected. If that ever changes, this word
-              is the first thing that has to go.
+              ⚠️ "forever" was dropped here on Aug 6 and now appears NOWHERE on
+              the page — the hero's support line says "Free with your first 3
+              students" and this says "free to try". Both are true and neither
+              claims permanence, which is the safer direction. The free tier IS
+              forever (see Pricing), so re-adding the word would not be a lie —
+              it is simply no longer being claimed.
 
-              ⚠️ The price is deliberately NOT restated here. The Pro card two
-              rows down carries $10/mo, and saying it twice made the heading's
-              promise of straightforwardness do the opposite. This also absorbs
-              the standalone "no card to start" line that used to sit under the
-              Free CTA — note that absorption is IMPLICIT: "free forever" is
-              read as no-payment, but the words card and payment now appear
-              nowhere in this section. */}
+              ⚠️ The price is still deliberately NOT restated here; the Pro card
+              two rows down carries $10/mo. */}
           <p className="pricing-sub">
-            Free forever with your first three students.
+            Free to try, no card needed. See if it fits in a few minutes.
           </p>
 
           <div className="pricing-cards">
@@ -1055,7 +1127,19 @@ export default function LandingPage() {
               <p className="pricing-price">
                 $10<span className="pricing-per">/mo</span>
               </p>
-              <p className="pricing-limit">unlimited students</p>
+              {/* ⚠️ COPY ONLY — nothing enforces this. entitlement.ts defines
+                  FREE_STUDENT_LIMIT = 3 and no Pro ceiling of any kind, so a Pro
+                  coach can currently add students without bound. A real 30-cap
+                  is a separate build (gate, downgrade behaviour, what happens to
+                  student 31), tracked outside this pass.
+
+                  ✅ The in-app paywall AGREES as of Aug 6 2026. It read "Pro
+                  unlocks unlimited, $10/month" for part of that day, which
+                  contradicted this card; AddPlayerForm.tsx now reads "Pro takes
+                  you up to 30 {studentsLabel}". ⚠️ The two are copies of one
+                  promise in two files with nothing linking them — change one and
+                  the other has to move by hand. */}
+              <p className="pricing-limit">up to 30 students</p>
               <Link href="/instructor/signup" className="cta-real pricing-cta">
                 Start free
               </Link>
@@ -1092,31 +1176,45 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      {/* Its own band: #1a1d24, darker than section 2's #262a39, with a
-          1px rule on top. It once shared a colour with the band above it, so
-          the rule was carrying the separation alone and the footer read as the
-          tail of that section. A tonal step separates without a hard edge.
-          Greys and links are the dark-background set: #555 / #2d7bc4 were tuned
-          for cream and go muddy here. */}
-      <footer style={{ backgroundColor: "#1a1d24", borderTop: "1px solid #2a2d36", padding: "20px var(--page-pad) 28px" }}>
+      {/* ⚠️ #262a39 as of Aug 6 2026 — the same value section 2's band uses,
+          reused now that the Pro card no longer holds it. Same reuse pattern as
+          the pricing band borrowing /privacy and /terms' #f8f7f5.
+
+          ⚠️ The 1px #2a2d36 top rule was REMOVED, not forgotten. Its documented
+          job was separating the footer from a band it once shared a colour with.
+          The band above is now the pricing section's near-white #f8f7f5, which
+          is 13.32:1 away from this — the tonal step is emphatic on its own — and
+          the rule measured 1.04:1 against the new background, so it was
+          invisible as a rule and merely made the footer 1px taller.
+
+          ⚠️ Every ink in here MOVED, because the lighter band broke two of them.
+          On the old #1a1d24 the greys were 5.28:1 and the links 4.69:1; on this
+          band they fell to 4.46:1 and 3.97:1 — both under AA for 12-13px text.
+          This is the .program-caption lesson exactly: a background change
+          silently taking text under the line. New values are measured, and both
+          are reused rather than invented — #9095ac is the ink .program-caption
+          already uses on this same colour, and #4a9ae8 is --reps-orange-hi, the
+          brand blue's existing lighter variant. The brand blue itself is
+          untouched everywhere else. */}
+      <footer style={{ backgroundColor: "#262a39", padding: "20px var(--page-pad) 28px" }}>
         {/* Desktop: single line */}
         <div className="footer-desktop">
-          <span style={{ color: "#8a8fa8" }}>© 2026 Reps</span>
-          <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
-          <Link href="/terms"   style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
-          <span style={{ color: "#8a8fa8" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
+          <span style={{ color: "#9095ac" }}>© 2026 Reps</span>
+          <Link href="/privacy" style={{ color: "#4a9ae8", textDecoration: "underline" }}>Privacy Policy</Link>
+          <Link href="/terms"   style={{ color: "#4a9ae8", textDecoration: "underline" }}>Terms of Service</Link>
+          <span style={{ color: "#9095ac" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#4a9ae8", textDecoration: "underline" }}>hello@assignreps.com</a></span>
         </div>
         {/* Mobile: two lines */}
         <div className="footer-mobile">
           <div className="footer-line">
-            <Link href="/privacy" style={{ color: "#378add", textDecoration: "underline" }}>Privacy Policy</Link>
-            <span style={{ color: "#52576a" }}>·</span>
-            <Link href="/terms" style={{ color: "#378add", textDecoration: "underline" }}>Terms of Service</Link>
+            <Link href="/privacy" style={{ color: "#4a9ae8", textDecoration: "underline" }}>Privacy Policy</Link>
+            <span style={{ color: "#5f657c" }}>·</span>
+            <Link href="/terms" style={{ color: "#4a9ae8", textDecoration: "underline" }}>Terms of Service</Link>
           </div>
           <div className="footer-line">
-            <span style={{ color: "#8a8fa8" }}>© 2026 Reps</span>
-            <span style={{ color: "#52576a" }}>·</span>
-            <span style={{ color: "#8a8fa8" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a></span>
+            <span style={{ color: "#9095ac" }}>© 2026 Reps</span>
+            <span style={{ color: "#5f657c" }}>·</span>
+            <span style={{ color: "#9095ac" }}>Questions? <a href="mailto:hello@assignreps.com" style={{ color: "#4a9ae8", textDecoration: "underline" }}>hello@assignreps.com</a></span>
           </div>
         </div>
       </footer>
@@ -1219,6 +1317,33 @@ export default function LandingPage() {
         }
         .landing-text { width: 100%; }
         .cta-primary  { width: 100%; }
+        /* Support line under the hero CTA. Quiet by design — it reassures, it
+           does not sell, so it sits well below the button's 19px/700.
+           ⚠️ #55555c measures 6.11:1 on the hero's #ede9e3 cream. That is the
+           same value the pricing subtext uses on #f8f7f5; it was re-measured
+           here rather than assumed to carry across, because the two bands are
+           not the same lightness. */
+        /* ⚠️ align-self: stretch is what makes text-align do anything at all.
+           As a plain flex item this box was SHRINK-TO-FIT — measured 170.6px
+           against its own 170.6px of text — so centring inside it was a no-op
+           and the line sat 46.7px left of the button's centre at 1280. The text
+           was already centred; it had no room to be centred in.
+
+           Stretch makes the box fill the flex container's cross axis, and
+           .cta-section is width: fit-content at >=768, so the container is
+           exactly button-width. Result: the line centres under the button
+           rather than under the whole copy column. On mobile the button is
+           width: 100%, so the same rule centres it under the full-width button
+           for free. */
+        .cta-support {
+          margin: 0;
+          align-self: stretch;
+          font-size: 13.5px;
+          font-weight: 400;
+          line-height: 1.45;
+          color: #55555c;
+          text-align: center;
+        }
 
         /* Mobile type scale. Eyebrow, headline and bullet rows share the
            same left edge — no extra indent on any of them. */
@@ -1338,7 +1463,14 @@ export default function LandingPage() {
           }
           .landing-text { flex: 1; }
           .cta-primary  { width: auto; }
-          .cta-section  { align-items: flex-start !important; }
+          /* ⚠️ width: fit-content is load-bearing for the support line, not
+             cosmetic. It shrinks this column to the button's own width, which
+             is what gives .cta-support's align-self: stretch something
+             button-sized to stretch to. Without it the section spans the whole
+             copy column and the support line would centre under the COLUMN —
+             further from the button than leaving it alone. The button stays
+             flush left either way, so nothing else moves. */
+          .cta-section  { align-items: flex-start !important; width: fit-content; }
           .eyebrow  { font-size: 14px; margin: 0 0 10px; }
           .headline { font-size: clamp(38px, 4.5vw, 56px); line-height: 1.1; margin: 0 0 24px; }
           .bullets  { margin-bottom: 36px !important; }
@@ -1505,6 +1637,58 @@ export default function LandingPage() {
           background-color: rgba(15, 15, 16, 0.04);
         }
 
+        /* ---- Header nav ----------------------------------------------------
+           Pricing and FAQ are deliberately UNSTYLED text — no fill, no border,
+           no radius — so the header carries exactly one control. #0f0f10 is the
+           same ink the Reps wordmark and .signin-btn already use on the cream
+           band, which measures 17.2:1: far past AA at 14px either way.
+
+           ⚠️ 500, not 600. .signin-btn is 600, and matching it made the three
+           items read as three buttons with one of them missing its outline. */
+        .header-nav {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .header-link {
+          font-size: 14px;
+          font-weight: 500;
+          color: #0f0f10;
+          text-decoration: none;
+          white-space: nowrap;
+        }
+        .header-link:hover {
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+
+        /* ⚠️ MOBILE ONLY, and scoped to .header-signin rather than .signin-btn.
+           Below 768 the outlined button's border + 18px horizontal padding cost
+           ~38px the 375px header cannot spare once two more labels sit beside
+           it, so it drops to plain text and all three items match. Desktop is
+           untouched — the button is back in full at 768.
+
+           ⚠️ The scoping is load-bearing: .signin-btn is also the pricing
+           section's Free-card CTA, and flattening that on mobile would be a
+           pricing change made by accident. The hover override is part of the
+           strip, not decoration — without it the flattened link still paints a
+           background block on tap-hold. */
+        @media (max-width: 767px) {
+          .header-nav { gap: 15px; }
+          .signin-btn.header-signin {
+            font-weight: 500;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            white-space: nowrap;
+          }
+          .signin-btn.header-signin:hover {
+            background-color: transparent;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+          }
+        }
+
         .program-cta {
           display: block;
           width: 100%;
@@ -1541,6 +1725,7 @@ export default function LandingPage() {
           align-items: center;
           min-width: 0;
         }
+
         /* Identifying labels, not steps — deliberately not numbered, and in a
            quiet register well under the heading they sit beneath. */
         .program-caption {
@@ -1902,6 +2087,30 @@ export default function LandingPage() {
           margin: 0 auto;
           text-align: center;
         }
+        /* ⚠️ NOT the hero's .eyebrow colour, and this is exactly the trap the
+           .program-caption note below records. The hero eyebrow is #2d7bc4;
+           carried onto this band it measures **4.14:1**, under AA for 13px text
+           (bold only counts as large from 18.66px). It looks fine and fails.
+           Measured, not assumed.
+
+           ⚠️ Separately and PRE-EXISTING, not introduced here: that same hero
+           eyebrow measures **3.66:1 on its own cream band**, so the .eyebrow
+           class is already under AA where it currently lives. Out of scope for
+           a copy pass, but it is a real finding and it is why this rule does
+           not simply reuse the class.
+
+           #6b6b73 is this section's own muted label value — already proven at
+           4.93:1 here by "Everything included, always" — so the eyebrow takes a
+           neutral variant rather than a second, darker blue. The band is
+           near-neutral, so a neutral accent suits it anyway. */
+        .pricing-eyebrow {
+          margin: 0 0 10px;
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: #6b6b73;
+        }
         .pricing-heading {
           font-size: 27px;
           line-height: 1.1;
@@ -1967,12 +2176,25 @@ export default function LandingPage() {
           background: #ffffff;
           border: 1px solid rgba(15, 15, 16, 0.10);
         }
-        /* ⚠️ #262a39 — section 2's band colour, so the paid tier is visibly
-           part of the product's own palette rather than a fifth colour.
-           It must be kept in step with .program-section if that ever moves. */
+        /* Light blue tint, not an inversion — Free and Pro read as two honest
+           options, not a default-vs-upgrade pair. Kept a full step lighter than
+           section 2's band on purpose.
+
+           ⚠️ This replaces #262a39, which was section 2's own band colour. That
+           earlier reasoning — "visibly part of the product's palette" — is
+           retired: it made Pro the only inverted object on the band, and a dark
+           card beside a white one reads as the recommended one no matter what
+           the copy says. The tie to .program-section is deliberately cut, so
+           this no longer has to move when that band does.
+
+           ⚠️ Every text colour inside this card was re-measured against the new
+           background rather than adjusted by eye — see the ratios on each rule
+           below. The .program-caption note further down is the reason: a value
+           that looks fine on a changed background is exactly what slips under
+           AA unnoticed. */
         .pricing-card-pro {
-          background: #262a39;
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: #d5e6fb;
+          border: 1px solid rgba(55, 138, 221, 0.4);
         }
         .pricing-plan {
           margin: 0;
@@ -1982,7 +2204,7 @@ export default function LandingPage() {
           text-transform: uppercase;
         }
         .pricing-card-free .pricing-plan { color: #6b6b73; }
-        .pricing-card-pro  .pricing-plan { color: #9095ac; }
+        .pricing-card-pro  .pricing-plan { color: #1c4b7c; }   /* measured 7.05:1 on #d5e6fb */
         .pricing-price {
           margin: 10px 0 0;
           font-size: 40px;
@@ -1991,7 +2213,7 @@ export default function LandingPage() {
           line-height: 1;
         }
         .pricing-card-free .pricing-price { color: #0f0f10; }
-        .pricing-card-pro  .pricing-price { color: #ffffff; }
+        .pricing-card-pro  .pricing-price { color: #0f0f10; }  /* measured 15.09:1 on #d5e6fb */
         /* Rides with the number rather than sitting beside it at full size. */
         .pricing-per {
           font-size: 17px;
@@ -2004,7 +2226,7 @@ export default function LandingPage() {
           line-height: 1.4;
         }
         .pricing-card-free .pricing-limit { color: #55555c; }
-        .pricing-card-pro  .pricing-limit { color: #a2a8b4; }
+        .pricing-card-pro  .pricing-limit { color: #2f4f70; }  /* measured 6.69:1 on #d5e6fb */
         /* ⚠️ Full width inside the card and with its own horizontal padding.
            .cta-real ships 38px of side padding for a button sitting free on a
            page; inside a card that is what pushes the label past the edge. The
@@ -2143,6 +2365,8 @@ export default function LandingPage() {
           /* Peer with sections 2 and 3 — the same curve, for the same reason
              they are peers with each other: these are co-equal sections, not a
              descending hierarchy. */
+          /* Same 13 -> 14px step the hero eyebrow takes at this breakpoint. */
+          .pricing-eyebrow  { font-size: 14px; margin: 0 0 12px; }
           .pricing-heading  { font-size: clamp(32px, 3.7vw, 46px); margin: 0 0 16px; }
           .pricing-sub      { font-size: 18px; max-width: 520px; }
           .pricing-cards    { flex-direction: row; align-items: stretch; justify-content: center; gap: 20px; margin-top: 40px; }
