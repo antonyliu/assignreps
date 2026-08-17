@@ -2316,37 +2316,42 @@ export default function LandingPage() {
            the size parity above survives. The Free button does not need 19px
            for its own contrast — its ink is 19.16:1 on white — it needs it to
            stay the same object as its neighbour. */
-        /* The "Over 30?" note under the Pro CTA. Body weight, not a control —
-           17px/400 matching .pricing-feature, against the CTA's 19px/700 sitting
-           directly above it. The underline and the blue mark it as a link
-           without giving it any of the button's fill or elevation.
+        /* The "Over 30?" note under the Pro CTA — a FOOTNOTE, and the size
+           order on this card is deliberate and load-bearing:
 
-           ⚠️ #1f5f9e is measured on the Pro card's own #d5e6fb (5.19:1), NOT on
-           the section band. The link blue used everywhere else on a light
-           surface, #2a6fb5, is 4.86:1 on the near-white #f8f7f5 but only
-           4.09:1 here — it would FAIL AA on this card. A colour does not travel
-           between bands; re-measure it every time.
+             price   40px/700   the offer
+             CTA     19px/700   the action
+             limit   15px/400   the plan detail
+             note    13px/400   this — quietest thing on the card
+
+           ⚠️ It shipped at 17px, which put it ABOVE the 15px "up to 30 students"
+           it is a footnote TO — louder than the plan detail it qualifies, and
+           second only to the CTA. Backwards. It must stay below .pricing-limit;
+           if that line ever changes size, this one moves with it.
+
+           ⚠️ #4a6480 is measured on the Pro card's own #d5e6fb (4.83:1 — passes
+           at 13px, which needs 4.5:1), NOT on the section band. It is a muted
+           slate-blue rather than a link blue precisely so it recedes; the
+           underline is what still marks it as clickable. The link blue used
+           elsewhere on a light surface, #2a6fb5, is 4.86:1 on the near-white
+           #f8f7f5 but only 4.09:1 here and would FAIL. A colour does not travel
+           between bands; re-measure every time.
 
            ⚠️ white-space: nowrap is intentional, and it makes the FAILURE MODE
            overflow rather than a second line — so the copy has to stay short.
-           Measured, not derived from the base max-width: the card's content box
-           is 282px at 375/768/1280 (the cards are flex: 1 1 0 capped at 330px
-           from 768 up, so they do not reach the 380px base rule), and this line
-           is 215.9px intrinsic — about 66px of slack at every standard width.
-
-           ⚠️ The floor is real. The line needs a card at least 263.9px wide
-           (215.9 + 48px padding); at 262px it starts to spill. That leaves
-           ~12px of slack at the narrowest width tested, so this string is close
-           to as long as it can get. Anything longer needs the nowrap dropped or
-           the size reduced — check before editing the copy. */
+           At 13px the line is 172.2px against a 282px card content box — 110px
+           of slack; at the old 17px it was 215.9px and needed a
+           card at least 263.9px wide, which left only ~12px at the narrowest
+           width. Shrinking the type bought that margin back, but the rule still
+           stands: check the width before lengthening this string. */
         .pricing-overflow-note {
-          margin-top: 14px;
-          font-size: 17px;
+          margin-top: 12px;
+          font-size: 13px;
           line-height: 1.45;
           font-weight: 400;
-          color: #1f5f9e;
+          color: #4a6480;
           text-decoration: underline;
-          text-underline-offset: 3px;
+          text-underline-offset: 2px;
           white-space: nowrap;
         }
         .pricing-cta {
