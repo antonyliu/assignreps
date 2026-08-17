@@ -909,20 +909,29 @@ export default function LandingPage() {
               </ul>
 
               {/* CTAs */}
-              {/* ⚠️ "Try Reps free" was RESTORED on Aug 16 2026, reversing the
-                  Aug 4 retirement. Recorded so the earlier reasoning is not
-                  re-applied as though this were a drift:
+              {/* ⚠️ "Start free" — and the reason is the pricing model, not
+                  taste, so do not rename this back to a "Try…" variant.
 
-                  It was retired on Aug 4 because "Try" reads as a trial with an
-                  expiry, and the free tier is 3 students FOREVER — no card, no
-                  clock. See Pricing in CLAUDE.md, where a 14-day trial was
-                  considered and explicitly rejected.
+                  "Try" reads as a trial with an expiry. The free tier is 3
+                  students FOREVER — no card, no clock — and CLAUDE.md records a
+                  14-day trial being considered and explicitly rejected. Any
+                  wording implying a countdown misdescribes what is on offer.
 
-                  ⚠️ That objection still stands on its merits. If this ever
-                  reads as promising a time-limited trial, the fix is this
-                  string, not the pricing model. The support line below
-                  ("Try free. No card, no catch.") is what carries the
-                  no-commitment reassurance either way.
+                  This string has moved four times: "Try Reps free" -> "Start
+                  free" (Aug 4, for the reason above) -> "Keep them improving"
+                  (Aug 6, when each section's CTA named its own payoff) -> "Try
+                  Reps free" (Aug 16) -> "Start free" (Aug 17, back to the Aug 4
+                  reasoning). Recorded so the trial objection is not rediscovered
+                  a fourth time.
+
+                  ⚠️ The support line below still opens with "Try free." — same
+                  connotation, two lines down, deliberately left as-is for now.
+                  If the trial reading is the thing being avoided, that line is
+                  the remaining instance.
+
+                  ⚠️ The hero and BOTH pricing cards now read "Start free", so
+                  the Aug 6 "each section names its own payoff" rule holds only
+                  for §2 and §3 today.
 
                   ⚠️ 19px/700 on .cta-real is unchanged and is an ACCESSIBILITY
                   FLOOR, not a size preference — white on #378add is 3.59:1,
@@ -932,7 +941,7 @@ export default function LandingPage() {
                   href="/instructor/signup"
                   className="cta-real cta-primary hover:opacity-90 active:scale-[0.98] transition-all"
                 >
-                  Try Reps free
+                  Start free
                 </Link>
                 {/* ⚠️ BELOW the button, and the 375x667 fold behaviour is KNOWN
                     AND ACCEPTED — do not re-raise it as an open bug.
@@ -989,7 +998,7 @@ export default function LandingPage() {
             {/* ⚠️ The CTAs on this page no longer all say the same thing, and
                 that is a reversal of the Aug 6 morning decision rather than a
                 drift. Each section's button now names that section's OWN payoff
-                — "Try Reps free" in the hero, "Get organized" here — so
+                — "Start free" in the hero, "Get organized" here — so
                 the wording follows the argument being made rather than the
                 destination. All of them still go to /instructor/signup.
 
