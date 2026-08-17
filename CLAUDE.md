@@ -1,5 +1,47 @@
 # Reps — CLAUDE.md
-*Last updated: Aug 5 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+*Last updated: Aug 17 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+
+---
+
+## 📍 Current state — Aug 17 2026
+
+**Read this first. It supersedes the two dated sections below** (*Where we left off — Aug 5* and *Where things stand — Aug 6*), which are kept as history and are stale wherever they disagree.
+
+**Git:** local `main` = `origin/staging` = `8933a97`. Prod (`origin/main`) is `88de42a`, **73 commits back** — everything below is on staging only, nothing is live.
+⚠️ Re-run `git branch -r -v` rather than trusting these numbers; they go stale immediately.
+
+### Shipped tonight
+
+- **Stripe Customer Portal — built and verified end to end.** `createPortalSession()` in `instructor/billing/actions.ts`, reached from a **"Manage subscription"** row in `ProfileMenu` (panel cap raised 160px → 176px so the label is not crushed). Verified in test mode against a real cancellation: the portal opened, the cancellation registered at period end, the webhook processed both events, and **RJ's account was confirmed untouched** during Tony's cancellation.
+- **`/faq`'s cancel answer is now TRUE**, not a promise written ahead of the build. The 🛑 gates on it in code and in this file are cleared.
+- **Hero and pricing copy rewritten.** All "try/trial" language dropped in favour of honest *free forever* framing. Headline is **"The work you give them, gets done."** at 34px/700 with **normal tracking** (relaxed from −0.5px the same night, after it read as intense on device). CTA button reads **"Start free"**.
+- **Pricing cards:** the student-count line is now the visual differentiator at **20px/600**, where it was previously quieter than the shared feature list. A note sits under the **Pro card only** — "Need more than 30? Just email us."
+- **`/faq` mobile spacing** fixed (heading clamp + line-height, Q/A separation 22px → 32px).
+- **`/privacy` heading contrast** fixed — was failing AA at 3.36:1, now matches `/faq`'s measured values.
+- **Testimonial removed** from `page.tsx`, saved verbatim to `docs/deferred/section-2-testimonial.md`. Waiting on RJ, low priority.
+- **Hero device mock scaled to 120%** (`--pw` 206px), header gap halved (48px → 24px).
+
+### Still open, ranked
+
+1. **Deactivate/Activate students — not built.** Elevated tonight because it closes a real loophole, not just a UX gap: a Pro coach can add up to 30 students, cancel, and keep all 30 active on Free forever. **Nothing currently restricts the active count after a downgrade.** See pre-launch item 8 for the decided terminology and schema shape.
+2. **Students and parents on token links have ZERO route to `/privacy`.** More serious than the coach-side version below — these are the people whose data is described there, and many are minors.
+3. **Signed-in coaches cannot reach `/faq`, `/privacy` or `/terms` at all.** Every link to them lives on the public landing page; the instructor app has no footer and `ProfileMenu` has no link out.
+4. **Desktop hero headline still reads "intense."** Mobile was addressed via tracking (now `normal`); desktop was not. Next lever is already scoped: colour `#0f0f10` → `#1a1a1a`, still 13.4:1 and zero layout cost. ⚠️ Do not drop the 700 weight — it is what carries the hierarchy against the 18px/600 bullets.
+5. **Mobile scroll rhythm** — hero CTA to the next section's CTA feels too fast. Proposed and undecided: swap §2/§3 stacking order on mobile to mocks-first rather than copy-first.
+6. **Fold clearance is thin.** 10.4px at 375×812, and the "Free, forever. No card." support line now sits **below the fold on tall phones**, not just SE-class. Flagged; not yet decided whether it matters. `--pw` toward 190px is worth ~30px if it does.
+7. **The 30-student Pro cap is decided but NOT enforced.** Staying at 30. It remains copy on three unlinked surfaces (pricing card, `/faq`, `AddPlayerForm`) with no code behind it. Making the line more prominent tonight raised the cost of that gap rather than closing it.
+8. **Remaining privacy-audit bundle:** Stripe absent from the vendor list, the thin minors section, `#888888` failing on the "Last updated" line, `/terms` still carrying the old failing blue heading, and the date bump — do the bump last, once the rest lands.
+9. **Landing page metadata** (title/description/OG — **five strings**, four in `page.tsx` plus the fallback in `layout.tsx`). Parked, needs real thought: SEO wants "practice/drills" keywords, but "practice" collides with basketball's team-session meaning.
+10. **CLAUDE.md restructure** — split current state from narrative history into `docs/`. Its own isolated pass.
+11. **Later, no urgency:** the signed-in app is capped at phone width on desktop/tablet; landing page modules feel rigid block-to-block (TeuxDeux-style overlap was the direction); an animated hero walkthrough.
+
+### ⚠️ Going live is a separate task
+
+Everything above is **test mode**. Live mode needs, at minimum: a new live product and price, live API keys, a live webhook endpoint and secret, and all three Stripe env vars added to Vercel.
+
+⚠️ **The Customer Portal cancellation setting must be re-confirmed in live mode.** Tonight's confirmation ("At end of billing period") was test-mode only — the two modes hold separate portal configurations, and `/faq`'s cancel answer is false if live is set to Immediately.
+
+⚠️ **RJ's current test-mode subscription does not carry over.** He must be re-provisioned in live mode, and `COACHRJ` recreated there uncapped.
 
 ---
 
