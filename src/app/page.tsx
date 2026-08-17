@@ -1187,6 +1187,20 @@ export default function LandingPage() {
               <Link href="/instructor/signup" className="cta-real pricing-cta">
                 Start free
               </Link>
+              {/* ⚠️ INSIDE the Pro card, deliberately — not a sibling of the two
+                  cards. .pricing-cards is a flex ROW at >=768, so a line placed
+                  between the cards and their shared feature list would become a
+                  THIRD COLUMN beside them rather than a note under one card.
+                  Same trap the section 2 testimonial had with .program-inner.
+
+                  ⚠️ Belongs to Pro ONLY. The feature list below is shared by
+                  both plans and headed "Everything included, always"; the whole
+                  point of that block is that the plans differ by student count
+                  and nothing else. This line is about the count, so it sits with
+                  the plan that has the ceiling. */}
+              <a href="mailto:hello@assignreps.com" className="pricing-overflow-note">
+                Over 30? Let&apos;s make it work.
+              </a>
             </div>
           </div>
 
@@ -2302,6 +2316,39 @@ export default function LandingPage() {
            the size parity above survives. The Free button does not need 19px
            for its own contrast — its ink is 19.16:1 on white — it needs it to
            stay the same object as its neighbour. */
+        /* The "Over 30?" note under the Pro CTA. Body weight, not a control —
+           17px/400 matching .pricing-feature, against the CTA's 19px/700 sitting
+           directly above it. The underline and the blue mark it as a link
+           without giving it any of the button's fill or elevation.
+
+           ⚠️ #1f5f9e is measured on the Pro card's own #d5e6fb (5.19:1), NOT on
+           the section band. The link blue used everywhere else on a light
+           surface, #2a6fb5, is 4.86:1 on the near-white #f8f7f5 but only
+           4.09:1 here — it would FAIL AA on this card. A colour does not travel
+           between bands; re-measure it every time.
+
+           ⚠️ white-space: nowrap is intentional, and it makes the FAILURE MODE
+           overflow rather than a second line — so the copy has to stay short.
+           Measured, not derived from the base max-width: the card's content box
+           is 282px at 375/768/1280 (the cards are flex: 1 1 0 capped at 330px
+           from 768 up, so they do not reach the 380px base rule), and this line
+           is 215.9px intrinsic — about 66px of slack at every standard width.
+
+           ⚠️ The floor is real. The line needs a card at least 263.9px wide
+           (215.9 + 48px padding); at 262px it starts to spill. That leaves
+           ~12px of slack at the narrowest width tested, so this string is close
+           to as long as it can get. Anything longer needs the nowrap dropped or
+           the size reduced — check before editing the copy. */
+        .pricing-overflow-note {
+          margin-top: 14px;
+          font-size: 17px;
+          line-height: 1.45;
+          font-weight: 400;
+          color: #1f5f9e;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+          white-space: nowrap;
+        }
         .pricing-cta {
           display: block;
           width: 100%;
