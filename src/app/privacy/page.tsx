@@ -3,7 +3,24 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Privacy Policy — Reps" };
 
-const heading: React.CSSProperties = { fontSize: "17px", fontWeight: 600, letterSpacing: "-0.2px", color: "#378add", marginTop: "22px", marginBottom: "5px" };
+/* ⚠️ #1a1a1a, NOT the brand blue #378add this used to be — an ACCESSIBILITY
+   FIX, not a restyle. Measured on this page's own #f8f7f5 background:
+
+     #378add  3.36:1   FAILS AA (normal text needs 4.5:1)
+     #1a1a1a  16.26:1  passes comfortably
+
+   The blue passes only under the WCAG large-text allowance, which requires
+   >=18.66px AND bold. These headings are 17px/600 — neither. So the old value
+   was failing at every heading on the page.
+
+   Brought in line with /faq, which was built with measured values from the
+   start and is the deliberate choice on this site. Size, weight and spacing are
+   deliberately UNCHANGED — only the colour moved, because only the colour was
+   the defect.
+
+   ⚠️ /terms still carries the failing #378add on its own headings and links.
+   Same fix, out of scope for this commit. */
+const heading: React.CSSProperties = { fontSize: "17px", fontWeight: 600, letterSpacing: "-0.2px", color: "#1a1a1a", marginTop: "22px", marginBottom: "5px" };
 const body: React.CSSProperties = { fontSize: "15px", lineHeight: 1.55, color: "#333" };
 const intro: React.CSSProperties = { ...body, marginTop: "18px", fontStyle: "italic", color: "#6b6b6b" };
 
@@ -11,7 +28,9 @@ export default function PrivacyPage() {
   return (
     <div className="paper-grain" style={{ backgroundColor: "#f8f7f5", minHeight: "100vh" }}>
       <main style={{ maxWidth: "680px", margin: "0 auto", padding: "48px 28px 80px", color: "#1a1a1a", fontFamily: "system-ui, sans-serif" }}>
-        <Link href="/" style={{ fontSize: "15px", color: "#378add", textDecoration: "underline", textUnderlineOffset: "3px" }}>← Back</Link>
+        {/* ⚠️ #2a6fb5, the brand blue darkened until it passes — 4.86:1 here,
+            against #378add's 3.36:1. Same value /faq uses for every link. */}
+        <Link href="/" style={{ fontSize: "15px", color: "#2a6fb5", textDecoration: "underline", textUnderlineOffset: "3px" }}>← Back</Link>
         <h1 style={{ fontSize: "30px", fontWeight: 700, letterSpacing: "-0.5px", marginTop: "24px", marginBottom: "8px" }}>Privacy Policy</h1>
         <p style={{ fontSize: "14px", color: "#888", marginBottom: "8px" }}>Last updated: July 17, 2026</p>
 
@@ -102,7 +121,7 @@ export default function PrivacyPage() {
 
         <h2 style={heading}>Deleting your data</h2>
         <p style={body}>
-          Email <a href="mailto:hello@assignreps.com" style={{ color: "#378add", textDecoration: "underline" }}>hello@assignreps.com</a>{" "}and we&apos;ll remove your account and all associated data.
+          Email <a href="mailto:hello@assignreps.com" style={{ color: "#2a6fb5", textDecoration: "underline" }}>hello@assignreps.com</a>{" "}and we&apos;ll remove your account and all associated data.
         </p>
       </main>
     </div>
