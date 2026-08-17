@@ -898,9 +898,30 @@ export default function LandingPage() {
                   the line count, the line break, nor the height at any width.
                   The size bump in .headline is the half that costs fold
                   clearance; this half is free. */}
+              {/* ⚠️ letterSpacing: normal, relaxed from -0.5px on Aug 17 2026.
+                  The headline read as INTENSE on a real phone rather than
+                  merely bold, and the cause was three intensifiers stacking:
+                  near-black #0f0f10 (15.84:1 on the cream), weight 700, and
+                  NEGATIVE tracking pulling the letterforms tighter. Tight
+                  tracking on already-heavy type is what turns bold into dense —
+                  the letters crowd and the line reads as a solid block rather
+                  than as words.
+
+                  Tracking was relaxed first because it is the only one of the
+                  three that costs nothing: measured at 375x812, -0.5px /
+                  -0.25px / normal all produce the SAME line break, the SAME
+                  77.5px block height and the SAME 10.4px CTA fold clearance.
+                  The longest line grows 275.6px -> 284.1px inside a 331px
+                  column, so there is still ~47px of slack.
+
+                  ⚠️ Weight 700 and the colour are deliberately UNTOUCHED. The
+                  700 is what carries the hierarchy against the 18px/600 bullets
+                  and undoing it would reopen the flat-hero problem; the colour
+                  is the next lever if this is still too heavy (#1a1a1a is
+                  13.4:1, still far past AA). */}
               <h1 className="headline" style={{
                 fontWeight: 700,
-                letterSpacing: "-0.5px",
+                letterSpacing: "normal",
                 color: "#0f0f10",
               }}>
                 The work you give them, gets done.
