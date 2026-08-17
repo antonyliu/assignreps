@@ -39,12 +39,25 @@ const heading: React.CSSProperties = {
   paddingBottom: "8px",
   borderBottom: "1px solid #e4e2de",
 };
+/* ⚠️ marginTop is the ONLY thing separating one Q/A pair from the next, and it
+   is the same number that separates a group heading from its first question —
+   both come from this one rule, which is what keeps the rhythm identical across
+   all five groups.
+
+   Raised 22px -> 32px on Aug 16 2026. At 22px the gap BETWEEN pairs was only
+   5.5x the 4px gap INSIDE a pair, so the page read as one undifferentiated
+   column of text rather than as discrete question/answer units. At 32px that
+   ratio is 8x and the pairing is legible at a glance.
+
+   ⚠️ Deliberately spacing, NOT a divider. A hairline above each question would
+   compete with the borderBottom the group headings already carry, giving the
+   page two competing horizontal rules at different strengths. */
 const question: React.CSSProperties = {
   fontSize: "15px",
   fontWeight: 600,
   letterSpacing: "-0.1px",
   color: "#1a1a1a",
-  marginTop: "22px",
+  marginTop: "32px",
   marginBottom: "4px",
 };
 /* ⚠️ `textWrap: pretty` is a measured fix applied page-wide, not a flourish.
@@ -93,7 +106,23 @@ export default function FaqPage() {
     <div className="paper-grain" style={{ backgroundColor: "#f8f7f5", minHeight: "100vh" }}>
       <main style={{ maxWidth: "680px", margin: "0 auto", padding: "48px 28px 80px", color: "#1a1a1a", fontFamily: "system-ui, sans-serif" }}>
         <Link href="/" style={{ ...link, fontSize: "15px" }}>&larr; Back</Link>
-        <h1 style={{ fontSize: "30px", fontWeight: 700, letterSpacing: "-0.5px", marginTop: "24px", marginBottom: "8px" }}>
+        {/* ⚠️ Both values here are MEASURED, not taste.
+
+            fontSize: at a flat 30px this wrapped to "Frequently asked /
+            questions" at 375 — a one-word last line. Swept the mobile column
+            (319px): 25px is the exact threshold, fitting on ONE line, and 26px
+            is the first size that breaks. 6.6vw resolves to 24.75px at 375,
+            just under it with margin to spare, and the 30px ceiling means every
+            width from 768 up is unchanged.
+            ⚠️ A clamp() rather than a media query on purpose — this page has no
+            stylesheet at all (it was removed with the phone mock), and inline
+            styles cannot express a breakpoint. Reintroducing a <style> block
+            for one heading is not worth it.
+
+            lineHeight: was inheriting 1.5 from the app's body rule — 45px for a
+            30px heading, so the two-line h1 stood 90px tall. 1.2 is a heading
+            line-height; body copy elsewhere on the page keeps 1.55. */}
+        <h1 style={{ fontSize: "clamp(22px, 6.6vw, 30px)", lineHeight: 1.2, fontWeight: 700, letterSpacing: "-0.5px", marginTop: "24px", marginBottom: "8px" }}>
           Frequently asked questions
         </h1>
 
