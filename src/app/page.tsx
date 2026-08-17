@@ -1198,9 +1198,17 @@ export default function LandingPage() {
                   point of that block is that the plans differ by student count
                   and nothing else. This line is about the count, so it sits with
                   the plan that has the ceiling. */}
-              <a href="mailto:hello@assignreps.com" className="pricing-overflow-note">
-                Over 30? Let&apos;s make it work.
-              </a>
+              {/* ⚠️ A <p> wrapping a partial <a>, not a fully-linked line. Only
+                  "email us" is the link; the rest is plain text. The whole line
+                  used to be one <a>, which made a sentence-long tap target out
+                  of copy that is mostly not an instruction. */}
+              <p className="pricing-overflow-note">
+                Need more than 30?{" "}
+                <a href="mailto:hello@assignreps.com" className="pricing-overflow-link">
+                  Just email us
+                </a>
+                .
+              </p>
             </div>
           </div>
 
@@ -2339,20 +2347,35 @@ export default function LandingPage() {
 
            ⚠️ white-space: nowrap is intentional, and it makes the FAILURE MODE
            overflow rather than a second line — so the copy has to stay short.
-           At 13px the line is 172.2px against a 282px card content box — 110px
-           of slack; at the old 17px it was 215.9px and needed a
-           card at least 263.9px wide, which left only ~12px at the narrowest
-           width. Shrinking the type bought that margin back, but the rule still
-           stands: check the width before lengthening this string. */
+           Re-measured after the Aug 17 rewording: the line is 209.9px against a
+           282px card content box, so it needs a card at least 257.9px wide and
+           spills at 257px. That is 72px of slack at every standard width.
+
+           History, because this number keeps moving: 215.9px at the original
+           17px (threshold 263.9px, only ~12px of slack), 172.2px once the type
+           dropped to 13px, and 209.9px now that the copy is longer. The type
+           shrink bought room and this rewording spent about half of it back.
+           Check the width before lengthening the string again. */
         .pricing-overflow-note {
-          margin-top: 12px;
+          /* ⚠️ margin: 0 first — this became a <p> when only part of the line
+             was linked, and a bare <p> carries a browser default margin that
+             would have added ~13px above and below inside the card. */
+          margin: 12px 0 0;
           font-size: 13px;
           line-height: 1.45;
           font-weight: 400;
           color: #4a6480;
+          white-space: nowrap;
+        }
+        /* ⚠️ The underline lives HERE, not on the paragraph. Only "Just email
+           us" is the link; underlining the whole sentence made a tap target out
+           of copy that is mostly not an instruction. Same colour as the
+           surrounding text on purpose — the underline is the affordance, and a
+           second blue inside a 13px line reads as noise at this size. */
+        .pricing-overflow-link {
+          color: inherit;
           text-decoration: underline;
           text-underline-offset: 2px;
-          white-space: nowrap;
         }
         .pricing-cta {
           display: block;
