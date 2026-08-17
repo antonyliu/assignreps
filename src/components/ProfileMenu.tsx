@@ -202,14 +202,40 @@ export default function ProfileMenu({
                 oversized shape this is meant to avoid; at 160px it truncates
                 instead and the menu stays compact.
 
-                ⚠️ "Upgrade to Pro" is now the widest item, so the panel sits
-                wider at rest than the ~98px above and a long name truncates
-                slightly later. Still inside the 160px cap. The width therefore
-                varies with isPro: a Pro coach sees the original narrower menu,
-                because the item is removed rather than disabled. */}
+                ⚠️ RAISED 160px -> 176px on Aug 17 2026, because "Manage
+                subscription" did not fit and was being CRUSHED rather than
+                merely tight. The arithmetic, since it is not obvious from the
+                class alone — the cap covers the panel's own box, not the text:
+
+                  text                       135px
+                  row px-3, both sides      + 24px
+                  panel p-1, both sides     +  8px
+                  panel border, both sides  +  2px
+                  natural width needed       169px
+
+                At the old 160px cap the row's 12px right padding was consumed
+                and the label overran it by 9px, sitting hard against the panel
+                edge. ⚠️ An earlier note here recorded "one pixel of slack",
+                which was WRONG: it compared the row's width to the cap without
+                subtracting the panel's own padding and borders. The row padding
+                was never the problem and is unchanged — px-3, identical to
+                every other row.
+
+                176px was chosen over the bare 169px it needs so there is ~7px
+                of headroom for font-metric variance on other devices. It does
+                NOT make the menu wider at rest: w-max still sizes the panel to
+                its content, so this row renders at 169px and every shorter
+                row — Edit name, Sign out, Upgrade to Pro — is untouched. A
+                free-tier coach sees exactly the menu they saw before.
+
+                ⚠️ The cap still does real work: it is what truncates a long
+                coach name rather than letting the box grow to fit any name. At
+                200px "RJW Skills & Development" stretched the menu to 183px,
+                the oversized shape this exists to avoid. 176px keeps that
+                behaviour while clearing the widest ACTION. */}
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1.5 z-50 w-max max-w-[160px] bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
+              className="absolute right-0 top-full mt-1.5 z-50 w-max max-w-[176px] bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
             >
               {/* Identity, not an action: a plain div, so it is neither tappable
                   nor focusable, and role="presentation" keeps it out of the
@@ -259,7 +285,7 @@ export default function ProfileMenu({
                   {/* Inline rather than a toast: this menu has no toast, and the
                       errors reachable here are configuration problems a coach
                       cannot act on beyond retrying. Wraps rather than truncating
-                      so the message is actually readable in a 160px panel. */}
+                      so the message is actually readable in a 176px panel. */}
                   {upgradeError && (
                     <p className="px-3 pb-1.5 text-[12px] leading-snug text-red-400 whitespace-normal">
                       {upgradeError}
@@ -285,21 +311,21 @@ export default function ProfileMenu({
                   "Cancel" would suggest it cancels on the spot rather than
                   opening a screen where that is one of the options.
 
-                  ⚠️ IT IS THE WIDEST ITEM THIS MENU CAN RENDER, AND IT ONLY
-                  JUST FITS. Measured at 14px in the app's font stack: the label
-                  is 135.0px, plus px-3 on both sides = a 159.0px row against
-                  the panel's max-w-[160px] cap. ONE PIXEL of slack.
+                  ⚠️ IT IS THE WIDEST ITEM THIS MENU CAN RENDER. The label is
+                  135.0px at 14px in the app's font stack, against "Upgrade to
+                  Pro" at 98.4px and "Sign out" at 53.3px — so this row alone
+                  decides the panel's width, and the cap was raised to 176px to
+                  fit it. See the arithmetic on the panel above.
 
-                  For comparison: "Upgrade to Pro" is 122.4px and "Manage
-                  billing" (what this replaced) was 117.5px, so both had ~40px
-                  to spare. This does not.
+                  ⚠️ A previous note here claimed "one pixel of slack". That was
+                  WRONG — it compared the row's 159px to the 160px cap without
+                  subtracting the panel's own 4px padding and 1px borders, which
+                  left only 126px for a 135px label. The label was overrunning
+                  its right padding by 9px, not fitting by 1px.
 
-                  ⚠️ Measured in desktop Chrome. The row is whitespace-nowrap,
-                  so if a device's system font renders even ~1% wider — an
-                  iPhone, a different default face — the label overflows the
-                  capped panel rather than wrapping. If that shows up, widen the
-                  cap; do not shorten the label back without asking, it was
-                  chosen deliberately over "Manage billing". */}
+                  Do not shorten this label back to make it fit a narrower
+                  panel; it was chosen deliberately over "Manage billing". Widen
+                  the cap instead, and redo the arithmetic above. */}
               {isPro && (
                 <>
                   <button
@@ -311,7 +337,7 @@ export default function ProfileMenu({
                     {portalPending ? "Opening…" : "Manage subscription"}
                   </button>
                   {/* Inline and wrapping, matching the upgrade error above — this
-                      panel has no toast, and a truncated message in a 160px
+                      panel has no toast, and a truncated message in a 176px
                       panel is unreadable. */}
                   {portalError && (
                     <p className="px-3 pb-1.5 text-[12px] leading-snug text-red-400 whitespace-normal">
