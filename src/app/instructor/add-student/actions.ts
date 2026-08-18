@@ -70,7 +70,7 @@ export async function addPlayer(
   //
   // ⚠️ ACTIVE students, not all students. A deactivated student is a full pause
   // and consumes no seat, so a coach at their ceiling can deactivate someone to
-  // make room rather than deleting them and destroying their history.
+  // free up a spot rather than deleting them and destroying their history.
   const count = await countActiveStudents(supabase, user.id);
 
   // ⚠️ FAILS CLOSED, matching isEntitled(). A null count is "couldn't read it",
@@ -101,7 +101,7 @@ export async function addPlayer(
     return {
       ok: false,
       code: "ceiling_reached",
-      error: `Pro covers ${PRO_STUDENT_LIMIT} active ${labels.studentsLabel}. Deactivate someone to make room.`,
+      error: `Pro covers ${PRO_STUDENT_LIMIT} active ${labels.studentsLabel}. Deactivate someone to free up a spot.`,
     };
   }
 

@@ -122,7 +122,7 @@ export async function activatePlayer(playerId: string): Promise<SetPlayerActiveR
     return {
       ok: false,
       code: "ceiling_reached",
-      error: `Pro covers ${PRO_STUDENT_LIMIT} active ${labels.studentsLabel}. Deactivate someone else to make room.`,
+      error: `Pro covers ${PRO_STUDENT_LIMIT} active ${labels.studentsLabel}. Deactivate someone else to free up a spot.`,
     };
   }
 

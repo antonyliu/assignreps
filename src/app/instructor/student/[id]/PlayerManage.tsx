@@ -328,30 +328,43 @@ export default function PlayerManage({
             <h2 id="deactivate-student-title" className="text-[16px] font-semibold text-reps-ink mb-2">
               Deactivate {firstName}?
             </h2>
-            {/* Trimmed after a device pass — three paragraphs read as a wall
-                and nobody scans it. Same facts, fewer words: the old opener
-                ("Taking a break?") asked a question the coach had already
-                answered by opening this modal, and "keeps all their history
-                safe" plus "you can bring them back anytime" are one idea said
-                twice, now "nothing is lost... Reactivate anytime".
+            {/* TWO TIERS, not three. Everything here was one grey, so the
+                consequence, the upside and the caveat all read at the same
+                weight and the block scanned as a wall — short words did not fix
+                that, because the problem was hierarchy rather than length.
 
-                ⚠️ "frees up a spot on your plan" STAYS. It is the whole reason
-                a coach arrives here from the ceiling gate, and it is the only
-                line that explains what deactivating buys them. */}
-            <p className="text-[13px] text-reps-sub leading-relaxed">
-              Pauses new work and logging — nothing is lost, and it frees up a
-              spot on your plan. Reactivate anytime.
+                Tier one: what deactivating DOES, in the brightest ink, with a
+                real subject. It read "Pauses new work and logging", starting
+                mid-sentence with no grammatical subject, which is why it needed
+                the heading to make sense. */}
+            <p className="text-[13px] text-reps-ink leading-relaxed">
+              Deactivating pauses new work and logging — nothing is lost.
             </p>
-            {/* Informational, not a second gate — deactivation is undone in one
-                tap, so a confirmation step here would be ceremony over a
-                decision that costs nothing. */}
-            {openAssignmentCount > 0 && (
-              <p className="text-[13px] text-reps-sub leading-relaxed mt-3">
-                {firstName} has {openAssignmentCount} open{" "}
-                {openAssignmentCount === 1 ? "assignment" : "assignments"}, which
-                will pause too.
-              </p>
-            )}
+            {/* Tier two: everything secondary, in one dimmer block behind a
+                hairline. The upside and the open-assignment caveat are the same
+                KIND of information — context the coach may want but does not
+                need to act on — so they share a colour and a size instead of
+                stepping down again.
+
+                ⚠️ "Frees a spot on your plan" STAYS. It is the whole reason a
+                coach arrives here from the ceiling gate, and the only line that
+                says what deactivating buys them. "spot" is the app's one word
+                for this — see the activate gate, which was "No room" until it
+                was standardised.
+
+                ⚠️ The caveat is informational, NOT a second gate. Deactivation
+                is undone in one tap, so a confirmation step would be ceremony
+                over a decision that costs nothing. */}
+            <div className="mt-3 pt-3 border-t border-reps-line text-[13px] text-reps-sub leading-relaxed">
+              <p>Frees a spot on your plan. Reactivate anytime.</p>
+              {openAssignmentCount > 0 && (
+                <p className="mt-1.5">
+                  {firstName} has {openAssignmentCount} open{" "}
+                  {openAssignmentCount === 1 ? "assignment" : "assignments"}, which
+                  will pause too.
+                </p>
+              )}
+            </div>
             <div className="flex gap-3 mt-7">
               <button
                 onClick={() => setConfirmDeactivate(false)}
@@ -390,11 +403,29 @@ export default function PlayerManage({
             role="dialog"
             aria-modal="true"
             aria-labelledby="activate-gate-title"
-            className="w-full max-w-[320px] bg-reps-card border border-reps-line rounded-[16px] px-7 pt-7 pb-8"
+            // ⚠️ BLUE, where the deactivate modal above stays grey, and the split
+            // is a system rather than decoration: blue marks anything touching
+            // PLAN CAPACITY, grey marks a routine action. This modal and the
+            // roster's "Assigning is on hold" banner are the same state — over
+            // the limit — reached two different ways, so they share a surface.
+            //
+            // Wash and border are the all-done panel's idiom in the brand hue
+            // instead of emerald. Layered over the card colour rather than
+            // replacing it, because a bare rgba would composite against the
+            // black overlay and come out darker than the modal it belongs to.
+            className="w-full max-w-[320px] border rounded-[16px] px-7 pt-7 pb-8"
+            style={{
+              background:
+                "linear-gradient(rgba(55,138,221,0.07), rgba(55,138,221,0.07)), #1c1f26",
+              borderColor: "rgba(55,138,221,0.18)",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* "No spot", not "No room". The reassurance below and the deactivate
+                modal both say "spot", so the app now has ONE word for this idea
+                instead of two for the same thing. */}
             <h2 id="activate-gate-title" className="text-[16px] font-semibold text-reps-ink mb-2">
-              No room for {firstName} right now
+              No spot for {firstName} right now
             </h2>
             <p className="text-[13px] text-reps-sub leading-relaxed">{gate.error}</p>
             <p className="text-[13px] text-reps-sub leading-relaxed mt-3">

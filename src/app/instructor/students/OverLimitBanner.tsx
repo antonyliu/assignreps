@@ -20,8 +20,9 @@ import { useUpgrade } from "@/lib/use-upgrade";
  * ⚠️ NO WARNING COLOUR, and specifically no yellow or amber. Yellow was retired
  * platform-wide once it stopped meaning "in progress"; reintroducing it as a
  * warning tone here would break a locked decision and give the app a second
- * status vocabulary. The icon and both text tones are the greys already in use.
- * This is a state the coach can resolve, not a failure.
+ * status vocabulary. The blue below is the BRAND accent marking plan capacity,
+ * not a warning hue, and the icon and both text tones stay the greys already in
+ * use. This is a state the coach can resolve, not a failure.
  */
 export default function OverLimitBanner({
   activeCount,
@@ -50,7 +51,21 @@ export default function OverLimitBanner({
   return (
     <div
       className="rounded-[10px] px-[14px] py-3 mb-4 mt-2"
-      style={{ background: "#161a20", border: "1px solid #2a2d36" }}
+      // ⚠️ BLUE marks plan capacity. The all-done panel's idiom — a soft rgba
+      // wash with a border in the same hue — in the brand blue instead of
+      // emerald, so this reads as a state rather than as another grey card.
+      // The reactivate gate modal carries the identical treatment: same state,
+      // reached a different way.
+      //
+      // ⚠️ Layered OVER #161a20 rather than replacing it. The all-done panel
+      // washes straight onto the page, but this banner sits on the near-black
+      // roster background, so a bare rgba would land DARKER than the surface it
+      // has today and read as recessed instead of lifted.
+      style={{
+        background:
+          "linear-gradient(rgba(55,138,221,0.07), rgba(55,138,221,0.07)), #161a20",
+        border: "0.5px solid rgba(55,138,221,0.18)",
+      }}
     >
       <div className="flex gap-2.5">
         {/* mt-[1px] optically centres a 16px glyph against the 13px title line.
@@ -67,13 +82,13 @@ export default function OverLimitBanner({
           <div className="text-[13px] font-medium text-reps-ink">Assigning is on hold</div>
           <div className="text-[12px] text-reps-sub mt-0.5 leading-relaxed">
             You have {activeCount} active {studentsLabel} on a plan for {planLimit}.
-            Deactivate {over} {overNoun} to make room.
+            Deactivate {over} {overNoun} to free up a spot.
           </div>
 
           {/* ⚠️ A 44px BUTTON, not an inline link inside the sentence above.
               The app's rule is 44px minimum on every tap target with the visible
               label as the target — an accent phrase mid-paragraph cannot be
-              either. That is why the copy ends at "make room." and the offer
+              either. That is why the copy ends at "free up a spot." and the offer
               stands on its own line; the "or" is carried by the layout.
 
               Quiet by design: bordered rather than filled, so it reads as an
