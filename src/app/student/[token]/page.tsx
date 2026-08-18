@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { LogoMini } from "@/components/Logo";
+import PrivacyFooter from "@/components/PrivacyFooter";
 import AssignmentTabs, { EmptyState } from "@/components/AssignmentTabs";
 import AllDonePanel from "@/components/AllDonePanel";
 import { isComplete, progressTarget, progressValue } from "@/lib/exercises";
@@ -60,6 +61,7 @@ export default async function PlayerHomePage({
             Everything you&apos;ve logged is saved.
           </p>
         </div>
+        <PrivacyFooter />
       </main>
     );
   }
@@ -205,6 +207,11 @@ export default async function PlayerHomePage({
           }
         />
       )}
+      {/* ⚠️ mt-auto inside PrivacyFooter is what pins this to the bottom.
+          Nothing else in this <main> grows — AssignmentTabs carries no flex-1 —
+          so on a short list the footer sits at the bottom of the viewport
+          rather than directly under the last card. */}
+      <PrivacyFooter />
     </main>
   );
 }

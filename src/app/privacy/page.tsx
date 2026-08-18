@@ -178,7 +178,12 @@ export default function PrivacyPage() {
             Deliberately silent on age verification. There is none, and saying so
             invites a question rather than answering one; nothing here implies
             otherwise. Retention is covered by the deletion route above. */}
-        <h2 style={heading}>Students and minors</h2>
+        {/* ⚠️ The id is a LINK TARGET, not decoration. Every student- and
+            parent-facing screen now points at #students-and-minors via
+            PrivacyFooter, because this page spends five sections on coach and
+            billing matters before reaching the one written for parents.
+            Renaming it breaks those links silently — nothing would error. */}
+        <h2 id="students-and-minors" style={heading}>Students and minors</h2>
         <p style={{ ...body, marginBottom: "10px" }}>
           If your child uses Reps, here&apos;s what that means.
         </p>

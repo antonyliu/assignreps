@@ -1,6 +1,7 @@
 import { LogoLarge } from "@/components/Logo";
 import PlayerOtpFlow from "@/components/PlayerOtpFlow";
 import { lookupPlayerByPhone } from "./actions";
+import PrivacyFooter from "@/components/PrivacyFooter";
 
 export default function PlayerLoginPage() {
   return (
@@ -11,6 +12,9 @@ export default function PlayerLoginPage() {
         <p className="text-[13px] text-reps-sub mb-4">Enter your number to find your assignments.</p>
         <PlayerOtpFlow token="" lookupByPhone={lookupPlayerByPhone} />
       </div>
+      {/* This screen centres its content with justify-center; an auto top margin
+          still wins over that, so the footer pins to the bottom as elsewhere. */}
+      <PrivacyFooter />
     </main>
   );
 }

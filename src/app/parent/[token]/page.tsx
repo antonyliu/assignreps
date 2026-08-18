@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { LogoMini } from "@/components/Logo";
+import PrivacyFooter from "@/components/PrivacyFooter";
 
 export const metadata: Metadata = { title: "Weekly Update — Reps" };
 
@@ -149,9 +150,10 @@ export default async function ParentPage({
         </div>
       </div>
 
-      <div className="mt-auto pt-8 text-center">
-        <p className="text-[11px] text-reps-dim/50">Read-only view · Reps</p>
-      </div>
+      {/* This line is where the pattern came from — it shipped here first as
+          "Read-only view · Reps". Now the shared component, with the link
+          added, so the four surfaces cannot drift. */}
+      <PrivacyFooter prefix="Read-only view" />
     </main>
   );
 }
