@@ -7,7 +7,7 @@ import type { GoalType } from "@/lib/exercises";
 import { notifyRepeatAssignment } from "@/lib/notify-assignment";
 import { getActivityLabels } from "@/config/activityTypes";
 import { activeStudentLimit, isEntitled, PRO_STUDENT_LIMIT } from "@/lib/entitlement";
-import { countActiveStudents, requireActivePlayer } from "@/lib/active-students";
+import { countActiveStudents, requireCanAssign } from "@/lib/active-students";
 
 export async function deletePlayer(playerId: string): Promise<void> {
   const supabase = await createClient();
@@ -322,7 +322,8 @@ export async function repeatAssignment(assignmentId: string): Promise<RepeatAssi
   if (!original) return { ok: false, error: "Assignment not found." };
 
   // ⚠️ A repeat CREATES NEW WORK, so it is an assign path and carries the same
-  // pause check the two assign actions do. The card's menu is hidden for an
+  // two-part check the two assign actions do — student paused, or account over
+  // its plan limit. The card's menu is hidden for an
   // inactive student, but a stale tab or a direct call arrives with no page gate
   // in front of it — the same lesson this file already learned twice, at
   // fileFinishedAssignments() and at the completion re-check just below.
@@ -330,8 +331,8 @@ export async function repeatAssignment(assignmentId: string): Promise<RepeatAssi
   // Above the completion check on purpose: being paused is the cheaper and more
   // fundamental refusal, and it also stops the SMS at the end of this function
   // firing at a student the coach has explicitly paused.
-  const active = await requireActivePlayer(supabase, user.id, original.player_id);
-  if (!active.ok) return { ok: false, error: active.error };
+  const gate = await requireCanAssign(supabase, user.id, original.player_id);
+  if (!gate.ok) return { ok: false, error: gate.error };
 
   // ⚠️ Completion is re-established HERE, not inherited from the fact that the
   // menu only draws "Assign again" on a finished card. A render-time gate is not a

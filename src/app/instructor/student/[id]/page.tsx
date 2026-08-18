@@ -7,6 +7,7 @@ import type { Assignment } from "@/types/database";
 import PlayerManage from "./PlayerManage";
 import CoachAssignmentList from "./CoachAssignmentList";
 import type { CardRow } from "./CoachAssignmentList";
+import { accountOverLimit } from "@/lib/active-students";
 import { isComplete } from "@/lib/exercises";
 import type { GoalType } from "@/lib/exercises";
 
@@ -112,6 +113,14 @@ export default async function CoachPlayerPage({
   // schema cache predates the migration omits the column entirely.
   const isActive = !player.deactivated_at;
 
+  // ⚠️ Two independent reasons this screen offers no path to new work, and they
+  // must not be conflated. `!isActive` is about THIS student and also freezes
+  // their logging. `overLimit` is about the ACCOUNT, freezes assigning for every
+  // student, and freezes logging for none. Only read when the student is active,
+  // since the per-student banner already covers the other case and would win.
+  const overLimit = isActive ? (await accountOverLimit(supabase, user.id)).over : false;
+  const canAssign = isActive && !overLimit;
+
   // Unfinished work still in the New tab — what deactivating would actually
   // pause. Finished cards are excluded because pausing them means nothing, and
   // archived ones because the coach has already put them away.
@@ -209,10 +218,12 @@ export default async function CoachPlayerPage({
       {assignmentList.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
           <p className="text-[15px] text-reps-sub mb-5">
-            {isActive ? (
-              <>Nothing assigned yet.<br />Give {firstName} some homework.</>
-            ) : (
+            {!isActive ? (
               <>Nothing assigned.<br />Activate {firstName} to give them work.</>
+            ) : overLimit ? (
+              <>Nothing assigned yet.<br />Assigning is on hold while you&apos;re over your plan limit.</>
+            ) : (
+              <>Nothing assigned yet.<br />Give {firstName} some homework.</>
             )}
           </p>
           {/* ⚠️ Suppressed rather than disabled while paused. A greyed button
@@ -220,7 +231,7 @@ export default async function CoachPlayerPage({
               said why there is no button. The assign ROUTES redirect back here
               too, and the three assign ACTIONS refuse outright — this is the
               first of those three layers, and the only cosmetic one. */}
-          {isActive && (
+          {canAssign && (
             <Link
               href={`/instructor/student/${id}/assign`}
               className="bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
@@ -238,6 +249,7 @@ export default async function CoachPlayerPage({
             firstName={firstName}
             rows={rows}
             isActive={isActive}
+            overLimit={overLimit}
             loggedByAssignment={loggedByAssignment}
             makesByAssignment={makesByAssignment}
             // ⚠️ Deliberately unconsumed this step. The data layer lands first

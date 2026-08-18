@@ -1,5 +1,6 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { requireCoach } from "@/lib/require-coach";
+import { redirectUnlessCanAssign } from "@/lib/active-students";
 import { CATEGORIES, defaultTrackMakes } from "@/lib/exercises";
 import CountScreen from "./CountScreen";
 
@@ -20,11 +21,15 @@ export default async function AssignCountPage({
 
   if (!player) notFound();
 
-  // ⚠️ CONVENIENCE, not protection. A paused student cannot be given new work,
-  // and the three assign ACTIONS each enforce that themselves — this only stops
-  // a coach walking a whole picker flow that would refuse at the end. Sent back
-  // to the student's own screen, which is where the Activate control lives.
-  if (player.deactivated_at) redirect(`/instructor/student/${id}`);
+  // ⚠️ CONVENIENCE, not protection — one shared helper across all six assign
+  // routes so they cannot drift. Bounces back to the student's own screen for
+  // either reason a coach cannot create work right now: THIS student is
+  // deactivated, or the ACCOUNT is over its plan's active-student limit. The
+  // three assign ACTIONS each enforce both themselves.
+  //
+  // The per-student half reuses the row already read above rather than querying
+  // again; only the account half costs a round trip.
+  await redirectUnlessCanAssign(supabase, user.id, id, player.deactivated_at ?? null);
 
   const cat = CATEGORIES[category];
   if (!cat) notFound();

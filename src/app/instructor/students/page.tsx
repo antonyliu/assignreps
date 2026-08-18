@@ -6,7 +6,7 @@ import ScrollToTop from "./ScrollToTop";
 import InactiveGroup from "./InactiveGroup";
 import { getActivityLabels } from "@/config/activityTypes";
 import { isComplete } from "@/lib/exercises";
-import { isEntitled } from "@/lib/entitlement";
+import { activeStudentLimit, isEntitled } from "@/lib/entitlement";
 import type { GoalType } from "@/lib/exercises";
 import type { Metadata } from "next";
 import type { Player } from "@/types/database";
@@ -182,6 +182,18 @@ export default async function RosterPage() {
     return `${doneCount(playerId)} of ${total} done`;
   }
 
+  // ⚠️ COSTS NO EXTRA QUERY. The roster already has every player row and
+  // requireCoach() already selected subscription_status, so the account-level
+  // limit state falls straight out of data on hand.
+  //
+  // ⚠️ `>` not `>=`, matching accountOverLimit() and deliberately NOT matching
+  // addPlayer(), which needs room for one more. A coach sitting exactly ON their
+  // limit can still assign; they just cannot add.
+  const activeCount = playerList.filter((p) => !p.deactivated_at).length;
+  const planLimit = activeStudentLimit(coach?.subscription_status);
+  const overLimit = activeCount > planLimit;
+  const canUpgrade = !isEntitled(coach?.subscription_status);
+
   const grouped: Record<Group, Player[]> = {
     done: [], progress: [], notstarted: [], unassigned: [], inactive: [],
   };
@@ -287,6 +299,31 @@ export default async function RosterPage() {
           )}
         </div>
       </div>
+
+      {/* ⚠️ ACCOUNT-LEVEL, so it lives on the account-level screen. Assigning is
+          frozen for every student until the roster is back within the plan;
+          logging is untouched for all of them, and no data is hidden or lost.
+
+          It names WHERE the fix is ("from their profile" would be the wording
+          if this ever moves) because the lever — Deactivate — lives on each
+          student's own screen, not here. A banner stating a problem with no
+          visible route to the fix is worse than no banner.
+
+          Quieter than an error, louder than the group labels: this is a state
+          the coach can resolve, not a failure. */}
+      {overLimit && (
+        <div
+          className="rounded-[10px] px-[14px] py-3 mb-4 mt-2"
+          style={{ background: "#161a20", border: "1px solid #2a2d36" }}
+        >
+          <div className="text-[13px] font-medium text-reps-ink">Assigning is on hold</div>
+          <div className="text-[12px] text-reps-sub mt-0.5 leading-relaxed">
+            You have {activeCount} active {labels.studentsLabel} on a plan for{" "}
+            {planLimit}. Deactivate one to make room
+            {canUpgrade ? " — or upgrade to Pro." : "."}
+          </div>
+        </div>
+      )}
 
       {playerList.length === 0 ? (
         <>

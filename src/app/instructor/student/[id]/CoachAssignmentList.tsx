@@ -75,6 +75,10 @@ type Props = {
    *  again". ⚠️ Cosmetic — the assign routes redirect and the assign actions
    *  refuse on their own. */
   isActive: boolean;
+  /** True when the ACCOUNT is over its plan's active-student limit. Distinct
+   *  from `isActive`: this freezes assigning for every student and freezes
+   *  logging for none, where deactivation does both for one student. */
+  overLimit: boolean;
 };
 
 /** The four mutations, as optimistic edits to the row list. Each mirrors
@@ -113,7 +117,10 @@ export default function CoachAssignmentList({
   makesByAssignment,
   noteByAssignment,
   isActive,
+  overLimit,
 }: Props) {
+  // Either reason withdraws every route to new work on this screen.
+  const canAssign = isActive && !overLimit;
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [toast, setToast] = useState("");
@@ -179,10 +186,10 @@ export default function CoachAssignmentList({
         newCount={newList.length}
         archiveCount={archiveList.length}
         newList={newList.map((a) =>
-          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, isActive),
+          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, canAssign),
         )}
         archiveList={archiveList.map((a) =>
-          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, isActive),
+          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, canAssign),
         )}
         newTop={
           allDone && fileableCount > 0 ? (
@@ -221,7 +228,7 @@ export default function CoachAssignmentList({
           the last thing on screen, which is correct for a read-only history
           view. A greyed CTA would invite a tap that explains nothing, and the
           banner above the list has already said why there is none. */}
-      {isActive && (
+      {canAssign ? (
       <div
         className="sticky bottom-0 mt-auto -mx-[1.25rem] px-[1.25rem] pt-3 bg-reps-bg relative"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
@@ -239,7 +246,15 @@ export default function CoachAssignmentList({
           {allDone ? "+ Assign new work" : "+ Assign more"}
         </Link>
       </div>
-      )}
+      ) : overLimit ? (
+        // In place of the CTA rather than beside it — same slot, so the screen
+        // does not shift when the coach comes back under their limit. No
+        // mt-auto: with the CTA gone the list is the last thing on screen, and
+        // this line simply follows it.
+        <div className="mt-6 mb-2 text-center text-[13px] text-reps-sub leading-relaxed">
+          Assigning is on hold while you&apos;re over your plan limit.
+        </div>
+      ) : null}
 
       {/* Same toast treatment as PlayerManage and AllDoneActions — one per
           list rather than one per card, since only one action runs at a time. */}
