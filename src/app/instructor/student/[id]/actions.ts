@@ -7,7 +7,7 @@ import type { GoalType } from "@/lib/exercises";
 import { notifyRepeatAssignment } from "@/lib/notify-assignment";
 import { getActivityLabels } from "@/config/activityTypes";
 import { activeStudentLimit, isEntitled, PRO_STUDENT_LIMIT } from "@/lib/entitlement";
-import { countActiveStudents, requireCanAssign } from "@/lib/active-students";
+import { accountOverLimit, countActiveStudents, overLimitMessage, requireCanAssign } from "@/lib/active-students";
 
 export async function deletePlayer(playerId: string): Promise<void> {
   const supabase = await createClient();
@@ -400,6 +400,27 @@ export async function updateAssignmentTarget(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not authenticated." };
   if (!Number.isFinite(target) || target < 1) return { ok: false, error: "Enter an amount greater than 0." };
+
+  // ⚠️ EDITING AN AMOUNT IS ASSIGNING WORK. Raising a target from 25 to 200 hands
+  // the student genuinely more to do — the same act as a new assignment, routed
+  // through an edit instead of a new row. Without this the whole account-level
+  // gate is trivially side-stepped.
+  //
+  // ⚠️ ACCOUNT-LEVEL ONLY — accountOverLimit(), deliberately NOT
+  // requireCanAssign(). The per-student pause must not apply here: item 8 keeps
+  // "Edit amount" usable for a DEACTIVATED student on purpose, because a paused
+  // student cannot log at all, so editing their target is inert. This block is
+  // the opposite case — the student is active and logging, so the edit is live
+  // and consequential. Same state, two different reasons, and only one of them
+  // belongs on this action.
+  //
+  // ⚠️ All-or-nothing, with no increase/decrease distinction, matching the rest
+  // of the gate. "Only block increases" invites a coach to ratchet 25 -> 24 ->
+  // 200 and turns one rule into a puzzle.
+  const account = await accountOverLimit(supabase, user.id);
+  if (account.over) {
+    return { ok: false, error: overLimitMessage(account, "make changes") };
+  }
 
   // Silent correction — updates the target only, no SMS. Ownership-scoped.
   // The UI only offers this when the assignment has no logged progress.

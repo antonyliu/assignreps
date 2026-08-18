@@ -121,6 +121,8 @@ export default function CoachAssignmentList({
 }: Props) {
   // Either reason withdraws every route to new work on this screen.
   const canAssign = isActive && !overLimit;
+  // ⚠️ The ACCOUNT half only — see the canEditAmount note on AssignmentMenu.
+  const canEditAmount = !overLimit;
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [toast, setToast] = useState("");
@@ -186,10 +188,10 @@ export default function CoachAssignmentList({
         newCount={newList.length}
         archiveCount={archiveList.length}
         newList={newList.map((a) =>
-          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, canAssign),
+          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, canAssign, canEditAmount),
         )}
         archiveList={archiveList.map((a) =>
-          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, canAssign),
+          renderAssignmentCard(a, loggedByAssignment, makesByAssignment, noteByAssignment, actions, canAssign, canEditAmount),
         )}
         newTop={
           allDone && fileableCount > 0 ? (
@@ -301,6 +303,7 @@ function renderAssignmentCard(
   /** Threaded through rather than read from a closure — this renderer sits at
    *  module scope so both tabs share exactly one card implementation. */
   canAssign: boolean,
+  canEditAmount: boolean,
 ) {
   const goalType = (a.goal_type ?? "reps") as GoalType;
   const logged = loggedByAssignment[a.id] ?? 0;
@@ -441,6 +444,11 @@ function renderAssignmentCard(
         // Paused students can't be given new work, so the one item that
         // creates some is dropped. The rest of the menu stays usable.
         canAssign={canAssign}
+        // ⚠️ Keyed on the ACCOUNT alone, not on canAssign. Raising a target is
+        // live work for an active student, so an over-limit account loses it —
+        // but a deactivated student keeps it, because they cannot log and the
+        // edit is inert. Wiring this to canAssign would reverse that.
+        canEditAmount={canEditAmount}
         onArchive={() => actions.archive(a)}
         onMoveToNew={() => actions.moveToNew(a)}
         onDelete={() => actions.remove(a)}

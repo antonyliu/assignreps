@@ -115,6 +115,25 @@ export async function accountOverLimit(
   return { over: count > limit, count, limit, entitled };
 }
 
+/**
+ * The one sentence every over-limit refusal says, with only the verb differing.
+ *
+ * ⚠️ Shared so the assign block and the edit-amount block cannot drift into
+ * describing the same account state two different ways. `action` completes
+ * "Deactivate someone to ___" — "start assigning again", "make changes".
+ *
+ * The upgrade clause is dropped for an entitled coach: they are past
+ * PRO_STUDENT_LIMIT, there is no higher plan, and offering one would be a lie
+ * dressed as a fix. Same split CeilingBlock makes.
+ */
+export function overLimitMessage(
+  account: { count: number; limit: number; entitled: boolean },
+  action: string
+): string {
+  const tail = account.entitled ? "" : ", or upgrade to Pro";
+  return `You're over your plan — ${account.count} active students on a limit of ${account.limit}. Deactivate someone to ${action}${tail}.`;
+}
+
 export type CanAssignCheck =
   | { ok: true }
   | { ok: false; error: string; code: "student_paused" | "over_limit" | "over_ceiling" };
@@ -156,11 +175,10 @@ export async function requireCanAssign(
   if (!player.ok) return { ok: false, error: player.error, code: "student_paused" };
 
   if (account.over) {
-    const tail = account.entitled ? "" : ", or upgrade to Pro";
     return {
       ok: false,
       code: account.entitled ? "over_ceiling" : "over_limit",
-      error: `You're over your plan — ${account.count} active students on a limit of ${account.limit}. Deactivate someone to start assigning again${tail}.`,
+      error: overLimitMessage(account, "start assigning again"),
     };
   }
 

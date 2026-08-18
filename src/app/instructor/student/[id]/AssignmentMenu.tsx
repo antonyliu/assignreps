@@ -39,6 +39,16 @@ type Props = {
    *
    *  ⚠️ Cosmetic. repeatAssignment() refuses on its own for a paused student. */
   canAssign?: boolean;
+  /** False when the ACCOUNT is over its plan limit. Hides "Edit amount" only.
+   *
+   *  ⚠️ NOT the same condition as `canAssign`, and the difference is the point.
+   *  A deactivated student keeps "Edit amount" — they cannot log, so changing
+   *  their target is inert. An over-limit ACCOUNT loses it, because those
+   *  students are active and logging, so raising a target is live work. Wiring
+   *  this to canAssign would quietly reverse item 8's decision.
+   *
+   *  ⚠️ Cosmetic. updateAssignmentTarget() refuses on its own. */
+  canEditAmount?: boolean;
   /** ⚠️ These four no longer call the server here. CoachAssignmentList owns the
    *  row list, so it owns the optimistic edit, the mutation, the rollback and
    *  the error toast — all four have to happen together or the card and the
@@ -105,7 +115,7 @@ const EDIT_SUBTITLE: Record<GoalType, string> = {
 // gone — and matches "Delete exercise" in CustomExerciseMenu.
 export default function AssignmentMenu({
   assignmentId, exerciseName, target, presets, goalType, hasProgress, isDone, isFiled,
-  disabled = false, canAssign = true, onArchive, onMoveToNew, onDelete, onAssignAgain,
+  disabled = false, canAssign = true, canEditAmount = true, onArchive, onMoveToNew, onDelete, onAssignAgain,
 }: Props) {
   const router = useRouter();
   // Only "Edit amount" still calls the server from this component, so this is
@@ -117,6 +127,7 @@ export default function AssignmentMenu({
   const [editOpen, setEditOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(target);
   const [editCustom, setEditCustom] = useState(false);
+  const [editError, setEditError] = useState("");
 
   // Same rule as the count screen, so assigning and editing offer the identical
   // row: a makes goal counts in makes and a streak in consecutive hits, neither
@@ -124,6 +135,7 @@ export default function AssignmentMenu({
   const goalPresets = goalType === "reps" ? presets : GOAL_PRESETS[goalType];
 
   function openEdit() {
+    setEditError("");
     setMenuOpen(false);
     setEditTarget(target);
     // If the current target isn't a preset, reveal the input pre-filled;
@@ -163,11 +175,19 @@ export default function AssignmentMenu({
 
   function handleSaveAmount() {
     if (!editTarget || editTarget < 1) return;
+    setEditError("");
     startTransition(async () => {
       const result = await updateAssignmentTarget(assignmentId, editTarget);
       if (result.ok) {
         setEditOpen(false);
         router.refresh();
+      } else {
+        // ⚠️ Previously this branch did NOTHING — a failed save left the modal
+        // open, unchanged and silent, which reads as a dead button. Harmless
+        // while the only reachable failure was a DB error nobody hit; not
+        // harmless now that the over-limit block returns a message a coach has
+        // to read in order to know what to do.
+        setEditError(result.error);
       }
     });
   }
@@ -235,7 +255,7 @@ export default function AssignmentMenu({
                 // confirm dialog — it is the one genuinely destructive action
                 // left on this menu.
                 <>
-                  {!hasProgress && (
+                  {!hasProgress && canEditAmount && (
                     <button role="menuitem" onClick={openEdit} className={MENU_ITEM}>
                       <Pencil {...ICON} />
                       Edit amount
@@ -249,7 +269,7 @@ export default function AssignmentMenu({
                     }}
                     // Divider only when "Edit amount" rendered above it —
                     // otherwise this is the first row and needs no rule.
-                    className={`${MENU_ITEM_BASE} text-red-400 ${!hasProgress ? MENU_DIVIDER : ""}`}
+                    className={`${MENU_ITEM_BASE} text-red-400 ${!hasProgress && canEditAmount ? MENU_DIVIDER : ""}`}
                   >
                     <Trash2 {...ICON} />
                     Delete assignment
@@ -356,6 +376,14 @@ export default function AssignmentMenu({
                   + enter your own
                 </button>
               )
+            )}
+
+            {/* Above the buttons rather than below, so the reason is read before
+                the control is tapped again. Quiet inline line, matching the two
+                other upgrade-adjacent surfaces — this is a plan state a coach
+                can resolve, not input they typed wrong. */}
+            {editError && (
+              <p className="mt-4 text-[13px] leading-snug text-red-400">{editError}</p>
             )}
 
             <div className="flex gap-3 mt-6">
