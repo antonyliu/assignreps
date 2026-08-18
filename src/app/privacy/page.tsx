@@ -129,9 +129,47 @@ export default function PrivacyPage() {
           We don&apos;t sell your data. We use Supabase (database), Twilio (SMS), Resend (email), and Stripe (payments) to operate the product.
         </p>
 
+        {/* ⚠️ REWRITTEN Aug 17 2026. This section was one sentence — "You are
+            responsible for having appropriate consent…" — which is a liability
+            transfer to the COACH under a heading that promises minors. It never
+            once addressed a parent, never said what is held about a child, and
+            gave a parent nothing to do.
+
+            ⚠️ It also leaned on an agreement that does not exist. Nothing in the
+            signup flow links to or accepts /terms — no link, no checkbox — so
+            "you are responsible" was addressed to someone who has never been
+            shown the document making them responsible. That is a signup-flow
+            problem, recorded separately in CLAUDE.md; the fix here is simply not
+            to rest this section on it.
+
+            Opens by addressing the parent, because they are who the heading
+            implies and who most needs it. The coach's duty is still stated —
+            demoted from being the whole section to a clause inside the sentence
+            that explains how a number gets here.
+
+            ⚠️ "their name", NOT "first name". The form's placeholder suggests a
+            first name but the label is just "Name" and players.name is free
+            text that takes whatever is typed. "First name" would be a claim
+            about coach behaviour, not about the field.
+
+            ⚠️ The parent deletion route is a REAL COMMITMENT, and the only new
+            protection here rather than a rewording. Like the coach-facing
+            promise above it, it is manual — and it is offered to people who have
+            no other relationship with us, so it has to be honoured on request
+            without asking who the coach is.
+
+            Deliberately silent on age verification. There is none, and saying so
+            invites a question rather than answering one; nothing here implies
+            otherwise. Retention is covered by the deletion route above. */}
         <h2 style={heading}>Students and minors</h2>
+        <p style={{ ...body, marginBottom: "10px" }}>
+          If your child uses Reps, here&apos;s what that means.
+        </p>
+        <p style={{ ...body, marginBottom: "10px" }}>
+          They don&apos;t have an account. A coach adds their name and one phone number — theirs or a parent&apos;s — after getting permission in person. We store the practice they&apos;re assigned, what they log, and any note they write with it.
+        </p>
         <p style={body}>
-          You are responsible for having appropriate consent before adding any student or parent contact information to Reps.
+          Parents: email <a href="mailto:hello@assignreps.com" style={{ color: "#2a6fb5", textDecoration: "underline" }}>hello@assignreps.com</a>{" "}to have your child&apos;s data removed. You don&apos;t need to go through the coach.
         </p>
 
         {/* ⚠️ Three separate accuracy fixes in this section.
