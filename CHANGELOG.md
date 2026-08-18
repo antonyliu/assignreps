@@ -265,6 +265,10 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | `student_paused` wins over `over_limit` when both apply | It is the more specific fact about the student the coach is looking at, and it stays true after the limit is fixed — leading with the account message would send them to solve the wrong problem first |
 | `over_ceiling` split from `over_limit` | A Pro coach past 30 has no higher plan to buy, so offering an upgrade would be a lie dressed as a fix. Same split the add-student ceiling already makes |
 | Both checks run in parallel; the six assign routes share one convenience guard | Parallel means the gate costs no more latency than the single per-student check it replaced. One shared guard rather than six copies, because partial coverage across those routes is worse than none — the failure becomes unpredictable rather than absent |
+| "Edit amount" added as a fourth enforcement point | Raising a target from 25 reps to 200 hands the student genuinely more work — the same act as assigning, routed through an edit instead of a new row, so the gate was side-steppable by anyone who noticed |
+| It calls `accountOverLimit()` rather than `requireCanAssign()` | Using the full check would drag the per-student pause in with it, and a deactivated student deliberately KEEPS Edit amount: they cannot log, so changing their target is inert. An active student on an over-limit account is the opposite case, where the edit is live |
+| `canEditAmount` kept separate from `canAssign` | The two look redundant side by side and are not — merging them would silently reverse the rule above, since only `canAssign` carries the per-student half |
+| A silent save failure fixed alongside it | The edit modal did nothing at all when the action refused — open, unchanged, no message, reading as a dead button. Invisible while the only reachable failure was a DB error nobody hit; not invisible once a block returns a message the coach has to read |
 
 ---
 

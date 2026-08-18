@@ -871,9 +871,10 @@ This is the distinction most likely to be collapsed by a later change, so it is 
 
 | Layer | Where | Job |
 |---|---|---|
-| **Enforcement** | `requireCanAssign()` in `src/lib/active-students.ts`, called by `saveAssignment()`, `saveCustomAssignment()` and `repeatAssignment()` | the gate |
+| **Enforcement** | `requireCanAssign()` in `src/lib/active-students.ts`, called by `saveAssignment()`, `saveCustomAssignment()` and `repeatAssignment()` | the gate on the three write paths |
+| **Enforcement** | `accountOverLimit()` in `updateAssignmentTarget()` — ⚠️ **a different helper on purpose**, see below | the gate on **Edit amount**, the fourth path |
 | Convenience | `redirectUnlessCanAssign()`, shared by all six `/assign/*` routes | stops a coach walking a picker flow that would refuse at the end |
-| Presentation | roster banner, and the student screen's suppressed CTA | says it before they try |
+| Presentation | roster banner, the student screen's suppressed CTA, and the hidden **Edit amount** row | says it before they try |
 
 **Three result codes**, mirroring `AddPlayerResult`'s shape:
 
@@ -884,6 +885,29 @@ This is the distinction most likely to be collapsed by a later change, so it is 
 ⚠️ `requireCanAssign()` runs the per-student check and the account check in **`Promise.all`**. They are mutually independent, so this costs **no extra latency** over the single `requireActivePlayer()` call it replaced — which matters given the cold starts and the iad1/US-West region mismatch recorded under *Navigation & loading feel*.
 
 ⚠️ It reuses `countActiveStudents()` rather than folding the count into the player read. Two reads instead of one, on purpose: a JS `filter` beside the existing `.is("deactivated_at", null)` would be a **second expression of "active"**, and this codebase has been bitten by exactly that (`isComplete`'s seven call sites).
+
+### ⚠️ Edit amount is the FOURTH enforcement point, and it uses a different helper
+
+Added Aug 17 2026 (`752907c`), found in testing after the first three shipped.
+
+**Editing an amount IS assigning work.** Raising a target from 25 reps to 200 hands the student genuinely more to do — the same act as a new assignment, routed through an edit instead of a new row. Without this the whole account-level gate is side-stepped by anyone who notices.
+
+⚠️ **It calls `accountOverLimit()`, NOT `requireCanAssign()`, and that is the entire point of this entry.** `requireCanAssign()` would drag the per-student pause in with it, and **item 8 deliberately keeps "Edit amount" usable for a DEACTIVATED student**: a paused student cannot log at all, so changing their target is inert. This block is the opposite case — the student is **active and logging**, so the edit is live and consequential. Same control, two different reasons, and only one of them belongs on this action.
+
+| Account | Student | Edit amount |
+|---|---|---|
+| within limit | active | **shown** |
+| within limit | **deactivated** | **shown** — item 8's rule, the edit is inert |
+| **over limit** | active | **hidden + blocked** |
+| **over limit** | deactivated | hidden + blocked — because of the ACCOUNT, not the pause |
+
+⚠️ **`canEditAmount` is a separate prop from `canAssign` on `AssignmentMenu`, and merging them would silently reverse item 8.** `canAssign = isActive && !overLimit`; `canEditAmount = !overLimit`. Side by side they look redundant and are not — row two of that table is the whole difference. Both are cosmetic; the action refuses either way.
+
+⚠️ **All-or-nothing, with no increase/decrease distinction**, matching the rest of the gate. "Only block increases" invites a coach to ratchet 25 → 24 → 200 and turns one rule into a puzzle.
+
+⚠️ Both refusals share `overLimitMessage(account, action)` so they cannot drift into describing one account state two different ways — *"…Deactivate someone to **start assigning again**"* against *"…to **make changes**"*, identical otherwise.
+
+⚠️ **This exposed a silent failure and fixed it.** `handleSaveAmount()` in `AssignmentMenu` did **nothing** on `ok: false` — the modal stayed open, unchanged and silent, reading as a dead button. Harmless while the only reachable failure was a DB error nobody hit; not harmless once a block returns a message the coach has to read. The modal now renders the error above its buttons.
 
 ### Surfaces
 
