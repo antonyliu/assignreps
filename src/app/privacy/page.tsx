@@ -37,13 +37,22 @@ export default function PrivacyPage() {
             were fixed. #6b6b6b is 4.98:1 and is what /faq uses for its own
             muted lines.
 
-            ⚠️ The DATE is deliberately untouched by this pass. It bumps once,
-            last, after every content change has landed — bumping it twice in a
-            week is noise. */}
-        <p style={{ fontSize: "14px", color: "#6b6b6b", marginBottom: "8px" }}>Last updated: July 17, 2026</p>
+            The DATE was bumped once, last, on Aug 17 2026 — after the accuracy
+            fixes, the minors rewrite and the contrast pass had all landed.
+            ⚠️ It moves again only when the CONTENT changes, not when styling
+            does. */}
+        <p style={{ fontSize: "14px", color: "#6b6b6b", marginBottom: "8px" }}>Last updated: August 17, 2026</p>
 
+        {/* ⚠️ "built by one person" dropped Aug 17 2026. /faq made the same call
+            on Aug 16 when it moved its closing line to "Let us know", and the
+            two pages reading as different entities — one a person, one a team —
+            was the last voice mismatch between them.
+
+            "small" STAYS. It is the honest framing this whole page rests on and
+            it is what keeps the plain register defensible; only the headcount
+            claim goes. */}
         <p style={intro}>
-          Reps is a small product, built by one person. Here&apos;s exactly what we collect and why.
+          Reps is a small product. Here&apos;s exactly what we collect and why.
         </p>
 
         {/* ⚠️ Two omissions fixed here, both verified against the schema:

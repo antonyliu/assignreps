@@ -284,6 +284,22 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | `#5ba3ea` for the CTA border and label | `#378add` measures 4.47:1 as 13px text on the tinted surface — under the 4.5 AA floor, and it was the tint that pushed it under. Not tokenised yet; flagged with the standing greens item |
 | A real Upgrade CTA on the student detail screen | The over-limit slot named a state with no way to act on it. Fifth consumer of `useUpgrade()`, so no new checkout path — and gated on the coach being unentitled, since a Pro coach at the ceiling has nothing higher to buy |
 
+## Privacy and legal audit (Aug 17 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Stripe named as a processor | It had handled payment data since Aug 1 and was absent from a disclosure list naming Supabase, Twilio and Resend |
+| Student notes and billing fields added to "What we collect" | `logs.note` is the only free text a student writes anywhere in the product, the student is often a minor, and it had been undisclosed since the day it shipped |
+| The player-delete cascade disclosed | Removing a student destroys every rep they ever logged. The in-app modal had always said so and no public page did — glossed by omission rather than by a false statement |
+| Deactivation and the over-limit state written in | Both were new that night. One preserves data, the other changes access and never touches data; a privacy page that did not say so would go stale the week it shipped |
+| The deletion promise made honest about being manual | "We'll remove your account and all associated data" reads as an automated flow. There isn't one — it was true only because someone would go and do it by hand |
+| The minors section rewritten to address parents | It was one sentence transferring liability to the coach, under a heading promising minors. It never addressed a parent, never said what is held about a child, and gave a parent nothing to do |
+| Parents given a deletion route that skips the coach | The only genuinely new protection in the pass rather than a rewording. A parent was previously not a party to anything and had no way to ask |
+| Deliberately silent on age verification | There is none, and saying so invites a question rather than answering one. Nothing on the page implies otherwise |
+| AA contrast fixed on both pages | Two failing colours, not one: the brand blue at 3.36:1 across every heading and link on `/terms`, and `#888888` at 3.31:1 on the "Last updated" line of both. Neither qualified for the large-text allowance |
+| "Last updated" bumped once, at the end | Bumping after each pass would have moved it three times in a night. It moves on content changes, not styling |
+| `/faq`'s advertiser over-claim trimmed | It promised "the full detail is in the privacy policy" about a claim privacy never made. Fixed by trimming the claim rather than adding a promise to justify it |
+
 ---
 
 ## Not shipped — recorded so the history is honest

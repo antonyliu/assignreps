@@ -33,10 +33,11 @@ export default function TermsPage() {
             were fixed. #6b6b6b is 4.98:1 and is what /faq uses for its own
             muted lines.
 
-            ⚠️ The DATE is deliberately untouched by this pass. It bumps once,
-            last, after every content change has landed — bumping it twice in a
-            week is noise. */}
-        <p style={{ fontSize: "14px", color: "#6b6b6b", marginBottom: "8px" }}>Last updated: July 17, 2026</p>
+            The DATE was bumped once, last, on Aug 17 2026 — after the accuracy
+            fixes, the minors rewrite and the contrast pass had all landed.
+            ⚠️ It moves again only when the CONTENT changes, not when styling
+            does. */}
+        <p style={{ fontSize: "14px", color: "#6b6b6b", marginBottom: "8px" }}>Last updated: August 17, 2026</p>
 
         <h2 style={heading}>What Reps is</h2>
         <p style={body}>
