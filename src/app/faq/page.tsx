@@ -364,7 +364,7 @@ export default function FaqPage() {
 
         <h3 style={question}>Do you sell or share data?</h3>
         <p style={body}>
-          No. Never sold, never shared with advertisers. The full detail is in the{" "}
+          No, never sold. The vendors we use to run Reps are listed in the{" "}
           <Link href="/privacy" style={link}>privacy policy</Link>.
         </p>
 

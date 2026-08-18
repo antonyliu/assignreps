@@ -16,7 +16,7 @@ export default function TermsPage() {
 
         <h2 style={heading}>What Reps is</h2>
         <p style={body}>
-          Reps is a tool for instructors to assign practice homework and for students to log their progress.
+          Reps is a tool for coaches and trainers to assign practice homework, and for students to log their progress.
         </p>
 
         <h2 style={heading}>Your responsibilities</h2>
@@ -30,9 +30,13 @@ export default function TermsPage() {
           You agree not to add phone numbers of anyone who has not verbally agreed to receive messages. Recipients can reply STOP at any time to opt out.
         </p>
 
+        {/* ⚠️ The over-limit sentence lives HERE rather than in /privacy, and the
+            split is deliberate: terms covers what you can DO, privacy covers
+            what happens to your DATA. /privacy carries the matching "nothing is
+            deleted" reassurance, so neither page repeats the other. */}
         <h2 style={heading}>Payments</h2>
         <p style={body}>
-          Reps offers a free tier. Paid plans are billed monthly and can be cancelled anytime.
+          Reps offers a free tier. Paid plans are billed monthly and can be cancelled anytime. If you have more active students than your plan allows, you can&apos;t assign new work until you&apos;re back within it.
         </p>
 
         <h2 style={heading}>Availability</h2>

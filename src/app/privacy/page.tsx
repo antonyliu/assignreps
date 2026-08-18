@@ -38,9 +38,24 @@ export default function PrivacyPage() {
           Reps is a small product, built by one person. Here&apos;s exactly what we collect and why.
         </p>
 
+        {/* ⚠️ Two omissions fixed here, both verified against the schema:
+
+            1. `logs.note` — the short optional message a student writes with a
+               log. Shipped Aug 1 and never disclosed. It is the ONLY free text a
+               student writes anywhere in the product, and the student is often a
+               minor, which makes it the most sensitive thing collected and the
+               worst thing to have left off this list.
+
+            2. The three billing columns on `coaches` — stripe_customer_id,
+               stripe_subscription_id, subscription_status — added Aug 1.
+
+            ⚠️ The card sentence is a real claim, not reassurance for its own
+            sake: checkout is a hosted Stripe page, so card details never reach
+            our servers or database. If that ever changes to an embedded form,
+            this sentence has to go. */}
         <h2 style={heading}>What we collect</h2>
         <p style={body}>
-          We collect your name, email address, and any student or parent phone numbers you add. We also store the practice assignments you create and the rep logs your students submit.
+          We collect your name, email address, and any student or parent phone numbers you add. We store the practice assignments you create, the rep logs your students submit, and the short note a student can leave with a log. If you subscribe, we store your Stripe customer and subscription IDs and whether your plan is active. Card details go straight to Stripe — we never see or store them.
         </p>
 
         {/* ⚠️ Two false statements were REMOVED from this paragraph on Aug 6
@@ -111,7 +126,7 @@ export default function PrivacyPage() {
 
         <h2 style={heading}>Who we share it with</h2>
         <p style={body}>
-          We don&apos;t sell your data. We use Supabase (database), Twilio (SMS), and Resend (email) to operate the product.
+          We don&apos;t sell your data. We use Supabase (database), Twilio (SMS), Resend (email), and Stripe (payments) to operate the product.
         </p>
 
         <h2 style={heading}>Students and minors</h2>
@@ -119,9 +134,33 @@ export default function PrivacyPage() {
           You are responsible for having appropriate consent before adding any student or parent contact information to Reps.
         </p>
 
+        {/* ⚠️ Three separate accuracy fixes in this section.
+
+            1. THE CASCADE, which no public page disclosed. players.assignments
+               and players.logs are both ON DELETE CASCADE, so removing a student
+               destroys every rep they ever logged. The in-app modal has always
+               been honest about it; this page was silent, which glossed it by
+               omission rather than by a false statement.
+
+            2. DEACTIVATION as the deliberate contrast. It is the safe path in
+               front of that destructive one, and saying so here is the whole
+               reason a coach would choose it.
+
+            3. THE PROMISE IS NOW HONEST ABOUT BEING MANUAL. It read "we'll
+               remove your account and all associated data", which reads as an
+               automated flow. There isn't one — account deletion is an unbuilt
+               item and Tony does it by hand today. The claim was true only
+               because someone would go and do it.
+               ⚠️ If a real deletion flow ships, this qualifier comes out. */}
         <h2 style={heading}>Deleting your data</h2>
+        <p style={{ ...body, marginBottom: "10px" }}>
+          Email <a href="mailto:hello@assignreps.com" style={{ color: "#2a6fb5", textDecoration: "underline" }}>hello@assignreps.com</a>{" "}and we&apos;ll remove your account and everything in it. We do this by hand, so give us a few days.
+        </p>
+        <p style={{ ...body, marginBottom: "10px" }}>
+          Removing a student from your roster deletes their assignments and logs too. That can&apos;t be undone.
+        </p>
         <p style={body}>
-          Email <a href="mailto:hello@assignreps.com" style={{ color: "#2a6fb5", textDecoration: "underline" }}>hello@assignreps.com</a>{" "}and we&apos;ll remove your account and all associated data.
+          Deactivating a student is different: it pauses them and keeps everything. Going over your plan&apos;s limit only changes what you can do in the app — it never deletes anything.
         </p>
       </main>
     </div>
