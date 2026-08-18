@@ -169,7 +169,13 @@ export default function PlayerManage({
                 sticky or pinned element on this screen has to stay under z-40 or
                 it will swallow both menus again. */}
             <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 top-8 z-50 bg-reps-raised border border-reps-line rounded-[10px] shadow-xl min-w-[180px] overflow-hidden">
+            {/* ⚠️ max-w is what makes `truncate` on the name rows below work at
+                all. The panel is absolutely positioned, so it sizes to its
+                content: a nowrap row would simply widen it (and push it off the
+                left edge on a narrow phone) rather than ellipsizing. The pair
+                has to travel together — min-w sets the floor, max-w the point
+                where a long name gives up characters instead of space. */}
+            <div className="absolute right-0 top-8 z-50 bg-reps-raised border border-reps-line rounded-[10px] shadow-xl min-w-[180px] max-w-[240px] overflow-hidden">
               <button
                 onClick={handleShare}
                 className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors"
@@ -182,7 +188,15 @@ export default function PlayerManage({
               >
                 Edit phone number
               </button>
-              {/* ⚠️ The SUGGESTED path, listed above Delete and in the panel's
+              {/* ⚠️ All three name rows `truncate` rather than wrap. A long name
+                  (seen on "Jamaroquai") broke each row onto two lines and made
+                  the panel look broken. Losing the tail of the name costs
+                  nothing here: the screen header directly above this menu shows
+                  it in full, so the row only has to say WHICH action, not who.
+                  Applied to all three, not just the one that happened to wrap —
+                  they are the same string in three moods.
+
+                  ⚠️ The SUGGESTED path, listed above Delete and in the panel's
                   normal ink rather than red. Deactivating is what a coach almost
                   always means when a student stops for a season, and it is fully
                   reversible; Delete below is the rare, irreversible one. Order
@@ -191,7 +205,7 @@ export default function PlayerManage({
               {isActive ? (
                 <button
                   onClick={() => { setMenuOpen(false); setConfirmDeactivate(true); }}
-                  className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors border-t border-reps-line"
+                  className="w-full truncate text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors border-t border-reps-line"
                 >
                   Deactivate {firstName}
                 </button>
@@ -199,7 +213,7 @@ export default function PlayerManage({
                 <button
                   onClick={handleActivate}
                   disabled={isPending}
-                  className="w-full text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors border-t border-reps-line disabled:opacity-50"
+                  className="w-full truncate text-left px-4 py-3 text-[14px] text-reps-ink hover:bg-reps-line transition-colors border-t border-reps-line disabled:opacity-50"
                 >
                   {isPending ? "Activating…" : `Activate ${firstName}`}
                 </button>
@@ -209,7 +223,7 @@ export default function PlayerManage({
                   action did not. */}
               <button
                 onClick={() => { setMenuOpen(false); setDeleteTyped(""); setConfirmDelete(true); }}
-                className="w-full text-left px-4 py-3 text-[14px] text-red-400 hover:bg-reps-line transition-colors border-t border-reps-line"
+                className="w-full truncate text-left px-4 py-3 text-[14px] text-red-400 hover:bg-reps-line transition-colors border-t border-reps-line"
               >
                 Delete {firstName}
               </button>
@@ -314,21 +328,30 @@ export default function PlayerManage({
             <h2 id="deactivate-student-title" className="text-[16px] font-semibold text-reps-ink mb-2">
               Deactivate {firstName}?
             </h2>
+            {/* Trimmed after a device pass — three paragraphs read as a wall
+                and nobody scans it. Same facts, fewer words: the old opener
+                ("Taking a break?") asked a question the coach had already
+                answered by opening this modal, and "keeps all their history
+                safe" plus "you can bring them back anytime" are one idea said
+                twice, now "nothing is lost... Reactivate anytime".
+
+                ⚠️ "frees up a spot on your plan" STAYS. It is the whole reason
+                a coach arrives here from the ceiling gate, and it is the only
+                line that explains what deactivating buys them. */}
             <p className="text-[13px] text-reps-sub leading-relaxed">
-              Taking a break? Deactivating keeps all their history safe. They
-              won&apos;t get new work and can&apos;t log while they&apos;re paused,
-              and they stop counting toward your plan.
+              Pauses new work and logging — nothing is lost, and it frees up a
+              spot on your plan. Reactivate anytime.
             </p>
+            {/* Informational, not a second gate — deactivation is undone in one
+                tap, so a confirmation step here would be ceremony over a
+                decision that costs nothing. */}
             {openAssignmentCount > 0 && (
               <p className="text-[13px] text-reps-sub leading-relaxed mt-3">
                 {firstName} has {openAssignmentCount} open{" "}
-                {openAssignmentCount === 1 ? "assignment" : "assignments"} —
-                deactivating will pause {openAssignmentCount === 1 ? "it" : "them"}.
+                {openAssignmentCount === 1 ? "assignment" : "assignments"}, which
+                will pause too.
               </p>
             )}
-            <p className="text-[13px] text-reps-sub leading-relaxed mt-3">
-              You can bring them back anytime.
-            </p>
             <div className="flex gap-3 mt-7">
               <button
                 onClick={() => setConfirmDeactivate(false)}
