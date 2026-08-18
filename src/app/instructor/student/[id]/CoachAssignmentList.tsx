@@ -1,6 +1,7 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
+import { useUpgrade } from "@/lib/use-upgrade";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AssignmentTabs, { EmptyState } from "@/components/AssignmentTabs";
@@ -79,6 +80,9 @@ type Props = {
    *  from `isActive`: this freezes assigning for every student and freezes
    *  logging for none, where deactivation does both for one student. */
   overLimit: boolean;
+  /** Whether the over-limit slot offers an upgrade. False for a Pro coach past
+   *  the ceiling — nothing higher to sell. */
+  canUpgrade: boolean;
 };
 
 /** The four mutations, as optimistic edits to the row list. Each mirrors
@@ -118,11 +122,16 @@ export default function CoachAssignmentList({
   noteByAssignment,
   isActive,
   overLimit,
+  canUpgrade,
 }: Props) {
   // Either reason withdraws every route to new work on this screen.
   const canAssign = isActive && !overLimit;
   // ⚠️ The ACCOUNT half only — see the canEditAmount note on AssignmentMenu.
   const canEditAmount = !overLimit;
+  // The same handler ProfileMenu, the add-student paywall, the reactivate gate
+  // and the roster banner use. Fifth consumer — a new checkout path here is
+  // exactly the drift this hook exists to prevent.
+  const { startUpgrade, upgrading, upgradeError } = useUpgrade();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [toast, setToast] = useState("");
@@ -252,9 +261,31 @@ export default function CoachAssignmentList({
         // In place of the CTA rather than beside it — same slot, so the screen
         // does not shift when the coach comes back under their limit. No
         // mt-auto: with the CTA gone the list is the last thing on screen, and
-        // this line simply follows it.
-        <div className="mt-6 mb-2 text-center text-[13px] text-reps-sub leading-relaxed">
-          Assigning is on hold while you&apos;re over your plan limit.
+        // this block simply follows it.
+        <div className="mt-6 mb-2 flex flex-col items-center gap-3">
+          <p className="text-center text-[13px] text-reps-sub leading-relaxed">
+            Assigning is on hold while you&apos;re over your plan limit.
+          </p>
+          {/* ⚠️ A BUTTON UNDER the sentence, never an "upgrade" link inside it.
+              Same reasoning that pulled the roster banner's inline phrase out
+              into its own control: the rule is 44px minimum with the visible
+              label AS the target, and an accent phrase mid-sentence can be
+              neither. The blue outline is the plan-capacity system — this slot
+              and the roster banner are the same state seen from two screens. */}
+          {canUpgrade && (
+            <button
+              type="button"
+              onClick={startUpgrade}
+              disabled={upgrading}
+              className="inline-flex min-h-[44px] items-center rounded-[8px] bg-transparent px-4 text-[13px] font-medium transition-colors hover:bg-reps-raised disabled:opacity-50 disabled:pointer-events-none"
+              style={{ border: "1.5px solid #5ba3ea", color: "#5ba3ea", WebkitTapHighlightColor: "transparent" }}
+            >
+              {upgrading ? "Starting…" : "Upgrade to Pro"}
+            </button>
+          )}
+          {upgradeError && (
+            <p className="text-center text-[12px] leading-snug text-red-400">{upgradeError}</p>
+          )}
         </div>
       ) : null}
 

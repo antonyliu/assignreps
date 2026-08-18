@@ -99,8 +99,14 @@ export default function OverLimitBanner({
               type="button"
               onClick={startUpgrade}
               disabled={upgrading}
-              className="mt-2.5 inline-flex min-h-[44px] items-center rounded-[8px] border border-reps-line px-3 text-[13px] font-medium text-[#378add] transition-colors hover:bg-reps-raised disabled:opacity-50 disabled:pointer-events-none"
-              style={{ WebkitTapHighlightColor: "transparent" }}
+              className="mt-2.5 inline-flex min-h-[44px] items-center rounded-[8px] bg-transparent px-4 text-[13px] font-medium transition-colors hover:bg-reps-raised disabled:opacity-50 disabled:pointer-events-none"
+              // ⚠️ Blue outline, not the grey `border-reps-line` this carried
+              // first. Two reasons. It is the plan-capacity system — this button
+              // and the one on the student screen's over-limit slot are the same
+              // offer from two screens, so they have to look identical. And
+              // #378add measures 4.47:1 as 13px text on this tinted surface,
+              // just under the 4.5 AA floor; #5ba3ea clears it at 6.03:1.
+              style={{ border: "1.5px solid #5ba3ea", color: "#5ba3ea", WebkitTapHighlightColor: "transparent" }}
             >
               {upgrading ? "Starting…" : "Upgrade to Pro"}
             </button>

@@ -118,8 +118,14 @@ export default async function CoachPlayerPage({
   // their logging. `overLimit` is about the ACCOUNT, freezes assigning for every
   // student, and freezes logging for none. Only read when the student is active,
   // since the per-student banner already covers the other case and would win.
-  const overLimit = isActive ? (await accountOverLimit(supabase, user.id)).over : false;
+  const account = isActive ? await accountOverLimit(supabase, user.id) : null;
+  const overLimit = account?.over ?? false;
   const canAssign = isActive && !overLimit;
+  // ⚠️ `entitled` rides the SAME read — no second query for the CTA. False for a
+  // Pro coach past the ceiling, who has no higher plan to buy, so the button is
+  // omitted rather than offered as a dead end. Same split the roster banner and
+  // CeilingBlock make.
+  const canUpgrade = overLimit && !(account?.entitled ?? true);
 
   // Unfinished work still in the New tab — what deactivating would actually
   // pause. Finished cards are excluded because pausing them means nothing, and
@@ -250,6 +256,7 @@ export default async function CoachPlayerPage({
             rows={rows}
             isActive={isActive}
             overLimit={overLimit}
+            canUpgrade={canUpgrade}
             loggedByAssignment={loggedByAssignment}
             makesByAssignment={makesByAssignment}
             // ⚠️ Deliberately unconsumed this step. The data layer lands first
