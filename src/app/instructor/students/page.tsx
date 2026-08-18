@@ -4,6 +4,7 @@ import { LogoMini } from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import ScrollToTop from "./ScrollToTop";
 import InactiveGroup from "./InactiveGroup";
+import OverLimitBanner from "./OverLimitBanner";
 import { getActivityLabels } from "@/config/activityTypes";
 import { isComplete } from "@/lib/exercises";
 import { activeStudentLimit, isEntitled } from "@/lib/entitlement";
@@ -304,25 +305,17 @@ export default async function RosterPage() {
           frozen for every student until the roster is back within the plan;
           logging is untouched for all of them, and no data is hidden or lost.
 
-          It names WHERE the fix is ("from their profile" would be the wording
-          if this ever moves) because the lever — Deactivate — lives on each
-          student's own screen, not here. A banner stating a problem with no
-          visible route to the fix is worse than no banner.
-
-          Quieter than an error, louder than the group labels: this is a state
-          the coach can resolve, not a failure. */}
+          Extracted to a client component only because its upgrade CTA has to
+          call useUpgrade() — this page is an async Server Component. The
+          numbers it needs are already computed here, so it costs no query. */}
       {overLimit && (
-        <div
-          className="rounded-[10px] px-[14px] py-3 mb-4 mt-2"
-          style={{ background: "#161a20", border: "1px solid #2a2d36" }}
-        >
-          <div className="text-[13px] font-medium text-reps-ink">Assigning is on hold</div>
-          <div className="text-[12px] text-reps-sub mt-0.5 leading-relaxed">
-            You have {activeCount} active {labels.studentsLabel} on a plan for{" "}
-            {planLimit}. Deactivate one to make room
-            {canUpgrade ? " — or upgrade to Pro." : "."}
-          </div>
-        </div>
+        <OverLimitBanner
+          activeCount={activeCount}
+          planLimit={planLimit}
+          canUpgrade={canUpgrade}
+          studentLabel={labels.studentLabel}
+          studentsLabel={labels.studentsLabel}
+        />
       )}
 
       {playerList.length === 0 ? (
