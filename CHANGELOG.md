@@ -147,11 +147,111 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | Roster groups sorted by most recent activity, never-logged players last | Rows were ordered by when the player was added, which bore no relation to the last-activity dates rendered beside their names — the coach read one order and saw another. Never-logged players sort to the bottom of their group rather than being interleaved via a fallback date that would rank "never" against real activity |
 | Parent recipient helper text combined into one paragraph | The second sentence sat in its own `<p>` with a 2px margin — too small to read as a deliberate paragraph break, too large to read as continuous prose, so it landed as neither |
 
+## Billing — Stripe checkout, webhook, entitlement (Aug 2–3 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Price locked at $10/mo | Cost to serve was never the constraint — SMS runs pennies to low single digits per free coach — so this was positioning, not margin. $10 still sits well under Trainerize and TrueCoach. $9.99 was set aside because a round number reads as honest and a charm-priced one reads as optimised extraction |
+| Three billing columns on `coaches`, all nullable with no backfill | NULL across all three means "never went through checkout", which every existing coach is, and which reads as the free tier |
+| No CHECK constraint on `subscription_status` | Stripe owns that vocabulary and has extended it before. The only writer is a webhook, so a constraint rejecting an unfamiliar value would fail the UPDATE and freeze a coach at a stale status while Stripe moved on — wrongly gated or wrongly admitted, silently |
+| `coaches` billing writes blocked by a TRIGGER, not just a grant | The July 25 column-grant allowlist was silently dead within a week: something re-granted table-level UPDATE, and Postgres privileges are a union, so the surviving `name` grant restricted nothing. A coach could PATCH any column on their own row. The trigger is the layer that holds — whatever re-granted the privilege once can do it again |
+| The trigger covers INSERT as well as UPDATE | Signup writes the whole `coaches` row as `authenticated`, so an UPDATE-only guard would leave a crafted signup free to set `subscription_status = 'active'` on the way in |
+| Found by querying live state, not by reading the migration | The migration file described protection that was no longer in force. In this repo the base schema, `logs_amount_check`, the dashboard views and the `coaches: own row` policy are all live and in no file |
+| `isEntitled()` as one shared rule — an allowlist of `active` + `trialing` | Two surfaces ask "is this coach paying?" and a coach shown "Upgrade" while already paying is the same bug as one blocked at 3 students despite a subscription. Unrecognised statuses fail closed; `past_due` is deliberately not entitled, since Stripe retries a failed payment for weeks |
+| Webhook as a route handler under `/api` — the app's only one | Stripe POSTs from its own infrastructure to a URL, which a server action cannot receive. That is the only reason `/api` exists |
+| Signature verified before any part of the body is read, and the body read with `req.text()` | This route can grant entitlement, which every other layer exists to stop a coach doing themselves. Re-serialising through `req.json()` changes whitespace and key order, and the HMAC stops matching |
+| Subscription retrieved fresh on every event | Stripe delivers at-least-once and in no guaranteed order, so a stale `updated` can land after a newer one and overwrite current status with old |
+| Never assume `active` on checkout completion | A card needing 3DS lands as `incomplete`; writing `active` would grant access to someone who has not paid |
+| Three routes home, and a 200 when none match | No single identifier covers every event shape. An unmatchable event is not transient, so a 500 would have Stripe retrying it for days |
+| Already-subscribed guard on `createCheckoutSession()` | Testing put **three active subscriptions on one customer** — $20/mo of real double-billing in live mode. Hiding the menu item is not protection: `isPro` only turns true once the webhook lands, so the redirect window is a live double-subscribe window |
+| Subscription status resolved at the CUSTOMER level, not per event | Cancelling two stray test subscriptions fired `deleted` for each and wrote `canceled` over a coach who still held a live one. The real-world shape of this is cancel-then-resubscribe |
+| `COACHRJ` recreated with no redemption cap | The original was capped at 1, and testing consumed the single redemption — leaving the code dead. The lesson is for live mode, where it is one-way |
+
 ## Landing page (Aug 3 2026)
 
 | Feature | Why it exists |
 |---|---|
 | Hero thumbnail swapped from a piano student to a young soccer player | Soccer is one of the three activities that stay visible at signup under the narrowed picker; the hero should show something being built toward rather than an activity being removed. Compressed to WebP (1016 KB → 68 KB, −93%) at a quality tuned to sit beside its siblings, then re-cropped 5% tighter from the original PNG so the zoom did not stack a second lossy encode |
+
+## Free-tier gate (Aug 4 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Add-student gate — blocks the 4th player, offers the paywall | The free tier is 3 students forever, not a trial. A 14-day-unlimited trial was rejected: it doesn't prevent the cold roster dump it was reached for, and it reintroduces a deadline the model deliberately avoids |
+| Enforcement in `addPlayer()`, with the page check as convenience only | A stale tab, a second device and a direct invocation all arrive at the action with no page gate in front of them. Same lesson as `fileFinishedAssignments()` computing its own set |
+| The action fails CLOSED, the page fails OPEN | `count ?? 0` in the action would read "we don't know" as "zero students" and wave a coach past the paywall on a transient hiccup — the failure nobody would notice. The page only decides whether to draw a form, so on a hiccup it shows the form and lets the action decide |
+| `limit_reached` carried as a code, separate from the error string | Hitting a paywall is not a validation failure. A red bordered box reads as "you typed something wrong", which is exactly what the coach did not do |
+| The paywall renders in place, inside the add-student screen's own shell | A redirect would strand the coach on the roster hunting for an upgrade item buried in a dropdown; a modal is ceremony this screen uses nowhere else |
+| `useUpgrade()` shared by both upgrade entry points | A hook rather than a component, deliberately: the two surfaces render genuinely different controls, so what is shared is the handler, not the markup |
+| Count-then-insert race knowingly accepted | Closing it properly needs a database trigger, and any migration hits local, staging and prod at once. The cost of the gap is one extra free player for one coach |
+
+## Landing page rebuild (Aug 4–5 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Hero rebuilt around a single hand-drawn device mock | Replaced a two-circle photo collage. The coach's student-detail screen is the only one where all three things the hero shows are simultaneously real: progress bars including the two-tone makes bar, a completed assignment, and a student's note |
+| Every name in the mock invented, and the page's cast unified behind one `CAST` constant | Real rosters are real children and this page is public |
+| Device shadows warm, never black | Black on the cream hero greys the cream and makes the device read as a hole punched in the page |
+| A dark hero built and reverted the same day | The warm charcoal read as muddy and brown rather than premium. Kept from that pass: the headline's `text-wrap: balance` |
+| `text-wrap: balance` on the hero headline | A hard `<br>` fixes one width and produces a widow at every other; balance evens the lines at whatever width the viewport is |
+| Hero bullets rewritten to name the mechanism | The old set described outcomes but never said what "it" was or why "live" mattered, so a first-time reader could not repeat back what Reps does. The new set walks the actual loop — assign → text → log → certainty |
+| `white-space: nowrap` dropped from the bullets | With nowrap the lines could not break, so the longest bullet set a min-content floor and **the page widened instead** — a horizontal scrollbar in a band around 768px, where the layout goes side-by-side and the type grows at the same breakpoint. Pre-existing, not introduced by the new copy |
+| "How it works" rebuilt as numbered steps, then removed entirely | Not a reversal of the work but a scope decision: the instructor and student sections cover the same ground between them, at full size and split by audience. Redundant rather than wrong, so it came out whole |
+| Instructor and student sections built as a peer-sized pair | A deliberate departure from the 82% descending-tier rule: that rule stops a later, *lesser* section outgrowing an earlier one — it does not apply between siblings about two audiences |
+| Both middle bands set to one blue family at opposite lightnesses | The student section is light *specifically* so it, the instructor band and the footer are not three darks in a row. The page alternates; it does not descend |
+| `.program-caption` re-toned to `#9095ac`, off the app's `--reps-sub` token | Desaturating the instructor band lifted its luminance and dropped the caption to 4.46:1, under the 4.5 floor. The app's token is tuned against the app's own surfaces, and matching it by eye is what put this under AA |
+| Device shadows tinted from the band they sit on | The instructor band's warm brown shadow was *lighter* than the band in red and green — it was lightening, not shadowing. Found by measuring, not by looking |
+| Pricing section centred rather than zig-zagged | The two sections above alternate because they tell a directional story; pricing is a fair comparison, and putting either plan on a side would weight it |
+| One shared feature list under both pricing cards | Every feature belongs to both plans — `FREE_STUDENT_LIMIT` gates the 4th student and nothing else. A per-column tick grid would be a straightforward lie about what the app does |
+| CTA type raised to 19px/700 | White on the brand blue is 3.59:1, which fails AA as normal text and passes only as large text — and bold only counts as large from 18.66px. Below that, every CTA on the page fails |
+| Eyebrow and page metadata reconciled to "Coaches & Trainers" | They diverged for part of a day. It is **five** strings, four in `page.tsx` plus the root fallback title in `layout.tsx`, which would have kept the divergence alive on its own |
+| `flex: 1 0 auto` pinned to whichever band is last before the footer | The page is a 100vh flex column and this is its only grower. With none, a 2200px viewport showed a 679px shell band *below* the footer |
+
+## FAQ, legal accuracy & landing copy (Aug 16 2026)
+
+| Feature | Why it exists |
+|---|---|
+| `/faq` — 19 questions in five groups | Strangers trust nothing by default, and a stranger does not email to ask how to cancel; they simply never sign up. It answers what data is collected, who sees a roster, whether data is sold, and how the free tier works |
+| Answers checked against shipped behaviour rather than written to sound good | "Nothing to enter" (the signup tree contains no billing code), "no separate login to remember" (students never authenticate), and the drills answer (30 exercises across 6 categories, three named as a sample so adding a category cannot falsify it) |
+| No accordion — every question and answer rendered flat | The same surfaced-over-progressive-disclosure principle already locked for the student note field |
+| `/faq` sets its own measured colours instead of inheriting the legal pages' | `/privacy` and `/terms` set headings and links in the brand blue at 3.36:1, which fails AA for normal text. All 48 elements on `/faq` were audited against their actual painted background: zero failures, minimum 4.86:1 |
+| A consent question was removed rather than softened | Its answer was gentler than both `/terms` and `/privacy`, which place the obligation squarely on the coach. Removing it leaves the binding statement in one place instead of two that disagreed |
+| Three false statements removed from `/privacy` | The parent weekly digest (no cron, no scheduled job — the only occurrence of "digest" in the codebase was the sentence describing it); "students and parents receive SMS" (parents receive nothing — both notify paths send only to `players.phone`); and "every SMS includes STOP instructions" (no message body contains it — the mechanism is carrier-level and automatic) |
+| The §2 testimonial removed and saved verbatim to `docs/deferred/` | Placeholder copy never approved by RJ, and the only thing in `page.tsx` blocking the rest of the file from shipping. The quote was a **reconstruction** of four reported fragments sitting inside quotation marks, and "AAU coach" appears nowhere in anything recorded about him |
+| Header nav — Pricing · FAQ · Sign in | Landing page only; the legal pages carry a `← Back` link into a prose shell instead, so there is no shared header to keep in sync |
+| Section CTAs stop reading identically | Each now names its own section's payoff rather than repeating one label four times |
+| In-app paywall corrected to "up to 30 students" | It read "Pro unlocks unlimited", which contradicted the pricing card. This is the surface a coach sees at the moment they are asked to pay, so it was the more important of the two to correct |
+| Footer reuses the instructor band's colour; its top rule removed | The rule's documented job was separating the footer from a band it once shared a colour with; against the near-white pricing band it measured 1.04:1 — invisible, and merely made the footer 1px taller. Every ink in the footer moved with it, because the lighter background dropped two of them under AA |
+
+## Stripe Customer Portal & copy pass (Aug 17 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Self-serve cancellation via the Stripe Billing Portal | The pre-launch item most likely to burn a stranger: a coach could subscribe with no visible way out, and `/faq`'s cancel answer described a flow that did not exist. Building it made that answer true |
+| Gated on having a Stripe customer, not on `isEntitled()` | A lapsed coach still has invoices and still needs a way back in |
+| Verified against a real cancellation, with RJ's row checked on both sides | Stripe reported `active` with `cancel_at` equal to `current_period_end`, both webhook events returned 200, and no other coach was touched — the customer-level resolution held, which is the specific Aug 3 regression |
+| Compare `cancel_at` to `current_period_end`, never trust `cancel_at_period_end` | On API version `2026-07-29.dahlia` the boolean reads FALSE even when the cancellation *is* correctly scheduled for period end |
+| Hero and pricing copy rewritten, all trial language dropped | "Try" implies an expiry, and the free tier is 3 students forever. Honest *free* framing instead |
+| Student-count line made the pricing cards' visible differentiator | It was quieter than the shared feature list beneath it, despite being the only real difference between the two plans |
+| Hero headline through three sizing passes in one session | Raised to 36px/700 for hierarchy against the 18px/600 bullets, trimmed to 34px to recover fold clearance, then tracking relaxed from −0.5px to normal after it read as intense on a real device |
+| `/faq` mobile spacing and `/privacy` heading contrast | The privacy headings were failing AA at 3.36:1; the fix was already proven on `/faq` and simply had not been applied |
+
+## Student deactivation (Aug 17 2026)
+
+| Feature | Why it exists |
+|---|---|
+| `players.deactivated_at` — a reversible pause | Mirrors `assignments.filed_at`, the pattern this codebase already uses for reversible state. A timestamp rather than a boolean keeps *when* as well as *whether*, at no extra cost |
+| Deliberately **not** named `archived_at` | "Archive" already means a finished assignment filed away, on both the coach's screen and the student's. A second meaning for players would make the word ambiguous in every conversation and every function name — the exact collision `filed_at` was named to avoid |
+| A full pause in both directions | The coach cannot assign and the student cannot log. Hiding a paused student from the assign flow alone would leave them still logging against work nobody is watching |
+| `saveLog()` enforces it server-side | `logs` has **no RLS policy at all** and `saveLog` takes `playerId` as an argument, so the log page's redirect proves nothing. This read is the only thing that actually stops a paused student's write |
+| `activatePlayer()` re-checks the seat gate | Activation is the only moment a student re-enters the active count, so it is the only place the gate can be applied — and without it a Pro coach could add 30 students, cancel, and keep all 30 running on Free forever |
+| `deactivatePlayer()` deliberately ungated | It only ever frees a seat, and it is a coach's escape hatch when a downgrade leaves them over the ceiling. Gating the escape hatch would trap them |
+| `PRO_STUDENT_LIMIT = 30` and `activeStudentLimit()` | "Up to 30" had been copy on three unlinked surfaces with nothing behind it. The reactivate gate needed a plan-aware limit, and two gates disagreeing about what a plan allows was not an option |
+| `ceiling_reached` kept distinct from `limit_reached` | A Pro coach at 30 has already paid and has no higher plan to buy, so showing them an upgrade button would be a lie dressed as a solution. They are told to deactivate someone instead |
+| Roster gains a collapsed "Inactive" group, last | Inactive comes from the player row and wins over all four completion groups. The rows themselves are identical to active ones — dimming a student's row would make their record look degraded, which is the opposite of what deactivation promises |
+| A paused student's token link still opens | Never a 404. A dead link reads as "you've been removed" to a kid who has simply stopped for the season; they get their coach's name and "everything you've logged is saved" |
+| Permanent delete moved behind a typed confirmation | `players` cascades to both `assignments` and `logs`, so one tap destroyed every rep a student had ever recorded — the app's most destructive act behind its lightest control. Typing the student's own name proves you know *whose* history is going |
+| Delete stays reachable directly from the active state | Forcing deactivate-first would make the safe action a step on the way to the destructive one, which teaches a coach to tap straight through it |
 
 ---
 
@@ -169,3 +269,8 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | Full-width stepper | Buttons felt too far apart |
 | Parent weekly digest | Page exists, but no cron, no scheduled job — never sent |
 | Retroactive makes editing | `logs_amount_check` blocks `amount: 0`, and there's no RLS UPDATE policy |
+| 14-day unlimited trial | Doesn't prevent the cold roster dump it was reached for, and reintroduces a deadline the free-forever model deliberately avoids |
+| Dark landing hero | Built and reverted the same day — read as muddy and brown rather than premium |
+| Per-column tick grid on the pricing cards | Every feature belongs to both plans; a grid would be a straightforward lie, and it would undercut a free tier that is deliberately generous positioning |
+| White housed panel around the pricing feature list | Bought presence at the cost of being a third boxed object on a band that already had two |
+| §2 testimonial from RJ | Removed pending his sign-off — the quote was a reconstruction, and two claims about him were unverified. Markup saved to `docs/deferred/` |
