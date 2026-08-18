@@ -21,6 +21,7 @@
 - **Testimonial removed** from `page.tsx`, saved verbatim to `docs/deferred/section-2-testimonial.md`. Waiting on RJ, low priority.
 - **Hero device mock scaled to 120%** (`--pw` 206px), header gap halved (48px → 24px).
 - **Deactivate/Activate students — BUILT.** Migration `20260817120000` adds `players.deactivated_at` (nullable timestamptz, mirroring `assignments.filed_at`). A full pause in both directions: the coach cannot assign, and the student cannot log. Their token link still opens and shows a "you're on pause" screen naming their coach. Roster gains a collapsed **Inactive** group; `PlayerManage` gains **Deactivate/Activate**, and **Delete** moves behind a typed confirmation. See *Deactivation* below.
+- **Assigning is now blocked account-wide while a coach is over their plan limit** (`d1018f7`) — the other half of the downgrade loophole. Assign-only and account-wide; logging is untouched. See *Over-limit assign gate* below.
 - **The 30-student Pro cap is now ENFORCED**, as a side effect of the above. `PRO_STUDENT_LIMIT = 30` and `activeStudentLimit()` are real code in `entitlement.ts`, asked by both the add gate and the reactivate gate.
 
 ### Still open, ranked
@@ -824,6 +825,75 @@ Built Aug 17 2026. A **reversible pause** on one student, driven by `players.dea
 ⚠️ **Never seen on a device.** The three modals, the banner and the collapsed group have only been type-checked and built.
 
 ⚠️ **The open questions from pre-launch item 8 that this build did NOT answer:** whether an inactive student should still receive assignment SMS (moot today — they cannot be assigned to), and what a coach already over the limit sees on the roster (nothing special; they simply cannot add or activate until they deactivate someone).
+
+---
+
+## Over-limit assign gate (account-level)
+
+Built Aug 17 2026 (`d1018f7`), immediately after deactivation and **parallel to it, not part of it**. Closes the other half of the downgrade loophole: the add-student gate already stopped a lapsed coach *adding* students, but nothing stopped them *assigning new work* to the ones already on the roster — so a single $10 payment bought unlimited ongoing operation above the free tier. Pro's value is the ongoing ability to operate above 3, not the one-time ability to get there.
+
+### The rule
+
+**`active_count > plan_limit` blocks every assign, account-wide, until the coach is back within their plan.**
+
+⚠️ **Not per-student, and the system does NOT choose who stays operative.** Which students a coach keeps running — who they are mid-season with, who is closest to finishing — is real judgment only they have. Deactivation is the tool for it. The moment they are back under the limit everything unfreezes for whoever is left active.
+
+### ⚠️ `>` here, `>=` in the add gate — and that is not a typo
+
+| | Comparison | Why |
+|---|---|---|
+| `addPlayer()` | `count >= limit` | adding needs room for **one more** |
+| assign gate | `count > limit` | assigning only needs the roster to be **within** the limit |
+
+So a Free coach sitting at **exactly 3** active can still assign to all three; they simply cannot add a fourth. A Pro coach at exactly 30 likewise. The two comparisons sit in adjacent helpers reading the same `activeStudentLimit()`, so they look like one is wrong — both call sites carry a comment saying why they differ. Verified at the boundary: `3/3 → assign allowed, add blocked`; `4/3 → both blocked`.
+
+### ⚠️ Assign-only. `saveLog` is deliberately UNTOUCHED
+
+This is the distinction most likely to be collapsed by a later change, so it is stated twice in the code and once here:
+
+| | blocks assigning | blocks logging | scope |
+|---|---|---|---|
+| **Deactivation** | yes | **yes** | one student |
+| **Over-limit** | yes | **no** | account-wide |
+
+`saveLog()` reads exactly one thing — `players.deactivated_at`, by player id. It never reads the coaches row, `subscription_status`, or any count, so **logging is plan-agnostic by construction** rather than by a rule someone has to remember. Students keep logging work already assigned while their coach is over limit. Nothing is deleted, hidden or degraded.
+
+⚠️ Adding a plan read to `saveLog` would silently turn this into a second, harsher deactivation. Do not.
+
+### ⚠️ It fails OPEN — the reverse of the add gate
+
+`accountOverLimit()` treats an unreadable count as "not over" and lets the assign through. `addPlayer()` treats an unreadable count as a hard block. **Both are deliberate and the asymmetry is the point:**
+
+- The **add** gate guards **new** capacity. Failing open silently gives away paid capacity — the failure nobody notices.
+- The **assign** gate freezes work for a coach who **has already paid up to this point**. Wrongly freezing a compliant coach on a transient hiccup is worse than briefly letting an over-limit one assign.
+
+### Where it lives
+
+| Layer | Where | Job |
+|---|---|---|
+| **Enforcement** | `requireCanAssign()` in `src/lib/active-students.ts`, called by `saveAssignment()`, `saveCustomAssignment()` and `repeatAssignment()` | the gate |
+| Convenience | `redirectUnlessCanAssign()`, shared by all six `/assign/*` routes | stops a coach walking a picker flow that would refuse at the end |
+| Presentation | roster banner, and the student screen's suppressed CTA | says it before they try |
+
+**Three result codes**, mirroring `AddPlayerResult`'s shape:
+
+- **`student_paused`** — this student is deactivated. ⚠️ **Wins when both apply**: it is the more specific fact about the student the coach is looking at, and it stays true after the limit is fixed, so leading with the account message would send them to solve the wrong problem first.
+- **`over_limit`** — account over, coach unentitled. Copy offers upgrading.
+- **`over_ceiling`** — account over, coach is Pro past `PRO_STUDENT_LIMIT`. **No upgrade offered** — there is no higher plan, so suggesting one would be a lie dressed as a fix. Same split `CeilingBlock` already makes.
+
+⚠️ `requireCanAssign()` runs the per-student check and the account check in **`Promise.all`**. They are mutually independent, so this costs **no extra latency** over the single `requireActivePlayer()` call it replaced — which matters given the cold starts and the iad1/US-West region mismatch recorded under *Navigation & loading feel*.
+
+⚠️ It reuses `countActiveStudents()` rather than folding the count into the player read. Two reads instead of one, on purpose: a JS `filter` beside the existing `.is("deactivated_at", null)` would be a **second expression of "active"**, and this codebase has been bitten by exactly that (`isComplete`'s seven call sites).
+
+### Surfaces
+
+- **Roster** — an "Assigning is on hold" banner above the groups: *"You have {n} active {students} on a plan for {limit}. Deactivate one to make room — or upgrade to Pro."* The final clause is dropped for `over_ceiling`. ⚠️ **Costs ZERO extra queries** — the page already holds every player row and `requireCoach()` already selected `subscription_status`. ⚠️ It names where the fix is because the lever (Deactivate) lives on each student's own screen, not here; a banner stating a problem with no visible route to it is worse than none.
+- **Student detail** — the assign CTA is replaced, **in its own slot**, by *"Assigning is on hold while you're over your plan limit."* Same slot so nothing shifts when the coach comes back under. Read only when the student is active, since the per-student banner wins anyway.
+- **`resendPlayerLink()` is deliberately NOT blocked.** It re-sends an existing link and creates no new work. (Deactivation *does* block it, for a different reason: the link leads a paused student to a dead end.)
+
+### Not done
+
+⚠️ **Never seen on a device.** Verified against a real over-limit account (`canceled`, 5 active, limit 3) at the data layer — active students refused with `over_limit`, the inactive one with `student_paused`, a Pro coach at 5/30 unaffected — but the banner and the suppressed CTA have not been looked at on a phone.
 
 ---
 

@@ -253,6 +253,19 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | Permanent delete moved behind a typed confirmation | `players` cascades to both `assignments` and `logs`, so one tap destroyed every rep a student had ever recorded — the app's most destructive act behind its lightest control. Typing the student's own name proves you know *whose* history is going |
 | Delete stays reachable directly from the active state | Forcing deactivate-first would make the safe action a step on the way to the destructive one, which teaches a coach to tap straight through it |
 
+## Over-limit assign gate (Aug 17 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Assigning blocked account-wide while `active_count > plan_limit` | The add-student gate stopped a lapsed coach ADDING students but not assigning new work to the ones already on the roster — so one $10 payment bought unlimited ongoing operation above the free tier. Pro's value is the ongoing ability to operate above 3, not the one-time ability to get there |
+| Account-wide, never per-student | Which students stay operative — who a coach is mid-season with, who is closest to finishing — is real judgment only they have. Deactivation is the tool for it; the moment they are back under the limit everything unfreezes for whoever is left active |
+| `>` here against `>=` in the add gate | Adding needs room for one more; assigning only needs the roster to be within the limit. A Free coach at exactly 3 active can still assign to all three and simply cannot add a fourth |
+| `saveLog` deliberately untouched | Students keep logging work already assigned. It reads only `players.deactivated_at` and no plan state at all, so logging is plan-agnostic BY CONSTRUCTION rather than by a rule someone has to remember — which is what keeps this distinct from deactivation's full per-student pause |
+| The gate fails OPEN, the reverse of the add gate | The add gate guards NEW capacity, where failing open silently gives away paid capacity. This one freezes work for a coach who has already paid, where wrongly freezing a compliant coach on a hiccup is the worse failure |
+| `student_paused` wins over `over_limit` when both apply | It is the more specific fact about the student the coach is looking at, and it stays true after the limit is fixed — leading with the account message would send them to solve the wrong problem first |
+| `over_ceiling` split from `over_limit` | A Pro coach past 30 has no higher plan to buy, so offering an upgrade would be a lie dressed as a fix. Same split the add-student ceiling already makes |
+| Both checks run in parallel; the six assign routes share one convenience guard | Parallel means the gate costs no more latency than the single per-student check it replaced. One shared guard rather than six copies, because partial coverage across those routes is worse than none — the failure becomes unpredictable rather than absent |
+
 ---
 
 ## Not shipped — recorded so the history is honest
