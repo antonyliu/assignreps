@@ -18,8 +18,8 @@ export const metadata: Metadata = { title: "Privacy Policy — Reps" };
    deliberately UNCHANGED — only the colour moved, because only the colour was
    the defect.
 
-   ⚠️ /terms still carries the failing #378add on its own headings and links.
-   Same fix, out of scope for this commit. */
+   ⚠️ /terms carried the same failure and was fixed the same way on Aug 17
+   2026, finishing the pair. Both legal pages now match /faq. */
 const heading: React.CSSProperties = { fontSize: "17px", fontWeight: 600, letterSpacing: "-0.2px", color: "#1a1a1a", marginTop: "22px", marginBottom: "5px" };
 const body: React.CSSProperties = { fontSize: "15px", lineHeight: 1.55, color: "#333" };
 const intro: React.CSSProperties = { ...body, marginTop: "18px", fontStyle: "italic", color: "#6b6b6b" };
@@ -32,7 +32,15 @@ export default function PrivacyPage() {
             against #378add's 3.36:1. Same value /faq uses for every link. */}
         <Link href="/" style={{ fontSize: "15px", color: "#2a6fb5", textDecoration: "underline", textUnderlineOffset: "3px" }}>← Back</Link>
         <h1 style={{ fontSize: "30px", fontWeight: 700, letterSpacing: "-0.5px", marginTop: "24px", marginBottom: "8px" }}>Privacy Policy</h1>
-        <p style={{ fontSize: "14px", color: "#888", marginBottom: "8px" }}>Last updated: July 17, 2026</p>
+        {/* ⚠️ #6b6b6b, not #888. The old value measured 3.31:1 here — a FAIL, and
+            the one contrast defect /privacy still carried after its headings
+            were fixed. #6b6b6b is 4.98:1 and is what /faq uses for its own
+            muted lines.
+
+            ⚠️ The DATE is deliberately untouched by this pass. It bumps once,
+            last, after every content change has landed — bumping it twice in a
+            week is noise. */}
+        <p style={{ fontSize: "14px", color: "#6b6b6b", marginBottom: "8px" }}>Last updated: July 17, 2026</p>
 
         <p style={intro}>
           Reps is a small product, built by one person. Here&apos;s exactly what we collect and why.
