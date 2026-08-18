@@ -108,14 +108,39 @@ function CeilingBlock({
 }) {
   return (
     <div className="flex flex-1 flex-col">
+      {/* ⚠️ The count and noun stay dynamic — this reads "30 active players"
+          for a basketball coach and "30 active students" for a piano teacher,
+          the same way every other gate string follows getActivityLabels().
+
+          Framing matters here: reaching 30 is not an error, it is a coach who
+          has built something. The headline names the achievement before the
+          body names the constraint. */}
       <h1 className="text-[17px] font-semibold leading-snug text-white">
-        You&apos;ve got {shownCount} active {studentsLabel} — that&apos;s the Pro
-        limit.
+        {shownCount} active {studentsLabel} — you&apos;ve maxed out Pro.
       </h1>
+      {/* Two short lines rather than one paragraph: the first is the action
+          available right now, the second is the way out if 30 genuinely is not
+          enough. Run together they read as one wall and neither lands. */}
       <p className="mt-2 text-[14px] leading-relaxed text-[#8a8fa8]">
-        Deactivate a {studentsLabel.replace(/s$/, "")} you&apos;re not working
-        with right now to free up a spot. Nothing of theirs is lost, and you can
-        bring them back anytime.
+        Deactivate someone you&apos;re not working with right now to free up a
+        spot — nothing of theirs is lost, bring them back anytime.
+      </p>
+      {/* ⚠️ "Need more than 30?" is deliberately the SAME opening as the note on
+          the landing page's Pro card. A coach who hit this screen and later goes
+          looking for what they half-remember should find the same promise in the
+          same words, not a near-miss that makes them wonder if it changed.
+
+          The number comes from the constant; the landing page's copy of it is
+          still a hand-written string. */}
+      <p className="mt-3 text-[14px] leading-relaxed text-[#8a8fa8]">
+        Need more than {PRO_STUDENT_LIMIT}?{" "}
+        <a
+          href="mailto:hello@assignreps.com"
+          className="text-[#378add] underline underline-offset-2 hover:text-[#4a9ae8] transition-colors"
+        >
+          Email us
+        </a>{" "}
+        and we&apos;ll set you up.
       </p>
     </div>
   );
