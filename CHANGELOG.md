@@ -270,6 +270,20 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 | `canEditAmount` kept separate from `canAssign` | The two look redundant side by side and are not — merging them would silently reverse the rule above, since only `canAssign` carries the per-student half |
 | A silent save failure fixed alongside it | The edit modal did nothing at all when the action refused — open, unchanged, no message, reading as a dead button. Invisible while the only reachable failure was a DB error nobody hit; not invisible once a block returns a message the coach has to read |
 
+## Plan-limit UI polish (Aug 17 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Deactivate modal collapsed to two tiers | It was one grey at one size, so the consequence, the upside and the open-assignment caveat all read at the same weight and the block scanned as a wall. Short words had not fixed it, because the problem was hierarchy. Now what deactivating DOES in the brightest ink, and everything secondary in one flowing paragraph behind a hairline |
+| Its primary line gained a subject, and lost an em dash | It began "Pauses new work and logging", mid-sentence, leaning on the heading to parse. Em dashes across both modals became periods — two short sentences read faster than one hinged clause on a small screen |
+| Tier two stayed at `#8a8fa8` rather than stepping down again | `--reps-dim` is the same value as `--reps-sub`, and the next grey down measures 3.34:1 on the modal card — under AA. The hierarchy comes from a divider and a brighter tier one instead of a dimmer tier two |
+| One term for available capacity: "spot" | "No room", "make room" and "frees a spot" were three phrasings of one idea across the banner, the activate gate and both Pro-ceiling refusals. A coach who hits two of them should not have to work out whether they mean the same thing |
+| Blue marks plan capacity; grey marks routine actions | The roster banner and the "No spot" modal are the same state — over the limit — reached by assigning versus reactivating, so they share a surface. The deactivate modal stays grey because it is neither |
+| Those surfaces use flattened solids, not layered gradients | The wash was `linear-gradient(rgba(…) ×2), <base>`, which computes correctly in Chrome but rendered wrong on device. A solid is the same colour with no engine variance |
+| The banner's outline went to 1px at 0.35 alpha | At 0.18 it read as a colour wash with no edge and lost its shape against the roster |
+| `#5ba3ea` for the CTA border and label | `#378add` measures 4.47:1 as 13px text on the tinted surface — under the 4.5 AA floor, and it was the tint that pushed it under. Not tokenised yet; flagged with the standing greens item |
+| A real Upgrade CTA on the student detail screen | The over-limit slot named a state with no way to act on it. Fifth consumer of `useUpgrade()`, so no new checkout path — and gated on the coach being unentitled, since a Pro coach at the ceiling has nothing higher to buy |
+
 ---
 
 ## Not shipped — recorded so the history is honest

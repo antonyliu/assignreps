@@ -741,7 +741,7 @@ This applies to text only. **Bar fills are unaffected** — an in-progress bar i
 - **Background:** `#080b0f` (`--reps-bg`)
 - **Surfaces:** `#1c1f26`
 - **Borders:** `#2a2d36`
-- **Accent (interactive):** `#378add` (sky blue)
+- **Accent (interactive):** `#378add` (sky blue) — ⚠️ and as of Aug 17 2026 blue also carries a MEANING in the instructor app: plan capacity. See *The blue capacity system* under the over-limit assign gate before tinting anything blue.
 - **Labels:** `#c8cdd8` (`--reps-label`)
 - **Placeholders:** `#5a5f72` — ⚠️ **the intended token, but NOT what most fields actually render.** See below.
 - **Helper text:** `#8a8fa8`
@@ -911,18 +911,45 @@ Added Aug 17 2026 (`752907c`), found in testing after the first three shipped.
 
 ### Surfaces
 
-- **Roster** — an "Assigning is on hold" banner above the groups, `OverLimitBanner.tsx`. Two parts, not one sentence (corrected Aug 17 2026, `3c69549` — this entry originally recorded a single inline sentence, which the shipped banner never kept):
-  - Copy: *"You have {n} active {students} on a plan for {limit}. Deactivate {n − limit} {student/students} to make room."* ⚠️ **The shortfall is COMPUTED, not the word "one".** It shipped saying "one" regardless, and a coach two over who deactivates a single student is still blocked — round the loop a second time. The noun follows `getActivityLabels()`, so a piano teacher reads "Deactivate 2 students".
-  - **"Upgrade to Pro" is a real 44px BUTTON on its own line**, calling `startUpgrade()` from `useUpgrade()` — the **fourth** consumer of that handler, after ProfileMenu, the add-student paywall and the reactivate gate. ⚠️ It is not an inline link inside the sentence, and that is the 44px rule rather than taste: an accent phrase mid-paragraph cannot be a tap target whose visible label *is* the target. That is why the copy ends at "make room." and the "or" is carried by layout instead of words. Omitted entirely for `over_ceiling`.
-  - ⚠️ **The banner does NOT name where the fix is.** An earlier draft said "from their profile"; the shipped copy does not, so a coach reads *what* to do without being told the lever lives on each student's own screen. Recorded as a known gap rather than a decision — it was the main copy constraint identified when this was designed, and it is currently unmet.
-  - `PauseCircle` at 16px / stroke 2 in `#8a8fa8` — the overflow-menu icon size, in the sub-text grey. Everything else matches the per-student **Inactive** banner exactly: same `#161a20` surface, `1px #2a2d36` border, 13px/12px type pair. ⚠️ **No yellow, no amber, no new status colour** — yellow was retired platform-wide and reintroducing it as a warning tone would give the app a second status vocabulary.
+- **Roster** — an "Assigning is on hold" banner above the groups, `OverLimitBanner.tsx`.
+  - ⚠️ **RULES, NOT THE SENTENCE. This entry quoted the banner's exact copy and went stale TWICE in one night** — first on "make room" versus "spot", then on the two-part restructure. The wording lives in `OverLimitBanner.tsx`; read it there. What is recorded here is what must stay true of whatever it says:
+    - **"spot" is the app's one term for available capacity.** Not "room", not "slot". Also used by the deactivate modal, the activate gate's heading, and the Pro-ceiling refusals in `addPlayer()` and `activatePlayer()`. Changing it means changing all of them.
+    - **The shortfall is COMPUTED**, `count − limit`, with the noun following `getActivityLabels()`. It shipped as a hardcoded "one" and was wrong for any coach more than one over — they deactivate a student, are still blocked, and go round again.
+    - **The upgrade offer is a 44px BUTTON on its own line, never an inline link.** The rule is 44px minimum with the visible label *as* the target, and an accent phrase mid-sentence can be neither. This is why the sentence ends before the offer rather than running into it. Omitted entirely for `over_ceiling`.
+    - It calls `startUpgrade()` from `useUpgrade()` — **the fourth consumer**, after ProfileMenu, the add-student paywall and the reactivate gate.
+  - ⚠️ **The banner does NOT name where the fix is.** An earlier draft said "from their profile"; the shipped copy does not, so a coach reads *what* to do without being told the lever lives on each student's own screen. A known gap rather than a decision — it was the main copy constraint identified when this was designed, and it is currently unmet.
+  - `PauseCircle` at 16px / stroke 2 in `#8a8fa8` — the overflow-menu icon size, in the sub-text grey. Surface and outline follow *The blue capacity system* below.
   - ⚠️ A **client component**, and only because of the CTA. It still **costs ZERO extra queries** — the page already holds every player row and `requireCoach()` already selected `subscription_status`, so the numbers are passed down rather than re-read.
-- **Student detail** — the assign CTA is replaced, **in its own slot**, by *"Assigning is on hold while you're over your plan limit."* Same slot so nothing shifts when the coach comes back under. Read only when the student is active, since the per-student banner wins anyway.
+- **Student detail** — the assign CTA is replaced, **in its own slot**, by a line saying assigning is on hold, plus the same 44px Upgrade button (**the fifth** `useUpgrade()` consumer). Same slot so nothing shifts when the coach comes back under. Both the line and the button read only when the student is active, since the per-student banner wins anyway, and the button is gated on the coach being unentitled — `entitled` rides the same `accountOverLimit()` read, so it costs nothing.
 - **`resendPlayerLink()` is deliberately NOT blocked.** It re-sends an existing link and creates no new work. (Deactivation *does* block it, for a different reason: the link leads a paused student to a dead end.)
+
+### The blue capacity system
+
+Established Aug 17 2026. **Blue marks anything touching PLAN CAPACITY. Grey marks a routine action.** Two surfaces carry it, and they carry it *because they are the same state* — over the plan's limit — reached two different ways:
+
+| Surface | Reached by | Treatment |
+|---|---|---|
+| Roster "Assigning is on hold" banner | trying to assign | `#18222d` fill, `1px solid rgba(55,138,221,0.35)` |
+| "No spot for {name}" modal | trying to reactivate | `#1e2633` fill, same outline |
+| Deactivate confirm modal | a routine, reversible action | **plain grey**, deliberately |
+
+The fills are the brand blue washed over the surface underneath at 7% — the all-done panel's idiom in blue instead of emerald — then **flattened to a solid**. ⚠️ They were layered gradients first (`linear-gradient(rgba(55,138,221,0.07) ×2), #161a20`). That computes correctly in Chrome, verified, but rendered wrong on device; a solid removes the engine variance and leaves one value to read rather than two to compose in your head.
+
+⚠️ **The outline is load-bearing, not decoration.** At `0.18` alpha the banner read as a colour wash with no edge and lost its shape against the roster. `0.35` at 1px is a light outline that defines it without becoming a saturated blue rule.
+
+⚠️ **This is NOT a warning colour, and there still isn't one.** Yellow was retired platform-wide when it stopped meaning "in progress", and nothing here reintroduces a second status vocabulary — the blue is the existing brand accent, and the icon and both text tones stay the greys already in use. These are states a coach can resolve, not failures.
+
+⚠️ **`#5ba3ea` — the CTA border and label on both surfaces — is a NEW VALUE and is not tokenised.** The palette has `--reps-orange` `#378add` and `--reps-orange-hi` `#4a9ae8`; this is a third step up, chosen because `#378add` measures **4.47:1** as 13px text on the tinted banner (under the 4.5 AA floor — the tint is what pushed it under) where `#5ba3ea` clears at **6.03:1**. It is a literal in two files. See the tokenising item under *Low priority*.
+
+⚠️ **Never use a bare `border` class on a dark surface.** Tailwind 3.4's preflight defaults `border-color` to `#e5e7eb`, a light grey. The activate-gate modal was briefly the app's only bare `border`; an inline colour did override it, but the next edit would have put a white ring round a dark modal.
 
 ### Not done
 
-⚠️ **Never seen on a device.** Verified against a real over-limit account (`canceled`, 5 active, limit 3) at the data layer — active students refused with `over_limit`, the inactive one with `student_paused`, a Pro coach at 5/30 unaffected — but the banner and the suppressed CTA have not been looked at on a phone.
+✅ **Verified against a real over-limit account** at the data layer (`canceled`, 5 active, limit 3): active students refused with `over_limit`, the inactive one with `student_paused`, a Pro coach at 5/30 unaffected. The downgrade that produced it was a genuine Stripe test-clock advance — clock → cancel → webhook → `subscription_status` → gate, observed joined end to end.
+
+✅ **Device-tested Aug 17 2026**, and it is where most of this section's copy and colour decisions came from: the hardcoded "one", the missing outline, the em dashes, the flat three-tier modal, the inline upgrade phrase. Every one of those was invisible until it was on a phone.
+
+⚠️ **Still unseen on a device:** the `over_ceiling` variants. Everything above was walked as an unentitled coach over the *free* limit; a Pro coach past 30 — who gets no upgrade button on either surface — has never been rendered.
 
 ---
 
@@ -1692,6 +1719,7 @@ Design resolved — these need building, not deciding.
 - **"Consecutive" goal label vs "In a row"** — known drift, not a bug. The landing page's assign frame labels the third goal **In a row**, which is how instructors actually speak; the app's `CountScreen` still shows **Consecutive**. The stored `goal_type` value is `'consecutive'` either way, so this is display copy only — but the app and the marketing page currently name the same goal differently. Renaming the app label is the likely fix; it touches `GOALS` in `CountScreen.tsx` and the `SETS COMPLETED` / streak wording on the log screen
 
 ### Low priority / future
+- ⚠️ **`#5ba3ea` is a hardcoded literal in two files** (`OverLimitBanner.tsx` and `CoachAssignmentList.tsx`) — the CTA border and label for *The blue capacity system*. Same class of gap as the greens below and worth doing in the same pass; it is a third blue beside `--reps-orange` and `--reps-orange-hi`, so it wants a name before a fourth appears.
 - **Finish tokenising the greens** — 4 sites still hardcode `#3ed68a` rather than using the token: the celebrate confetti array, the two `Check` icon `color` props (CountScreen + CustomExerciseScreen), and the roster `GROUP_STYLE` object. The icons are the reason it stopped: lucide passes `color` into an SVG `stroke` attribute, where a CSS var resolves in practice but wants seeing rendered before trusting.
 - **`CustomExerciseMenu` is the odd one out** — three of the app's four overflow menus now share the raised/flush/divider style with icons; this one keeps the old padded `p-1` panel with rounded inner items and no icon. Its single item is `Delete exercise`, which pairs naturally with the `Trash2` on `Delete assignment`.
 - **Toast is dim** — noted on device, not fixed. All three toasts use `text-reps-sub` on `--reps-raised`.
