@@ -151,11 +151,46 @@ export default function EmailStep() {
               ⚠️ /privacy, NOT /privacy#students-and-minors. That anchor is where
               PrivacyFooter sends students and parents; this reader is the coach,
               and the top of the page is written for them. */}
+          {/* ⚠️ NEW TAB, and ONLY here. Signup state — name, instructor type,
+              email — lives in plain useState inside SignupProvider, which the
+              signup layout mounts. Nothing is persisted: no sessionStorage, no
+              draft row. So ANY navigation out of the signup segment destroys it,
+              and the coach restarts at step 1.
+
+              Found on device via the most likely path: tap Terms, then tap that
+              page's own back arrow, which returns to the LANDING page rather
+              than to signup. But browser-back is no better — it remounts the
+              provider empty. Opening in a new tab is what actually fixes it,
+              because the signup tab is never navigated away from at all.
+
+              ⚠️ SCOPED TO THESE TWO LINKS. /terms, /privacy and PrivacyFooter
+              are deliberately untouched: a marketing visitor's back arrow
+              returning them to the landing page is correct, and no other surface
+              has in-progress state to protect. Do not generalise this.
+
+              rel="noopener noreferrer" because target="_blank" otherwise hands
+              the opened page a live window.opener reference back to this one. */}
           <p className="mt-5 text-center text-[12px] leading-relaxed text-reps-dim">
             By continuing, you agree to our{" "}
-            <Link href="/terms" className={CONSENT_LINK}>Terms</Link>
+            <Link
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Terms of Service (opens in a new tab)"
+              className={CONSENT_LINK}
+            >
+              Terms
+            </Link>
             {" "}and{" "}
-            <Link href="/privacy" className={CONSENT_LINK}>Privacy Policy</Link>.
+            <Link
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Privacy Policy (opens in a new tab)"
+              className={CONSENT_LINK}
+            >
+              Privacy Policy
+            </Link>.
           </p>
         </form>
       </main>
