@@ -108,40 +108,65 @@ function CeilingBlock({
 }) {
   return (
     <div className="flex flex-1 flex-col">
-      {/* ⚠️ The count and noun stay dynamic — this reads "30 active players"
-          for a basketball coach and "30 active students" for a piano teacher,
-          the same way every other gate string follows getActivityLabels().
+      {/* ⚠️ THE BLUE CAPACITY SURFACE. This screen is the third member of that
+          family — the roster's "Assigning is on hold" banner and the "No spot"
+          modal are the other two — and until now it was the only one still
+          rendering as bare copy on the page background, which read as a wall of
+          black. Blue marks plan capacity; a coach should recognise what this is
+          about before reading a word of it.
 
-          Framing matters here: reaching 30 is not an error, it is a coach who
-          has built something. The headline names the achievement before the
-          body names the constraint. */}
-      <h1 className="text-[17px] font-semibold leading-snug text-white">
-        {shownCount} active {studentsLabel} — you&apos;ve maxed out Pro.
-      </h1>
-      {/* Two short lines rather than one paragraph: the first is the action
-          available right now, the second is the way out if 30 genuinely is not
-          enough. Run together they read as one wall and neither lands. */}
-      <p className="mt-2 text-[14px] leading-relaxed text-[#8a8fa8]">
-        Deactivate someone you&apos;re not working with right now to free up a
-        spot — nothing of theirs is lost, bring them back anytime.
-      </p>
-      {/* ⚠️ "Need more than 30?" is deliberately the SAME opening as the note on
-          the landing page's Pro card. A coach who hit this screen and later goes
-          looking for what they half-remember should find the same promise in the
-          same words, not a near-miss that makes them wonder if it changed.
+          Same fill and outline as the roster banner, deliberately identical
+          rather than merely similar. */}
+      <div
+        className="rounded-[10px] px-[14px] py-4"
+        style={{ background: "#18222d", border: "1px solid rgba(55,138,221,0.35)" }}
+      >
+        {/* ⚠️ The count and noun stay dynamic — this reads "30 active players"
+            for a basketball coach and "30 active students" for a piano teacher,
+            the same way every other gate string follows getActivityLabels().
 
-          The number comes from the constant; the landing page's copy of it is
-          still a hand-written string. */}
-      <p className="mt-3 text-[14px] leading-relaxed text-[#8a8fa8]">
-        Need more than {PRO_STUDENT_LIMIT}?{" "}
-        <a
-          href="mailto:hello@assignreps.com"
-          className="text-[#378add] underline underline-offset-2 hover:text-[#4a9ae8] transition-colors"
-        >
-          Email us
-        </a>{" "}
-        and we&apos;ll set you up.
-      </p>
+            Framing matters here: reaching 30 is not an error, it is a coach who
+            has built something. The headline names the achievement before the
+            body names the constraint.
+
+            ⚠️ TWO SENTENCES, no em dash. The source always had a proper space
+            around it (verified at byte level), but the h1 wraps at exactly that
+            space on a phone, which puts the dash at the head of the next line
+            and reads as though the space is missing. A period cannot do that,
+            and it matches the em-dash removal applied across the modals. */}
+        <h1 className="text-[17px] font-semibold leading-snug text-white">
+          {shownCount} active {studentsLabel}. You&apos;ve maxed out Pro.
+        </h1>
+        {/* Two short lines rather than one paragraph: the first is the action
+            available right now, the second is the way out if 30 genuinely is not
+            enough. Run together they read as one wall and neither lands. */}
+        <p className="mt-2 text-[14px] leading-relaxed text-[#8a8fa8]">
+          Deactivate someone you&apos;re not working with right now to free up a
+          spot. Nothing of theirs is lost, bring them back anytime.
+        </p>
+        {/* ⚠️ "Need more than 30?" is deliberately the SAME opening as the note on
+            the landing page's Pro card. A coach who hit this screen and later goes
+            looking for what they half-remember should find the same promise in the
+            same words, not a near-miss that makes them wonder if it changed.
+
+            The number comes from the constant; the landing page's copy of it is
+            still a hand-written string. */}
+        <p className="mt-3 text-[14px] leading-relaxed text-[#8a8fa8]">
+          Need more than {PRO_STUDENT_LIMIT}?{" "}
+          {/* ⚠️ #5ba3ea, not #378add, and the tint above is why. The brand blue
+              measures 4.47:1 as body text on #18222d — under the 4.5 AA floor —
+              where #5ba3ea clears at 6.03:1. Exactly the regression adding this
+              tint caused on the roster banner's CTA; same fix, same reason. */}
+          <a
+            href="mailto:hello@assignreps.com"
+            className="underline underline-offset-2 transition-colors"
+            style={{ color: "#5ba3ea" }}
+          >
+            Email us
+          </a>{" "}
+          and we&apos;ll set you up.
+        </p>
+      </div>
     </div>
   );
 }
