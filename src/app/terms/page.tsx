@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SMS_CONSENT_SCRIPT } from "@/lib/consent";
 
 export const metadata: Metadata = { title: "Terms of Service — Reps" };
 
@@ -49,7 +50,7 @@ export default function TermsPage() {
           You are responsible for obtaining explicit verbal consent before adding any student or parent phone number to Reps.
         </p>
         <p style={{ ...body, marginBottom: "10px" }}>
-          Before entering a phone number you must confirm with the recipient: &ldquo;I&apos;d like to send your practice assignments through Reps. You&apos;ll get a text with a link to view and log your work. Is that okay?&rdquo;
+          Before entering a phone number you must confirm with the recipient: &ldquo;{SMS_CONSENT_SCRIPT}&rdquo;
         </p>
         <p style={body}>
           You agree not to add phone numbers of anyone who has not verbally agreed to receive messages. Recipients can reply STOP at any time to opt out.

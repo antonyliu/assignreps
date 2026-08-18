@@ -6,6 +6,7 @@ import Link from "next/link";
 import { addPlayer } from "./actions";
 import { useUpgrade } from "@/lib/use-upgrade";
 import { PRO_STUDENT_LIMIT } from "@/lib/entitlement";
+import { SMS_CONSENT_SCRIPT } from "@/lib/consent";
 
 const INPUT =
   "w-full rounded-[10px] border border-[#2a2d36] bg-[#1c1f26] px-[14px] py-[13px] text-base text-white outline-none transition-colors placeholder:text-[#5a5f72] focus:border-[#378add]";
@@ -167,6 +168,47 @@ function CeilingBlock({
           and we&apos;ll set you up.
         </p>
       </div>
+    </div>
+  );
+}
+
+// The "what to say" disclosure, collapsed by default.
+//
+// ⚠️ Reuses InactiveGroup's shape rather than inventing chrome — it is the app's
+// only content expand/collapse (the other three aria-expanded controls are
+// dropdown menus). Same 44px target with a negative margin cancelling the added
+// height, same rotating chevron so the control reads as one thing in two states.
+//
+// ⚠️ type="button" is LOAD-BEARING. This sits inside the add-player <form>, and
+// a bare <button> defaults to type="submit" — tapping "What to say" would
+// submit the form and add the student.
+function ConsentScript() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-1">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="-my-2 flex h-11 items-center gap-1.5 text-[13px] text-[#8a8fa8] transition-colors hover:text-white"
+        style={{ WebkitTapHighlightColor: "transparent" }}
+      >
+        What to say
+        <span
+          aria-hidden="true"
+          className="text-[10px] transition-transform"
+          style={{ transform: open ? "rotate(90deg)" : "none" }}
+        >
+          ▶
+        </span>
+      </button>
+      {/* Verbatim from /terms via one shared constant. This is the first place
+          that script is reachable at the moment a coach needs it. */}
+      {open && (
+        <p className="mt-2 text-[13px] italic leading-relaxed text-[#8a8fa8]">
+          &ldquo;{SMS_CONSENT_SCRIPT}&rdquo;
+        </p>
+      )}
     </div>
   );
 }
@@ -358,6 +400,36 @@ export default function AddPlayerForm({
             They&apos;ll get a text when you assign work.
           </p>
         )}
+
+        {/* ⚠️ THE CONSENT REQUIREMENT, stated where a coach can act on it. It
+            lived only in /terms and /privacy — documents nothing in the app
+            linked to until Aug 17 — while this screen, the one place someone is
+            about to type another person's number, said nothing.
+
+            ⚠️ SHARED ACROSS BOTH TOGGLE STATES on purpose. /terms and /privacy
+            both say "student or parent phone number" in one breath; two consent
+            standards is precisely the divergence the Aug 16 /faq removal ended.
+            The parenthetical carries the minors distinction /privacy's minors
+            section establishes — permission from the student OR their parent —
+            because this is the only screen where that is actionable.
+
+            ⚠️ It STATES an obligation, it does not reassure. The pulled /faq
+            answer read "if you already have that relationship, most coaches do,
+            you're fine... just one text instead of many" and was removed for
+            being softer than the documents it summarised. None of that framing
+            comes back: no "if you already", no "most coaches", no "just one
+            text".
+
+            ⚠️ #8a8fa8, not the #5a5f72 the line above uses. That value measures
+            3.11:1 on this background and already fails AA — a pre-existing
+            defect, not introduced here, and left alone as out of scope. This
+            line is a legal obligation and gets 6.17:1. The side effect is that
+            it reads one step brighter than the informational line above it,
+            which is the correct ranking anyway. */}
+        <p className="mt-2 text-[13px] text-[#8a8fa8]">
+          Get their OK first (or a parent&apos;s, if they&apos;re younger) before adding this number.
+        </p>
+        <ConsentScript />
 
         {/* Submit */}
         <button
