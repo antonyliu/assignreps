@@ -1984,6 +1984,46 @@ Verified end to end in test mode on Coach Tony's subscription, not assumed:
 
 ---
 
+## SMS consent on the add-student screen
+
+Built Aug 18 2026 (`f3ec235`). The verbal-consent obligation lived only in `/terms` and `/privacy` — documents nothing in the app linked to until the day before — while the one screen where a coach is about to type **another person's** phone number said nothing about it. ⚠️ This is the clause an outside party actually relies on: **Twilio's toll-free registration rests on it.**
+
+Two things under the phone field: a line stating the requirement, and a collapsed **"What to say"** disclosure revealing the script.
+
+### ⚠️ `SMS_CONSENT_SCRIPT` is a single source, in `src/lib/consent.ts`
+
+Imported by **both** `/terms` (where it is the binding obligation) and the add-student disclosure (where it is the only place a coach can act on it). ⚠️ **Not two copies, deliberately.** Copying the sentence would leave two versions one edit apart, and the precedent for what that costs is already on file: the Aug 16 `/faq` removal pulled a second, softer telling of this same requirement *before it ever shipped*, because it read as reassurance where the legal pages read as an obligation.
+
+Quotation marks are **not** part of the constant — each render site wraps it, since the quotes are presentation.
+
+### ⚠️ ONE consent standard, not one per toggle state
+
+The line is **identical** whether the coach has Player or Parent selected. `/terms` and `/privacy` both say *"student or parent phone number"* in a single breath, so forking the language by recipient would recreate exactly the divergence the `/faq` removal fixed.
+
+The minors distinction rides inside the one line — *"or a parent's, if they're younger"* — because this is the only screen where `/privacy`'s "permission from the student **or** their parent" is actionable at the moment it matters.
+
+⚠️ **The banned framings**, from the pulled `/faq` answer: no *"if you already"*, no *"most coaches"*, no *"just one text"*. It states an obligation; it does not reassure.
+
+### ⚠️ `type="button"` on the disclosure is load-bearing
+
+`ConsentScript` sits **inside the add-player `<form>`**, and a bare `<button>` defaults to `type="submit"`. Without it, tapping **"What to say"** submits the form and adds the student. Nothing about the markup makes that visible.
+
+It reuses `InactiveGroup`'s shape — 44px target with a negative margin cancelling the added height, rotating ▶ chevron, `aria-expanded` — rather than inventing chrome. That is the app's **only** content expand/collapse; the other three `aria-expanded` controls are dropdown menus.
+
+### ⚠️ The helper line above it still fails AA
+
+*"They'll get a text when you assign work."* is `#5a5f72`, which measures **3.11:1** on this background. **Pre-existing, not introduced here, and deliberately left alone** as out of scope.
+
+The consent line is `#8a8fa8` at **6.17:1** — a legally load-bearing sentence should not ship below AA. The visible side effect is that it reads one step brighter than the informational line above it, which ranks the two correctly anyway. ⚠️ Worth a future sweep: `#5a5f72` is the documented placeholder token and may be doing body-text duty elsewhere, so this wants checking beyond the one line.
+
+### Not done
+
+⚠️ **Neither surface has been seen on a device** — the consent line, and the disclosure. **Specifically confirm that tapping "What to say" does NOT submit the form**, since that is the failure `type="button"` prevents and the only one that would silently add a student.
+
+⚠️ There is no central untested-on-device list in this file; each section carries its own note. If that keeps growing it may be worth one.
+
+---
+
 ## Legal pages — Aug 6 audit (`/privacy`, `/terms`)
 
 A line-by-line fact-check of both pages **against the code**, not by reading. Both are short — privacy is 8 sections, terms is 7 — and genuinely written, so the problems are staleness and omission rather than filler. ⚠️ **Only the three FALSE statements were fixed. Everything else below is still open**, and this list is the worklist for the standing *Final legal review* item.
