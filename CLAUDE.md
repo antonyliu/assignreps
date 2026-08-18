@@ -27,8 +27,10 @@
 ### Still open, ranked
 
 1. ✅ **Deactivate/Activate students — BUILT Aug 17 2026.** The loophole it was elevated for is closed: `activatePlayer()` re-checks the seat gate, which is the only moment a student re-enters the active count, so a downgraded coach cannot quietly keep 30 running on Free. ⚠️ **The migration must be run by hand in the Supabase SQL editor** — see `supabase/migrations/20260817120000_add_deactivated_at_to_players.sql`. Nothing else in this build works until it is applied. ⚠️ **Not yet device-tested**, and the deactivate/activate/delete modals and the collapsed roster group have never been seen on a real phone.
-2. **Students and parents on token links have ZERO route to `/privacy`.** More serious than the coach-side version below — these are the people whose data is described there, and many are minors.
+2. ✅ **Students and parents can reach `/privacy`** (Aug 17 2026, `e18b5c2`). `PrivacyFooter` on the student home, the paused screen, `/student/login` and the parent view, pointing at the minors anchor. See *PrivacyFooter* below.
 3. **Signed-in coaches cannot reach `/faq`, `/privacy` or `/terms` at all.** Every link to them lives on the public landing page; the instructor app has no footer and `ProfileMenu` has no link out.
+   - **Cheaper now that `PrivacyFooter` exists** (item 2), but ⚠️ **not the same component.** A coach needs all THREE pages, not one, and must NOT be deep-linked to `#students-and-minors` — that section is written to parents. Either a variant or a sibling; do not widen `PrivacyFooter` and give students a link to `/terms` they never agreed to.
+   - `ProfileMenu` is the obvious host: it already carries account-level actions and is on every instructor screen.
 4. **Desktop hero headline still reads "intense."** Mobile was addressed via tracking (now `normal`); desktop was not. Next lever is already scoped: colour `#0f0f10` → `#1a1a1a`, still 13.4:1 and zero layout cost. ⚠️ Do not drop the 700 weight — it is what carries the hierarchy against the 18px/600 bullets.
 5. **Mobile scroll rhythm** — hero CTA to the next section's CTA feels too fast. Proposed and undecided: swap §2/§3 stacking order on mobile to mocks-first rather than copy-first.
 6. **Fold clearance is thin.** 10.4px at 375×812, and the "Free, forever. No card." support line now sits **below the fold on tall phones**, not just SE-class. Flagged; not yet decided whether it matters. `--pw` toward 190px is worth ~30px if it does.
@@ -972,6 +974,38 @@ Players are grouped by completion — **Done / In progress / Not started / Nothi
 ⚠️ **Only two groups actually move.** *Done* and *In progress* require logs by definition and reorder fully. *Not started* is assignments-with-no-logs and is a guaranteed no-op — if it ever appears to reorder, something is wrong. *Nothing assigned* is usually a no-op too, but not always: a player whose assignments were all deleted keeps their logs (`assignment_id` goes NULL, never the row), and the activity read is player-scoped precisely so that still counts — so they can outrank a genuinely new player.
 
 ⚠️ The sort compares with `Date.parse`; the `MAX(logged_at)` fold immediately above it still compares raw strings with `>`. Both work on uniformly-formatted UTC values — the string form quietly depends on every row carrying identical fractional-second precision. Left as-is, noted so the inconsistency isn't mistaken for intent.
+
+## PrivacyFooter — the student and parent link out
+
+Built Aug 17 2026 (`e18b5c2`). `src/components/PrivacyFooter.tsx`. Until then **nothing under `/student` or `/parent` linked to `/privacy`, `/terms` or `/faq`** — every reference lived in `page.tsx` and `/faq`. The gap fell on the people least able to act on it: students on a token link, many of them minors, and the parents whose data the policy describes.
+
+**Where it renders:** the student home (both branches — the assignment list and the paused screen), `/student/login`, and `/parent/[token]`.
+
+⚠️ **NOT on the log screen or `/celebrate`, and that is a decision rather than an oversight.** The log screen's bottom is a `sticky bottom-0` CTA whose spacing and gradient are documented to the pixel in *Student log screen* below — anything added under it either sits beneath a sticky element or fights it, for near-zero gain. Celebrate is one congratulatory beat and is one tap from the home screen that carries this.
+
+⚠️ **One component, not four copies.** The treatment shipped first on the parent view as a hand-rolled `Read-only view · Reps`; it was lifted into a component when three more surfaces needed it. `prefix` is the only prop, and exists solely for that parent line.
+
+### ⚠️ The anchor is load-bearing
+
+The link targets **`/privacy#students-and-minors`**, not the top of the page. `/privacy` spends five sections on coach and billing matters before reaching the one written for parents — a parent who taps this should land on the answer, not on Stripe customer IDs.
+
+⚠️ **`id="students-and-minors"` on that `h2` is therefore a link target, not decoration. Renaming or removing it breaks four links SILENTLY** — no build error, no runtime error, the page just opens at the top. There is nothing in the toolchain that would catch it.
+
+### ⚠️ Two deliberate departures from the pattern it copied
+
+Both measured, both because a **link** is not the decorative label the pattern was invented for:
+
+| | Original line | The link |
+|---|---|---|
+| Colour | `text-reps-dim/50` → `#494d5c`, **2.35:1** | `text-reps-sub` `#8a8fa8`, **6.17:1** |
+| Target | none — 11px text is ~13px tall | `inline-flex min-h-[44px]` |
+
+- The surrounding line keeps `dim/50`. Only the link moved: 2.35:1 is fine for a label nobody has to find, and not fine for the one thing on the screen a person is meant to tap.
+- ⚠️ **The 44px floor applies here** — this stopped being decorative text the moment it became the only route to the policy. A ~13px target is the exact dead zone that made seven back links need several taps. A negative margin cancels the added height, so the line looks identical to the one the parent view already shipped.
+
+⚠️ **Never seen on a device.** The specific thing to check is whether `mt-auto` pins the footer where expected on the student home with a LONG assignment list versus a short one — nothing else in that `<main>` grows, which is what the placement relies on.
+
+---
 
 ## Student log screen
 
