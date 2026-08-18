@@ -338,13 +338,14 @@ export default function PlayerManage({
                 mid-sentence with no grammatical subject, which is why it needed
                 the heading to make sense. */}
             <p className="text-[13px] text-reps-ink leading-relaxed">
-              Deactivating pauses new work and logging — nothing is lost.
+              Deactivating pauses new work and logging. Nothing is lost.
             </p>
-            {/* Tier two: everything secondary, in one dimmer block behind a
+            {/* Tier two: everything secondary, as ONE flowing paragraph behind a
                 hairline. The upside and the open-assignment caveat are the same
-                KIND of information — context the coach may want but does not
-                need to act on — so they share a colour and a size instead of
-                stepping down again.
+                KIND of information (context the coach may want but does not need
+                to act on), so they share a colour, a size AND a paragraph. Two
+                <p> tags with a gap between them read as two ragged blocks;
+                sentence spacing reads as one thought.
 
                 ⚠️ "Frees a spot on your plan" STAYS. It is the whole reason a
                 coach arrives here from the ceiling gate, and the only line that
@@ -355,16 +356,17 @@ export default function PlayerManage({
                 ⚠️ The caveat is informational, NOT a second gate. Deactivation
                 is undone in one tap, so a confirmation step would be ceremony
                 over a decision that costs nothing. */}
-            <div className="mt-3 pt-3 border-t border-reps-line text-[13px] text-reps-sub leading-relaxed">
-              <p>Frees a spot on your plan. Reactivate anytime.</p>
+            <p className="mt-3 pt-3 border-t border-reps-line text-[13px] text-reps-sub leading-relaxed">
+              Frees a spot on your plan. Reactivate anytime.
               {openAssignmentCount > 0 && (
-                <p className="mt-1.5">
+                <>
+                  {" "}
                   {firstName} has {openAssignmentCount} open{" "}
                   {openAssignmentCount === 1 ? "assignment" : "assignments"}, which
                   will pause too.
-                </p>
+                </>
               )}
-            </div>
+            </p>
             <div className="flex gap-3 mt-7">
               <button
                 onClick={() => setConfirmDeactivate(false)}
@@ -409,15 +411,22 @@ export default function PlayerManage({
             // roster's "Assigning is on hold" banner are the same state — over
             // the limit — reached two different ways, so they share a surface.
             //
-            // Wash and border are the all-done panel's idiom in the brand hue
-            // instead of emerald. Layered over the card colour rather than
-            // replacing it, because a bare rgba would composite against the
-            // black overlay and come out darker than the modal it belongs to.
-            className="w-full max-w-[320px] border rounded-[16px] px-7 pt-7 pb-8"
+            // ⚠️ A PRECOMPUTED SOLID, not a layered gradient. This carried
+            // `background: linear-gradient(rgba(55,138,221,0.07) x2), #1c1f26`,
+            // which computes correctly in Chrome (verified: backgroundColor
+            // resolves to rgb(28,31,38) with the wash on top) but rendered wrong
+            // on device. #1e2633 IS that composite, flattened — same colour, no
+            // engine variance, and one value to read instead of two to compose.
+            //
+            // ⚠️ `border` alone was the other half of the risk. Tailwind 3.4's
+            // preflight defaults border-color to #e5e7eb — a LIGHT grey — and
+            // this was the only bare `border` in the app; every other modal sets
+            // border-reps-line. The inline colour did override it, but relying
+            // on that is one edit away from a white ring round a dark modal.
+            className="w-full max-w-[320px] rounded-[16px] px-7 pt-7 pb-8"
             style={{
-              background:
-                "linear-gradient(rgba(55,138,221,0.07), rgba(55,138,221,0.07)), #1c1f26",
-              borderColor: "rgba(55,138,221,0.18)",
+              background: "#1e2633",
+              border: "1px solid rgba(55,138,221,0.35)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -445,9 +454,16 @@ export default function PlayerManage({
               <p className="mt-3 text-[13px] leading-snug text-red-400">{upgradeError}</p>
             )}
 
+            {/* ⚠️ A brighter border than the other modals' Cancel buttons, and
+                deliberately so. Those sit on #1c1f26 where border-reps-line
+                (#2a2d36) just reads; this modal's surface is lighter, which took
+                that same border to nearly invisible. Neutral white at 25% rather
+                than more blue, so it stays clearly secondary to the Upgrade CTA
+                above it. */}
             <button
               onClick={() => setGate(null)}
-              className={`w-full min-h-[44px] rounded-[10px] border border-reps-line text-reps-ink font-medium text-[15px] hover:bg-reps-raised transition-colors ${gate.canUpgrade ? "mt-3" : "mt-7"}`}
+              style={{ border: "1px solid rgba(255,255,255,0.25)" }}
+              className={`w-full min-h-[44px] rounded-[10px] text-reps-ink font-medium text-[15px] hover:bg-reps-raised transition-colors ${gate.canUpgrade ? "mt-3" : "mt-7"}`}
             >
               Close
             </button>
@@ -488,7 +504,7 @@ export default function PlayerManage({
             </p>
             {isActive && (
               <p className="text-[13px] text-reps-sub leading-relaxed mt-3">
-                Just taking a break? Deactivate {firstName} instead — it frees the
+                Just taking a break? Deactivate {firstName} instead. It frees the
                 same spot and keeps everything.
               </p>
             )}

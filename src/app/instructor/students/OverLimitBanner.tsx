@@ -61,10 +61,17 @@ export default function OverLimitBanner({
       // washes straight onto the page, but this banner sits on the near-black
       // roster background, so a bare rgba would land DARKER than the surface it
       // has today and read as recessed instead of lifted.
+      // ⚠️ A precomputed solid, matching the gate modal — #18222d IS
+      // rgba(55,138,221,0.07) over #161a20, flattened. Same reason: no engine
+      // variance, one value to read.
+      //
+      // ⚠️ The border went 0.18 -> 0.35 alpha and 0.5px -> 1px. At 0.18 the
+      // banner read as a colour wash with no edge and lost its shape against
+      // the roster; this is a light outline that defines it without becoming a
+      // saturated blue rule.
       style={{
-        background:
-          "linear-gradient(rgba(55,138,221,0.07), rgba(55,138,221,0.07)), #161a20",
-        border: "0.5px solid rgba(55,138,221,0.18)",
+        background: "#18222d",
+        border: "1px solid rgba(55,138,221,0.35)",
       }}
     >
       <div className="flex gap-2.5">
