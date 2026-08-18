@@ -2,9 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
 import { useSignup } from "../provider";
 import { ScreenHeader, ErrorBanner, INPUT, BTN_PRIMARY } from "@/components/SignupUI";
+
+// ⚠️ A 44px tap target on a 12px line, via the same technique PrivacyFooter
+// uses: inline-flex for the height, a negative block margin so it adds none,
+// align-middle to keep it on the text baseline. At 12px these labels are ~14px
+// tall — the dead zone that made seven back links need several taps.
+//
+// px-1 rather than px-2 because there are TWO links in one sentence and they sit
+// side by side; wider padding would run their targets together.
+//
+// text-reps-orange (#378add) is the app's established inline-link colour, used
+// by this flow's own "Sign in" control. 5.48:1 on the app background — passes AA
+// for normal text.
+const CONSENT_LINK =
+  "inline-flex min-h-[44px] items-center px-1 -my-[15px] align-middle text-reps-orange underline underline-offset-2 hover:text-reps-orange-hi transition-colors";
 
 export default function EmailStep() {
   const supabase = createClient();
@@ -110,6 +125,38 @@ export default function EmailStep() {
           >
             {loading ? "Sending…" : "Send code"}
           </button>
+          {/* ⚠️ THE ONLY PLACE A COACH IS EVER SHOWN /terms OR /privacy. Until
+              Aug 17 2026 the entire signup tree contained no reference to
+              either — no link, no checkbox — so every "you are responsible for"
+              clause on /terms was asserted against someone who had never been
+              shown it. The SMS verbal-consent clause is the load-bearing one:
+              Twilio's toll-free registration rests on it.
+
+              ⚠️ A NOTICE, NOT A GATE, and deliberately so. No checkbox, no
+              consent column, no timestamp. The coaches row is inserted
+              CLIENT-SIDE in submitCode() below, so a checkbox gating a button
+              the client also controls would prove nothing an attacker or a bug
+              could not walk past — it would look more rigorous while being
+              exactly as unenforceable. This is a visibility fix; do not
+              "strengthen" it into theatre.
+
+              ⚠️ Renders on BOTH first signup and every returning sign-in,
+              because this screen serves both — the landing header's "Sign in"
+              links straight here, and the insert below tolerates a 23505 unique
+              violation precisely because the row may already exist. Nothing
+              distinguishes the two until after the email is submitted, so a
+              checkbox would also have been shown to people who signed up months
+              ago.
+
+              ⚠️ /privacy, NOT /privacy#students-and-minors. That anchor is where
+              PrivacyFooter sends students and parents; this reader is the coach,
+              and the top of the page is written for them. */}
+          <p className="mt-5 text-center text-[12px] leading-relaxed text-reps-dim">
+            By continuing, you agree to our{" "}
+            <Link href="/terms" className={CONSENT_LINK}>Terms</Link>
+            {" "}and{" "}
+            <Link href="/privacy" className={CONSENT_LINK}>Privacy Policy</Link>.
+          </p>
         </form>
       </main>
     );
