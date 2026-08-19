@@ -4,7 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
-import { User } from "lucide-react";
+// ChevronRight marks the one row that opens a sub-view instead of acting;
+// ChevronLeft is its counterpart on the way back. lucide at size 14 /
+// strokeWidth 2, following AssignmentMenu's directional icons rather than the
+// bare "←" glyph the app's seven full-screen back links use — that glyph
+// belongs to page-level navigation, and this stays inside one panel.
+import { User, ChevronRight, ChevronLeft } from "lucide-react";
 import { useUpgrade } from "@/lib/use-upgrade";
 import { createPortalSession } from "@/app/instructor/billing/actions";
 
@@ -34,6 +39,43 @@ export default function ProfileMenu({
   const supabase = createClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // ⚠️ THE APP'S FIRST MULTI-LEVEL MENU. All four overflow menus in this
+  // codebase — this one, PlayerManage, AssignmentMenu, CustomExerciseMenu —
+  // are built from the same three parts: one boolean, a RENDERED
+  // `fixed inset-0 z-40` click-away sibling, and a z-50 panel. There are no
+  // document listeners, no refs, no Escape handling and no focus traps
+  // anywhere in the app. Whatever is done here becomes the precedent for the
+  // other three, so it EXTENDS that mechanism rather than replacing it.
+  //
+  // ⚠️ `menuOpen` REMAINS THE SOLE AUTHORITY on open/closed. It is untouched:
+  // the click-away, the z-tiers and every existing close path still do exactly
+  // what they did. `view` is a SUB-state that only decides which list the open
+  // panel is showing.
+  //
+  // ⚠️ NORMALIZED AT OPEN, NOT RESET AT CLOSE — the whole reason this is safe.
+  // Resetting the view in each close handler would mean touching five of them
+  // and would silently break the day a sixth is added: the menu would reopen
+  // still showing Help & Legal. Because the only opener resets it, "closed but
+  // stuck in the sub-view" is unreachable by construction.
+  //
+  // ⚠️ It is also what makes "clicking away from EITHER view closes the whole
+  // thing" free. The click-away sets menuOpen = false and knows nothing about
+  // view; the next open starts at "main" regardless of where it was left. No
+  // second close path to keep in sync, so the two cannot drift.
+  const [view, setView] = useState<"main" | "help">("main");
+
+  // Opening always lands on the top level. Written as an explicit branch rather
+  // than a side effect inside the setMenuOpen updater — updaters can run twice
+  // in StrictMode, and this must not be one of the things that does.
+  function toggleMenu() {
+    if (menuOpen) {
+      setMenuOpen(false);
+      return;
+    }
+    setView("main");
+    setMenuOpen(true);
+  }
 
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState(coachName);
@@ -162,7 +204,7 @@ export default function ProfileMenu({
             (44-26)/2 = 9. Leaving it at the old 7 would inset the circle 2px
             from the gutter and leave the row 2px taller than the circle. */}
         <button
-          onClick={() => setMenuOpen((o) => !o)}
+          onClick={toggleMenu}
           className="group flex items-center justify-center shrink-0 -mr-[9px] -my-[9px]"
           style={{ width: 44, height: 44, WebkitTapHighlightColor: "transparent" }}
           aria-haspopup="menu"
@@ -238,248 +280,293 @@ export default function ProfileMenu({
               role="menu"
               className="absolute right-0 top-full mt-1.5 z-50 w-max max-w-[176px] bg-reps-card border border-reps-line rounded-[10px] p-1 shadow-lg shadow-black/40"
             >
-              {/* Identity, not an action: a plain div, so it is neither tappable
-                  nor focusable, and role="presentation" keeps it out of the
-                  menu's item list for screen readers. Guarded because the roster
-                  passes "" when the coach row has no name — an empty string here
-                  would render a blank line above a stray divider. `title` keeps
-                  the full name reachable on hover once it truncates. */}
-              {coachName && (
+              {/* ⚠️ TWO VIEWS IN ONE PANEL — same floating box, same anchor,
+                  same click-away; only the contents swap. Not a nested popover
+                  and not a route: a second panel would need its own dismissal
+                  and its own z-tier, and a route would lose the coach's place
+                  on the roster to read a policy.
+
+                  ⚠️ Both views open with a QUIET HEADER ROW then a divider, and
+                  that parallel is deliberate — the main view is titled by the
+                  coach's name, the sub-view by "Help & Legal" with the way back
+                  attached. Same position, same 12px/#8a8fa8 weight, so the swap
+                  reads as the same object changing contents rather than as a
+                  different component appearing.
+
+                  ⚠️ HEIGHT IS FLUID BETWEEN THE TWO, and a fixed height was
+                  rejected rather than skipped: there is no single main-view
+                  height to match one. It already varies in production — isPro
+                  swaps the billing row, upgradeError/portalError add WRAPPING
+                  paragraphs, and an absent coachName removes the name row and
+                  its divider together. Committing to a fixed height would mean
+                  sizing every state to the wrapped-error worst case and leaving
+                  ~40px of dead panel under "Terms of Service", which reads as a
+                  clipped list rather than as calm.
+
+                  ⚠️ WIDTH IS LEFT FLUID TOO (w-max, unchanged), and it moves in
+                  OPPOSITE DIRECTIONS depending on plan — the one genuinely
+                  awkward thing here, so it is recorded as measurements rather
+                  than an opinion. Rendered and measured in a browser, not
+                  predicted: the panel goes 169px -> 142.5px for a Pro coach
+                  (SHRINKS 26.5px, "Manage subscription" being the widest row
+                  anywhere in the menu) and 132.4px -> 142.5px for a free one
+                  (GROWS 10.1px). Height goes 191px -> 159px for both. Left
+                  alone because the panel is anchored right-0/top-full, so the
+                  top-right corner is pinned and only the left and bottom edges
+                  move, and because pinning would widen EVERY free coach's menu
+                  by ~44px at rest to fix a one-frame transition. ⚠️ If it does
+                  read badly on device the fix is one token: swap
+                  `w-max max-w-[176px]` for `w-[176px]`. Do not reach for a
+                  height or width TRANSITION instead — this app animates no
+                  panel geometry anywhere, and a first one belongs in its own
+                  pass. */}
+              {view === "main" ? (
                 <>
-                  <div
-                    role="presentation"
-                    title={coachName}
-                    className="px-3 pt-1.5 pb-2 text-[12px] text-[#8a8fa8] truncate"
+                {/* Identity, not an action: a plain div, so it is neither tappable
+                    nor focusable, and role="presentation" keeps it out of the
+                    menu's item list for screen readers. Guarded because the roster
+                    passes "" when the coach row has no name — an empty string here
+                    would render a blank line above a stray divider. `title` keeps
+                    the full name reachable on hover once it truncates. */}
+                {coachName && (
+                  <>
+                    <div
+                      role="presentation"
+                      title={coachName}
+                      className="px-3 pt-1.5 pb-2 text-[12px] text-[#8a8fa8] truncate"
+                    >
+                      {coachName}
+                    </div>
+                    {/* Inset by the menu's own p-1 rather than bled to the edges
+                        with a negative margin — the bleed pattern is what has been
+                        failing on iOS elsewhere in this header, and 4px of inset
+                        reads as deliberate in a rounded card. */}
+                    <div
+                      role="presentation"
+                      className="h-px mb-1"
+                      style={{ background: "#2a2d36" }}
+                    />
+                  </>
+                )}
+                {/* First, above Edit name, with Sign out staying last — that is
+                    the one action a thumb should not find by accident.
+
+                    ⚠️ Hidden entirely for a coach already on a paid plan rather
+                    than shown disabled: offering "Upgrade" to someone who has
+                    already upgraded is worse than offering nothing. Managing an
+                    existing subscription is a separate action (Billing Portal)
+                    and is not built yet, so a Pro coach currently sees the menu
+                    exactly as it was before this feature. */}
+                {!isPro && (
+                  <>
+                    <button
+                      role="menuitem"
+                      onClick={startUpgrade}
+                      disabled={upgrading}
+                      className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                      {upgrading ? "Starting…" : "Upgrade to Pro"}
+                    </button>
+                    {/* Inline rather than a toast: this menu has no toast, and the
+                        errors reachable here are configuration problems a coach
+                        cannot act on beyond retrying. Wraps rather than truncating
+                        so the message is actually readable in a 176px panel. */}
+                    {upgradeError && (
+                      <p className="px-3 pb-1.5 text-[12px] leading-snug text-red-400 whitespace-normal">
+                        {upgradeError}
+                      </p>
+                    )}
+                  </>
+                )}
+                {/* The mirror of "Upgrade to Pro" above: that row shows to a coach
+                    WITHOUT a subscription, this one to a coach WITH one, so the
+                    menu always offers exactly one billing action and never both.
+                    Cancelling is only meaningful for a subscriber, which is why
+                    isPro is the right condition and no new prop has to be threaded
+                    through the roster page.
+
+                    ⚠️ isPro is a page-load-old RENDER HINT, not the guard. The
+                    action re-reads the coach's own row and refuses if there is no
+                    stripe_customer_id — the same rule createCheckoutSession's
+                    already-subscribed guard follows, since a server action can be
+                    invoked with no UI in front of it.
+
+                    "Manage subscription" rather than "Cancel": the portal also
+                    carries invoices and the payment method, and an item reading
+                    "Cancel" would suggest it cancels on the spot rather than
+                    opening a screen where that is one of the options.
+
+                    ⚠️ IT IS THE WIDEST ITEM THIS MENU CAN RENDER. The label is
+                    135.0px at 14px in the app's font stack, against "Upgrade to
+                    Pro" at 98.4px and "Sign out" at 53.3px — so this row alone
+                    decides the panel's width, and the cap was raised to 176px to
+                    fit it. See the arithmetic on the panel above.
+
+                    ⚠️ A previous note here claimed "one pixel of slack". That was
+                    WRONG — it compared the row's 159px to the 160px cap without
+                    subtracting the panel's own 4px padding and 1px borders, which
+                    left only 126px for a 135px label. The label was overrunning
+                    its right padding by 9px, not fitting by 1px.
+
+                    Do not shorten this label back to make it fit a narrower
+                    panel; it was chosen deliberately over "Manage billing". Widen
+                    the cap instead, and redo the arithmetic above. */}
+                {isPro && (
+                  <>
+                    <button
+                      role="menuitem"
+                      onClick={openBillingPortal}
+                      disabled={portalPending}
+                      className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                      {portalPending ? "Opening…" : "Manage subscription"}
+                    </button>
+                    {/* Inline and wrapping, matching the upgrade error above — this
+                        panel has no toast, and a truncated message in a 176px
+                        panel is unreadable. */}
+                    {portalError && (
+                      <p className="px-3 pb-1.5 text-[12px] leading-snug text-red-400 whitespace-normal">
+                        {portalError}
+                      </p>
+                    )}
+                  </>
+                )}
+                <button
+                  role="menuitem"
+                  onClick={openEdit}
+                  className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
+                >
+                  Edit name
+                </button>
+                  {/* Opens the sub-view rather than acting. The chevron is the
+                      only thing distinguishing it from the terminal actions
+                      around it, so it is not decoration — every other row in
+                      this menu does something and closes, and this one goes
+                      somewhere. ml-auto pins it to the right edge, and it is the
+                      reason this row carries `gap-0` rather than the implicit
+                      spacing of a text-only row.
+
+                      ⚠️ Does NOT close the menu, unlike every other row here.
+                      That is the point of the pattern: the panel stays open and
+                      re-renders with different contents. */}
+                  <button
+                    role="menuitem"
+                    onClick={() => setView("help")}
+                    aria-label="Help and legal"
+                    className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
                   >
-                    {coachName}
-                  </div>
-                  {/* Inset by the menu's own p-1 rather than bled to the edges
-                      with a negative margin — the bleed pattern is what has been
-                      failing on iOS elsewhere in this header, and 4px of inset
-                      reads as deliberate in a rounded card. */}
+                    Help &amp; Legal
+                    <ChevronRight
+                      size={14}
+                      strokeWidth={2}
+                      className="ml-auto shrink-0 pl-1.5 text-reps-sub"
+                      aria-hidden="true"
+                    />
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setConfirmOpen(true);
+                    }}
+                    className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* The sub-view's header AND the way back, in one control —
+                      mirroring the coach-name row's position and weight in the
+                      main view. It returns to "main" and deliberately does NOT
+                      close the menu; closing from here is the click-away's job,
+                      and it closes the whole thing rather than stepping back a
+                      level.
+
+                      h-9 like every other row, so a 12px label still carries a
+                      36px target — the same size the actions above it have. */}
+                  <button
+                    onClick={() => setView("main")}
+                    aria-label="Back to profile menu"
+                    className="flex items-center gap-1 w-full h-9 pl-1.5 pr-3 rounded-[7px] text-left text-[12px] text-[#8a8fa8] whitespace-nowrap hover:bg-reps-raised hover:text-reps-ink transition-colors"
+                  >
+                    <ChevronLeft size={14} strokeWidth={2} className="shrink-0" aria-hidden="true" />
+                    Help &amp; Legal
+                  </button>
                   <div
                     role="presentation"
                     className="h-px mb-1"
                     style={{ background: "#2a2d36" }}
                   />
-                </>
-              )}
-              {/* First, above Edit name, with Sign out staying last — that is
-                  the one action a thumb should not find by accident.
+                  {/* ⚠️ FULL WEIGHT — 14px/text-reps-ink, matching Edit name and
+                      Sign out. An earlier build had these as a quieter tier
+                      because they sat as three extra rows INSIDE the main menu
+                      and had to recede from the account actions around them. In
+                      their own view they are the content, not a footnote, so
+                      subduing them here would just make the whole screen quiet.
 
-                  ⚠️ Hidden entirely for a coach already on a paid plan rather
-                  than shown disabled: offering "Upgrade" to someone who has
-                  already upgraded is worse than offering nothing. Managing an
-                  existing subscription is a separate action (Billing Portal)
-                  and is not built yet, so a Pro coach currently sees the menu
-                  exactly as it was before this feature. */}
-              {!isPro && (
-                <>
-                  <button
+                      ⚠️ FAQ LEADS. It is the only one of the three a coach opens
+                      voluntarily; the other two are documents you consult.
+
+                      ⚠️ NEW TAB ON ALL THREE, and this is its OWN reason — NOT a
+                      reuse of the signup-consent precedent. That one protects
+                      in-memory SignupProvider state, which nothing here has. The
+                      reason here: all three pages point their own back arrow at
+                      `/`, the MARKETING LANDING PAGE, not into the app. A coach
+                      who tapped it would be stranded outside their own app with
+                      no route back but signing in again. Browser back works; the
+                      on-page control lies. A new tab means the app tab is never
+                      navigated away from at all.
+
+                      ⚠️ NOT PrivacyFooter or a variant of it. That component
+                      deep-links students and parents to
+                      /privacy#students-and-minors, a section written TO parents.
+                      A coach needs all three pages and the TOP of /privacy, and
+                      widening it would hand students a /terms link they never
+                      agreed to.
+
+                      ⚠️ Closing the menu on tap even though the tab does not
+                      navigate: the coach returns to this tab afterwards, and a
+                      menu still hanging open reads as a UI that got stuck.
+                      Safe against staleness because `view` is normalized on the
+                      next open — see the state comment at the top of the file.
+
+                      ⚠️ THREE INLINE LINKS, NOT A COMPONENT. Every row in this
+                      menu repeats its class string inline and there is exactly
+                      one host. Same rule the billing portal follows above: if a
+                      second entry point ever appears, extract it then. */}
+                  <Link
                     role="menuitem"
-                    onClick={startUpgrade}
-                    disabled={upgrading}
-                    className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                    href="/faq"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
                   >
-                    {upgrading ? "Starting…" : "Upgrade to Pro"}
-                  </button>
-                  {/* Inline rather than a toast: this menu has no toast, and the
-                      errors reachable here are configuration problems a coach
-                      cannot act on beyond retrying. Wraps rather than truncating
-                      so the message is actually readable in a 176px panel. */}
-                  {upgradeError && (
-                    <p className="px-3 pb-1.5 text-[12px] leading-snug text-red-400 whitespace-normal">
-                      {upgradeError}
-                    </p>
-                  )}
-                </>
-              )}
-              {/* The mirror of "Upgrade to Pro" above: that row shows to a coach
-                  WITHOUT a subscription, this one to a coach WITH one, so the
-                  menu always offers exactly one billing action and never both.
-                  Cancelling is only meaningful for a subscriber, which is why
-                  isPro is the right condition and no new prop has to be threaded
-                  through the roster page.
-
-                  ⚠️ isPro is a page-load-old RENDER HINT, not the guard. The
-                  action re-reads the coach's own row and refuses if there is no
-                  stripe_customer_id — the same rule createCheckoutSession's
-                  already-subscribed guard follows, since a server action can be
-                  invoked with no UI in front of it.
-
-                  "Manage subscription" rather than "Cancel": the portal also
-                  carries invoices and the payment method, and an item reading
-                  "Cancel" would suggest it cancels on the spot rather than
-                  opening a screen where that is one of the options.
-
-                  ⚠️ IT IS THE WIDEST ITEM THIS MENU CAN RENDER. The label is
-                  135.0px at 14px in the app's font stack, against "Upgrade to
-                  Pro" at 98.4px and "Sign out" at 53.3px — so this row alone
-                  decides the panel's width, and the cap was raised to 176px to
-                  fit it. See the arithmetic on the panel above.
-
-                  ⚠️ A previous note here claimed "one pixel of slack". That was
-                  WRONG — it compared the row's 159px to the 160px cap without
-                  subtracting the panel's own 4px padding and 1px borders, which
-                  left only 126px for a 135px label. The label was overrunning
-                  its right padding by 9px, not fitting by 1px.
-
-                  Do not shorten this label back to make it fit a narrower
-                  panel; it was chosen deliberately over "Manage billing". Widen
-                  the cap instead, and redo the arithmetic above. */}
-              {isPro && (
-                <>
-                  <button
+                    FAQ
+                  </Link>
+                  <Link
                     role="menuitem"
-                    onClick={openBillingPortal}
-                    disabled={portalPending}
-                    className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
                   >
-                    {portalPending ? "Opening…" : "Manage subscription"}
-                  </button>
-                  {/* Inline and wrapping, matching the upgrade error above — this
-                      panel has no toast, and a truncated message in a 176px
-                      panel is unreadable. */}
-                  {portalError && (
-                    <p className="px-3 pb-1.5 text-[12px] leading-snug text-red-400 whitespace-normal">
-                      {portalError}
-                    </p>
-                  )}
+                    Privacy Policy
+                  </Link>
+                  <Link
+                    role="menuitem"
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
+                  >
+                    Terms of Service
+                  </Link>
                 </>
               )}
-              <button
-                role="menuitem"
-                onClick={openEdit}
-                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
-              >
-                Edit name
-              </button>
-              {/* ─── Reference group ───────────────────────────────────────
-                  ⚠️ WHY IT EXISTS: a signed-in coach could not reach /faq,
-                  /privacy or /terms from ANYWHERE in the instructor app. Every
-                  link to all three lived on the public landing page, so the
-                  only route in was to sign out or type the URL. This menu is
-                  the fix, and it is deliberately the ONLY host — see below.
-
-                  ⚠️ NOT PrivacyFooter, and not a variant of it. That component
-                  sends students and parents to ONE page, deep-linked to
-                  /privacy#students-and-minors because that section is written
-                  to parents. A coach needs all THREE pages and must land on
-                  the TOP of /privacy, which is written to them. Widening
-                  PrivacyFooter would also hand students a /terms link they
-                  never agreed to.
-
-                  ⚠️ ROSTER-ONLY, and that is the decision rather than a
-                  limitation. An earlier note in CLAUDE.md claimed this menu
-                  renders on every instructor screen; it does not — the roster
-                  is its single call site. A persistent footer was the
-                  alternative and was rejected: four of the eight coach screens
-                  end in a `sticky bottom-0 mt-auto` CTA, so a footer would sit
-                  under a sticky element or fight it (the same argument that
-                  keeps PrivacyFooter off the student log screen), and the only
-                  shared wrapper — instructor/layout.tsx — is shared with the
-                  signup tree, which already carries its own consent notice.
-                  Students get one visit and need this surfaced; a coach
-                  returns daily and goes LOOKING for it, so the account menu is
-                  where it belongs.
-
-                  ⚠️ ONE STEP QUIETER THAN THE ACTIONS ABOVE — 13px in
-                  text-reps-sub, against the 14px text-reps-ink of Upgrade /
-                  Manage subscription / Edit name. Three tiers of weight, not
-                  six flat rows: the account actions are what a coach comes
-                  here to DO, these are reference material they come here to
-                  READ. Height stays h-9 so the tap targets match the rest of
-                  the menu; only size and colour drop.
-
-                  ⚠️ FAQ LEADS, deliberately. It is the only one of the three a
-                  coach would open voluntarily — the other two are documents
-                  you consult, not pages you visit.
-
-                  ⚠️ NEW TAB ON ALL THREE, and this is its OWN decision — NOT a
-                  reuse of the signup-consent precedent. That one opens in a new
-                  tab to protect in-memory SignupProvider state, which nothing
-                  here has. The reason here is different: all three pages set
-                  their own back arrow to `/` — the MARKETING LANDING PAGE, not
-                  into the app. So a signed-in coach who taps Privacy and then
-                  taps that page's own back control is stranded outside their
-                  own app, with no route back in but signing in again. Browser
-                  back works; the on-page control lies. Opening in a new tab
-                  means the app tab is never navigated away from at all.
-
-                  ⚠️ The panel cap is UNCHANGED at 176px, and that was MEASURED
-                  in the app's own font stack rather than estimated. At 13px:
-                  "Terms of Service" 101.8px, "Privacy Policy" 83.9px, "FAQ"
-                  25.1px — so the widest of the three needs a 135.8px panel,
-                  against the 169px "Manage subscription" already demands. No
-                  row added here widens the menu at any plan state, and the cap
-                  goes on truncating a long coach name, which is the behaviour
-                  it actually exists for. ⚠️ Re-measure before trusting these
-                  if the labels or the type size ever change.
-
-                  ⚠️ THREE INLINE LINKS, NOT A COMPONENT. Every other row in
-                  this menu repeats its class string inline, and there is
-                  exactly one host. Same rule the billing portal follows a few
-                  lines up: if a second entry point ever appears, extract it
-                  then, the same way and for the same reason. */}
-              <div
-                role="presentation"
-                className="h-px my-1"
-                style={{ background: "#2a2d36" }}
-              />
-              {/* Closes the menu even though the tab does not navigate — the
-                  coach comes back to this tab afterwards, and returning to a
-                  menu still hanging open reads as a UI that got stuck. */}
-              <Link
-                role="menuitem"
-                href="/faq"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[13px] text-reps-sub whitespace-nowrap hover:bg-reps-raised hover:text-reps-ink transition-colors"
-              >
-                FAQ
-              </Link>
-              <Link
-                role="menuitem"
-                href="/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[13px] text-reps-sub whitespace-nowrap hover:bg-reps-raised hover:text-reps-ink transition-colors"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                role="menuitem"
-                href="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[13px] text-reps-sub whitespace-nowrap hover:bg-reps-raised hover:text-reps-ink transition-colors"
-              >
-                Terms of Service
-              </Link>
-              {/* ⚠️ The SECOND divider, and it is load-bearing rather than
-                  decoration. Sign out stays last and stays full weight — it is
-                  still the one action a thumb should not find by accident —
-                  but with the quiet reference group directly above it, a single
-                  divider would have let it read as the fourth item in that
-                  group. Two dividers is the cost of keeping it separate. */}
-              <div
-                role="presentation"
-                className="h-px my-1"
-                style={{ background: "#2a2d36" }}
-              />
-              <button
-                role="menuitem"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setConfirmOpen(true);
-                }}
-                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[14px] text-reps-ink whitespace-nowrap hover:bg-reps-raised transition-colors"
-              >
-                Sign out
-              </button>
             </div>
           </>
         )}
