@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { addPlayer } from "./actions";
 import { useUpgrade } from "@/lib/use-upgrade";
 import { PRO_STUDENT_LIMIT } from "@/lib/entitlement";
-import { SMS_CONSENT_SCRIPT } from "@/lib/consent";
 
 const INPUT =
   "w-full rounded-[10px] border border-[#2a2d36] bg-[#1c1f26] px-[14px] py-[13px] text-base text-white outline-none transition-colors placeholder:text-[#5a5f72] focus:border-[#378add]";
@@ -172,42 +171,209 @@ function CeilingBlock({
   );
 }
 
-// The "what to say" disclosure, collapsed by default.
+// useLayoutEffect warns when a client component is server-rendered, and this one
+// is. Same shim ScrollToTop uses: fall back on the server, keep pre-paint timing
+// in the browser — which is what stops the tooltip flashing at left:0 before it
+// is measured and moved.
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+// The consent affordance: a 16px "i" beside the helper line, revealing the
+// requirement on tap.
 //
-// ⚠️ Reuses InactiveGroup's shape rather than inventing chrome — it is the app's
-// only content expand/collapse (the other three aria-expanded controls are
-// dropdown menus). Same 44px target with a negative margin cancelling the added
-// height, same rotating chevron so the control reads as one thing in two states.
+// ⚠️ REPLACED a standalone consent sentence plus a "What to say" disclosure that
+// quoted the script from /terms verbatim. That was pulled after a design review:
+// the script read as an unfamiliar pattern on a screen whose other copy is one
+// short line. The REQUIREMENT survives; the script does not appear here.
+//
+// ⚠️ A FLEX ROW, not an inline button inside the <p>. The first attempt put a
+// 44px inline-flex button in the paragraph with -my-[14px] to cancel the height.
+// THAT DOES NOT WORK: vertical margins on an INLINE-level box are ignored when
+// the line box is measured, so the 44px button inflated the whole line to 44px —
+// which is what made the gap under the phone field look wrong and the icon look
+// like it was drifting away from the text. In a flex row the same negative
+// margin DOES reduce the item's outer size, which is why the identical trick is
+// correct in InactiveGroup and was wrong here.
+//
+// ⚠️ NO TOOLTIP PATTERN EXISTS IN THIS APP. The dismissal borrows what the four
+// overflow menus use — a full-screen click-away at z-40, panel at z-50 — but the
+// SIZING is its own. Those panels are min-w-[180px] and were tuned for labels
+// like "Archive"; a sentence in that width wraps to a skinny column.
 //
 // ⚠️ type="button" is LOAD-BEARING. This sits inside the add-player <form>, and
-// a bare <button> defaults to type="submit" — tapping "What to say" would
-// submit the form and add the student.
-function ConsentScript() {
+// a bare <button> defaults to type="submit" — tapping the icon would add the
+// student.
+function ConsentInfo({ isParent, children }: { isParent: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const iconRef = useRef<HTMLSpanElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  // null until measured, so the box never paints at its unpositioned default.
+  const [pos, setPos] = useState<{ left: number; caret: number } | null>(null);
+
+  // ⚠️ MEASURED, not CSS. Centring on the icon is trivial in CSS; keeping the
+  // box on screen when centring would push it off is not, because the icon sits
+  // at the END of a sentence whose length changes with the student's name and
+  // the tab. So: centre on the icon, clamp the BOX to the column, then move the
+  // CARET within the box to keep pointing at the icon's real position. The box
+  // gives up its centring before the caret gives up its target.
+  useIsoLayoutEffect(() => {
+    if (!open) { setPos(null); return; }
+    const wrap = wrapRef.current, icon = iconRef.current, box = boxRef.current;
+    if (!wrap || !icon || !box) return;
+    const w = wrap.getBoundingClientRect();
+    const ic = icon.getBoundingClientRect();
+    const bw = box.offsetWidth;
+    const iconCentre = ic.left + ic.width / 2 - w.left;
+    const left = Math.max(0, Math.min(iconCentre - bw / 2, w.width - bw));
+    // Kept off the rounded corners so the caret never straddles one.
+    const caret = Math.min(Math.max(iconCentre - left, 14), bw - 14);
+    setPos({ left, caret });
+  }, [open, isParent, children]);
+
   return (
-    <div className="mt-1">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="-my-2 flex h-11 items-center gap-1.5 text-[13px] text-[#8a8fa8] transition-colors hover:text-white"
-        style={{ WebkitTapHighlightColor: "transparent" }}
-      >
-        What to say
-        <span
-          aria-hidden="true"
-          className="text-[10px] transition-transform"
-          style={{ transform: open ? "rotate(90deg)" : "none" }}
+    // Owns the row's top margin so the text-to-field gap matches the 8px the
+    // label above the field uses. The paragraph itself carries none.
+    <div ref={wrapRef} className="relative mt-2">
+      <p className="flex items-center gap-1.5 text-[13px] text-[#5a5f72]">
+        <span>{children}</span>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label="Why we ask"
+          // 44px target around a 16px glyph. As a FLEX ITEM the negative margin
+          // genuinely cancels the extra, so the row stays 16px tall.
+          className="-m-[14px] flex h-11 w-11 shrink-0 items-center justify-center"
+          style={{ WebkitTapHighlightColor: "transparent" }}
         >
-          ▶
-        </span>
-      </button>
-      {/* Verbatim from /terms via one shared constant. This is the first place
-          that script is reachable at the moment a coach needs it. */}
+          <span
+            ref={iconRef}
+            aria-hidden="true"
+            className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold leading-none"
+            style={{ border: "1px solid #5a5f72", color: "#5a5f72" }}
+          >
+            i
+          </span>
+        </button>
+      </p>
       {open && (
-        <p className="mt-2 text-[13px] italic leading-relaxed text-[#8a8fa8]">
-          &ldquo;{SMS_CONSENT_SCRIPT}&rdquo;
-        </p>
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          {/* ⚠️ IT HAS TO READ AS FLOATING, and the first attempt did not. It was
+              full-bleed (left-0 right-0) on #22252e, which is 1.08:1 against the
+              #1c1f26 the inputs and the disabled Add button use — a full-width
+              rectangle in near-identical grey reads as one more form field, and
+              it landed on top of the submit button.
+
+              Four changes, each doing one job:
+
+              1. AUTO WIDTH, capped. w-max sizes to the sentence; max-w-[260px]
+                 is ~67% of a 390px phone. A FIXED cap rather than a vw unit
+                 because the instructor shell is max-w-[390px] and centred — on
+                 a desktop window, 68vw would blow well past the column.
+
+              2. #2a2d36 SURFACE, not #22252e and not #1c1f26. ⚠️ The
+                 deactivation modals use #1c1f26 — the exact colour of the
+                 disabled button and the inputs — so copying them would have
+                 made this worse. #2a2d36 is the app's own line colour used as a
+                 surface, the lightest step that still belongs to the palette.
+
+              3. OPENS UPWARD (bottom-full), so it can never cover "Add player".
+                 There is always more room above here: the phone field, the
+                 label and the name field are all above it, and floating over an
+                 input is what an overlay is FOR. Covering the primary action is
+                 not.
+
+              4. rounded-[10px] and a #3a3d46 border, the app's dominant radius
+                 and its brightest line, plus the shadow the menus already use.
+
+              ⚠️ Text is #c8cdd8, NOT the #8a8fa8 used elsewhere. On this lighter
+              surface reps-sub measures 4.31:1 — under AA. reps-label is 8.63:1.
+
+              ⚠️ Copy states the requirement and must not soften it. The Aug 16
+              /faq removal pulled an answer reading "if you already have that
+              relationship, most coaches do, you're fine" for being weaker than
+              /terms and /privacy. None of that framing returns.
+
+              ⚠️ The two variants differ only in WHO to ask, never in whether
+              consent is needed. Forking the standard by recipient is the
+              divergence that removal fixed. */}
+          <div
+            ref={boxRef}
+            role="tooltip"
+            className="absolute bottom-full z-50 mb-3 w-max max-w-[260px] rounded-[10px] px-3 py-2.5 text-[12px] leading-relaxed shadow-xl"
+            style={{
+              background: "#2a2d36",
+              border: "1px solid #3a3d46",
+              color: "#c8cdd8",
+              left: pos ? pos.left : 0,
+              // Hidden for the frame before measurement. useIsoLayoutEffect runs
+              // pre-paint so this should never be seen, but it costs nothing and
+              // removes any chance of a jump from left:0.
+              visibility: pos ? "visible" : "hidden",
+            }}
+          >
+            {isParent
+              ? "Get the parent's OK before adding this number."
+              : "Get their OK before adding this number. If they're younger, ask a parent instead."}
+            {/* ⚠️ HAND-BUILT, and this is the app's FIRST tooltip — treat it as
+                the template for any future info affordance. There is no
+                popover-with-arrow anywhere in this codebase and no library that
+                provides one: the dependencies are Supabase, Stripe, Next, React
+                and lucide, which is icons only. Every other "arrow" in the app
+                is a back-link glyph.
+
+                ⚠️ TWO STACKED CSS TRIANGLES, not one rotated square. The square
+                version shipped first and read as flush and rounded against the
+                icon rather than as a point — a 45deg rotation puts the box's
+                corner radius and its two borders on the diagonal, so the tip is
+                never crisp. The border-trick triangle has no rotation and no
+                corners, so it cannot pick up either artifact.
+
+                The outline is faked by layering: a 7px triangle in the border
+                colour behind a 6px triangle in the fill colour, which leaves a
+                1px sliver of border showing along both slanted edges and at the
+                tip.
+
+                ⚠️ BOTH sit 1px higher than the box's outer edge (-6 / -5 rather
+                than -7 / -6) so their flat tops cover the box's own 1px bottom
+                border across the caret's width. Without that, a hairline runs
+                straight across the base of the arrow and it reads as a separate
+                shape stuck underneath the box.
+
+                translateX(-50%) means `left` is the caret's CENTRE, which is
+                what the measurement above computes. Positioning and clamping are
+                untouched — only the shape changed. */}
+            <span
+              aria-hidden="true"
+              className="absolute"
+              style={{
+                bottom: -6,
+                left: pos ? pos.caret : 0,
+                transform: "translateX(-50%)",
+                width: 0,
+                height: 0,
+                borderLeft: "7px solid transparent",
+                borderRight: "7px solid transparent",
+                borderTop: "7px solid #3a3d46",
+              }}
+            />
+            <span
+              aria-hidden="true"
+              className="absolute"
+              style={{
+                bottom: -5,
+                left: pos ? pos.caret : 0,
+                transform: "translateX(-50%)",
+                width: 0,
+                height: 0,
+                borderLeft: "6px solid transparent",
+                borderRight: "6px solid transparent",
+                borderTop: "6px solid #2a2d36",
+              }}
+            />
+          </div>
+        </>
       )}
     </div>
   );
@@ -387,49 +553,17 @@ export default function AddPlayerForm({
           onChange={(e) => setPhone(e.target.value)}
           className={INPUT}
         />
-        {isParent ? (
-          // One paragraph, not two. The second line used to be its own <p> with
-          // mt-0.5 — 2px, too small to read as a deliberate paragraph break and
-          // too large to read as continuous text, so it landed as neither.
-          <p className="mt-2 text-[13px] text-[#5a5f72]">
-            They&apos;ll get a text when you assign work — to share with{" "}
-            {firstName || "them"}. Great for younger students.
-          </p>
-        ) : (
-          <p className="mt-2 text-[13px] text-[#5a5f72]">
-            They&apos;ll get a text when you assign work.
-          </p>
-        )}
+        {/* One line per tab. ConsentInfo owns the paragraph and its spacing, so
+            the icon sits in the same flex row as the text rather than inside it.
+            ⚠️ The parent line lost "when you assign work" and "Great for younger
+            students" to get to one line. "They" was already correct — it is the
+            recipient, not the coach — and the em dash went with the trim. */}
+        <ConsentInfo isParent={isParent}>
+          {isParent
+            ? `They'll get a text to share with ${firstName || "them"}.`
+            : "They'll get a text when you assign work."}
+        </ConsentInfo>
 
-        {/* ⚠️ THE CONSENT REQUIREMENT, stated where a coach can act on it. It
-            lived only in /terms and /privacy — documents nothing in the app
-            linked to until Aug 17 — while this screen, the one place someone is
-            about to type another person's number, said nothing.
-
-            ⚠️ SHARED ACROSS BOTH TOGGLE STATES on purpose. /terms and /privacy
-            both say "student or parent phone number" in one breath; two consent
-            standards is precisely the divergence the Aug 16 /faq removal ended.
-            The parenthetical carries the minors distinction /privacy's minors
-            section establishes — permission from the student OR their parent —
-            because this is the only screen where that is actionable.
-
-            ⚠️ It STATES an obligation, it does not reassure. The pulled /faq
-            answer read "if you already have that relationship, most coaches do,
-            you're fine... just one text instead of many" and was removed for
-            being softer than the documents it summarised. None of that framing
-            comes back: no "if you already", no "most coaches", no "just one
-            text".
-
-            ⚠️ #8a8fa8, not the #5a5f72 the line above uses. That value measures
-            3.11:1 on this background and already fails AA — a pre-existing
-            defect, not introduced here, and left alone as out of scope. This
-            line is a legal obligation and gets 6.17:1. The side effect is that
-            it reads one step brighter than the informational line above it,
-            which is the correct ranking anyway. */}
-        <p className="mt-2 text-[13px] text-[#8a8fa8]">
-          Get their OK first (or a parent&apos;s, if they&apos;re younger) before adding this number.
-        </p>
-        <ConsentScript />
 
         {/* Submit */}
         <button
