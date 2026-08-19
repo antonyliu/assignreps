@@ -1296,7 +1296,15 @@ Both paths always send to `players.phone`. `send_to_parent` is still not consult
 
 ⚠️ **Live mode does not exist yet.** No live product, price or coupon has been created. None of the test values above work in live mode — Stripe keeps the two entirely separate, so *every* ID changes at launch, and the whole dashboard sequence has to be repeated. `sk_test_` vs `sk_live_` is the tell for which mode a key is in.
 
-⚠️ **Still pending:** all three Stripe env vars in Vercel, **staging AND prod** — alongside the `TWILIO_FROM_NUMBER` update already outstanding in both.
+✅ **PROD now carries all three Stripe env vars, in TEST mode** (Aug 18 2026), and a real checkout has completed against them — see *Verified end to end — ON PROD*. So prod is a working **test-mode** billing environment, not an unconfigured one.
+
+✅ **Test-mode webhook endpoint registered:** `we_1U61rNJoxKRCY55iM5xU8jRB` → `https://www.assignreps.com/api/stripe/webhook`, subscribed to exactly the three events the handler acts on. ⚠️ **`www`, not the apex** — see the prod verification block for why the apex silently fails.
+
+⚠️ **Still pending:** the three Stripe env vars on **STAGING**, which has none — an unsigned POST to its webhook still answers `500 "Webhook not configured"`.
+
+⚠️ **`TWILIO_FROM_NUMBER` is NOT actually pending, and this entry was wrong twice.** No code reads it — `sms.ts` sends via `MessagingServiceSid`, as its own comment says. The var in `.env.local` still holds the **released** number `+15625487985`, so it is dead config carrying a dead value rather than an outstanding task. Delete it or correct it, but nothing is broken by it.
+
+⚠️ **PROD ON TEST KEYS IS A REAL STATE WITH A REAL CONSEQUENCE, not a halfway house.** Because local, staging and prod share one Supabase project, `subscription_status` is now writable from prod by anyone completing a **test** checkout with card `4242`. That is currently harmless — every environment is on test keys — but it is the shared-database hazard from the go-live investigation, now armed rather than theoretical. It bites the moment prod switches to `sk_live_` while any other environment stays on `sk_test_`.
 
 ---
 
@@ -1386,6 +1394,58 @@ Blocks a non-entitled coach's **4th** player and offers the paywall instead. Thr
 ⚠️ If none match it does **not** guess: logs and returns 200. An unmatchable event is not transient, and a 500 would have Stripe retrying it for days.
 
 **Status codes are the retry protocol**, not decoration: `400` bad signature (never retry) · `500` missing secret (we are broken; retry succeeds once fixed, so events aren't lost) · `500` write or retrieve failure (transient) · `200` handled or ignorable. ⚠️ A `200` on a failed write marks the event delivered and loses it permanently.
+
+### ✅ Verified end to end — ON PROD (Aug 18 2026)
+
+**The first time the whole loop has been proven on production rather than locally.** Every earlier entry in this section was localhost with `stripe listen` forwarding; this one is prod's own deployed route receiving a real Stripe-signed event over the internet. ⚠️ **Test mode** — prod carries `sk_test_` keys. This is not a live-mode verification and does not substitute for one.
+
+**The chain, each link observed rather than inferred:** a fresh coach (`tony@liudesign.com`) tapped **Upgrade to Pro** on prod → Checkout completed with card `4242` → the webhook fired to the registered endpoint → the service-role write landed → `ProfileMenu` flipped from "Upgrade to Pro" to "Manage subscription".
+
+| Side | Value |
+|---|---|
+| Stripe subscription | `sub_1U62CkJoxKRCY55ilnlWJ3Kh`, status **`active`**, `livemode: false` |
+| Stripe customer | `cus_V6EWjosSs1ZLHu` |
+| Price | `price_1U0EVsJoxKRCY55iExnvBMmP` — $10.00/mo, the correct one |
+| `subscription_status` | `active` |
+| `stripe_customer_id` | `cus_V6EWjosSs1ZLHu` — **matches Stripe** |
+| `stripe_subscription_id` | `sub_1U62CkJoxKRCY55ilnlWJ3Kh` — **matches Stripe** |
+
+✅ **`subscription_data.metadata.coach_id` is populated on the live subscription object** (`48217f54-…`), so the webhook's *second* route home is confirmed working in production, not just the `client_reference_id` one.
+
+✅ **THE AUG 3 REGRESSION WAS RE-CONFIRMED ON PROD, not assumed.** All four coach rows were read after the write: RJ (`riselongbeach@gmail.com`) still `active` and untouched, Coach Tony untouched, the canceled row still `canceled`. The customer-level resolution did not spray.
+
+⚠️ **The webhook endpoint is a DASHBOARD endpoint, and it is registered at the `www` host** — `we_1U61rNJoxKRCY55iM5xU8jRB` → `https://www.assignreps.com/api/stripe/webhook`, subscribed to exactly the three events `HANDLED` contains. **The apex would have failed silently:** `assignreps.com` 308-redirects to `www`, and Stripe does not follow redirects on delivery. Register the live endpoint at `www` too.
+
+⚠️ **A `stripe trigger checkout.session.completed` was run first and proved LESS than it appears.** It delivered (`pending_webhooks: 0`, so prod returned 2xx), which confirms DNS → TLS → routing → `STRIPE_WEBHOOK_SECRET` → HMAC verification. But the fixture creates a **`mode: "payment"`** session, which the handler rejects at its own `session.mode !== "subscription"` guard three steps before coach resolution. **It never touched the database.** Only the real checkout above proves the business logic. Do not treat a passing `stripe trigger` as an end-to-end test.
+
+⚠️ **Dated Aug 18 2026 from the git clock, deliberately.** Stripe's timestamps on all of the above read **Aug 19** because they are UTC and this was a Pacific evening — the exact confusion ranked item 13 exists to correct. Use the local date, as `CHANGELOG.md` does.
+
+### ✅ Verified end to end — CANCELLATION ON PROD (Aug 18 2026)
+
+**The last unverified piece of the billing system, and it is now closed.** Cancel-at-period-end had only ever been proven locally (Aug 17); this is prod's own deployed portal action, prod's Stripe dashboard portal configuration, and prod's webhook. ⚠️ **Still test mode.**
+
+Tony cancelled the throwaway `tony@liudesign.com` subscription through **ProfileMenu → Manage subscription** on prod — the real Customer Portal, not a simulated API call.
+
+| Field | Value |
+|---|---|
+| `status` | **`active`** — correct; Pro is kept until the period ends |
+| `cancel_at` | `1789796303` = **2026-09-19T05:38:23Z** |
+| item `current_period_end` | `1789796303` — **EXACT MATCH** |
+| `canceled_at` | 2026-08-19T05:42:56Z (when the button was pressed) |
+| `ended_at` | `null` |
+| `cancel_at_period_end` | **`false`** — the dahlia quirk, reproduced |
+
+✅ **`billing_portal.session.created` (`bps_1U62GtJoxKRCY55igHDwE4Gy`) fired at 05:42:43**, which is independent proof that `createPortalSession()` executed on prod and Stripe minted a real portal session — not merely that the UI row rendered.
+
+✅ **`customer.subscription.updated` delivered**, `pending_webhooks: 0`, so prod's webhook returned 2xx for a genuine cancellation event.
+
+⚠️ **`subscription_status` in the database still reads `active`, and that is the CORRECT result, not a missed write.** Stripe holds the subscription `active` until the period actually ends; `isEntitled()` allows `active`; so the coach keeps Pro until **2026-09-19**, which is exactly what `/faq` promises. The row flips to `canceled` when `customer.subscription.deleted` fires at period end. **Do not "fix" this into an immediate downgrade.**
+
+⚠️ **NEW dahlia finding, and it makes the existing instruction incomplete.** This file and two code comments say *"compare `cancel_at` against `current_period_end`"*. On `2026-07-29.dahlia` the **top-level `subscription.current_period_end` is `null`** — the field has moved onto the subscription **item** (`subscription.items.data[0].current_period_end`). Following the instruction literally compares a real timestamp against `null`, concludes the cancellation was *not* scheduled for period end, and raises a false alarm — the same class of scare `cancel_at_period_end` already caused once. **Read the period end off the ITEM.**
+
+✅ **The app is immune to both quirks by construction, which was checked rather than assumed.** No executable code anywhere in `src/` reads `cancel_at`, `cancel_at_period_end` or `current_period_end` — the only occurrences are comments. The webhook writes `effective.status` and nothing else, so these are **verification traps, not runtime bugs**.
+
+✅ **`/faq`'s cancel answer is now true in production**, not just locally: cancellation is reachable from the coach's own profile, and access genuinely runs to the end of the paid period. ⚠️ It remains hostage to the dashboard portal setting staying on "At end of billing period" — **and that setting must be made again in live mode**, where none of tonight's verification carries over.
 
 ### ✅ Verified end to end — the gate (Aug 4 2026)
 
