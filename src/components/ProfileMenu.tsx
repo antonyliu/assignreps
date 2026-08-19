@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { User } from "lucide-react";
@@ -353,6 +354,122 @@ export default function ProfileMenu({
               >
                 Edit name
               </button>
+              {/* ─── Reference group ───────────────────────────────────────
+                  ⚠️ WHY IT EXISTS: a signed-in coach could not reach /faq,
+                  /privacy or /terms from ANYWHERE in the instructor app. Every
+                  link to all three lived on the public landing page, so the
+                  only route in was to sign out or type the URL. This menu is
+                  the fix, and it is deliberately the ONLY host — see below.
+
+                  ⚠️ NOT PrivacyFooter, and not a variant of it. That component
+                  sends students and parents to ONE page, deep-linked to
+                  /privacy#students-and-minors because that section is written
+                  to parents. A coach needs all THREE pages and must land on
+                  the TOP of /privacy, which is written to them. Widening
+                  PrivacyFooter would also hand students a /terms link they
+                  never agreed to.
+
+                  ⚠️ ROSTER-ONLY, and that is the decision rather than a
+                  limitation. An earlier note in CLAUDE.md claimed this menu
+                  renders on every instructor screen; it does not — the roster
+                  is its single call site. A persistent footer was the
+                  alternative and was rejected: four of the eight coach screens
+                  end in a `sticky bottom-0 mt-auto` CTA, so a footer would sit
+                  under a sticky element or fight it (the same argument that
+                  keeps PrivacyFooter off the student log screen), and the only
+                  shared wrapper — instructor/layout.tsx — is shared with the
+                  signup tree, which already carries its own consent notice.
+                  Students get one visit and need this surfaced; a coach
+                  returns daily and goes LOOKING for it, so the account menu is
+                  where it belongs.
+
+                  ⚠️ ONE STEP QUIETER THAN THE ACTIONS ABOVE — 13px in
+                  text-reps-sub, against the 14px text-reps-ink of Upgrade /
+                  Manage subscription / Edit name. Three tiers of weight, not
+                  six flat rows: the account actions are what a coach comes
+                  here to DO, these are reference material they come here to
+                  READ. Height stays h-9 so the tap targets match the rest of
+                  the menu; only size and colour drop.
+
+                  ⚠️ FAQ LEADS, deliberately. It is the only one of the three a
+                  coach would open voluntarily — the other two are documents
+                  you consult, not pages you visit.
+
+                  ⚠️ NEW TAB ON ALL THREE, and this is its OWN decision — NOT a
+                  reuse of the signup-consent precedent. That one opens in a new
+                  tab to protect in-memory SignupProvider state, which nothing
+                  here has. The reason here is different: all three pages set
+                  their own back arrow to `/` — the MARKETING LANDING PAGE, not
+                  into the app. So a signed-in coach who taps Privacy and then
+                  taps that page's own back control is stranded outside their
+                  own app, with no route back in but signing in again. Browser
+                  back works; the on-page control lies. Opening in a new tab
+                  means the app tab is never navigated away from at all.
+
+                  ⚠️ The panel cap is UNCHANGED at 176px, and that was MEASURED
+                  in the app's own font stack rather than estimated. At 13px:
+                  "Terms of Service" 101.8px, "Privacy Policy" 83.9px, "FAQ"
+                  25.1px — so the widest of the three needs a 135.8px panel,
+                  against the 169px "Manage subscription" already demands. No
+                  row added here widens the menu at any plan state, and the cap
+                  goes on truncating a long coach name, which is the behaviour
+                  it actually exists for. ⚠️ Re-measure before trusting these
+                  if the labels or the type size ever change.
+
+                  ⚠️ THREE INLINE LINKS, NOT A COMPONENT. Every other row in
+                  this menu repeats its class string inline, and there is
+                  exactly one host. Same rule the billing portal follows a few
+                  lines up: if a second entry point ever appears, extract it
+                  then, the same way and for the same reason. */}
+              <div
+                role="presentation"
+                className="h-px my-1"
+                style={{ background: "#2a2d36" }}
+              />
+              {/* Closes the menu even though the tab does not navigate — the
+                  coach comes back to this tab afterwards, and returning to a
+                  menu still hanging open reads as a UI that got stuck. */}
+              <Link
+                role="menuitem"
+                href="/faq"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[13px] text-reps-sub whitespace-nowrap hover:bg-reps-raised hover:text-reps-ink transition-colors"
+              >
+                FAQ
+              </Link>
+              <Link
+                role="menuitem"
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[13px] text-reps-sub whitespace-nowrap hover:bg-reps-raised hover:text-reps-ink transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                role="menuitem"
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center w-full h-9 px-3 rounded-[7px] text-left text-[13px] text-reps-sub whitespace-nowrap hover:bg-reps-raised hover:text-reps-ink transition-colors"
+              >
+                Terms of Service
+              </Link>
+              {/* ⚠️ The SECOND divider, and it is load-bearing rather than
+                  decoration. Sign out stays last and stays full weight — it is
+                  still the one action a thumb should not find by accident —
+                  but with the quiet reference group directly above it, a single
+                  divider would have let it read as the fourth item in that
+                  group. Two dividers is the cost of keeping it separate. */}
+              <div
+                role="presentation"
+                className="h-px my-1"
+                style={{ background: "#2a2d36" }}
+              />
               <button
                 role="menuitem"
                 onClick={() => {
