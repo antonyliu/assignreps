@@ -314,12 +314,18 @@ export default function ProfileMenu({
                   alone because the panel is anchored right-0/top-full, so the
                   top-right corner is pinned and only the left and bottom edges
                   move, and because pinning would widen EVERY free coach's menu
-                  by ~44px at rest to fix a one-frame transition. ⚠️ If it does
-                  read badly on device the fix is one token: swap
-                  `w-max max-w-[176px]` for `w-[176px]`. Do not reach for a
-                  height or width TRANSITION instead — this app animates no
-                  panel geometry anywhere, and a first one belongs in its own
-                  pass. */}
+                  by ~44px at rest to fix a one-frame transition.
+
+                  ✅ DEVICE-TESTED Aug 18 2026 AND ACCEPTED — the resize reads
+                  fine on a real phone, so `w-max` stays and nothing here needs
+                  revisiting. Recorded because the numbers look alarming written
+                  down and this is exactly the kind of thing that gets
+                  re-flagged by someone reading the deltas cold. If it is ever
+                  reopened the lever is one token — swap `w-max max-w-[176px]`
+                  for `w-[176px]` — but that is a change of mind, not an
+                  outstanding fix. ⚠️ Do not reach for a height or width
+                  TRANSITION instead: this app animates no panel geometry
+                  anywhere, and a first one belongs in its own pass. */}
               {view === "main" ? (
                 <>
                 {/* Identity, not an action: a plain div, so it is neither tappable
