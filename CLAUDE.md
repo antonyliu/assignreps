@@ -1294,9 +1294,13 @@ Both paths always send to `players.phone`. `send_to_parent` is still not consult
 - Env var names: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET` — see `.env.local.example`
 - Schema: three columns on `coaches` — see **`coaches` billing columns** and **`coaches` write protection** in Key schema notes
 
-⚠️ **Live mode does not exist yet.** No live product, price or coupon has been created. None of the test values above work in live mode — Stripe keeps the two entirely separate, so *every* ID changes at launch, and the whole dashboard sequence has to be repeated. `sk_test_` vs `sk_live_` is the tell for which mode a key is in.
+✅ **LIVE MODE EXISTS AS OF Aug 18–19 2026, and PROD RUNS ON IT.** Live keys were deployed to prod at ~11:38pm Aug 18, a live webhook endpoint was registered ~11:32pm at `https://www.assignreps.com/api/stripe/webhook` (same three events), and a real live checkout has since completed end to end — see *Verified end to end — LIVE MODE ON PROD*. ⚠️ **Test and live still share nothing:** every id differs, and the test values listed above are meaningless in live.
 
-✅ **PROD now carries all three Stripe env vars, in TEST mode** (Aug 18 2026), and a real checkout has completed against them — see *Verified end to end — ON PROD*. So prod is a working **test-mode** billing environment, not an unconfigured one.
+⚠️ **The live-mode ids are NOT recorded in this file, deliberately** — the CLI here holds test credentials only, so anything written down would be transcribed rather than verified, which is the class of claim this file has been burned by before. Read them from the live dashboard.
+
+⚠️ **RJ WAS PROVISIONED BY HAND, NOT THROUGH CHECKOUT.** His live subscription was created directly in the Stripe dashboard with a "RJ Free Access, 100% off forever" coupon (first invoice $0.00, Active), and his `coaches` row was then repointed to his live customer and subscription ids by a **direct database write** on Aug 18. ⚠️ So his account has **never exercised the live webhook path** — his working state proves entitlement reads only. Do not cite it as evidence the live pipeline works; the `elliecocoliu@gmail.com` checkout is the only thing that proves that.
+
+✅ **Prod carried all three Stripe env vars in TEST mode first** (Aug 18 2026), and a full checkout plus a portal cancellation were proven against them — see the two Aug 18 verification blocks. ⚠️ **Prod has since moved to LIVE keys**, so those two blocks describe a configuration prod no longer runs. They remain the proof that the CODE path is correct; they are not a description of current prod.
 
 ✅ **Test-mode webhook endpoint registered:** `we_1U61rNJoxKRCY55iM5xU8jRB` → `https://www.assignreps.com/api/stripe/webhook`, subscribed to exactly the three events the handler acts on. ⚠️ **`www`, not the apex** — see the prod verification block for why the apex silently fails.
 
@@ -1304,7 +1308,7 @@ Both paths always send to `players.phone`. `send_to_parent` is still not consult
 
 ⚠️ **`TWILIO_FROM_NUMBER` is NOT actually pending, and this entry was wrong twice.** No code reads it — `sms.ts` sends via `MessagingServiceSid`, as its own comment says. The var in `.env.local` still holds the **released** number `+15625487985`, so it is dead config carrying a dead value rather than an outstanding task. Delete it or correct it, but nothing is broken by it.
 
-⚠️ **PROD ON TEST KEYS IS A REAL STATE WITH A REAL CONSEQUENCE, not a halfway house.** Because local, staging and prod share one Supabase project, `subscription_status` is now writable from prod by anyone completing a **test** checkout with card `4242`. That is currently harmless — every environment is on test keys — but it is the shared-database hazard from the go-live investigation, now armed rather than theoretical. It bites the moment prod switches to `sk_live_` while any other environment stays on `sk_test_`.
+⚠️ **THE SHARED-DATABASE HAZARD IS NOW LIVE, not theoretical.** Local, staging and prod share one Supabase project, so `subscription_status`, `stripe_customer_id` and `stripe_subscription_id` are ONE set of columns for all three. Prod is on `sk_live_`; local is on `sk_test_` and staging has no Stripe vars at all. **A test-mode checkout run locally with card `4242` writes `active` to the same row prod reads** — granting real Pro access on live for a fake payment — and overwrites the coach's live `stripe_customer_id` with a test one, which then breaks their portal on prod with "No such customer". This is the go-live risk from the investigation, now armed. It has no code fix; it needs either separate Supabase projects per environment, or a discipline of never running a local/staging checkout against a coach row that matters in prod.
 
 ---
 
@@ -1394,6 +1398,37 @@ Blocks a non-entitled coach's **4th** player and offers the paywall instead. Thr
 ⚠️ If none match it does **not** guess: logs and returns 200. An unmatchable event is not transient, and a 500 would have Stripe retrying it for days.
 
 **Status codes are the retry protocol**, not decoration: `400` bad signature (never retry) · `500` missing secret (we are broken; retry succeeds once fixed, so events aren't lost) · `500` write or retrieve failure (transient) · `200` handled or ignorable. ⚠️ A `200` on a failed write marks the event delivered and loses it permanently.
+
+### ✅ Verified end to end — LIVE MODE ON PROD (Aug 19 2026)
+
+**The real one. Live keys, live webhook endpoint, a real card, through the actual app flow.** Everything above this entry is test mode; this is the first time money-capable infrastructure has carried a checkout from the app to the database.
+
+⚠️ **Dated Aug 19, NOT folded into the Aug 18 session**, though it is the same continuous night. The checkout landed at **07:00:31 UTC = 12:00:31 AM PDT**, so the local date had rolled over. Ranked item 13 exists because a session's self-label was once carried forward over the real date; this is that rule applied rather than repeated.
+
+A fresh coach ("Coach Tone Loc", `elliecocoliu@gmail.com`) signed up on prod, tapped **Upgrade to Pro**, applied a temporary 100%-off code (`TESTLIVE`, capped at 1, now spent), and completed Checkout with a **real card collected and $0.00 charged**.
+
+| | |
+|---|---|
+| `subscription_status` | `active` |
+| `stripe_customer_id` | `cus_V6G0Hwsawp5Lyc` |
+| `stripe_subscription_id` | `sub_1U63XPJB7ZL7YlQBLwAFAtbK` |
+| `metadata.coach_id` on the live subscription | `4bffbfaa-77c0-45c1-b15a-b84cfac7cad8` — **exact match to the coach row** |
+
+⚠️ **WHY THE DATABASE ROW IS PROOF THE WEBHOOK RAN, and is not circular.** `createCheckoutSession()` writes `stripe_customer_id` itself, so that column alone proves only that checkout *started*. But **`subscription_status` and `stripe_subscription_id` have exactly ONE writer in the whole codebase** — `webhook/route.ts:227-228`, audited across `src/`. Nothing else can populate them. Their presence therefore *is* the evidence that Stripe delivered a signed live event to prod's endpoint and the handler processed it.
+
+⚠️ **THIS IS THE DISTINCTION THAT MATTERS, AND IT IS EASY TO LOSE.** **RJ's live subscription was created BY HAND in the Stripe dashboard** — it never went through Checkout, so it never fired `checkout.session.completed` and never exercised the live webhook path at all. His row was repointed to his live ids by a **direct database write** (Aug 18, below). So RJ's working state proves *entitlement reads*, not *the live write path*. **This coach is the only thing that has ever proven live checkout → live webhook → database.** Do not cite RJ's account as evidence the pipeline works.
+
+✅ **The `coach_id` metadata match is the definitive link**, and it was confirmed **directly in the Stripe dashboard by Tony** — not inferred. It is what would carry future `customer.subscription.*` events home, since those events carry no `client_reference_id`.
+
+⚠️ **PROVENANCE — the Stripe side of this was NOT verified by tooling.** The CLI holds test credentials only (`stripe login` reports live needs re-authenticating), so live mode is entirely unobservable from here. Everything Stripe-side above comes from **Tony reading the live dashboard**. What the CLI *could* establish independently: both ids return `resource_missing` in test mode, and Stripe's id account-segment separates them cleanly — every test subscription carries `JoxKRCY55i`, both live ones carry `JB7ZL7YlQB`. That corroborates; it does not substitute for `livemode: true`.
+
+**Cleanup done and outstanding:**
+
+- ✅ **The `elliecocoliu@gmail.com` coach row was DELETED** after verification (Aug 19). Checked first: zero players, assignments and custom exercises, so nothing cascaded.
+- ✅ `TESTLIVE` is spent and capped at 1 — inert, no action.
+- ⚠️ **THE LIVE STRIPE SUBSCRIPTION `sub_1U63XPJB7ZL7YlQBLwAFAtbK` WAS NOT CANCELLED BY THAT DELETE, AND A REAL CARD IS ATTACHED TO IT.** Deleting a `coaches` row touches nothing at Stripe. If `TESTLIVE` was 100%-off **once** rather than **forever**, the next billing cycle charges that card for real — and with the coach row gone there is no in-app portal route to it, so it has to be cancelled in the live dashboard. **Verify and cancel it there.**
+- ⚠️ The deleted row's `auth.users` entry remains, as ever — see the auth user audit under Medium priority.
+- ⚠️ **`sub_1U0aJ6JoxKRCY55iGi5HfZ3l`, RJ's OLD test-mode subscription, is now orphaned** — still `active` in test mode, referenced by no row since the Aug 18 repoint. Harmless (test mode, no money) and deliberately left; it belongs to the broader stale-test-data audit, not to this pass.
 
 ### ✅ Verified end to end — ON PROD (Aug 18 2026)
 
