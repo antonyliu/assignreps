@@ -1986,41 +1986,76 @@ Verified end to end in test mode on Coach Tony's subscription, not assumed:
 
 ## SMS consent on the add-student screen
 
-Built Aug 18 2026 (`f3ec235`). The verbal-consent obligation lived only in `/terms` and `/privacy` — documents nothing in the app linked to until the day before — while the one screen where a coach is about to type **another person's** phone number said nothing about it. ⚠️ This is the clause an outside party actually relies on: **Twilio's toll-free registration rests on it.**
+Built Aug 18 2026 (`f3ec235`), then **replaced the same day** (`e684111`) after a design review and four rounds of device testing. The verbal-consent obligation lived only in `/terms` and `/privacy` — documents nothing in the app linked to until the day before — while the one screen where a coach is about to type **another person's** phone number said nothing. ⚠️ This is the clause an outside party actually relies on: **Twilio's toll-free registration rests on it.**
 
-Two things under the phone field: a line stating the requirement, and a collapsed **"What to say"** disclosure revealing the script.
+### What is there now
 
-### ⚠️ `SMS_CONSENT_SCRIPT` is a single source, in `src/lib/consent.ts`
+One helper line per tab, each followed by a 16px `i` icon that opens a tooltip:
 
-Imported by **both** `/terms` (where it is the binding obligation) and the add-student disclosure (where it is the only place a coach can act on it). ⚠️ **Not two copies, deliberately.** Copying the sentence would leave two versions one edit apart, and the precedent for what that costs is already on file: the Aug 16 `/faq` removal pulled a second, softer telling of this same requirement *before it ever shipped*, because it read as reassurance where the legal pages read as an obligation.
+| Tab | Helper line | Tooltip |
+|---|---|---|
+| Player | *"They'll get a text when you assign work."* | *"Get their OK before adding this number. If they're younger, ask a parent instead."* |
+| Parent | *"They'll get a text to share with {name}."* | *"Get the parent's OK before adding this number."* |
 
-Quotation marks are **not** part of the constant — each render site wraps it, since the quotes are presentation.
+⚠️ **The parent line is a TRIM, not a fix.** It lost *"when you assign work"* and *"Great for younger students"* to reach one line, and an em dash went with them. It already said *"They'll"* — the pronoun was never wrong, and a report that it said *"You'll"* was mistaken.
 
-### ⚠️ ONE consent standard, not one per toggle state
+⚠️ **ONE consent standard, not one per tab.** The two tooltips differ only in **who to ask**, never in whether consent is needed. `/terms` and `/privacy` both say *"student or parent phone number"* in a single breath, and forking the standard by recipient is the divergence the Aug 16 `/faq` removal ended. The minors distinction rides inside the Player variant because this is the only screen where `/privacy`'s "permission from the student **or** their parent" is actionable.
 
-The line is **identical** whether the coach has Player or Parent selected. `/terms` and `/privacy` both say *"student or parent phone number"* in a single breath, so forking the language by recipient would recreate exactly the divergence the `/faq` removal fixed.
+⚠️ **The banned framings**, from that pulled `/faq` answer: no *"if you already"*, no *"most coaches"*, no *"just one text"*. It states an obligation; it does not reassure.
 
-The minors distinction rides inside the one line — *"or a parent's, if they're younger"* — because this is the only screen where `/privacy`'s "permission from the student **or** their parent" is actionable at the moment it matters.
+### ⚠️ NO SCRIPT ON THIS SCREEN, deliberately
 
-⚠️ **The banned framings**, from the pulled `/faq` answer: no *"if you already"*, no *"most coaches"*, no *"just one text"*. It states an obligation; it does not reassure.
+The first version put a standalone consent sentence plus a **"What to say"** disclosure that quoted `/terms`' scripted line verbatim. **Both were removed after review**: a block of quoted dialogue read as an unfamiliar pattern on a screen whose other copy is a single short line, and nobody wanted a *script* inside a form.
 
-### ⚠️ `type="button"` on the disclosure is load-bearing
+`SMS_CONSENT_SCRIPT` in `src/lib/consent.ts` is therefore down to **one consumer — `/terms` only**. ⚠️ It is kept as a constant rather than inlined back, because the moment a second surface needs that sentence it must be *that* sentence; the `/faq` removal is the precedent for what an independently-worded second telling costs.
 
-`ConsentScript` sits **inside the add-player `<form>`**, and a bare `<button>` defaults to `type="submit"`. Without it, tapping **"What to say"** submits the form and adds the student. Nothing about the markup makes that visible.
+### ⚠️ The app's FIRST tooltip — treat it as the template
 
-It reuses `InactiveGroup`'s shape — 44px target with a negative margin cancelling the added height, rotating ▶ chevron, `aria-expanded` — rather than inventing chrome. That is the app's **only** content expand/collapse; the other three `aria-expanded` controls are dropdown menus.
+There is **no popover-with-arrow anywhere** in this codebase and **no library that provides one**: the dependencies are Supabase, Stripe, Next, React and `lucide-react`, which is icons only. Every other "arrow" in the app is a back-link glyph. All of the below is hand-built.
+
+**Dismissal borrows the overflow menus** — a full-screen click-away at `z-40`, panel at `z-50`. **Sizing does not**: those panels are `min-w-[180px]`, tuned for labels like "Archive", and a sentence in that width wraps to a skinny column.
+
+**Surface** is `#2a2d36` with a `#3a3d46` border, `rounded-[10px]`, and the menus' shadow. ⚠️ **NOT `#1c1f26`** — that is what the deactivation modals use, and it is the exact colour of the inputs and the disabled Add button, so a tooltip in it reads as one more form field. Measured against the field colour: `#22252e` 1.08:1, `#2a2d36` 1.20:1. Text is `#c8cdd8`, because `reps-sub` measures **4.31:1** on this lighter surface — under AA.
+
+**Opens upward** (`bottom-full`) so it can never cover *Add player* — verified at 59.5px clearance. There is always more room above: the phone field, its label and the name field. Floating over an input is what an overlay is for; covering the primary action is not.
+
+**Width** is `w-max max-w-[260px]`, ~67% of a 390px phone. ⚠️ A **fixed** cap rather than a `vw` unit, because the instructor shell is `max-w-[390px]` and centred — `68vw` would blow past the column on a desktop window.
+
+### ⚠️ Positioning is MEASURED, and the clamp is the normal path
+
+Centring on the icon is trivial in CSS; keeping the box on screen when centring would push it off is not, because the icon sits at the **end of a sentence** whose length changes with the tab and the student's name. So, in a layout effect on open:
+
+1. centre the box on the icon
+2. **clamp the box** to the column
+3. **move the caret within the box** to keep pointing at the icon's true position
+
+The box gives up its centring before the caret gives up its target. ⚠️ **The clamp fires on BOTH tabs** — measured at a 342px column, pure centring would place the box at 125→385 and 86→346, both past the edge. This is not a rare edge case; the caret is doing real work every time. The caret is clamped 14px from either end so it can never straddle a rounded corner.
+
+⚠️ `useLayoutEffect` behind the same isomorphic shim `ScrollToTop` uses, since it warns during SSR. Pre-paint timing is what stops the box appearing at `left: 0` before it is measured.
+
+### ⚠️ The caret: two CSS triangles, never a rotated square
+
+A **rotated square was tried first and rejected**. A 45° rotation puts the box's corner radius and both of its borders on the diagonal, so the tip can never be crisp — on device it read as flush and rounded against the icon rather than as a point.
+
+Replaced with the border-triangle technique: a **7px triangle in the border colour behind a 6px triangle in the fill colour**, leaving an even 1px outline along both slanted edges and at the tip. No rotation, no corners, so neither artifact can appear.
+
+⚠️ **Both sit 1px high** (`-6` / `-5`, not `-7` / `-6`) so their flat tops cover the box's own 1px bottom border across the caret's width. Without that a hairline runs straight across the base of the arrow and it reads as a separate shape stuck underneath.
+
+### ⚠️ `type="button"` is still load-bearing
+
+It moved from the removed disclosure to the **icon**, which is still inside the add-player `<form>`. A bare `<button>` defaults to `type="submit"`, so tapping the icon would add the student. Nothing about the markup makes that visible.
 
 ### ⚠️ The helper line above it still fails AA
 
-*"They'll get a text when you assign work."* is `#5a5f72`, which measures **3.11:1** on this background. **Pre-existing, not introduced here, and deliberately left alone** as out of scope.
-
-The consent line is `#8a8fa8` at **6.17:1** — a legally load-bearing sentence should not ship below AA. The visible side effect is that it reads one step brighter than the informational line above it, which ranks the two correctly anyway. ⚠️ Worth a future sweep: `#5a5f72` is the documented placeholder token and may be doing body-text duty elsewhere, so this wants checking beyond the one line.
+*"They'll get a text when you assign work."* is `#5a5f72` at **3.11:1**. **Pre-existing, not introduced here, deliberately left alone.** Worth a future sweep: `#5a5f72` is the documented placeholder token and may be doing body-text duty elsewhere.
 
 ### Not done
 
-⚠️ **Neither surface has been seen on a device** — the consent line, and the disclosure. **Specifically confirm that tapping "What to say" does NOT submit the form**, since that is the failure `type="button"` prevents and the only one that would silently add a student.
+✅ Positioning and clamping verified on a phone; the caret shape verified on desktop.
 
-⚠️ There is no central untested-on-device list in this file; each section carries its own note. If that keeps growing it may be worth one.
+⚠️ **Confirm tapping the icon does not submit the form.** That check transferred from the removed disclosure to the icon and is still the one failure here that would go wrong silently — it would add the student.
+
+⚠️ There is no central untested-on-device list in this file; each section carries its own note.
 
 ---
 
