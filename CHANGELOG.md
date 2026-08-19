@@ -302,6 +302,35 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 
 ---
 
+## Legal links reachable inside the instructor app (Aug 18 2026)
+
+| Feature | Why it exists |
+|---|---|
+| "Help & Legal" in `ProfileMenu`, opening a second view with `/faq`, `/privacy` and `/terms` | A signed-in coach could not reach any of the three from anywhere in the app. Every link lived on the public landing page, so the only route in was to sign out or type the URL |
+| A two-level panel swap rather than three flat rows | Six items in a four-item menu made reference material compete with the account actions. The sub-view keeps the panel, anchor and click-away identical and swaps only its contents |
+| Sub-view state normalized when the menu OPENS, never reset on close | Resetting in each close handler would mean touching five of them, and would break silently the day a sixth is added — the menu would reopen still showing Help & Legal. It also makes "click away closes the whole thing" free |
+| All three links open in a new tab | All three pages point their own back arrow at the marketing landing page, so a coach who tapped it would be stranded outside the app with no route back but signing in again |
+| Not a `PrivacyFooter` variant, and not a persistent footer | That component deep-links students and parents to the minors anchor, written to parents; a coach needs all three pages and the top of `/privacy`. A footer was rejected because four of the eight coach screens end in a sticky bottom CTA it would fight |
+
+---
+
+## Live Stripe cutover — test-mode only to verified live billing (Aug 18–19 2026)
+
+**The single largest change this project has shipped.** Prod went from carrying no billing code at all to running real, money-capable Stripe billing, verified end to end.
+
+| Feature | Why it exists |
+|---|---|
+| 111 commits deployed to staging, then prod | Prod had been held back deliberately since Aug 4 and contained **none** of the billing system — no webhook route, no `stripe.ts`, no `entitlement.ts`. Everything built since early August landed at once |
+| Live product, price and webhook endpoint created | Stripe keeps test and live entirely separate: every id changes, and the whole dashboard sequence has to be repeated |
+| Live webhook endpoint registered at `www.assignreps.com`, not the apex | The apex 308-redirects to `www`, and **Stripe does not follow redirects on delivery** — the apex would have failed silently on every event |
+| Prod env vars moved test → live | Verified in stages: the webhook answered "Webhook not configured" until `STRIPE_WEBHOOK_SECRET` landed, then rejected a forged signature with "Invalid signature", proving HMAC verification was actually executing |
+| RJ provisioned by hand in the live dashboard, and his row repointed by direct database write | His account is the one that must not break. A manual subscription with a 100%-off-forever coupon avoided putting a real charge anywhere near it — but it means **his account has never exercised the live webhook path** and cannot be cited as proof the pipeline works |
+| Live checkout proven end to end with a throwaway coach | The only thing that has ever proven live checkout → live webhook → database. `subscription_status` and `stripe_subscription_id` have exactly one writer in the codebase — the webhook — so their presence is the proof, not merely evidence checkout started |
+| Live Customer Portal cancellation setting confirmed | It is a per-mode dashboard setting with no code representation, and `/faq` promises access runs to the end of the paid period. Read directly from the live dashboard and already correct |
+| Test debris cleaned up as it was created | The throwaway coach row was deleted and its live subscription cancelled separately — **deleting a coach row touches nothing at Stripe**, which is the trap worth remembering |
+
+---
+
 ## Not shipped — recorded so the history is honest
 
 | Killed / deferred | Why |

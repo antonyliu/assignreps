@@ -58,13 +58,19 @@
 15. **Roster view at scale — backburner design question.** Testing the 30-student Pro ceiling surfaced that a flat card list of 30 feels overwhelming to scan, even though most of a coach's actual attention only lives in two of the four status groups (Done / In progress). ⚠️ **Some of that reaction was likely the test data itself** — 24 identically-named placeholder rows with no real variation — rather than the list format; real names and real activity patterns would read differently. But the underlying question is worth keeping: whether a card list is the right format for scanning thirty players at once, versus something more spreadsheet-like. **Revisit once a coach actually approaches that number organically, not from seeded test data.**
 16. **Later, no urgency:** the signed-in app is capped at phone width on desktop/tablet; landing page modules feel rigid block-to-block (TeuxDeux-style overlap was the direction); an animated hero walkthrough.
 
-### ⚠️ Going live is a separate task
+### ✅ Going live — DONE (Aug 18–19 2026)
 
-Everything above is **test mode**. Live mode needs, at minimum: a new live product and price, live API keys, a live webhook endpoint and secret, and all three Stripe env vars added to Vercel.
+⚠️ **This section used to read "Going live is a separate task" and listed what was outstanding. It is done.** Live product and price created, live API keys and webhook endpoint configured, all three Stripe env vars set on prod, and the whole path proven end to end — see *Verified end to end — LIVE MODE ON PROD*. **Prod runs on `sk_live_`.**
 
-⚠️ **The Customer Portal cancellation setting must be re-confirmed in live mode.** Tonight's confirmation ("At end of billing period") was test-mode only — the two modes hold separate portal configurations, and `/faq`'s cancel answer is false if live is set to Immediately.
+⚠️ **The dated section this sits inside is Aug 17 and predates all of it.** Where the two disagree, this block and the live verification block are current.
 
-⚠️ **RJ's current test-mode subscription does not carry over.** He must be re-provisioned in live mode, and `COACHRJ` recreated there uncapped.
+✅ **The Customer Portal cancellation setting IS confirmed in live mode** (Aug 19 2026) — checked directly in the live dashboard and already set to **"Cancel at end of billing period"**, matching test. `/faq`'s cancel answer is therefore true in live as well as test. ⚠️ It is still a DASHBOARD setting with no code representation: switch it to Immediately and that answer silently becomes false, with nothing in the repo to catch it.
+
+✅ **RJ has been re-provisioned in live mode** (Aug 18 2026) — a subscription created **by hand in the live dashboard** with a **"RJ Free Access, 100% off forever"** coupon applied (first invoice $0.00, Active), and his `coaches` row repointed to his live customer and subscription ids by a direct database write. Dashboard-confirmed by Tony; the CLI here has test credentials only and cannot see live.
+
+⚠️ **His old test-mode subscription did NOT carry over and was never meant to** — `sub_1U0aJ6JoxKRCY55iGi5HfZ3l` is still `active` in test mode, now orphaned and referenced by no row. Harmless; part of the stale-test-data audit.
+
+⚠️ **A redeemable promo CODE named `COACHRJ` in live mode is NOT established.** What was confirmed is a *coupon* applied directly to RJ's subscription — which is not the same thing as a code anyone could enter at Checkout. If a second comped account is ever needed, or RJ's subscription is ever rebuilt, check whether a live promo code exists and create it **uncapped** — the test original was destroyed by a single redemption.
 
 ---
 
@@ -286,7 +292,7 @@ Tony is stepping away to focus on other work for an unknown stretch. This sectio
 
 **Terms** — not touched in this audit cycle beyond what privacy fixes implied. Cancellation language ("can be cancelled anytime") is vague rather than false, and is deliberately being left as-is until self-serve cancellation is real, at which point it becomes true without editing.
 
-**Self-serve Stripe cancellation — ✅ BUILT AND VERIFIED Aug 17 2026** (`41ea622`). Stripe Customer Portal integration, a "Manage subscription" row in `ProfileMenu`, cancelling at period end. Verified end to end in test mode against a real cancellation: portal opens, cancellation registers, the coach keeps Pro to `current_period_end`, the webhook processes both events, and no other coach is affected. This unblocked the FAQ's cancel answer and closes pre-launch checklist item 5. ⚠️ Test mode only — live mode still needs its own portal configuration in the Stripe dashboard.
+**Self-serve Stripe cancellation — ✅ BUILT AND VERIFIED Aug 17 2026** (`41ea622`). Stripe Customer Portal integration, a "Manage subscription" row in `ProfileMenu`, cancelling at period end. Verified end to end in test mode against a real cancellation: portal opens, cancellation registers, the coach keeps Pro to `current_period_end`, the webhook processes both events, and no other coach is affected. This unblocked the FAQ's cancel answer and closes pre-launch checklist item 5. ✅ **Live mode confirmed too** (Aug 19 2026): the live portal's cancellation setting was checked in the dashboard and is already "Cancel at end of billing period". ⚠️ The live portal's *behaviour* has not been exercised by an actual live cancellation — only the setting was read.
 
 **RJ's actual open asks — corrected this session, several prior attributions were wrong:**
 
@@ -1426,7 +1432,7 @@ A fresh coach ("Coach Tone Loc", `elliecocoliu@gmail.com`) signed up on prod, ta
 
 - ✅ **The `elliecocoliu@gmail.com` coach row was DELETED** after verification (Aug 19). Checked first: zero players, assignments and custom exercises, so nothing cascaded.
 - ✅ `TESTLIVE` is spent and capped at 1 — inert, no action.
-- ⚠️ **THE LIVE STRIPE SUBSCRIPTION `sub_1U63XPJB7ZL7YlQBLwAFAtbK` WAS NOT CANCELLED BY THAT DELETE, AND A REAL CARD IS ATTACHED TO IT.** Deleting a `coaches` row touches nothing at Stripe. If `TESTLIVE` was 100%-off **once** rather than **forever**, the next billing cycle charges that card for real — and with the coach row gone there is no in-app portal route to it, so it has to be cancelled in the live dashboard. **Verify and cancel it there.**
+- ✅ **The live subscription `sub_1U63XPJB7ZL7YlQBLwAFAtbK` was CANCELLED in the live dashboard** (Aug 19 2026) — **Immediately**, no refund, with $0.00 confirmed as ever having been charged. ⚠️ Recorded because deleting the `coaches` row did **not** do this: **deleting a coach row touches nothing at Stripe**, and with the row gone there was no in-app portal route left, so it could only be cancelled dashboard-side. Any future test coach on live needs the same two-step cleanup — cancel at Stripe, then delete the row.
 - ⚠️ The deleted row's `auth.users` entry remains, as ever — see the auth user audit under Medium priority.
 - ⚠️ **`sub_1U0aJ6JoxKRCY55iGi5HfZ3l`, RJ's OLD test-mode subscription, is now orphaned** — still `active` in test mode, referenced by no row since the Aug 18 repoint. Harmless (test mode, no money) and deliberately left; it belongs to the broader stale-test-data audit, not to this pass.
 
@@ -1480,7 +1486,7 @@ Tony cancelled the throwaway `tony@liudesign.com` subscription through **Profile
 
 ✅ **The app is immune to both quirks by construction, which was checked rather than assumed.** No executable code anywhere in `src/` reads `cancel_at`, `cancel_at_period_end` or `current_period_end` — the only occurrences are comments. The webhook writes `effective.status` and nothing else, so these are **verification traps, not runtime bugs**.
 
-✅ **`/faq`'s cancel answer is now true in production**, not just locally: cancellation is reachable from the coach's own profile, and access genuinely runs to the end of the paid period. ⚠️ It remains hostage to the dashboard portal setting staying on "At end of billing period" — **and that setting must be made again in live mode**, where none of tonight's verification carries over.
+✅ **`/faq`'s cancel answer is now true in production**, not just locally: cancellation is reachable from the coach's own profile, and access genuinely runs to the end of the paid period. ✅ **And it is now true in LIVE mode as well** — the live portal's cancellation setting was read directly from the dashboard on Aug 19 and is already "Cancel at end of billing period". ⚠️ It remains hostage to that setting: flip either mode to Immediately and this answer becomes false with nothing in the code to catch it.
 
 ### ✅ Verified end to end — the gate (Aug 4 2026)
 
@@ -2041,7 +2047,7 @@ Verified end to end in test mode on Coach Tony's subscription, not assumed:
 ⚠️ **TWO THINGS THAT CAN STILL MAKE THIS ANSWER FALSE, and neither is visible from the code:**
 
 1. **The portal's cancellation mode is a DASHBOARD SETTING.** Stripe Dashboard → Settings → Billing → Customer portal → Cancellation must stay on **"At end of billing period"**. Confirmed set on Aug 17. Switch it to Immediately and the second sentence of the answer becomes false with nothing in the repo to catch it.
-2. **Live mode has its own portal configuration.** The code is mode-agnostic, but the dashboard setting has to be made again in live — see pre-launch item 1.
+2. ✅ **Live mode's own portal configuration is CONFIRMED SET** (Aug 19 2026) — read directly from the live dashboard, already "Cancel at end of billing period". The code is mode-agnostic, so both modes now agree. ⚠️ Still a dashboard setting either mode can silently invalidate.
 
 ⚠️ **On API version `2026-07-29.dahlia`, `cancel_at_period_end` reads FALSE even when the cancellation IS correctly scheduled for period end** — the flag effectively moved to `cancel_at`. Compare `cancel_at` against `current_period_end`; do not trust the boolean. This caused a moment of false alarm during verification and will again.
 
