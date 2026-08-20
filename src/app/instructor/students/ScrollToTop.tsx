@@ -9,6 +9,53 @@ import { usePathname } from "next/navigation";
 // point of the change below.
 const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
+// ⚠️⚠️ TEMPORARY INSTRUMENTATION — REMOVE BEFORE THE REAL FIX. ⚠️⚠️
+//
+// Added Aug 20 2026 to test one specific theory about why the roster can open
+// already scrolled, with the first group label and the top of the first card
+// under the sticky header. The theory, from the investigation that day:
+//
+//   The roster is reached from add-student by router.push(), and
+//   AddPlayerForm's submit handler never blurs the phone field — it awaits
+//   addPlayer() over the network with the keyboard still up, then pushes. Both
+//   scroll resets below therefore run while iOS is still animating the keyboard
+//   away. When it finishes, the visual viewport grows, the URL bar re-expands,
+//   and Safari settles scroll somewhere non-zero — after everything here has
+//   already run. Nothing corrects it, because history.scrollRestoration is
+//   "manual" (set below) and Next's App Router implements no scroll restoration
+//   of its own.
+//
+// WHAT CONFIRMS IT: scrollY reads 0 at layout and at raf, and NON-ZERO at
+// t+600ms — with visualViewport.height SMALLER at layout/raf (keyboard still
+// up) than at t+600ms (keyboard gone).
+//
+// WHAT REFUTES IT: scrollY is 0 at all three readings, or visualViewport.height
+// does not change across them.
+//
+// maxScroll is logged as a second, independent check: body, the instructor
+// layout and this page are all min-h-screen (100vh, not dvh) nested three deep,
+// and on iOS 100vh is the LARGE viewport. If maxScroll is > 0 on a roster whose
+// content fits, that phantom scroll range is real and is the room the offset
+// lands in.
+//
+// A formatted string rather than an object on purpose: Safari's remote console
+// evaluates object properties when you expand them, not when they were logged,
+// which would show settled values instead of the ones at each moment.
+let mountSeq = 0;
+
+function logScroll(seq: number, when: string) {
+  const vv = window.visualViewport;
+  const doc = document.documentElement;
+  const maxScroll = doc.scrollHeight - doc.clientHeight;
+  console.log(
+    `[reps-scroll] #${seq} ${when}` +
+      ` scrollY=${Math.round(window.scrollY)}` +
+      ` vvHeight=${vv ? Math.round(vv.height) : "n/a"}` +
+      ` innerHeight=${window.innerHeight}` +
+      ` maxScroll=${maxScroll}`
+  );
+}
+
 // Resets scroll so the roster always opens at true scroll-top, with the sticky
 // header and the first group label both fully visible.
 //
@@ -54,6 +101,11 @@ export default function ScrollToTop() {
       history.scrollRestoration = "manual";
     }
 
+    // TEMPORARY — reading 1 of 3. Before either scrollTo, so it captures what
+    // the page was handed rather than what this effect leaves behind.
+    const seq = ++mountSeq;
+    logScroll(seq, "layout ");
+
     // ⚠️ A LAYOUT EFFECT, not useEffect. useEffect fires after paint, so a
     // restored offset was briefly VISIBLE and then snapped away — the jump
     // reads as the page settling in the wrong place. Running before paint means
@@ -73,8 +125,26 @@ export default function ScrollToTop() {
     //
     // Cancelled on cleanup so a fast navigation away cannot have this fire
     // against the next route.
-    const raf = requestAnimationFrame(() => window.scrollTo(0, 0));
-    return () => cancelAnimationFrame(raf);
+    const raf = requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      // TEMPORARY — reading 2 of 3. After this frame's scrollTo, so it shows
+      // whether the reset held through the frame.
+      logScroll(seq, "raf    ");
+    });
+
+    // ⚠️ TEMPORARY — reading 3 of 3, and the one the theory turns on. Long
+    // enough to outlast an iOS keyboard dismissal (~250ms) and the URL bar
+    // resize that follows it. It ONLY logs; it must not scroll, or it would
+    // paper over the very thing being measured.
+    //
+    // Cleared on unmount for the same reason the rAF is cancelled: a fast
+    // navigation away would otherwise have this fire against the next route.
+    const timer = setTimeout(() => logScroll(seq, "t+600ms"), 600);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
   }, [pathname]);
 
   return null;
