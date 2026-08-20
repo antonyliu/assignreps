@@ -105,10 +105,10 @@ export default function EmailStep() {
         <ScreenHeader stepNum={2} total={2} />
         {/* Same words as step 1 — the two screens are one job. */}
         <p className={EYEBROW}>Setting up your account</p>
-        <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1 text-reps-ink">Your email</h2>
-        {/* One line. It answers the question the field actually raises — what
-            this address is for — rather than restating what the button says. */}
-        <p className="text-[15px] text-reps-sub mb-6">We&apos;ll only use this to email you a sign-in code.</p>
+        {/* ⚠️ The eyebrow above keeps its tight mb-2 — one unit with the
+            headline. The reassurance that used to sit here moved DOWN to the
+            field it is about; see the caption under the input. */}
+        <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-10 text-reps-ink">Your email</h2>
         <ErrorBanner error={error} />
         <form onSubmit={submitEmail}>
           <input
@@ -116,8 +116,23 @@ export default function EmailStep() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`${INPUT} mb-6`}
+            className={INPUT}
           />
+          {/* ⚠️ FIELD-LEVEL TRUST, next to the field it is about — the same job
+              "They'll get a text when you assign work." does under the phone
+              field on the add-student screen, and the same 13px caption sitting
+              mt-2 under its input.
+
+              ⚠️ NOT the same COLOUR as that one, deliberately. That caption is
+              #5a5f72, which measures 3.11:1 and is recorded in CLAUDE.md as a
+              pre-existing AA failure left for a future sweep. Matching it
+              exactly would copy a known defect onto a new screen, so this uses
+              #7a8090 — 4.99:1, quieter than body text and above the 4.5 floor
+              for 13px. If that sweep ever lands, these two should meet at a
+              passing value rather than this one moving down. */}
+          <p className="mt-2 mb-10 text-[13px] text-[#7a8090]">
+            We&apos;ll only use this to email you a sign-in code.
+          </p>
           <button
             type="submit"
             disabled={loading || !emailValid}

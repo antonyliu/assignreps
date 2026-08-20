@@ -42,7 +42,10 @@ export const EYEBROW =
  */
 export function ScreenHeader({ stepNum, total }: { stepNum: number; total: number }) {
   return (
-    <div className="mb-10">
+    /* ⚠️ Spacing widened after seeing these on device: the screens are
+       top-packed inside a min-h-screen column with a large empty tail, so the
+       chrome was crowding the content while the room sat unused below. */
+    <div className="mb-12">
       <div
         className="flex gap-1.5"
         role="progressbar"
@@ -62,7 +65,7 @@ export function ScreenHeader({ stepNum, total }: { stepNum: number; total: numbe
       <span className="sr-only">
         Step {stepNum} of {total}
       </span>
-      <div className="flex items-center h-7 mt-6">
+      <div className="flex items-center h-7 mt-8">
         <LogoMini />
       </div>
     </div>

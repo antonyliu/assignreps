@@ -28,7 +28,9 @@ export default function NameStep() {
       <ScreenHeader stepNum={1} total={2} />
       {/* Names the job both signup screens belong to. Same words on step 2. */}
       <p className={EYEBROW}>Setting up your account</p>
-      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6 text-reps-ink">What should students call you?</h2>
+      {/* ⚠️ The eyebrow above keeps its tight mb-2 — those two are ONE unit and
+          must not drift apart while everything around them opens up. */}
+      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-10 text-reps-ink">What should students call you?</h2>
       <ErrorBanner error={error} />
       <form onSubmit={submit}>
         <input
@@ -36,7 +38,7 @@ export default function NameStep() {
           placeholder="e.g. Coach RJ"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className={`${INPUT} mb-6 placeholder:italic`}
+          className={`${INPUT} mb-10 placeholder:italic`}
         />
         <button
           type="submit"

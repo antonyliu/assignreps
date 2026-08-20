@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireCoach } from "@/lib/require-coach";
 import { LogoMini } from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
-import EmptyStateCard from "@/components/EmptyStateCard";
+import { Check } from "lucide-react";
 import ScrollToTop from "./ScrollToTop";
 import InactiveGroup from "./InactiveGroup";
 import OverLimitBanner from "./OverLimitBanner";
@@ -323,27 +323,49 @@ export default async function RosterPage() {
       )}
 
       {playerList.length === 0 ? (
-        /* ⚠️ REPLACED the "ghost roster" — three faded skeleton rows behind a
-           bottom mask, which hinted at what would fill the screen. It is gone
-           deliberately, not lost: it showed a coach an imitation of data they
-           did not have, and said nothing about what to do next. This says both.
+        /* ⚠️ TWO PIECES, not one card — split after seeing it on staging.
+           The arrival and the next action are different beats: one is a result,
+           the other is an instruction. Wrapping both in a single filled card
+           gave them equal weight and made the greeting read as a label on the
+           button rather than as its own moment.
 
-           ⚠️ The LOADING skeleton for this route is a different thing and still
-           exists. It pulses; this never did. That distinction is what stops a
-           coach with seven players being briefly told they have none, so do not
-           merge the two idioms back together.
+           ⚠️ The celebration sits on the PAGE, with no surface behind it. That
+           is what earns the pause below it; putting it back in a card would
+           collapse the two halves together again.
 
-           ⚠️ Blue here means "set up, nothing yet" — NOT plan capacity. See the
-           long note in EmptyStateCard before touching the fill. */
-        <div className="mt-6">
-          <EmptyStateCard
-            badge
-            /* The name they typed at step 1. Guarded because the coaches row
-               can carry an empty name — the greeting then drops the comma
-               rather than rendering "You're in, ." */
-            headline={coachName ? `You're in, ${coachName}.` : "You're in."}
-            line={`Add your first ${labels.studentLabel} to get started.`}
+           ⚠️ It also means this screen no longer uses a blue-tinted surface at
+           all, which sidesteps the collision with the plan-capacity blue that
+           EmptyStateCard has to reason about. Worth keeping that way. */
+        <>
+          <div className="mt-12 flex flex-col items-center text-center">
+            <span
+              aria-hidden="true"
+              className="mb-4 flex items-center justify-center rounded-full"
+              style={{ width: 40, height: 40, background: "#16314c" }}
+            >
+              {/* #5ba3ea, not the brand #378add: 4.99:1 on this circle. */}
+              <Check size={20} strokeWidth={2.5} color="#5ba3ea" />
+            </span>
+            {/* The name they typed at step 1. Guarded because the coaches row
+                can carry an empty name — the greeting then drops the comma
+                rather than rendering "You're in, ." */}
+            <h2 className="text-[17px] font-semibold tracking-[-0.2px] text-reps-ink">
+              {coachName ? `You're in, ${coachName}.` : "You're in."}
+            </h2>
+          </div>
+
+          {/* ⚠️ The pause. This gap is the whole point of the split — it is
+              doing the work the card used to do badly. */}
+          <div
+            className="mt-14 rounded-[14px] px-6 py-6 text-center"
+            style={{ border: "1px solid #2a2d36" }}
           >
+            <p className="text-[14px] leading-relaxed text-reps-sub mb-5">
+              Add your first {labels.studentLabel} to get started.
+            </p>
+            {/* The button keeps its weight: it is the one thing a brand-new
+                coach has to do, and the lighter treatment above is the
+                CONTAINER receding, not the action. */}
             <Link
               href="/instructor/add-student"
               className="block text-center bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
@@ -351,8 +373,8 @@ export default async function RosterPage() {
             >
               + Add {labels.studentLabel}
             </Link>
-          </EmptyStateCard>
-        </div>
+          </div>
+        </>
       ) : (
         <>
           {/* Tight but distinct spacing between completion groups. The top
