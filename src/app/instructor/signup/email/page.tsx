@@ -102,7 +102,7 @@ export default function EmailStep() {
   if (!sent) {
     return (
       <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-        <ScreenHeader stepNum={3} total={3} />
+        <ScreenHeader stepNum={2} total={2} />
         <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1 text-reps-ink">Your email</h2>
         <p className="text-[15px] text-reps-sub mb-6">We&apos;ll email you a sign-in code.</p>
         <ErrorBanner error={error} />
@@ -199,7 +199,7 @@ export default function EmailStep() {
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-      <ScreenHeader stepNum={3} total={3} />
+      <ScreenHeader stepNum={2} total={2} />
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1 text-reps-ink">Enter your code</h2>
       <p className="text-[13px] text-reps-sub mb-6">
         We emailed a 6-digit code to <span className="text-reps-ink font-medium">{email}</span>.

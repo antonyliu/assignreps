@@ -10,8 +10,22 @@ import { type ActivityType } from "@/config/activityTypes";
 type SignupCtx = {
   name: string;
   setName: (v: string) => void;
+  /**
+   * ⚠️ READ-ONLY as of the two-step signup. There is no setter, because the
+   * activity picker that used to set it (/instructor/signup/type) is gone and
+   * this now has exactly one value for every new coach.
+   *
+   * It stays in the context rather than being inlined at the insert site so the
+   * signup flow still has ONE place that decides what a new coach teaches — the
+   * email step reads it and writes it to `coaches.instructor_type` unchanged.
+   *
+   * ⚠️ Re-adding a picker means restoring the setter here and a screen that
+   * calls it; NOT changing the column. `instructor_type` is plain nullable text
+   * with no CHECK constraint, and `getActivityLabels()` already falls back to
+   * basketball for null, so every other activity in activityTypes.ts is
+   * reachable without a migration.
+   */
   instructorType: ActivityType;
-  setInstructorType: (v: ActivityType) => void;
   email: string;
   setEmail: (v: string) => void;
 };
@@ -26,10 +40,15 @@ export function useSignup() {
 
 export function SignupProvider({ children }: { children: React.ReactNode }) {
   const [name, setName] = useState("");
-  const [instructorType, setInstructorType] = useState<ActivityType>("basketball");
   const [email, setEmail] = useState("");
+  // ⚠️ THE DEFAULT IS NOW THE ONLY SOURCE. It was already "basketball" — the
+  // picker merely had the chance to change it — so this is not a new value
+  // being invented, it is the one the field already expected, and the one
+  // getActivityLabels() falls back to. A const rather than state: nothing can
+  // change it during signup any more, and useState would imply otherwise.
+  const instructorType: ActivityType = "basketball";
   return (
-    <Ctx.Provider value={{ name, setName, instructorType, setInstructorType, email, setEmail }}>
+    <Ctx.Provider value={{ name, setName, instructorType, email, setEmail }}>
       {children}
     </Ctx.Provider>
   );

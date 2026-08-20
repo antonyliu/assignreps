@@ -17,12 +17,15 @@ export default function NameStep() {
       return;
     }
     setError("");
-    router.push("/instructor/signup/type");
+    // ⚠️ Straight to email — the activity picker that used to sit between them
+    // is gone. `instructor_type` is still written at signup; it now comes from
+    // SignupProvider's default rather than from a screen. See the provider.
+    router.push("/instructor/signup/email");
   }
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-      <ScreenHeader stepNum={1} total={3} />
+      <ScreenHeader stepNum={1} total={2} />
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6 text-reps-ink">What should students call you?</h2>
       <ErrorBanner error={error} />
       <form onSubmit={submit}>
