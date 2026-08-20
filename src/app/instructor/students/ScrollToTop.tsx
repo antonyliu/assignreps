@@ -135,6 +135,49 @@ const NUDGE_SETTLE_MS = 120;
 // invisible once they interact.
 const NUDGE_WINDOW_MS = 4000;
 
+// ⚠️⚠️ EXPERIMENT, Aug 20 2026 — SET BACK TO true TO RESTORE. ⚠️⚠️
+//
+// Both forced scrollTo(0, 0) calls are switched off. scrollRestoration stays
+// "manual", tier 1, tier 2 and the header are untouched: one variable.
+//
+// WHY. Every log tonight showed the same shape — scrollY ~40 at the first
+// reading, then a "scroll" event single-digit milliseconds later reading 0 —
+// and that was taken as the layout recovering on its own. It is not. Reproduced
+// in a browser with no bug present, using this file's exact ordering:
+//
+//     layout  t=0.1ms  y=40
+//     scroll  t=0.4ms  y=0
+//     raf     t=0.5ms  y=0
+//
+// The scroll event IS this component's own scrollTo(0, 0). The listener is
+// attached after the call, but scroll events dispatch asynchronously, so it
+// still catches it. So the "healthy" readings were never evidence of anything —
+// they were the echo of our own correction, and every "layout is fine"
+// conclusion tonight was drawn from them.
+//
+// ⚠️ WHICH MAKES THE layout READING THE ONLY HONEST ONE, and it says the roster
+// ARRIVES AT ~40px. That is squarely in the band measured off the screenshot:
+// at 40 the group label is fully hidden and the first card is clipped 14px.
+//
+// WHAT THIS TESTS. The hypothesis is that the correction is the problem — a
+// synthetic scrollTo landing while the visual viewport is still resizing
+// (toolbar collapsing behind a dismissing keyboard, or just re-expanding after
+// any navigation) leaves the compositor showing a stale frame, and only a real
+// touch-driven scroll, which goes through a different pipeline, resolves it.
+//
+// ⚠️ A CLEAN RESULT IS NOT THE ONLY USEFUL ONE. If the roster now arrives
+// visibly scrolled at ~40 and simply stays there, that is equally decisive and
+// simpler: it was never a paint bug, and we have spent the night masking a real
+// scroll offset instead of finding out why the page arrives at 40.
+//
+// ⚠️ ONE CONFOUND, LEFT IN DELIBERATELY because the brief was to isolate this
+// variable: tier 2's nudge is also a synthetic scroll. It is debounced to fire
+// AFTER the resize settles rather than during it, so it is far less implicated
+// — but if the result comes out clean, check the log for nudge lines before
+// crediting this change. If the screen was already right before nudge1-pre,
+// tier 2 was not the repair.
+const FORCE_SCROLL_TO_TOP: boolean = false;
+
 let mountSeq = 0;
 
 export default function ScrollToTop() {
@@ -235,6 +278,11 @@ export default function ScrollToTop() {
       console.log(`[reps-scroll] #${seq} +${Math.round(performance.now() - t0)}ms ${why.padEnd(10)} ${line}`);
     };
 
+    // Says which build is running, so a console full of readings can never be
+    // mistaken for the other one.
+    console.log(
+      `[reps-scroll] BUILD forcedScrollTo=${FORCE_SCROLL_TO_TOP ? "ENABLED" : "DISABLED (experiment)"}`
+    );
     sample("layout");
     // ── end probe ──────────────────────────────────────────────────────────
 
@@ -242,7 +290,9 @@ export default function ScrollToTop() {
     // restored offset was briefly VISIBLE and then snapped away — the jump
     // reads as the page settling in the wrong place. Running before paint means
     // the first frame the coach sees is already at the top.
-    window.scrollTo(0, 0);
+    //
+    // ⚠️ DISABLED BY THE EXPERIMENT ABOVE.
+    if (FORCE_SCROLL_TO_TOP) window.scrollTo(0, 0);
 
     // ⚠️ AND AGAIN ON THE NEXT FRAME. This is the part that actually closes the
     // race the comment above describes rather than merely narrowing it.
@@ -257,8 +307,10 @@ export default function ScrollToTop() {
     //
     // Cancelled on cleanup so a fast navigation away cannot have this fire
     // against the next route.
+    // ⚠️ The rAF still runs and still samples — only the scroll is disabled, so
+    // the timeline keeps its shape and the two builds stay comparable.
     const raf = requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
+      if (FORCE_SCROLL_TO_TOP) window.scrollTo(0, 0);
       sample("raf");
     });
 
