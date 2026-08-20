@@ -291,7 +291,49 @@ export default async function RosterPage() {
             subtle so the button reads as an affordance, not a filled CTA competing
             with the heading. Suppressed on the empty state, where the full-width
             bottom CTA is the whole point. */}
-        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[20px] pb-1.5">
+        {/* ⚠️ pb-[14.5px], NOT pb-5, and the odd number is load-bearing. This
+            sets the header's masking band — the run of solid background below
+            its last ink — to 20px, matching the pb-5 AssignmentTabs carries. It
+            is not 20 here because the row is items-baseline and "+ Add"'s padded
+            box hangs 5.5px BELOW the h1's text bottom. 5.5 + 14.5 = 20. Measured
+            against the real compiled CSS at 390px, not derived.
+
+            ⚠️ IT HAS TO BE PADDING, NOT A MARGIN ON THE LIST BELOW — the same
+            rule written out at STICKY_BAR in AssignmentTabs. A margin scrolls
+            away the moment the header pins, so it contributes nothing in exactly
+            the situation this exists for. The old 13.5px was 11.5px of padding
+            plus a 2px mt-0.5 on the groups wrapper, so only 11.5px of it ever
+            survived a scroll. That mt-0.5 is gone and folded in here.
+
+            ⚠️ IT BUYS VISUAL BODY, NOT PROTECTION — measured, and the earlier
+            version of this comment claimed otherwise:
+
+              config                      ink-to-ink   scroll to fully hide label
+              pb-1.5 + mt-0.5 (before)          13.5                        18px
+              pb-[14.5px], no mt (here)           20                        16px
+              pb-1.5 + mt-[8.5px]                 20                      24.5px
+
+            Padding sits INSIDE the header, so it makes the header taller and it
+            therefore covers marginally MORE, not less: the label went from 2px
+            below the header's bottom edge to flush against it. AssignmentTabs
+            has the same property — its cards sit 0px under the bar and start
+            being covered on the first pixel of scroll. Its 20px is body for the
+            pinned bar, not a shield for the content.
+
+            ⚠️ So if the goal is ever specifically to keep the label ALIVE
+            through a small offset rather than to match the tab bar, the space
+            has to go OUTSIDE the header instead — pb-1.5 with mt-[8.5px] on the
+            groups wrapper is the same 20px ink-to-ink and holds the label to
+            24.5px of scroll. It was not chosen here because it contradicts the
+            rule above and diverges from AssignmentTabs.
+
+            ⚠️ Either way this is a MITIGATION, NOT A FIX, and a narrow one: at
+            the ~40px offset actually observed the label is gone under every one
+            of these values. It only changes behaviour below about 20px.
+
+            ⚠️ The skeleton's matching row in loading.tsx carries the same value.
+            They have to move together or the swap gains a jump. */}
+        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[20px] pb-[14.5px]">
           <h1 className="text-xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
           {playerList.length > 0 && (
             <Link
@@ -380,7 +422,9 @@ export default async function RosterPage() {
               margin is small because the heading row's own bottom padding
               already sits above it — together they set the heading-to-first-
               group gap, so both have to stay small to keep it tight. */}
-          <div className="flex flex-col gap-5 mt-0.5 mb-8" data-scroll-probe="groups">
+          {/* mt-0.5 removed Aug 20 2026 — its 2px moved into the header's
+              padding above, where it survives the header pinning. */}
+          <div className="flex flex-col gap-5 mb-8" data-scroll-probe="groups">
             {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;
