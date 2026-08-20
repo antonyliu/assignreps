@@ -250,7 +250,18 @@ export default async function CoachPlayerPage({
               ⚠️ One line, no box. The headline IS the instruction; the old
               "Ready when you are." sat above it saying nothing the sentence
               below did not already say. */
-          <div className="mt-2">
+          /* ⚠️ TWO GROUPS, NOT ONE STACK — identity, then task.
+             The header block carries mb-4, so mt-6 here reads as 40px between
+             the "Joined ..." line and this headline. The previous mt-2 (24px
+             total) matched the gap the sticky tab bar leaves when there ARE
+             assignments, which was consistent but wrong for this screen: with
+             only four short elements on an otherwise empty page it flattened
+             identity and task into one uniform list.
+
+             NOTE this is a plain block comment, not a JSX-braced one: it sits
+             in expression position inside the ternary above, where a braced
+             comment counts as a second child and breaks the parse. */
+          <div className="mt-6">
             {/* ⚠️ LEFT-ALIGNED, not centred. Everything above it on this
                 screen — the student's name and the "Joined ..." line — is left
                 aligned, and centring this one line made it read as a caption
@@ -258,7 +269,11 @@ export default async function CoachPlayerPage({
                 the student. The BUTTON keeps its own centred label; that is a
                 full-width control centring its text, which is a different
                 thing from the block being centred. */}
-            <h2 className="text-[17px] font-semibold tracking-[-0.2px] text-reps-ink mb-5">
+            {/* ⚠️ Tight to the button on purpose. The headline is the
+                instruction and the button carries it out — they are one unit,
+                and the 40px above is what separates that unit from the
+                identity block rather than any space in here. */}
+            <h2 className="text-[17px] font-semibold tracking-[-0.2px] text-reps-ink mb-4">
               Give {firstName} their first assignment.
             </h2>
             <Link
