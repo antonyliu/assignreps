@@ -85,7 +85,53 @@ const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : use
 // A formatted string rather than an object on purpose: Safari's remote console
 // evaluates object properties when you expand them, not when they were logged,
 // which would show settled values instead of the ones at each moment.
-const PROBE_WINDOW_MS = 4000;
+// ⚠️⚠️ THE 4-SECOND WINDOW WAS SHORTER THAN THE EVENT IT WAS OBSERVING. ⚠️⚠️
+//
+// Replaced Aug 20 2026. A run with the forced scrollTo disabled showed
+// innerHeight still climbing at the cutoff — 654 to 669, and nowhere near its
+// resting 714 — so every "final" reading this probe has ever logged was taken
+// while the viewport was still resizing. "Four seconds have passed" was never
+// the same thing as "the viewport has settled", and we had been treating them
+// as interchangeable all night.
+//
+// So the window is no longer a clock. A rAF loop reads innerHeight and
+// visualViewport.height every frame and only declares SETTLED once NEITHER has
+// changed for QUIET_MS straight, however long that takes. The geometry reading
+// that matters is taken at that moment.
+//
+// ⚠️ rAF, not resize events, deliberately. iOS does not necessarily fire an
+// event for every intermediate value of a URL-bar animation, and a missed
+// intermediate would look exactly like quiescence. Polling every frame cannot
+// miss one.
+//
+// THE QUESTION IT ANSWERS: at true settle, is OVERLAP/lblCover still bad? If it
+// is healthy the moment the resize genuinely finishes, this really is about
+// viewport settle timing. If it is still bad well after everything has stopped
+// moving, then settle timing was only ever a correlation and the cause is
+// elsewhere.
+const QUIET_MS = 500;
+
+// ⚠️ AND IT DOES NOT STOP THERE, WHICH IS THE POINT. Caught by testing the
+// watcher against a scripted climb before shipping it: with a 700ms pause
+// between two steps, a 500ms quiet threshold declared SETTLED mid-climb and
+// reported a resting height that was nothing of the sort. That is exactly
+// tonight's mistake in a new costume — concluding from an observation window
+// shorter than the event.
+//
+// So a quiet spell is reported, not obeyed. The watcher logs SETTLED#n with its
+// geometry reading, then KEEPS WATCHING; if the viewport moves again it logs
+// RESUMED and waits for the next one. It only stops once things have been
+// genuinely still for FINAL_QUIET_MS, and logs FINAL with the reading that
+// actually matters. A pause in the animation therefore costs an extra pair of
+// log lines instead of a wrong answer.
+const FINAL_QUIET_MS = 3000;
+
+// ⚠️ A RUNAWAY GUARD, NOT A DEADLINE — and it must not be read as one. If this
+// fires, the log says NEVER-SETTLED rather than SETTLED, which is itself a
+// finding: something is resizing the viewport indefinitely. Generous on purpose;
+// a URL bar that takes half a minute is already the answer to a different
+// question.
+const SETTLE_CAP_MS = 30000;
 
 // ── TIER 2 FIX: force a repaint once the visual viewport settles ───────────
 //
@@ -372,30 +418,109 @@ export default function ScrollToTop() {
     window.visualViewport?.addEventListener("resize", onVvResizeNudge);
     // ── end tier 2 fix ────────────────────────────────────────────────────
 
-    // Backstops, so a run where the coach never touches the screen still
-    // produces a timeline. Deduping means these stay silent if nothing moved.
-    const timers = [300, 600, 1200, 2500, PROBE_WINDOW_MS].map((ms) =>
+    // Early backstops so the first moments have a timeline even if nothing
+    // fires an event. Deduped, so they stay silent when nothing moved.
+    const timers = [300, 600, 1200, 2500].map((ms) =>
       setTimeout(() => sample(`t+${ms}`), ms)
     );
 
-    // Stop after the window closes: force one final unconditional reading so
-    // the settled state is always in the log even if it never changed, then
-    // detach so this cannot follow the coach around the app.
-    const stop = setTimeout(() => {
-      last = "";
-      sample("final");
+    const detachProbe = () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("touchend", onTouchEnd);
       window.visualViewport?.removeEventListener("resize", onVvResize);
       window.visualViewport?.removeEventListener("scroll", onVvScroll);
-    }, PROBE_WINDOW_MS + 50);
+    };
+
+    // ── TEMPORARY: watch until the viewport genuinely stops resizing ───────
+    const startIH = window.innerHeight;
+    const startVVH = window.visualViewport?.height ?? 0;
+    let lastIH = startIH;
+    let lastVVH = startVVH;
+    let quietSince = t0;
+    let lastChangeAt = t0;
+    let lastTraceAt = 0;
+    let changes = 0;
+    let lastMoved = "none";
+    let settleRaf = 0;
+
+    let settleSeq = 0;
+    let inQuiet = false;
+
+    const banner = (verdict: string, now: number) =>
+      console.log(
+        `[reps-scroll] #${seq} ===== ${verdict} =====` +
+          ` lastChange=+${Math.round(lastChangeAt - t0)}ms` +
+          ` at=+${Math.round(now - t0)}ms` +
+          ` innerH ${startIH}->${window.innerHeight}` +
+          ` vvH ${Math.round(startVVH)}->${Math.round(window.visualViewport?.height ?? 0)}` +
+          ` changes=${changes} lastMoved=${lastMoved}`
+      );
+
+    // Unconditional — the whole point is the reading AT this moment, even when
+    // it is byte-identical to the one before it.
+    const readingNow = (why: string) => { last = ""; sample(why); };
+
+    const stopWatching = (verdict: string, now: number) => {
+      cancelAnimationFrame(settleRaf);
+      settleRaf = 0;
+      banner(verdict, now);
+      readingNow(verdict === "FINAL" ? "FINAL" : "NO-SETTLE");
+      detachProbe();
+    };
+
+    const watch = () => {
+      const now = performance.now();
+      const ih = window.innerHeight;
+      const vh = window.visualViewport?.height ?? 0;
+
+      if (ih !== lastIH || vh !== lastVVH) {
+        if (inQuiet) {
+          inQuiet = false;
+          console.log(
+            `[reps-scroll] #${seq} +${Math.round(now - t0)}ms ===== RESUMED ` +
+              `after SETTLED#${settleSeq} — that settle was a PAUSE, not the end =====`
+          );
+        }
+        changes++;
+        lastMoved = ih !== lastIH ? "innerHeight" : "vvHeight";
+        lastIH = ih;
+        lastVVH = vh;
+        quietSince = now;
+        lastChangeAt = now;
+        // Throttled trace so the climb is visible without burying the console.
+        if (now - lastTraceAt > 150) {
+          lastTraceAt = now;
+          console.log(
+            `[reps-scroll] #${seq} +${Math.round(now - t0)}ms resizing   ` +
+              `innerH=${ih} vvH=${Math.round(vh)} scrollY=${Math.round(window.scrollY)}`
+          );
+        }
+      }
+
+      const quietFor = now - quietSince;
+
+      // First indication of stillness. Reported, then watching continues.
+      if (!inQuiet && quietFor >= QUIET_MS) {
+        inQuiet = true;
+        settleSeq++;
+        banner(`SETTLED#${settleSeq}`, now);
+        readingNow(`SETTLED#${settleSeq}`);
+      }
+
+      // Genuinely done — long enough that a pause in the animation cannot pass
+      // for the end of it.
+      if (quietFor >= FINAL_QUIET_MS) return stopWatching("FINAL", now);
+      if (now - t0 >= SETTLE_CAP_MS) return stopWatching("NEVER-SETTLED", now);
+      settleRaf = requestAnimationFrame(watch);
+    };
+    settleRaf = requestAnimationFrame(watch);
     // ── end probe ──────────────────────────────────────────────────────────
 
     return () => {
       cancelAnimationFrame(raf);
+      if (settleRaf) cancelAnimationFrame(settleRaf);
       timers.forEach(clearTimeout);
-      clearTimeout(stop);
       clearTimeout(nudgeTimer);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchStop);
