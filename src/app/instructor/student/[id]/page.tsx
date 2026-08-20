@@ -5,7 +5,6 @@ import { requireCoach } from "@/lib/require-coach";
 import { getActivityLabels } from "@/config/activityTypes";
 import type { Assignment } from "@/types/database";
 import PlayerManage from "./PlayerManage";
-import EmptyStateCard from "@/components/EmptyStateCard";
 import CoachAssignmentList from "./CoachAssignmentList";
 import type { CardRow } from "./CoachAssignmentList";
 import { accountOverLimit } from "@/lib/active-students";
@@ -223,40 +222,47 @@ export default async function CoachPlayerPage({
       )}
 
       {assignmentList.length === 0 ? (
-        <div className="flex-1 flex flex-col justify-center pb-8">
-          {/* ⚠️ THREE STATES, and only the last one gets the card.
-              A paused student and an over-limit account are both problems the
-              coach has to resolve, not empty states — and over-limit is a PLAN
-              CAPACITY state, which is exactly what a blue-tinted surface
-              already means elsewhere in this app. Dressing either as a friendly
-              "ready when you are" would hide the reason there is no button.
-              Both keep their own copy, unchanged. */}
-          {!isActive ? (
+        /* ⚠️ THREE STATES, and they no longer share a wrapper.
+           A paused student and an over-limit account are problems the coach has
+           to resolve, not empty states — and over-limit is a PLAN CAPACITY
+           state. Both keep their own copy AND their own vertical centring,
+           unchanged. Only the ready-to-assign state moved up. */
+        !isActive ? (
+          <div className="flex-1 flex flex-col justify-center pb-8">
             <p className="text-[15px] text-reps-sub text-center">
               Nothing assigned.<br />Activate {firstName} to give them work.
             </p>
-          ) : overLimit ? (
+          </div>
+        ) : overLimit ? (
+          <div className="flex-1 flex flex-col justify-center pb-8">
             <p className="text-[15px] text-reps-sub text-center">
               Nothing assigned yet.<br />Assigning is on hold while you&apos;re over your plan limit.
             </p>
-          ) : (
-            /* ⚠️ No badge, unlike the empty roster. Nothing has been completed
-               here — a success mark over an empty list congratulates nobody.
-               See EmptyStateCard. */
-            <EmptyStateCard
-              headline="Ready when you are."
-              line={`Give ${firstName} their first assignment.`}
+          </div>
+        ) : (
+          /* ⚠️ NOT centred in the remaining space any more, and that is the
+              point. `flex-1 justify-center` pushed this to the middle of an
+              otherwise empty screen, which read as detached from the student it
+              belongs to. mt-2 against the header's own mb-4 gives 24px — the
+              same gap the sticky tab bar leaves when there ARE assignments, so
+              the screen keeps one rhythm whether it is empty or full.
+
+              ⚠️ One line, no box. The headline IS the instruction; the old
+              "Ready when you are." sat above it saying nothing the sentence
+              below did not already say. */
+          <div className="mt-2">
+            <h2 className="text-[17px] font-semibold tracking-[-0.2px] text-reps-ink text-center mb-5">
+              Give {firstName} their first assignment.
+            </h2>
+            <Link
+              href={`/instructor/student/${id}/assign`}
+              className="block text-center bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+              style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              <Link
-                href={`/instructor/student/${id}/assign`}
-                className="block text-center bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
-                style={{ WebkitTapHighlightColor: "transparent" }}
-              >
-                + Assign homework
-              </Link>
-            </EmptyStateCard>
-          )}
-        </div>
+              + Assign homework
+            </Link>
+          </div>
+        )
       ) : (
         <>
           {/* Replaces the old "Assignments" section label — the tabs name the

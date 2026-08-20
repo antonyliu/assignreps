@@ -333,9 +333,12 @@ export default async function RosterPage() {
            is what earns the pause below it; putting it back in a card would
            collapse the two halves together again.
 
-           ⚠️ It also means this screen no longer uses a blue-tinted surface at
-           all, which sidesteps the collision with the plan-capacity blue that
-           EmptyStateCard has to reason about. Worth keeping that way. */
+           ⚠️ NEITHER empty state uses a tinted surface any more — this one or
+           the student detail screen. That matters beyond looks: blue means PLAN
+           CAPACITY in this app (the over-limit banner #18222d, the reactivate
+           modal #1e2633), and these were briefly a third blue surface with a
+           different meaning. The capacity blue is now the only blue-washed
+           surface in the instructor app. Keep it that way. */
         <>
           <div className="mt-12 flex flex-col items-center text-center">
             <span
@@ -354,26 +357,22 @@ export default async function RosterPage() {
             </h2>
           </div>
 
-          {/* ⚠️ The pause. This gap is the whole point of the split — it is
-              doing the work the card used to do badly. */}
-          <div
-            className="mt-14 rounded-[14px] px-6 py-6 text-center"
-            style={{ border: "1px solid #2a2d36" }}
+          {/* ⚠️ The pause, unchanged — this gap is what separates the arrival
+              from the next action, and it is doing the work the old card did
+              badly.
+
+              ⚠️ The hairline box and the "get started" line are BOTH gone. With
+              one element left below the greeting, a container had nothing to
+              contain and the prompt only restated what the button already says.
+              The instruction now lives in the button's own label, which is why
+              it reads "Add your first ..." rather than "Add ...". */}
+          <Link
+            href="/instructor/add-student"
+            className="mt-14 block text-center bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+            style={{ WebkitTapHighlightColor: "transparent" }}
           >
-            <p className="text-[14px] leading-relaxed text-reps-sub mb-5">
-              Add your first {labels.studentLabel} to get started.
-            </p>
-            {/* The button keeps its weight: it is the one thing a brand-new
-                coach has to do, and the lighter treatment above is the
-                CONTAINER receding, not the action. */}
-            <Link
-              href="/instructor/add-student"
-              className="block text-center bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
-              style={{ WebkitTapHighlightColor: "transparent" }}
-            >
-              + Add {labels.studentLabel}
-            </Link>
-          </div>
+            + Add your first {labels.studentLabel}
+          </Link>
         </>
       ) : (
         <>
