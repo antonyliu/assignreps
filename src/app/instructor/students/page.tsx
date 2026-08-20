@@ -3,7 +3,6 @@ import { requireCoach } from "@/lib/require-coach";
 import { LogoMini } from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import { Check } from "lucide-react";
-import ScrollToTop from "./ScrollToTop";
 import InactiveGroup from "./InactiveGroup";
 import OverLimitBanner from "./OverLimitBanner";
 import { getActivityLabels } from "@/config/activityTypes";
@@ -238,21 +237,27 @@ export default async function RosterPage() {
   return (
     <main className="flex flex-col min-h-screen p-[0_1.25rem_1.75rem]">
 
-      {/* Renders nothing — resets scroll so the sticky header is never already
-          covering the first group on arrival. */}
-      <ScrollToTop />
+      {/* ⚠️ THE APP CHROME IS STICKY. THE PAGE IS NOT. Narrowed Aug 20 2026
+          from a block that also carried the heading and + Add.
 
-      {/* Logo row and heading row travel together as one sticky unit, so the
-          roster's identity and its primary action stay on screen however far
-          the list scrolls. The -mx here bleeds the block past main's gutters so
-          its background fills the screen edge to edge and rows vanish cleanly
-          underneath instead of showing through at the sides — solid fill, hard
-          edge, no gradient, the same call made for the student ASSIGNMENTS
-          header. It carries the page's top padding itself (main no longer has
-          any), otherwise that padding would scroll away and leave the logo
-          against the status bar. Horizontal padding lives on the rows below,
-          not here. */}
-      <div className="sticky top-0 z-30 -mx-[1.25rem] pt-4 bg-reps-bg" data-scroll-probe="header">
+          What it pins is a 58px strip: the logo, the account control, and the
+          divider that closes it. Everything that is about the roster rather
+          than about the app — the heading, + Add, the group labels, the rows —
+          sits below this and scrolls away normally.
+
+          The -mx bleeds the block past main's gutters so its background fills
+          the screen edge to edge and rows vanish cleanly underneath instead of
+          showing through at the sides — solid fill, hard edge, no gradient, the
+          same call made for the student ASSIGNMENTS header. It carries the
+          page's top padding itself (main has none), otherwise that padding
+          would scroll away and leave the logo against the status bar.
+          Horizontal padding lives on the row inside, not here.
+
+          ⚠️ Keep the pinned surface to chrome. A tall sticky header is what put
+          the first group label 2px under a 117.5px overhang, where a few pixels
+          of drift erased it completely; the label now clears this strip by
+          about 60px. */}
+      <div className="sticky top-0 z-30 -mx-[1.25rem] pt-4 bg-reps-bg">
         {/* items-center keeps the left lockup and the right profile control on
             the same centerline across Chrome and Safari iOS. The control's 44px
             tap target is taller than the 23px logo, so centering — not baseline
@@ -284,25 +289,33 @@ export default async function RosterPage() {
             style={{ height: 1, background: "#2a2d36" }}
           />
         </div>
+      </div>
 
-        {/* Add lives inline with the heading rather than pinned to the bottom, so
-            it stays reachable without the list having to scroll to its end. White
-            label because this is the screen's primary action; the border stays
-            subtle so the button reads as an affordance, not a filled CTA competing
-            with the heading. Suppressed on the empty state, where the full-width
-            bottom CTA is the whole point. */}
-        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[20px] pb-1.5">
-          <h1 className="text-xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
-          {playerList.length > 0 && (
-            <Link
-              href="/instructor/add-student"
-              className="shrink-0 text-[13px] font-medium text-[#ffffff] px-2.5 py-1.5 rounded-[8px] hover:bg-reps-card transition-colors"
-              style={{ border: "1px solid #2a2d36", WebkitTapHighlightColor: "transparent" }}
-            >
-              + Add
-            </Link>
-          )}
-        </div>
+      {/* ⚠️ OUTSIDE the sticky block as of Aug 20 2026, so it scrolls away with
+          the list. That is a deliberate trade: + Add no longer stays reachable
+          part-way down a long roster, and a coach deep in the list scrolls back
+          up to reach it.
+
+          No px here — it is a direct child of main now, so main's own
+          1.25rem gutter applies. The rhythm is unchanged from when this sat
+          inside the sticky block: pt-[20px] above, pb-1.5 below, and the block
+          above it still ends on its divider.
+
+          White label because this is the screen's primary action; the border
+          stays subtle so the button reads as an affordance, not a filled CTA
+          competing with the heading. Suppressed on the empty state, where the
+          full-width bottom CTA is the whole point. */}
+      <div className="flex items-baseline justify-between gap-3 pt-[20px] pb-1.5">
+        <h1 className="text-xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
+        {playerList.length > 0 && (
+          <Link
+            href="/instructor/add-student"
+            className="shrink-0 text-[13px] font-medium text-[#ffffff] px-2.5 py-1.5 rounded-[8px] hover:bg-reps-card transition-colors"
+            style={{ border: "1px solid #2a2d36", WebkitTapHighlightColor: "transparent" }}
+          >
+            + Add
+          </Link>
+        )}
       </div>
 
       {/* ⚠️ ACCOUNT-LEVEL, so it lives on the account-level screen. Assigning is
@@ -380,7 +393,7 @@ export default async function RosterPage() {
               margin is small because the heading row's own bottom padding
               already sits above it — together they set the heading-to-first-
               group gap, so both have to stay small to keep it tight. */}
-          <div className="flex flex-col gap-5 mt-0.5 mb-8" data-scroll-probe="groups">
+          <div className="flex flex-col gap-5 mt-0.5 mb-8">
             {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;
@@ -466,7 +479,6 @@ export default async function RosterPage() {
                     <span
                       className="inline-flex items-center gap-1.5 text-xs font-semibold"
                       style={{ color: style.text }}
-                      data-scroll-probe="label"
                     >
                       <span
                         className="rounded-full shrink-0"
