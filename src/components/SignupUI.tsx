@@ -10,14 +10,61 @@ export const BTN_PRIMARY =
 export const ERROR_BOX =
   "bg-red-900/20 border border-red-500/30 text-red-400 rounded-[10px] px-4 py-3 text-sm mb-4";
 
+/**
+ * The small uppercase line above each signup headline. Both steps carry the
+ * same words, which is the point: it names the one task the two screens share,
+ * so the flow reads as a single job rather than two unrelated forms.
+ *
+ * Uppercase matches the app's existing label idiom (the log screen's goal-type
+ * labels), and #8a8fa8 measures 6.17:1 on the app background.
+ */
+export const EYEBROW =
+  "text-[11px] font-semibold uppercase tracking-[0.08em] text-reps-sub mb-2";
+
+/**
+ * Progress segments + wordmark.
+ *
+ * ⚠️ REPLACED the "Step X of Y" text label. One segment per step, filled up to
+ * and including the current one, so the last step shows every segment filled —
+ * a coach can see they are finishing rather than counting.
+ *
+ * ⚠️ The count is DERIVED from `total`, not hardcoded to two. Signup went from
+ * three steps to two when the activity picker was cut, and a hardcoded pair
+ * would have to be found and edited if a step is ever added back.
+ *
+ * ⚠️ Filled is the brand accent #378add, empty is #2a2d36 — the app's standard
+ * empty-track grey, the same value every progress bar already uses. Emerald was
+ * NOT used: it means "done / makes" on every assignment surface, and borrowing
+ * it for onboarding chrome would give it a second meaning.
+ *
+ * ⚠️ The text is kept for screen readers. The visual label went; the
+ * information it carried should not.
+ */
 export function ScreenHeader({ stepNum, total }: { stepNum: number; total: number }) {
   return (
-    <div className="flex justify-between items-center h-7 mb-12">
-      <LogoMini />
-      {/* Small and dim — a secondary marker that shouldn't rival the logo. */}
-      <span className="text-xs font-medium text-reps-dim">
+    <div className="mb-10">
+      <div
+        className="flex gap-1.5"
+        role="progressbar"
+        aria-valuenow={stepNum}
+        aria-valuemin={1}
+        aria-valuemax={total}
+        aria-label={`Step ${stepNum} of ${total}`}
+      >
+        {Array.from({ length: total }, (_, i) => (
+          <span
+            key={i}
+            className="h-[3px] flex-1 rounded-full"
+            style={{ background: i < stepNum ? "#378add" : "#2a2d36" }}
+          />
+        ))}
+      </div>
+      <span className="sr-only">
         Step {stepNum} of {total}
       </span>
+      <div className="flex items-center h-7 mt-6">
+        <LogoMini />
+      </div>
     </div>
   );
 }

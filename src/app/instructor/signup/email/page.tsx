@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
 import { useSignup } from "../provider";
-import { ScreenHeader, ErrorBanner, INPUT, BTN_PRIMARY } from "@/components/SignupUI";
+import { ScreenHeader, ErrorBanner, INPUT, BTN_PRIMARY, EYEBROW } from "@/components/SignupUI";
 
 // ⚠️ A 44px tap target on a 12px line, via the same technique PrivacyFooter
 // uses: inline-flex for the height, a negative block margin so it adds none,
@@ -103,8 +103,12 @@ export default function EmailStep() {
     return (
       <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
         <ScreenHeader stepNum={2} total={2} />
+        {/* Same words as step 1 — the two screens are one job. */}
+        <p className={EYEBROW}>Setting up your account</p>
         <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1 text-reps-ink">Your email</h2>
-        <p className="text-[15px] text-reps-sub mb-6">We&apos;ll email you a sign-in code.</p>
+        {/* One line. It answers the question the field actually raises — what
+            this address is for — rather than restating what the button says. */}
+        <p className="text-[15px] text-reps-sub mb-6">We&apos;ll only use this to email you a sign-in code.</p>
         <ErrorBanner error={error} />
         <form onSubmit={submitEmail}>
           <input
@@ -170,7 +174,13 @@ export default function EmailStep() {
 
               rel="noopener noreferrer" because target="_blank" otherwise hands
               the opened page a live window.opener reference back to this one. */}
-          <p className="mt-5 text-center text-[12px] leading-relaxed text-reps-dim">
+          {/* ⚠️ Deliberately quieter than the content above it, but NOT below AA.
+              This is a legal notice — the one line that must stay readable —
+              so it steps from #8a8fa8 (6.17:1) to #7a8090, which measures
+              4.99:1 on the app background and still clears the 4.5 floor for
+              12px text. The next stop down, #6f7587, is 4.29:1 and fails; do
+              not take it further to make it recede more. */}
+          <p className="mt-5 text-center text-[12px] leading-relaxed text-[#7a8090]">
             By continuing, you agree to our{" "}
             <Link
               href="/terms"

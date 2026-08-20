@@ -5,6 +5,7 @@ import { requireCoach } from "@/lib/require-coach";
 import { getActivityLabels } from "@/config/activityTypes";
 import type { Assignment } from "@/types/database";
 import PlayerManage from "./PlayerManage";
+import EmptyStateCard from "@/components/EmptyStateCard";
 import CoachAssignmentList from "./CoachAssignmentList";
 import type { CardRow } from "./CoachAssignmentList";
 import { accountOverLimit } from "@/lib/active-students";
@@ -222,28 +223,38 @@ export default async function CoachPlayerPage({
       )}
 
       {assignmentList.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center pb-8">
-          <p className="text-[15px] text-reps-sub mb-5">
-            {!isActive ? (
-              <>Nothing assigned.<br />Activate {firstName} to give them work.</>
-            ) : overLimit ? (
-              <>Nothing assigned yet.<br />Assigning is on hold while you&apos;re over your plan limit.</>
-            ) : (
-              <>Nothing assigned yet.<br />Give {firstName} some homework.</>
-            )}
-          </p>
-          {/* ⚠️ Suppressed rather than disabled while paused. A greyed button
-              invites a tap that explains nothing; the banner above has already
-              said why there is no button. The assign ROUTES redirect back here
-              too, and the three assign ACTIONS refuse outright — this is the
-              first of those three layers, and the only cosmetic one. */}
-          {canAssign && (
-            <Link
-              href={`/instructor/student/${id}/assign`}
-              className="bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+        <div className="flex-1 flex flex-col justify-center pb-8">
+          {/* ⚠️ THREE STATES, and only the last one gets the card.
+              A paused student and an over-limit account are both problems the
+              coach has to resolve, not empty states — and over-limit is a PLAN
+              CAPACITY state, which is exactly what a blue-tinted surface
+              already means elsewhere in this app. Dressing either as a friendly
+              "ready when you are" would hide the reason there is no button.
+              Both keep their own copy, unchanged. */}
+          {!isActive ? (
+            <p className="text-[15px] text-reps-sub text-center">
+              Nothing assigned.<br />Activate {firstName} to give them work.
+            </p>
+          ) : overLimit ? (
+            <p className="text-[15px] text-reps-sub text-center">
+              Nothing assigned yet.<br />Assigning is on hold while you&apos;re over your plan limit.
+            </p>
+          ) : (
+            /* ⚠️ No badge, unlike the empty roster. Nothing has been completed
+               here — a success mark over an empty list congratulates nobody.
+               See EmptyStateCard. */
+            <EmptyStateCard
+              headline="Ready when you are."
+              line={`Give ${firstName} their first assignment.`}
             >
-              + Assign homework
-            </Link>
+              <Link
+                href={`/instructor/student/${id}/assign`}
+                className="block text-center bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+                style={{ WebkitTapHighlightColor: "transparent" }}
+              >
+                + Assign homework
+              </Link>
+            </EmptyStateCard>
           )}
         </div>
       ) : (

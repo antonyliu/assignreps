@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSignup } from "./provider";
-import { ScreenHeader, ErrorBanner, INPUT } from "@/components/SignupUI";
+import { ScreenHeader, ErrorBanner, INPUT, EYEBROW } from "@/components/SignupUI";
 
 export default function NameStep() {
   const router = useRouter();
@@ -26,6 +26,8 @@ export default function NameStep() {
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
       <ScreenHeader stepNum={1} total={2} />
+      {/* Names the job both signup screens belong to. Same words on step 2. */}
+      <p className={EYEBROW}>Setting up your account</p>
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6 text-reps-ink">What should students call you?</h2>
       <ErrorBanner error={error} />
       <form onSubmit={submit}>

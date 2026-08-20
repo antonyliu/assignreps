@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireCoach } from "@/lib/require-coach";
 import { LogoMini } from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
+import EmptyStateCard from "@/components/EmptyStateCard";
 import ScrollToTop from "./ScrollToTop";
 import InactiveGroup from "./InactiveGroup";
 import OverLimitBanner from "./OverLimitBanner";
@@ -111,6 +112,9 @@ export default async function RosterPage() {
   }
 
   const labels = getActivityLabels(coach?.instructor_type ?? null);
+  // One derivation, two consumers: the profile menu and the empty-state
+  // greeting. Trimmed here so both agree on what "no name" means.
+  const coachName = coach?.name?.trim() || "";
   const playerList: Player[] = players ?? [];
 
   // Sum logged reps per assignment (same completion rule used elsewhere).
@@ -258,7 +262,7 @@ export default async function RosterPage() {
         <div className="relative flex items-center justify-between px-[1.25rem] pb-4">
           <LogoMini />
           <ProfileMenu
-            coachName={coach?.name?.trim() || ""}
+            coachName={coachName}
             isPro={isEntitled(coach?.subscription_status)}
           />
 
@@ -319,44 +323,36 @@ export default async function RosterPage() {
       )}
 
       {playerList.length === 0 ? (
-        <>
-          {/* Ghost roster — faded skeleton rows mirroring a real student row
-              (avatar, name bar, status bar, chevron) hint at what fills this
-              screen, in place of an empty-state illustration. Opacity steps
-              down per row and a mask fades the bottom so the rows dissolve
-              rather than hard-stop. */}
-          <div
-            className="flex flex-col gap-1 mt-6 mb-8"
-            aria-hidden="true"
-            style={{
-              WebkitMaskImage:
-                "linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%)",
-              maskImage:
-                "linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%)",
-            }}
+        /* ⚠️ REPLACED the "ghost roster" — three faded skeleton rows behind a
+           bottom mask, which hinted at what would fill the screen. It is gone
+           deliberately, not lost: it showed a coach an imitation of data they
+           did not have, and said nothing about what to do next. This says both.
+
+           ⚠️ The LOADING skeleton for this route is a different thing and still
+           exists. It pulses; this never did. That distinction is what stops a
+           coach with seven players being briefly told they have none, so do not
+           merge the two idioms back together.
+
+           ⚠️ Blue here means "set up, nothing yet" — NOT plan capacity. See the
+           long note in EmptyStateCard before touching the fill. */
+        <div className="mt-6">
+          <EmptyStateCard
+            badge
+            /* The name they typed at step 1. Guarded because the coaches row
+               can carry an empty name — the greeting then drops the comma
+               rather than rendering "You're in, ." */
+            headline={coachName ? `You're in, ${coachName}.` : "You're in."}
+            line={`Add your first ${labels.studentLabel} to get started.`}
           >
-            {[0.25, 0.18, 0.12].map((op, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 px-[14px] py-3 border border-reps-line rounded-[10px] pointer-events-none select-none"
-                style={{ opacity: op }}
-              >
-                <div className="w-8 h-8 rounded-full bg-reps-ink shrink-0" />
-                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                  <div className="h-3 w-24 rounded-full bg-reps-ink" />
-                  <div className="h-2.5 w-16 rounded-full bg-reps-ink" />
-                </div>
-                <span className="text-[18px] text-reps-ink">›</span>
-              </div>
-            ))}
-          </div>
-          <Link
-            href="/instructor/add-student"
-            className="block text-center bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
-          >
-            + Add your first {labels.studentLabel}
-          </Link>
-        </>
+            <Link
+              href="/instructor/add-student"
+              className="block text-center bg-reps-orange text-white font-semibold text-[15px] px-6 py-[14px] rounded-[10px] hover:bg-reps-orange-hi transition-colors"
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              + Add {labels.studentLabel}
+            </Link>
+          </EmptyStateCard>
+        </div>
       ) : (
         <>
           {/* Tight but distinct spacing between completion groups. The top
