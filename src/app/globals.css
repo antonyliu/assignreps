@@ -25,6 +25,35 @@
   --reps-green-muted:  #247a4f;
 }
 
+/* ⚠️⚠️ EXPERIMENT, Aug 20 2026 — DELETE THIS RULE WHEN THE ROSTER SCROLL
+   INVESTIGATION CLOSES. ⚠️⚠️
+
+   Disables CSS scroll anchoring, the browser's automatic compensation when
+   content above the viewport changes size. Testing whether the roster's ~40px
+   arrival offset is the browser silently compensating for a layout shift across
+   the skeleton -> RSC swap.
+
+   ON html, NOT on the roster's <main>, and not as a descendant opt-out.
+   Anchoring is a property of the SCROLL CONTAINER, and the document is the only
+   scroll container in this app — audited, there is no overflow-y-auto/scroll
+   anywhere in src/. Setting `none` on the scroller is the definitive form.
+   Putting it on <main> would only make that subtree ineligible to be CHOSEN as
+   an anchor, which happens to be equivalent here because <main> is everything —
+   but it is an indirect way to get there, and a test that fails to disable the
+   thing it is testing returns a false negative. Those have been expensive
+   tonight.
+
+   ⚠️ AND IT IS INERT ON THE DEVICE THIS BUG WAS REPORTED ON. Safari implements
+   no scroll anchoring at all — not the property, not the feature — on macOS or
+   iOS, and every iOS browser inherits that because Apple requires WebKit. It is
+   Chrome/Edge/Firefox/Opera only. So on an iPhone this declaration does nothing
+   and scroll anchoring cannot be the cause of the reported symptom. It is kept
+   for the Chrome and Android side of the question, and because it costs
+   nothing; it is not evidence either way about iOS. */
+html {
+  overflow-anchor: none;
+}
+
 body {
   background-color: var(--reps-bg);
   color: var(--reps-ink);
