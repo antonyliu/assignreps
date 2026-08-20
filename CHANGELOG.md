@@ -331,6 +331,58 @@ Dates are the git commit dates, oldest first. "Why it exists" is the actual reas
 
 ---
 
+## Two-step onboarding — the activity picker removed (Aug 20 2026)
+
+| Feature | Why it exists |
+|---|---|
+| `/instructor/signup/type` deleted; signup goes 3 steps → 2 | Basketball was the only selectable option — the other nine rendered as "Soon" and could not be chosen — so the screen asked a question with one answer. The standing plan was to narrow it from ten rows to four; removing it entirely was the better version of that idea |
+| `instructor_type` still written, from a constant | "basketball" was already the provider's default and already what `getActivityLabels()` returns for null, so nothing about the stored value changed — only where it comes from |
+| The column deliberately untouched | Plain nullable text, no CHECK constraint. Soccer or anything else needs a picker restored, **not a migration** — which is the whole reason the field was left alone |
+| Held as a `const`, not `useState`, with the setter removed | State would imply something can still change it during signup. Nothing can, and the setter's only consumer was the deleted screen |
+
+---
+
+## Onboarding & empty-state copy/UX pass (Aug 20 2026)
+
+Four screens — both signup steps, the empty roster, and a student with nothing assigned. The add-student screen was deliberately untouched.
+
+| Feature | Why it exists |
+|---|---|
+| Progress segments replace the "Step X of Y" label | A filled bar reads as *finishing* on the last step; a number reads as counting. The count derives from `total` rather than a hardcoded pair, because signup had just gone from three steps to two |
+| "Step X of Y" kept as `sr-only` | The visual label became a bar; the information should not disappear for screen readers |
+| An eyebrow above both signup headlines | Same words on both screens names the one job they share, so the flow reads as a single task rather than two unrelated forms. Kept tight to its headline — opening up the surrounding space is exactly when a pair like that drifts apart |
+| Step 2's reassurance moved under the email field | Field-level trust belongs beside the field, the same job the phone caption does on add-student |
+| That caption at #7a8090 rather than the #5a5f72 it mirrors | The add-student caption is a recorded AA failure at 3.11:1. Matching it exactly would have copied a known defect onto a new screen; #7a8090 is 4.99:1 |
+| Consent notice quieted to #7a8090 | It should recede without becoming unreadable — it is a legal notice. The next step down, #6f7587, is 4.29:1 and fails |
+| Empty roster split into celebration, pause, action | The arrival and the next step are different beats. One filled card gave them equal weight and made the greeting read as a label on the button |
+| Roster's prompt line and box removed; button carries the instruction | With one element left below the greeting, a container had nothing to contain and the prompt only restated the button. "+ Add your first player" says it once |
+| Player detail reduced to one bold line above the button | "Ready when you are." sat above a sentence that already said everything |
+| That screen moved up under the header, 40px / 16px | It had been centred in empty space and read as detached from the student. The 40px separates identity from task; the 16px keeps the instruction and the button that carries it out coupled |
+| Paused and over-limit branches deliberately left centred | They are problems a coach has to resolve, not empty states — and over-limit is a plan-capacity state. Only the ready-to-assign branch changed |
+
+---
+
+## The blue collision — caught, then removed rather than managed (Aug 20 2026)
+
+| Decision | Why |
+|---|---|
+| Empty states were built on a soft blue-tinted card, then rebuilt without one | Blue already means **plan capacity** in the instructor app — the over-limit banner and the reactivate modal are one state reached two ways. The empty-state card was a third blue surface with an unrelated meaning |
+| Resolved by deleting the second meaning, not by distinguishing the two blues | Separating them by fill base, border alpha and a badge worked on paper and still left a reader needing to know which blue was which. Both empty states moved to a plain hairline instead |
+| `EmptyStateCard` deleted | Created and removed the same day. Its reason for existing changed twice and then evaporated with the box; the blue-vs-capacity reasoning it carried was preserved in the roster's own comment |
+| Recorded as a standing rule in the colour system | A blue-washed surface means plan capacity and nothing else. Losing the fill also *improved* contrast — 5.34:1 on the card, 6.17:1 on the page |
+
+---
+
+## Test-account cleanup (Aug 20 2026)
+
+| Change | Why |
+|---|---|
+| Five test coach rows deleted, two kept | Accumulated signup and billing testing. RJ's account and one keeper for testing were protected and confirmed untouched by before/after diff, not by eye |
+| Cascade behaviour verified empirically first | The documented FK list named four constraints; the live database has six, and the two missing ones both point at `coaches`. PostgREST exposes that a key exists but not its delete rule, so a disposable coach with one child of every kind was created, deleted and the survivors counted |
+| Stripe cleaned up separately, by hand | Deleting a `coaches` row touches nothing at Stripe, and once the row is gone there is no in-app portal route left — so the Stripe side has to go first, or the customer id is only recoverable from the written record |
+
+---
+
 ## Not shipped — recorded so the history is honest
 
 | Killed / deferred | Why |

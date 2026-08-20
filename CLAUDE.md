@@ -197,7 +197,7 @@ If they compete for a session, the checklist wins — it contains promises to re
 
 ### Parked, deliberately — not started
 
-- ~~**Activity picker narrowing**~~ — ❌ **CLOSED Aug 19 2026, and NOT by being built.** The plan was to cut the picker from ten rows to four (basketball live, soccer/tennis/"create your own" as Soon). Instead **the whole screen was removed** and signup went from three steps to two, so there is no list left to narrow. ⚠️ The reasoning that produced the four-row plan is still sound and should be re-read if a picker ever returns — see *Queued for next session* item 2, kept for that reason. The homepage half of it shipped Aug 3 (soccer hero photo) and is unaffected.
+- ~~**Activity picker narrowing**~~ — ❌ **CLOSED Aug 20 2026, and NOT by being built.** The plan was to cut the picker from ten rows to four (basketball live, soccer/tennis/"create your own" as Soon). Instead **the whole screen was removed** and signup went from three steps to two, so there is no list left to narrow. ⚠️ The reasoning that produced the four-row plan is still sound and should be re-read if a picker ever returns — see *Queued for next session* item 2, kept for that reason. The homepage half of it shipped Aug 3 (soccer hero photo) and is unaffected.
 - **Landing page copy — empty state and permission language.** Reviewed and **deliberately left unchanged**; the existing copy was judged already correct. ⚠️ The specific strings and reasoning were not captured at the time, so this entry records the decision but not its detail — worth writing down properly if it is ever revisited, rather than re-deriving it.
 - **Roster weekly summary stat (RJ's consistency + active players)** — explored in depth, not shipped, see `docs/explorations/roster-weekly-summary-exploration.html` for reasoning and visual variations.
 - ~~**"How it works" section redesign**~~ — ✅ **CLOSED Aug 5 2026, and not by being built.** It was rebuilt as numbered steps that day (commit `b57a7ee`), then the whole section was **removed** (commit `5f2faad`): section 2 (instructor) and the new student section cover the same ground between them, at full size and split by audience. ⚠️ Do not resurrect this entry as a to-do — the section is gone deliberately, not pending.
@@ -414,7 +414,7 @@ The instructor is the customer — not the student. Students never choose this t
 
 ### Coach / Instructor
 - Signs up via email OTP (6-digit code, no password, no magic link)
-- Signup flow (per-step URLs): **name → email + 6-digit code → students list**. ⚠️ **TWO steps as of Aug 19 2026** — the activity picker that sat between name and email is gone. `instructor_type` is still written at signup, from `SignupProvider`'s constant rather than from a screen. See *Activity type system*.
+- Signup flow (per-step URLs): **name → email + 6-digit code → students list**. ⚠️ **TWO steps as of Aug 20 2026** — the activity picker that sat between name and email is gone. `instructor_type` is still written at signup, from `SignupProvider`'s constant rather than from a screen. See *Activity type system*.
 - Adds students by name + one phone number, with a Player/Parent toggle for whose number it is
 - Assigns exercises from a default library or creates custom ones
 - Picks a **goal type** (attempts / makes / consecutive) and an optional **side** (left / right)
@@ -541,10 +541,21 @@ Migrations live in `supabase/migrations/`. There is **no base schema migration**
   - ⚠️ **Not verified:** the trigger's rejection path has never executed. The privilege layer fires first, so the negative test was never run. Configuration is confirmed (no table-level UPDATE for the client roles, exactly one column grant, trigger enabled); the trigger's *behaviour* under a future grant regression is not.
 
 ### Foreign key cascade rules
+
+⚠️ **THIS LIST WAS INCOMPLETE UNTIL Aug 20 2026 — it named four constraints and the live database has SIX.** The two missing ones both point at `coaches`, which is exactly the table you would consult this list before deleting from.
+
 - `players.coach_id → coaches.id` — CASCADE
 - `assignments.player_id → players.id` — CASCADE
+- `assignments.coach_id → coaches.id` — **CASCADE** *(was undocumented)*
+- `custom_exercises.coach_id → coaches.id` — **CASCADE** *(was undocumented)*
 - `logs.player_id → players.id` — CASCADE
 - `logs.assignment_id → assignments.id` — **SET NULL** (intentional — preserves log history)
+
+⚠️ **Deleting a coach therefore destroys everything they own — silently.** Coach → players → assignments → custom exercises → logs, in one statement, HTTP 204, no error and no orphans left behind.
+
+⚠️ **`logs.assignment_id` being SET NULL does NOT save logs from a coach delete.** It only saves a log when an *assignment* is deleted. Deleting the coach takes the player, and `logs.player_id` is CASCADE.
+
+⚠️ **The delete RULES are not readable from the app's own tooling.** PostgREST's OpenAPI spec exposes that a foreign key exists but not its `ON DELETE` behaviour, and the base schema is in no migration file. The six above were settled **empirically** — a disposable coach was created with one child of every kind, deleted, and the survivors counted. That is the only reliable method here; do not infer these from `supabase/migrations/`, which is the mistake this file has already recorded three times in other contexts.
 
 ### Dashboard convenience views
 
@@ -769,6 +780,10 @@ This applies to text only. **Bar fills are unaffected** — an in-progress bar i
 - **Surfaces:** `#1c1f26`
 - **Borders:** `#2a2d36`
 - **Accent (interactive):** `#378add` (sky blue) — ⚠️ and as of Aug 17 2026 blue also carries a MEANING in the instructor app: plan capacity. See *The blue capacity system* under the over-limit assign gate before tinting anything blue.
+  - ⚠️⚠️ **A BLUE-WASHED SURFACE MEANS PLAN CAPACITY AND NOTHING ELSE. This was nearly broken on Aug 20 2026 and the rule is now explicit.** The onboarding empty states were built with a soft blue-tinted card (`#0f1d2c`, a 14% brand-blue wash) for "you're set up, nothing here yet" — a *third* blue surface carrying a meaning unrelated to capacity. It was caught because this very line says to read the capacity section first.
+  - **How it was resolved:** not by making the two blues more distinguishable, but by **removing the second meaning entirely**. Both empty states were rebuilt on a plain hairline (`1px solid #2a2d36`, no fill) and `EmptyStateCard` was deleted. **Neither empty state uses a tinted surface, so the capacity blue is once again the only blue-washed surface in the instructor app.**
+  - ⚠️ **Do not reintroduce a tinted fill for a non-capacity state.** Distinguishing two blue meanings by alpha and base colour was tried, worked on paper (different fill, lighter outline, a badge the capacity surfaces never carry) and was still the wrong answer — it left a reader needing to know which blue was which. Resolving the collision beat managing it.
+  - ⚠️ Losing the fill **improved** contrast rather than costing anything: body text measured 5.34:1 on the blue card and 6.17:1 on the page background.
 - **Labels:** `#c8cdd8` (`--reps-label`)
 - **Placeholders:** `#5a5f72` — ⚠️ **the intended token, but NOT what most fields actually render.** See below.
 - **Helper text:** `#8a8fa8`
@@ -977,6 +992,80 @@ The fills are the brand blue washed over the surface underneath at 7% — the al
 ✅ **Device-tested Aug 17 2026**, and it is where most of this section's copy and colour decisions came from: the hardcoded "one", the missing outline, the em dashes, the flat three-tier modal, the inline upgrade phrase. Every one of those was invisible until it was on a phone.
 
 ⚠️ **Still unseen on a device:** the `over_ceiling` variants. Everything above was walked as an unentitled coach over the *free* limit; a Pro coach past 30 — who gets no upgrade button on either surface — has never been rendered.
+
+---
+
+## Onboarding & empty states (Aug 20 2026)
+
+A copy and UX pass across four screens — both signup steps, the empty roster, and a student with nothing assigned — plus the removal of onboarding's second step. **The add-student screen was deliberately untouched throughout.** Shipped to prod as `33b1e44`.
+
+### Signup is two steps, and the picker is gone
+
+`/instructor/signup/type` ("What do you teach?") was **deleted**, not narrowed. The standing plan had been to cut its ten rows to four; the whole screen went instead.
+
+⚠️ **`instructor_type` is still written at signup and the SCHEMA IS UNTOUCHED.** Every new coach gets `"basketball"` from a constant in `SignupProvider` — not a new value: it was already the provider's default and is already what `getActivityLabels()` returns for null. `coaches.instructor_type` remains plain nullable text with no CHECK constraint, so **soccer or anything else needs a picker restored, not a migration**.
+
+⚠️ The provider holds it as a `const`, not `useState`, and the setter is gone with its only consumer. State would imply something can still change it during signup; nothing can. It stays in the context rather than being inlined at the insert so the flow keeps ONE place deciding what a new coach teaches.
+
+⚠️ `ACTIVITY_TYPE_ORDER` now has **zero consumers** — dead today, kept as the ordering a restored picker would use.
+
+### Progress segments replace "Step X of Y"
+
+One segment per step, filled up to and including the current one, so the last step reads as *finished* rather than as a number to count.
+
+⚠️ **The count derives from `total`, not a hardcoded pair.** Signup went 3 → 2 the same day; a hardcoded two would have to be found and edited if a step ever returns.
+
+⚠️ Filled is the brand accent, empty is `#2a2d36` — the app's existing track grey. **Emerald was deliberately avoided**: it means done/makes on every assignment surface, and borrowing it for onboarding chrome would give it a second meaning. (The same class of mistake the blue collision below actually made.)
+
+⚠️ **The "Step X of Y" text survives as `sr-only`.** The visual label became a bar; the information should not vanish for screen readers. It will show up in a grep of the rendered HTML — that is expected, not stale markup.
+
+### An eyebrow above both headlines
+
+**"Setting up your account"**, uppercase, on step 1 and step 2. Same words on both, which is the point: it names the one job the two screens share, so the flow reads as a single task rather than two unrelated forms. Headlines themselves were not changed.
+
+⚠️ The eyebrow keeps a tight 8px to its headline. **Those two are one unit** — opening up the space around them is exactly when they would drift apart, so the gap is called out in code.
+
+### Field-level trust sits next to the field
+
+Step 2's reassurance moved from under the headline to a caption under the email input, matching the job "They'll get a text when you assign work." does under the phone field on add-student — same 13px, same `mt-2`.
+
+⚠️ **NOT the same colour, deliberately.** That caption is `#5a5f72`, recorded in this file as a pre-existing **AA failure at 3.11:1**. Copying it exactly would have carried a known defect onto a new screen, so this uses **`#7a8090` (4.99:1)**. If the placeholder/helper sweep ever lands, the two should meet at a passing value — this one should not move down.
+
+⚠️ The consent notice on the same screen went `#8a8fa8` (6.17:1) → **`#7a8090` (4.99:1)** to recede. It is the one line on that screen that must stay readable; the next step down, `#6f7587`, is 4.29:1 and **fails**. Do not take it further.
+
+### Empty roster: celebration, pause, action
+
+Three iterations landed here, and the end state is the argument.
+
+1. A single blue-tinted card holding a checkmark, greeting, prompt and button.
+2. Split in two: the checkmark and **"You're in, {name}."** on the page with no surface, a **56px pause**, then a hairline-bordered block with the prompt and button.
+3. The prompt line and the hairline box **both removed**. The button is the only element below the greeting.
+
+⚠️ **The button carries the instruction now** — `+ Add your first {student}` rather than `+ Add {student}`. With one element left, a container had nothing to contain and the prompt only restated what the button said.
+
+⚠️ **The greeting name is real data**, from the coach's own row, and the greeting **drops the comma** when that row carries no name ("You're in." not "You're in, ."). Verified across three names including empty.
+
+❌ **This replaced the "ghost roster"** — three faded skeleton rows behind a mask. Removed deliberately: it showed a coach an imitation of data they did not have and said nothing about what to do next. ⚠️ **The LOADING skeleton for that route is a different thing and still exists.** It pulses; the ghost rows never did, and that distinction is what stops a coach with players being briefly told they have none. Do not merge the two idioms back together.
+
+### Player detail: identity, then task
+
+Also arrived at over several passes. Final state is one bold line — **"Give {first name} their first assignment."** — directly above the button, no box, no second line.
+
+⚠️ **"Ready when you are." was removed** because it sat above a sentence that already said everything.
+
+⚠️ **It is left-aligned, to the PAGE GUTTER, not to the name.** The student's name sits at a deeper left edge only because the 52px avatar indents it inside a flex row; matching that would push the headline under the avatar and out of line with its own button. Headline and button share one left edge. The button keeps its centred label — a full-width control centring its own text is a different thing from the block being centred.
+
+⚠️ **Spacing is two groups, not one stack:** 40px from the "Joined …" line to the headline, 16px from the headline to the button — a 2.5x ratio. The headline is the instruction and the button carries it out, so they are coupled; what separates them from the identity block above is the 40px.
+
+⚠️ **The 24px this replaced was not arbitrary** — it matched the gap the sticky tab bar leaves when there ARE assignments. Consistent in principle, wrong here: with four short elements on an empty page, the shared rhythm flattened identity and task into one list. **Do not "restore consistency" and undo it.**
+
+⚠️ **THREE STATES, and only one of them changed.** Paused and over-limit keep their own copy *and* their own vertical centring — they are problems a coach must resolve, not empty states, and over-limit is a plan-capacity state. The centring wrapper they had shared was pushed down into the individual branches so only the ready-to-assign one moved.
+
+⚠️ **Editing that branch:** the comment above the wrapper is a **plain block comment, not a JSX-braced one**. It sits in expression position inside a ternary, where a braced comment is a second child and breaks the parse. An earlier attempt also closed the comment early by quoting a comment terminator inside it. Both cost a build.
+
+### ❌ `EmptyStateCard` — created and deleted the same day
+
+Extracted when both empty states shared a card, then deleted when neither did. Its reason for existing evolved twice — first the blue-surface decision, then hairline parity — and evaporated when the box went. **The blue-vs-capacity reasoning it carried was preserved in the roster's own comment**, since that is the part a future reader must not undo.
 
 ---
 
@@ -1411,6 +1500,26 @@ Blocks a non-entitled coach's **4th** player and offers the paywall instead. Thr
 
 **Status codes are the retry protocol**, not decoration: `400` bad signature (never retry) · `500` missing secret (we are broken; retry succeeds once fixed, so events aren't lost) · `500` write or retrieve failure (transient) · `200` handled or ignorable. ⚠️ A `200` on a failed write marks the event delivered and loses it permanently.
 
+### 🧹 Test-account cleanup (Aug 20 2026)
+
+**Five coach rows deleted from Supabase**, leaving exactly two. Everything below was read before deleting and re-read after.
+
+| Deleted | Data that went with it | Stripe |
+|---|---|---|
+| Coach Tony 2 (`mail@antonyliu.com`) | 6 players · 3 assignments · 1 log | `cus_V5pamvnNt3ciVu` test, already `canceled` |
+| `tony@liudesign.com` | none | `cus_V6EWjosSs1ZLHu` test, already `canceled` |
+| FTUE Tony (`+ftue`) | 1 player | none |
+| 2 step Tony (`+2step`) | none | none |
+| 2 step Tony Prod (`+2stepb`) | 1 player · 1 assignment | `cus_V6kiuKNA8dhI5g` ⚠️ **LIVE** |
+
+✅ **PROTECTED AND CONFIRMED UNTOUCHED**, by before/after diff rather than by eye: **RJW Skills & Development** (14 players · 119 assignments · 132 logs · 14 customs) and **Coach Tony** `tonyliu34@gmail.com` (6 · 16 · 10 · 0). Both identical after. Zero orphans: no logs without a player, no players/assignments/customs pointing at a missing coach.
+
+⚠️ **DELETING A COACH CASCADES FURTHER THAN THIS FILE USED TO SAY, and it was verified rather than assumed.** The documented FK list covers four constraints; the live database has **six** pointing at `coaches` — `assignments.coach_id` and `custom_exercises.coach_id` were undocumented, and PostgREST exposes their existence but not their delete rule. It was settled empirically: a disposable coach with one player, assignment, custom exercise and log was created, deleted, and **every one of them vanished**. HTTP 204, no error, no orphans. The scaffold was then removed and totals confirmed back to their pre-probe values.
+
+⚠️ **`logs.assignment_id` being `ON DELETE SET NULL` does NOT protect logs here.** That only saves a log when an *assignment* is deleted. Deleting the coach takes the player, and `logs.player_id` is CASCADE, so the logs go too.
+
+⚠️ **Deleting a `coaches` row touches NOTHING at Stripe**, and with the row gone there is no in-app portal route left — so the Stripe side has to be done in the dashboard, and ideally first, since the customer id is only recoverable from a record like this one afterwards. The Stripe cleanup for these five was handled manually.
+
 ### ✅ Verified end to end — LIVE MODE ON PROD (Aug 19 2026)
 
 **The real one. Live keys, live webhook endpoint, a real card, through the actual app flow.** Everything above this entry is test mode; this is the first time money-capable infrastructure has carried a checkout from the app to the database.
@@ -1534,7 +1643,7 @@ Local, via `stripe listen --forward-to localhost:3000/api/stripe/webhook`. Strip
 Active: **Basketball** only  
 Available (not yet active): Piano · Martial Arts · Tennis · Golf · Guitar · Gymnastics · Soccer · Swimming · Voice
 
-⚠️ **THERE IS NO PICKER ANY MORE, as of Aug 19 2026.** `/instructor/signup/type` was deleted and signup went from three steps to two. Every new coach gets **`instructor_type: "basketball"`**, set as a constant in `SignupProvider` — not chosen on a screen, and not a new value: it was already the provider's default and is already what `getActivityLabels()` falls back to for null.
+⚠️ **THERE IS NO PICKER ANY MORE, as of Aug 20 2026.** `/instructor/signup/type` was deleted and signup went from three steps to two. Every new coach gets **`instructor_type: "basketball"`**, set as a constant in `SignupProvider` — not chosen on a screen, and not a new value: it was already the provider's default and is already what `getActivityLabels()` falls back to for null.
 
 ⚠️ **The COLUMN is untouched and deliberately so.** `coaches.instructor_type` is plain nullable text with no CHECK constraint, so soccer or anything else can be introduced later **without a migration** — the work is restoring a picker (a screen plus a setter on the provider), not changing the schema.
 
@@ -1704,7 +1813,7 @@ Factual, no interpretation:
 
    Also swap the homepage thumbnail from a piano student to a young female soccer athlete.
 
-   ⚠️ **SUPERSEDED Aug 19 2026 — there is no picker to narrow.** The screen was removed outright and signup is now two steps; every new coach gets `instructor_type: "basketball"` from `SignupProvider`. **This entry is kept for its REASONING, not as a to-do**: if a picker ever returns, the four-row shape and the "only tease what is actually intended next" rule are the decisions to start from. ⚠️ `activityTypes.ts` still carries all ten types and `ACTIVITY_TYPE_ORDER` is now unreferenced — dead today, and exactly what a restored picker would use.
+   ⚠️ **SUPERSEDED Aug 20 2026 — there is no picker to narrow.** The screen was removed outright and signup is now two steps; every new coach gets `instructor_type: "basketball"` from `SignupProvider`. **This entry is kept for its REASONING, not as a to-do**: if a picker ever returns, the four-row shape and the "only tease what is actually intended next" rule are the decisions to start from. ⚠️ `activityTypes.ts` still carries all ten types and `ACTIVITY_TYPE_ORDER` is now unreferenced — dead today, and exactly what a restored picker would use.
 
 3. **Landing page second section as a carousel.** Currently a static basketball showcase. Consider one slide per activity, each with its own device mocks and content matching that sport.
 
@@ -1793,6 +1902,12 @@ Trainerize and TrueCoach figures are screenshot-confirmed.
 ## Pending / loose ends
 
 ### High priority
+- ⚠️ **OPEN — test-mode Stripe events silently stop updating the database, now that prod runs LIVE keys.** Found Aug 20 2026 while cleaning up test accounts: `tony@liudesign.com` read `subscription_status: active` in the database while Stripe reported that subscription **`canceled`**.
+  - **Cause:** prod holds `sk_live_` and the **live** `STRIPE_WEBHOOK_SECRET`, while the **test-mode** dashboard endpoint (`we_1U61rN…`) still points at prod. A test-mode event is signed with the test endpoint's secret, which no longer verifies against prod's live secret — so it is rejected at the signature check and the write never happens.
+  - ⚠️ **It fails SILENTLY from the app's side.** Nothing surfaces; the row simply goes stale. The rejection is visible only in Stripe's own delivery log.
+  - **Consequence:** any future test-mode billing work against prod will leave the database disagreeing with Stripe. That row happened to be disposable; the next one might not be.
+  - **Not fixed.** Options are to delete or disable the stale test-mode endpoint, or to accept that test-mode events no longer reach prod and never rely on them. Decide before the next test-mode exercise against prod.
+- ⚠️ **OPEN — the delete-player confirmation copy is too long.** The modal stacks a destructive warning, a deactivation alternative, and a typed-confirmation instruction, and reads as a wall of text at exactly the moment a coach needs to take one fact in. ⚠️ **The typed confirmation itself is not in question** — it is the guard on the app's single most destructive action and should stay. This is a copy edit, not a behaviour change. Not started.
 - **✅ RESOLVED July 27 2026 — orphaned logs.** Kept here as the record; nothing outstanding.
 
   *Fixed forward:* `saveLog` copies `exercise_name`, `unit`, `goal_type`, `target` and `side` onto every log row at insert time, so a log survives its assignment being deleted. Applies to all logs, all coaches, from that date.
@@ -1895,7 +2010,7 @@ Design resolved — these need building, not deciding.
 
 ## V1 scope
 
-- Coach signup (email OTP) ✅ — **two steps as of Aug 19 2026** (name → email); the activity picker was removed
+- Coach signup (email OTP) ✅ — **two steps as of Aug 20 2026** (name → email); the activity picker was removed
 - Add student (name + phone, optional parent phone) ✅
 - Assign exercise (default library or custom) ✅
 - Student log screen — stepper ✅
