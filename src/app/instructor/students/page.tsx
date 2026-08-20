@@ -466,6 +466,7 @@ export default async function RosterPage() {
                     <span
                       className="inline-flex items-center gap-1.5 text-xs font-semibold"
                       style={{ color: style.text }}
+                      data-scroll-probe="label"
                     >
                       <span
                         className="rounded-full shrink-0"

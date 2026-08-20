@@ -40,6 +40,42 @@ const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : use
 // 60 -> 58 (cardCover 34). The 60 case is the screenshot that matches the
 // reported symptom exactly.
 //
+// ⚠️ THIRD PASS, Aug 20 2026 — OVERLAP ALONE COULD NOT SEE A MISSING LABEL.
+// It is measured off the groups WRAPPER, and a wrapper's top does not move
+// based on whether its first child has content. So a label that was absent, or
+// collapsed to zero height, reported a perfectly healthy OVERLAP -2 for a whole
+// run. Two different failures were indistinguishable in every reading so far:
+//
+//   (a) content pushed UNDER the header by a stale ~20px paint offset
+//   (b) content sitting ~24px HIGHER because the label block collapsed
+//
+// Both give scrollY 0 and OVERLAP -2, and both photograph identically. (b) fits
+// the numbers uncomfortably well — the label is 16px of ink plus mb-2, exactly
+// 24px, inside the 18-26px displacement measured off the screenshot.
+//
+// So the label is now probed directly, and the two split cleanly:
+//
+//   lbl=MISSING                    the element is not in the DOM at all
+//   lbl="..."@<top>h0              present but collapsed to zero height
+//   lbl="" (empty text)            present and sized but rendering no text
+//   lbl="Nothing assigned"@119.5h16 while the screen shows nothing there
+//                                  -> DOM is correct and the pixels are lying.
+//                                  Paint desync confirmed.
+//
+// lblCover is the same question OVERLAP was meant to answer, asked of the label
+// itself rather than its wrapper: header bottom minus the LABEL top. Negative is
+// healthy. It is the number to trust where the two disagree.
+//
+// op= is printed only when opacity is not 1, to catch a label that is present,
+// sized and full of text but painted invisible.
+//
+// ⚠️ Checked first and ruled out: the text is NOT late-arriving data. It is
+// GROUP_STYLE[g].title, a module constant, emitted by the same .map() iteration
+// that emits the rows — they are siblings in one <div key={g}>, so the rows
+// cannot exist without the label. The page is a pure async Server Component with
+// no hooks and no inner Suspense, and loading.tsx swaps the whole <main>
+// atomically. There is no frame where rows exist without their label.
+//
 // ⚠️ At scrollY 0 an in-flow sticky element CANNOT overlap what follows it —
 // measured, overlapAtScroll0 is false. So an OVERLAP > 0 reading alongside
 // scrollY 0 means something is scrolling that scrollY does not report, which is
@@ -150,11 +186,23 @@ export default function ScrollToTop() {
       // First player row, found through the groups wrapper so it needs no
       // probe of its own inside the group map.
       const card = groups?.querySelector('a[href^="/instructor/student/"]') ?? null;
+      // First match in document order is the first rendered group's label.
+      // InactiveGroup carries its own header and always sorts last, so this
+      // picks a plain group whenever one exists.
+      const label = document.querySelector('[data-scroll-probe="label"]');
 
       const h = header?.getBoundingClientRect();
       const g = groups?.getBoundingClientRect();
       const c = card?.getBoundingClientRect();
+      const l = label?.getBoundingClientRect();
       const vv = window.visualViewport;
+
+      // Is the label there, sized, and carrying its text — and is it covered?
+      const lblDesc = !label || !l
+        ? "MISSING"
+        : `"${(label.textContent ?? "").trim().slice(0, 24)}"@${l.top.toFixed(1)}h${l.height.toFixed(1)}`;
+      const lblCover = h && l ? h.bottom - l.top : null;
+      const op = label ? getComputedStyle(label).opacity : "1";
 
       // THE headline number: how far the sticky header's bottom edge reaches
       // past the top of the content below it. Positive means covered.
@@ -164,9 +212,16 @@ export default function ScrollToTop() {
       const line =
         `scrollY=${Math.round(window.scrollY)}` +
         ` OVERLAP=${overlap === null ? "n/a" : overlap.toFixed(1)}` +
-        ` cardCover=${cardCover === null ? "n/a" : Math.max(0, cardCover).toFixed(1)}` +
+        ` lbl=${lblDesc}` +
+        ` lblCover=${lblCover === null ? "n/a" : lblCover.toFixed(1)}` +
+        (op !== "1" ? ` op=${op}` : "") +
+        // ⚠️ NOT clamped at 0. It was, and clamping is exactly the habit that
+        // let OVERLAP hide four of five label failures — a negative value says
+        // how far BELOW the header the card sits, which is what separates a
+        // scrolled page from a collapsed label. All three cover numbers now
+        // read the same way: negative healthy, positive covered.
+        ` cardCover=${cardCover === null ? "n/a" : cardCover.toFixed(1)}` +
         ` hdrBottom=${h ? h.bottom.toFixed(1) : "n/a"}` +
-        ` grpTop=${g ? g.top.toFixed(1) : "n/a"}` +
         ` vvOffsetTop=${vv ? vv.offsetTop.toFixed(1) : "n/a"}` +
         ` vvPageTop=${vv ? vv.pageTop.toFixed(1) : "n/a"}` +
         ` vvH=${vv ? Math.round(vv.height) : "n/a"}` +
