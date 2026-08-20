@@ -70,7 +70,13 @@
 
 ⚠️ **His old test-mode subscription did NOT carry over and was never meant to** — `sub_1U0aJ6JoxKRCY55iGi5HfZ3l` is still `active` in test mode, now orphaned and referenced by no row. Harmless; part of the stale-test-data audit.
 
-⚠️ **A redeemable promo CODE named `COACHRJ` in live mode is NOT established.** What was confirmed is a *coupon* applied directly to RJ's subscription — which is not the same thing as a code anyone could enter at Checkout. If a second comped account is ever needed, or RJ's subscription is ever rebuilt, check whether a live promo code exists and create it **uncapped** — the test original was destroyed by a single redemption.
+⚠️ **A redeemable promo CODE named `COACHRJ` in live mode is NOT established.** What was confirmed is a *coupon* applied directly to RJ's subscription — which is not the same thing as a code anyone could enter at Checkout. If RJ's subscription is ever rebuilt via Checkout rather than by hand, check whether a live promo code exists first, and create it **uncapped** — the test original was destroyed by a single redemption.
+
+⚠️ **`COACHRJ` IS RJ'S PERSONAL CODE. It must never be given to, reused for, or renamed for another coach.** The name is his; handing it to someone else makes every later conversation and every dashboard row ambiguous about who it was for.
+
+⚠️ **A second comped coach needs a NEW, GENERICALLY-NAMED code — created fresh when that need actually arises**, not pre-made and not adapted from this one. Something in the register of `FRIENDSANDFAM` or `COMPED`; **the name is not decided** and should be chosen at the time rather than inherited from this note.
+
+⚠️ **"Uncapped" is a TESTING-SAFETY measure, not an invitation to share.** `max_redemptions` is unset on `COACHRJ` for one reason only: a cap of 1 means testing the code consumes the single redemption and destroys it, which is exactly what happened on Aug 3. It does **not** mean the code is meant for more than one person. Read the two properties separately — *who it is for* is one person; *how many redemptions it allows* is unlimited so it survives being tested.
 
 ---
 
@@ -191,7 +197,7 @@ If they compete for a session, the checklist wins — it contains promises to re
 
 ### Parked, deliberately — not started
 
-- **Activity picker narrowing** — basketball live, soccer/tennis/"create your own" hinted as Soon, everything else removed from what a coach sees at signup. Still only a captured plan; `activityTypes.ts` carries all ten. The homepage half shipped Aug 3 (soccer hero photo); the picker half has not started. See *Queued for next session* item 2.
+- ~~**Activity picker narrowing**~~ — ❌ **CLOSED Aug 19 2026, and NOT by being built.** The plan was to cut the picker from ten rows to four (basketball live, soccer/tennis/"create your own" as Soon). Instead **the whole screen was removed** and signup went from three steps to two, so there is no list left to narrow. ⚠️ The reasoning that produced the four-row plan is still sound and should be re-read if a picker ever returns — see *Queued for next session* item 2, kept for that reason. The homepage half of it shipped Aug 3 (soccer hero photo) and is unaffected.
 - **Landing page copy — empty state and permission language.** Reviewed and **deliberately left unchanged**; the existing copy was judged already correct. ⚠️ The specific strings and reasoning were not captured at the time, so this entry records the decision but not its detail — worth writing down properly if it is ever revisited, rather than re-deriving it.
 - **Roster weekly summary stat (RJ's consistency + active players)** — explored in depth, not shipped, see `docs/explorations/roster-weekly-summary-exploration.html` for reasoning and visual variations.
 - ~~**"How it works" section redesign**~~ — ✅ **CLOSED Aug 5 2026, and not by being built.** It was rebuilt as numbered steps that day (commit `b57a7ee`), then the whole section was **removed** (commit `5f2faad`): section 2 (instructor) and the new student section cover the same ground between them, at full size and split by audience. ⚠️ Do not resurrect this entry as a to-do — the section is gone deliberately, not pending.
@@ -408,7 +414,7 @@ The instructor is the customer — not the student. Students never choose this t
 
 ### Coach / Instructor
 - Signs up via email OTP (6-digit code, no password, no magic link)
-- Signup flow (per-step URLs): name → instructor type → email + 6-digit code → students list
+- Signup flow (per-step URLs): **name → email + 6-digit code → students list**. ⚠️ **TWO steps as of Aug 19 2026** — the activity picker that sat between name and email is gone. `instructor_type` is still written at signup, from `SignupProvider`'s constant rather than from a screen. See *Activity type system*.
 - Adds students by name + one phone number, with a Player/Parent toggle for whose number it is
 - Assigns exercises from a default library or creates custom ones
 - Picks a **goal type** (attempts / makes / consecutive) and an optional **side** (left / right)
@@ -1523,12 +1529,18 @@ Local, via `stripe listen --forward-to localhost:3000/api/stripe/webhook`. Strip
 
 ## Activity type system
 
-`src/config/activityTypes.ts` — single source of truth for discipline picker and UI copy.
+`src/config/activityTypes.ts` — single source of truth for UI copy that branches on what a coach teaches.
 
 Active: **Basketball** only  
 Available (not yet active): Piano · Martial Arts · Tennis · Golf · Guitar · Gymnastics · Soccer · Swimming · Voice
 
-Adding a new activity type is a content change — no engineering rework needed. The `instructor_type` field on coaches enables content branching.
+⚠️ **THERE IS NO PICKER ANY MORE, as of Aug 19 2026.** `/instructor/signup/type` was deleted and signup went from three steps to two. Every new coach gets **`instructor_type: "basketball"`**, set as a constant in `SignupProvider` — not chosen on a screen, and not a new value: it was already the provider's default and is already what `getActivityLabels()` falls back to for null.
+
+⚠️ **The COLUMN is untouched and deliberately so.** `coaches.instructor_type` is plain nullable text with no CHECK constraint, so soccer or anything else can be introduced later **without a migration** — the work is restoring a picker (a screen plus a setter on the provider), not changing the schema.
+
+⚠️ **`ACTIVITY_TYPE_ORDER` now has ZERO consumers.** The picker was its only one. Left in place because it is the ordering a restored picker would use; dead code until then.
+
+Adding a new activity type is still a content change — no engineering rework needed. The `instructor_type` field on coaches enables content branching, and every reader goes through `getActivityLabels()`.
 
 ---
 
@@ -1692,7 +1704,7 @@ Factual, no interpretation:
 
    Also swap the homepage thumbnail from a piano student to a young female soccer athlete.
 
-   ⚠️ Placeholder for a future session — **no code change yet**. `activityTypes.ts` still carries all ten; this is a correction to the captured plan so it is accurate when picked up.
+   ⚠️ **SUPERSEDED Aug 19 2026 — there is no picker to narrow.** The screen was removed outright and signup is now two steps; every new coach gets `instructor_type: "basketball"` from `SignupProvider`. **This entry is kept for its REASONING, not as a to-do**: if a picker ever returns, the four-row shape and the "only tease what is actually intended next" rule are the decisions to start from. ⚠️ `activityTypes.ts` still carries all ten types and `ACTIVITY_TYPE_ORDER` is now unreferenced — dead today, and exactly what a restored picker would use.
 
 3. **Landing page second section as a carousel.** Currently a static basketball showcase. Consider one slide per activity, each with its own device mocks and content matching that sport.
 
@@ -1883,7 +1895,7 @@ Design resolved — these need building, not deciding.
 
 ## V1 scope
 
-- Coach signup (email OTP) ✅
+- Coach signup (email OTP) ✅ — **two steps as of Aug 19 2026** (name → email); the activity picker was removed
 - Add student (name + phone, optional parent phone) ✅
 - Assign exercise (default library or custom) ✅
 - Student log screen — stepper ✅
