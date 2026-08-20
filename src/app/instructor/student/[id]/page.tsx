@@ -251,7 +251,14 @@ export default async function CoachPlayerPage({
               "Ready when you are." sat above it saying nothing the sentence
               below did not already say. */
           <div className="mt-2">
-            <h2 className="text-[17px] font-semibold tracking-[-0.2px] text-reps-ink text-center mb-5">
+            {/* ⚠️ LEFT-ALIGNED, not centred. Everything above it on this
+                screen — the student's name and the "Joined ..." line — is left
+                aligned, and centring this one line made it read as a caption
+                floating over the button rather than as a heading belonging to
+                the student. The BUTTON keeps its own centred label; that is a
+                full-width control centring its text, which is a different
+                thing from the block being centred. */}
+            <h2 className="text-[17px] font-semibold tracking-[-0.2px] text-reps-ink mb-5">
               Give {firstName} their first assignment.
             </h2>
             <Link
