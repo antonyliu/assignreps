@@ -224,6 +224,44 @@ const NUDGE_WINDOW_MS = 4000;
 // tier 2 was not the repair.
 const FORCE_SCROLL_TO_TOP: boolean = false;
 
+// ⚠️⚠️ EXPERIMENT, Aug 20 2026 — SET BACK TO true TO RESTORE. ⚠️⚠️
+//
+// scrollRestoration goes back to the browser default, "auto". The forced
+// scrollTo stays disabled, so neither of this file's scroll RESETS runs.
+//
+// ⚠️ Tier 2's nudge is still live and is still a synthetic scroll — it just
+// cannot account for a ~40px offset, since it is +1/-1 and nets to zero. In
+// practice it should not fire at all on these runs: it is triggered by a
+// visualViewport resize, and the run that produced this hypothesis had
+// innerHeight flat at 714 with no resize occurring. If a nudge line does appear
+// in the log, read the offset around it before drawing conclusions.
+//
+// WHY. With "manual" the browser stops restoring on a history traversal — and
+// Next's App Router implements no restoration of its own, audited across
+// app-router.js, app-router-instance.js and bfcache-state-manager.js. So there
+// was nothing doing the job: on a traversal the document simply KEPT whatever
+// offset the previous page had. A player-detail screen scrolled ~40px hands the
+// roster exactly ~40px, and it stays there because nothing corrects it.
+//
+// That fits every observation left standing after settle timing and scroll
+// anchoring were ruled out: the magnitude, the intermittency (it depends on
+// whether the previous screen happened to be scrolled), and why both the
+// add-player and the assign paths show it. It also explains why this was
+// invisible for a month — the forced scrollTo was papering over it.
+//
+// ⚠️ SET EXPLICITLY RATHER THAN JUST NOT SET. "auto" is the default, so
+// deleting the line would be equivalent on a fresh document — but not on one
+// that already ran the old build, and a test that fails to establish its own
+// condition returns a false negative. Those have been expensive tonight. The
+// value is read back and logged so the console says which mode is actually live.
+//
+// ⚠️ EXPECT BACK-NAVIGATION TO BEHAVE DIFFERENTLY, AND DO NOT READ THAT AS THE
+// BUG. With "auto" the browser restores each page's OWN remembered offset, so
+// coming back from a player lands the coach where they were on the roster
+// rather than at the top. That is correct behaviour and the app-wide side
+// effect this flag has carried since July 25 finally lifting — not a regression.
+const RESTORE_SCROLL_MANUAL: boolean = false;
+
 let mountSeq = 0;
 
 export default function ScrollToTop() {
@@ -258,8 +296,9 @@ export default function ScrollToTop() {
     // needs a script that runs before hydration, in the layout — deliberately
     // not done here, since this file is not the right place for it. The rAF
     // pass below is what covers it in practice.
+    // ⚠️ FLIPPED BY THE EXPERIMENT ABOVE — "auto" restores the browser default.
     if ("scrollRestoration" in history) {
-      history.scrollRestoration = "manual";
+      history.scrollRestoration = RESTORE_SCROLL_MANUAL ? "manual" : "auto";
     }
 
     // ── TEMPORARY probe ────────────────────────────────────────────────────
@@ -326,8 +365,12 @@ export default function ScrollToTop() {
 
     // Says which build is running, so a console full of readings can never be
     // mistaken for the other one.
+    // Reads the value BACK rather than reporting what we asked for, so a
+    // console full of readings can never be mistaken for the other build and an
+    // assignment that did not take cannot pass for one that did.
     console.log(
-      `[reps-scroll] BUILD forcedScrollTo=${FORCE_SCROLL_TO_TOP ? "ENABLED" : "DISABLED (experiment)"}`
+      `[reps-scroll] BUILD forcedScrollTo=${FORCE_SCROLL_TO_TOP ? "ENABLED" : "DISABLED"}` +
+        ` scrollRestoration=${"scrollRestoration" in history ? history.scrollRestoration : "unsupported"}`
     );
     sample("layout");
     // ── end probe ──────────────────────────────────────────────────────────
