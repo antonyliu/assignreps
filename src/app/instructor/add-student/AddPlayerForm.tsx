@@ -172,10 +172,9 @@ function CeilingBlock({
 }
 
 // useLayoutEffect warns when a client component is server-rendered, and this one
-// is. Fall back to useEffect on the server, keep pre-paint timing in the browser
-// — which is what stops the tooltip flashing at left:0 before it is measured and
-// moved. (This shim was shared with the roster's ScrollToTop until that file was
-// deleted on Aug 20 2026; it is the only copy now.)
+// is. Same shim ScrollToTop uses: fall back on the server, keep pre-paint timing
+// in the browser — which is what stops the tooltip flashing at left:0 before it
+// is measured and moved.
 const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 // The consent affordance: a 16px "i" beside the helper line, revealing the
