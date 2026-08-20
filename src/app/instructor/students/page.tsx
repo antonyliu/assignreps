@@ -252,7 +252,7 @@ export default async function RosterPage() {
           any), otherwise that padding would scroll away and leave the logo
           against the status bar. Horizontal padding lives on the rows below,
           not here. */}
-      <div className="sticky top-0 z-30 -mx-[1.25rem] pt-4 bg-reps-bg">
+      <div className="sticky top-0 z-30 -mx-[1.25rem] pt-4 bg-reps-bg" data-scroll-probe="header">
         {/* items-center keeps the left lockup and the right profile control on
             the same centerline across Chrome and Safari iOS. The control's 44px
             tap target is taller than the 23px logo, so centering — not baseline
@@ -380,7 +380,7 @@ export default async function RosterPage() {
               margin is small because the heading row's own bottom padding
               already sits above it — together they set the heading-to-first-
               group gap, so both have to stay small to keep it tight. */}
-          <div className="flex flex-col gap-5 mt-0.5 mb-8">
+          <div className="flex flex-col gap-5 mt-0.5 mb-8" data-scroll-probe="groups">
             {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;
