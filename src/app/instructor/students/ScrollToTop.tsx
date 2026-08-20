@@ -51,6 +51,54 @@ const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : use
 // which would show settled values instead of the ones at each moment.
 const PROBE_WINDOW_MS = 4000;
 
+// ── TIER 2 FIX: force a repaint once the visual viewport settles ───────────
+//
+// Aug 20 2026. NOT instrumentation — this one is meant to stay if it works.
+//
+// The evidence it is built on: the roster arrives painted from a stale frame.
+// Measured layout is correct and stays correct (OVERLAP -2, scrollY 0, still
+// -2 at the 4s reading), while the pixels sit roughly 20px off — the group
+// label hidden under the sticky header, the first card intact. It persists for
+// as long as nobody touches the screen, and a single swipe with no reload
+// corrects it. Layout and paint genuinely disagree, so nothing that adjusts
+// layout can fix it; something has to make WebKit re-rasterise.
+//
+// ⚠️ IT IS NOT THE ADD-PLAYER KEYBOARD. Confirmed Aug 20 on a second path —
+// assigning homework and coming back to the roster does it too. The trigger is
+// arriving at this page, not anything about that form. Tier 1 (taking the
+// page-wide skeleton opacity animation off <main>, so no page-sized
+// compositing layer is created and destroyed across the swap) did not fix it
+// either, and is deliberately left in place.
+//
+// The nudge scrolls the document 1px and back. The SCROLLING LAYER is the one
+// believed to be stale, and a real scroll is what forces it to re-raster —
+// which is exactly what the user's own swipe does, minus the user. It does not
+// depend on the scroll position being wrong and does not correct it: net
+// displacement is zero from wherever the page happens to be.
+//
+// ⚠️ THE TWO HALVES MUST LAND IN DIFFERENT FRAMES. Called back to back in one
+// task the browser coalesces them, the net change is zero, and the compositor
+// may never see a reason to redraw — which would make this look like a failed
+// experiment when it had simply never run. The return leg goes in a rAF so a
+// frame is committed at +1 first.
+//
+// ⚠️ Needs somewhere to scroll TO. On iOS there always is: body, the instructor
+// layout and this page are all min-h-screen (100vh, not dvh), and 100vh is the
+// large viewport, so there is a URL-bar's worth of range even when the content
+// fits. If a platform ever has maxScroll 0 the nudge is inert — harmless, but
+// it would not fire.
+const NUDGE_SETTLE_MS = 120;
+
+// ⚠️ ARRIVAL ONLY, and this guard is not optional. visualViewport resize fires
+// every time Safari's toolbar collapses or expands, which happens WHILE the
+// coach is scrolling the roster — and a programmatic scrollBy during momentum
+// scrolling cancels the momentum. Unguarded, this would turn every toolbar
+// transition on a long roster into a stutter. The symptom is an arrival bug, so
+// the nudge is confined to the seconds after arrival; past that a coach's own
+// touches re-sync the compositor anyway, which is the whole reason the bug is
+// invisible once they interact.
+const NUDGE_WINDOW_MS = 4000;
+
 let mountSeq = 0;
 
 export default function ScrollToTop() {
@@ -179,6 +227,44 @@ export default function ScrollToTop() {
     window.visualViewport?.addEventListener("resize", onVvResize);
     window.visualViewport?.addEventListener("scroll", onVvScroll);
 
+    // ── TIER 2 FIX (not instrumentation) ──────────────────────────────────
+    const mountedAt = performance.now();
+    let nudgeTimer: ReturnType<typeof setTimeout> | undefined;
+    let touchActive = false;
+    let nudgeSeq = 0;
+
+    const onTouchStart = () => { touchActive = true; };
+    const onTouchStop = () => { touchActive = false; };
+
+    const forceRepaint = () => {
+      // A touch in flight means the coach is already driving the compositor;
+      // scrolling underneath them is both unnecessary and disruptive.
+      if (touchActive) return;
+      if (performance.now() - mountedAt > NUDGE_WINDOW_MS) return;
+
+      const n = ++nudgeSeq;
+      sample(`nudge${n}-pre`);
+      window.scrollBy(0, 1);
+      // Second half next frame — see the note above on coalescing.
+      requestAnimationFrame(() => {
+        window.scrollBy(0, -1);
+        sample(`nudge${n}-post`);
+      });
+    };
+
+    // Debounced, so the whole toolbar animation counts as one resize and the
+    // nudge lands after it has settled rather than during it.
+    const onVvResizeNudge = () => {
+      clearTimeout(nudgeTimer);
+      nudgeTimer = setTimeout(forceRepaint, NUDGE_SETTLE_MS);
+    };
+
+    window.addEventListener("touchstart", onTouchStart, opts);
+    window.addEventListener("touchend", onTouchStop, opts);
+    window.addEventListener("touchcancel", onTouchStop, opts);
+    window.visualViewport?.addEventListener("resize", onVvResizeNudge);
+    // ── end tier 2 fix ────────────────────────────────────────────────────
+
     // Backstops, so a run where the coach never touches the screen still
     // produces a timeline. Deduping means these stay silent if nothing moved.
     const timers = [300, 600, 1200, 2500, PROBE_WINDOW_MS].map((ms) =>
@@ -203,6 +289,11 @@ export default function ScrollToTop() {
       cancelAnimationFrame(raf);
       timers.forEach(clearTimeout);
       clearTimeout(stop);
+      clearTimeout(nudgeTimer);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchStop);
+      window.removeEventListener("touchcancel", onTouchStop);
+      window.visualViewport?.removeEventListener("resize", onVvResizeNudge);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("touchend", onTouchEnd);
