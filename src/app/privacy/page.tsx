@@ -143,7 +143,7 @@ export default function PrivacyPage() {
 
         <h2 style={heading}>Who we share it with</h2>
         <p style={body}>
-          We don&apos;t sell your data. We use Supabase (database), Twilio (SMS), Resend (email), and Stripe (payments) to operate the product.
+          We don&apos;t sell your data. We use Supabase (database), Twilio (SMS), Resend (email), Stripe (payments), and Vercel (hosting and analytics) to operate the product.
         </p>
 
         {/* ⚠️ REWRITTEN Aug 17 2026. This section was one sentence — "You are
