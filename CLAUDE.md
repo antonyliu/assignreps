@@ -1,11 +1,86 @@
 # Reps — CLAUDE.md
-*Last updated: Aug 17 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+*Last updated: Aug 20 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+
+---
+
+## 📍 Current state — Aug 20 2026
+
+**Read this first. It supersedes every dated section below**, including *Current state — Aug 17*, which is kept as history and is stale wherever the two disagree.
+
+**Git:** `origin/main` (prod) = `origin/staging` = **`69e97cd`**. A third branch, **`origin/scroll-investigation` (`dcdf0f2`)**, holds work that is deliberately NOT shipped — see *Roster scroll* below.
+⚠️ Re-run `git branch -r -v` rather than trusting these SHAs.
+
+### Shipped to prod today, verified live
+
+**1. The signup/sign-in chrome split.** `/instructor/signup/email` is shared by new-coach signup step 2 AND returning sign-in, and it was showing "Setting up your account" plus a "Step 2 of 2" progress bar to people who were merely signing in. Step 1's Continue now pushes `?new=1`; only that flag renders the step chrome. See *Signup: one screen, three entry points*.
+
+⚠️ **THE NEAR-MISS IS THE PART WORTH REMEMBERING.** The first version gated the whole `ScreenHeader` — which carries the **Reps wordmark** as well as the bar — so it shipped a sign-in screen with **no branding at all**, just "Your email" 28px from the top. It was live on prod for roughly ten minutes.
+- **Root cause: a truncated file read.** `ScreenHeader` was inspected with a `head -30` that cut off before the `LogoMini` at the end of the component, and the change was then described as touching only the eyebrow and the bar.
+- **It was caught by asking for prod verification, not by the report.** The first report said "verified"; the verification found it.
+- ⚠️ It also invalidated a measurement: the sign-in heading's drop was reported as 75.5px, from a reproduction that had no wordmark in it. The real drop was **135.5px**. With the wordmark restored it lands at ~104px.
+- Fixed in `69e97cd`, then re-verified across **six cache-busted rounds** — round 1 failed while the deploy was still propagating, rounds 2–6 clean.
+
+**2. The skeleton pulse moved off `<main>`.** `sk-breathe` animates opacity, which promotes its element to its own compositing layer; on a `<main>` that put the entire page on one layer and tore it down at every RSC swap. It now sits on the individual placeholder shapes. Correct on its own merits — see *Onboarding & empty states*.
+
+### ⚠️ Roster scroll — INVESTIGATED ALL DAY, NOT SOLVED
+
+**The symptom:** after adding a student or assigning homework, the roster sometimes arrives scrolled ~40px, hiding the group label and the top of the first card under the sticky header. **Intermittent, and still unexplained.**
+
+**Everything from that investigation is parked on `origin/scroll-investigation` (`dcdf0f2`). Prod and staging are unaffected** — the roster on both behaves exactly as it did on Aug 19.
+
+⚠️ **THE SINGLE MOST IMPORTANT FINDING, AND IT INVALIDATES A MONTH OF READINGS.** July's fix set `scrollRestoration = "manual"` document-wide and paired it with a forced `window.scrollTo(0, 0)`. That forced scroll **masked the symptom so completely that nothing downstream of it could be measured.** Every "looks healthy" reading — all day, and presumably for the month before — was watching the app's own correction fire, not the page being healthy. Reproduced in a browser with no bug present, using the exact ordering of that file:
+
+```
+layout  t=0.1ms  y=40      <- the honest reading
+scroll  t=0.4ms  y=0       <- our own scrollTo, 0.3ms later
+raf     t=0.5ms  y=0
+```
+
+The listener is attached *after* the `scrollTo`, but scroll events dispatch asynchronously, so it still catches it. **The `layout` reading is the only uncontaminated one, and it says the roster arrives at ~40px.**
+
+**Nine theories tested and ruled out, each against evidence rather than argument:**
+
+| Theory | Verdict |
+|---|---|
+| Label missing or empty in the DOM | Ruled out — the text is `GROUP_STYLE[g].title`, a module constant, emitted by the same `.map()` iteration as the rows. They are siblings in one `<div key={g}>`; the rows cannot exist without it |
+| Sticky header clearance too thin | Ruled out — at true scroll-top an in-flow sticky element **cannot** overlap what follows it. Measured: `overlapAtScroll0 === false` |
+| Skeleton compositing-layer teardown | Fixed anyway (shipped, above) — did not resolve the bug |
+| Scroll-nudge repaint trick ("tier 2") | Built carefully, debounced on `visualViewport` resize. **Never confirmed to fire or to help** — the run that killed settle-timing had no resize at all, so it may not have run |
+| Viewport settle timing | Ruled out — a run with `innerHeight` flat at 714 for the full window, no resize occurring, still showed the bug |
+| CSS scroll anchoring | Ruled out — Safari implements **no scroll anchoring at all**, on macOS or iOS, and every iOS browser inherits that via WebKit |
+| Stale native scroll restoration | **Half real.** See the correction below |
+| Next.js focus management scrolling into view | Ruled out — the element Next calls `focus()` on is the page's `<main>`, which has no `tabindex` and Next adds none, so the call is a no-op. Measured: `focus()` on it moves neither `activeElement` nor scroll. It is also called synchronously beside `scrollTop = 0`, so it could never produce a delayed jump |
+| IntersectionObserver header replacement | Built, and geometrically sound — zero layout jump, correct centring, the `fixed inset-0` click-away still covers the viewport. **Never tested against the real bug**: no signed-in session was available, and the preview environment had no scrollport to trigger the observer |
+
+⚠️ **CORRECTION, and it must not be recorded the other way round.** A session summary described the restoration work as *"turning restoration back to auto fixed Safari's reload button, and that fix is now live on prod."* **Both halves are wrong**, verified against prod:
+- **Direction.** `"auto"` is what **caused** the reload-button jump — the browser reapplying a remembered offset after first paint. Setting it back to `"manual"` was the *proposed* fix, and **that test result never came back.**
+- **Shipped status.** **Nothing about `scrollRestoration` shipped.** Prod's `ScrollToTop.tsx` is byte-identical to Aug 19's — still `"manual"`, still both forced `scrollTo(0, 0)` calls.
+
+**What IS genuinely established about restoration** is a clean discriminator, observed on staging while on `"auto"`: typing the URL and hitting Go is clean; **Safari's own reload button paints correctly and then visibly scrolls up a moment later.** Those differ in exactly one way — "Go" creates a new history entry with no remembered scroll; the reload button reuses the same entry, which has one. Correct-then-moved is the signature of restoration landing after first paint. **Diagnosed, fix proposed, unshipped, unconfirmed.**
+
+### The open question
+
+**Why does a FORWARD navigation — not a reload, not a back-nav — still sometimes land the page pre-scrolled ~40px?** Nothing in the app's code or in documented browser behaviour accounts for it.
+
+⚠️ **The next step is NOT a tenth theory.** Nine rounds of reasoning-plus-console-logging produced one real finding and eight dead ends, and the instrumentation itself was wrong twice (it measured the wrapper instead of the label, and it read back our own scroll correction as health). This needs **Safari's Timeline and Layers panels on a real device** — a tool category that can see compositing and paint, which `console.log` structurally cannot.
+
+### ⚠️ Separate finding, fully diagnosed, NOT built: pull-to-refresh settles low
+
+Unrelated to the above and **not a mystery** — a hard reload on the roster visibly settles content lower once it loads, and the cause is measured:
+
+**The loading skeleton is systematically smaller than the content it replaces.** At 390px: header 110 → 117.5 (+7.5), group label ink 11 → 16 (+5), and **each row 50 → 56.5 (+6.5)**. The row delta compounds, so row 1 drops 12.5px, row 2 19px, row 3 25.5px, row 4 32px.
+
+⚠️ **And it worsens with more groups.** `loading.tsx` renders exactly **one** group label and **four** rows regardless of the real data; the real page renders one label per non-empty group with `gap-5` between. Each extra group adds ~44px the skeleton never accounted for.
+
+There is no late-loading resource involved — audited: no images, no `next/image`, no web fonts, no `@font-face`, system font stack only, both SVGs carry explicit dimensions. The "late resource" is the RSC payload.
+
+**Fix is straightforward — size the skeleton to match reality — but it is not built, is not on the investigation branch, and wants its own pass.**
 
 ---
 
 ## 📍 Current state — Aug 17 2026
 
-**Read this first. It supersedes the two dated sections below** (*Where we left off — Aug 5* and *Where things stand — Aug 6*), which are kept as history and are stale wherever they disagree.
+**Superseded by the Aug 20 section above.** Kept as history; stale wherever the two disagree.
 
 **Git:** local `main` = `origin/staging` = `8933a97`. Prod (`origin/main`) is `88de42a`, **73 commits back** — everything below is on staging only, nothing is live.
 ⚠️ Re-run `git branch -r -v` rather than trusting these numbers; they go stale immediately.
@@ -415,6 +490,7 @@ The instructor is the customer — not the student. Students never choose this t
 ### Coach / Instructor
 - Signs up via email OTP (6-digit code, no password, no magic link)
 - Signup flow (per-step URLs): **name → email + 6-digit code → students list**. ⚠️ **TWO steps as of Aug 20 2026** — the activity picker that sat between name and email is gone. `instructor_type` is still written at signup, from `SignupProvider`'s constant rather than from a screen. See *Activity type system*.
+- ⚠️ **The email/OTP screen is NOT signup-only — it is also the sign-in screen**, and the step chrome on it is conditional as of Aug 20 2026. See *Signup: one screen, three entry points*.
 - Adds students by name + one phone number, with a Player/Parent toggle for whose number it is
 - Assigns exercises from a default library or creates custom ones
 - Picks a **goal type** (attempts / makes / consecutive) and an optional **side** (left / right)
@@ -995,6 +1071,40 @@ The fills are the brand blue washed over the surface underneath at 7% — the al
 
 ---
 
+## Signup: one screen, three entry points (Aug 20 2026)
+
+`/instructor/signup/email` serves **new-coach signup step 2 AND returning sign-in**. Until Aug 20 it showed both audiences the same step chrome, so a returning coach was told they were "Setting up your account" on "Step 2 of 2".
+
+⚠️ **THREE ENTRY POINTS, NOT TWO, and all three were the same URL with no query string:**
+
+| Source | Intent |
+|---|---|
+| Landing header "Sign in" (`page.tsx`) | sign-in |
+| Step 1 **Continue** | new signup |
+| Step 1 **"Already have an account? Sign in"** | sign-in |
+
+The third is the one that makes this non-obvious: it lives *on step 1* and pushes the identical URL as Continue.
+
+**Only Continue appends `?new=1`. Absence means sign-in** — the safe default, since a returning coach shown signup chrome is the bug, and nothing is lost if a signup somehow arrives without it.
+
+⚠️ **NOT the provider's `name`, which is the obvious candidate and is wrong twice.** Step 1's Sign in button does not clear it, so someone who types a name and then realises they already have an account arrives with it set. And `SignupProvider` state is not persisted, so a genuine signup who reloads loses it. A query param survives the reload and cannot be set by the other two paths.
+
+⚠️ **Gated in THREE places.** The progress bar renders in **both** branches of the email screen — email entry and code entry — so a sign-in was showing "Step 2 of 2" on two consecutive screens.
+
+### ⚠️ `ScreenHeader` carries the WORDMARK as well as the bar
+
+**This is the trap, and it reached production for ten minutes.** `ScreenHeader` renders three things: the progress segments, their `sr-only` "Step 2 of 2", and **`<LogoMini />`**. Gating the whole component stripped Reps branding from the sign-in screen entirely.
+
+It now takes **`showProgress`** (default `true`). The bar and its label are conditional; **the wordmark never is.** Do not go back to `{isNewSignup && <ScreenHeader …>}`.
+
+⚠️ `mt-8` on the lockup applies only when there IS a bar above it, or it would sit under 32px of margin against nothing.
+
+**Measured at 390px:** heading at 163.5px with `?new=1`, ~104px on sign-in. The real difference between the paths is now the bar and eyebrow alone.
+
+⚠️ `useSearchParams()` needs no Suspense boundary here — the route is `ƒ` (the signup layout reads cookies), so it is never statically prerendered. Confirmed in the build output, and the chrome is present in the **server-rendered** HTML for `?new=1`, so there is no hydration flash.
+
+---
+
 ## Onboarding & empty states (Aug 20 2026)
 
 A copy and UX pass across four screens — both signup steps, the empty roster, and a student with nothing assigned — plus the removal of onboarding's second step. **The add-student screen was deliberately untouched throughout.** Shipped to prod as `33b1e44`.
@@ -1017,6 +1127,8 @@ One segment per step, filled up to and including the current one, so the last st
 
 ⚠️ Filled is the brand accent, empty is `#2a2d36` — the app's existing track grey. **Emerald was deliberately avoided**: it means done/makes on every assignment surface, and borrowing it for onboarding chrome would give it a second meaning. (The same class of mistake the blue collision below actually made.)
 
+⚠️ **CONDITIONAL ON THE EMAIL SCREEN as of Aug 20 2026.** Step 1 always shows the bar; the email/code screen shows it only for a genuine signup — see *Signup: one screen, three entry points*. The wordmark inside `ScreenHeader` is NOT conditional.
+
 ⚠️ **The "Step X of Y" text survives as `sr-only`.** The visual label became a bar; the information should not vanish for screen readers. It will show up in a grep of the rendered HTML — that is expected, not stale markup.
 
 ### An eyebrow above both headlines
@@ -1024,6 +1136,8 @@ One segment per step, filled up to and including the current one, so the last st
 **"Setting up your account"**, uppercase, on step 1 and step 2. Same words on both, which is the point: it names the one job the two screens share, so the flow reads as a single task rather than two unrelated forms. Headlines themselves were not changed.
 
 ⚠️ The eyebrow keeps a tight 8px to its headline. **Those two are one unit** — opening up the space around them is exactly when they would drift apart, so the gap is called out in code.
+
+⚠️ **It renders on step 2 only for a genuine signup as of Aug 20 2026.** Step 1 is signup-only so it always shows; the email screen is shared with sign-in and gates it on `?new=1`. See *Signup: one screen, three entry points*.
 
 ### Field-level trust sits next to the field
 
@@ -1072,6 +1186,8 @@ Extracted when both empty states shared a card, then deleted when neither did. I
 ## Roster screen
 
 The coach's home. `src/app/instructor/students/page.tsx`.
+
+⚠️ **ITS SCROLL AND STICKY-HEADER BEHAVIOUR IS UNDER INVESTIGATION AND SHOULD NOT BE TREATED AS SETTLED.** The header is `sticky top-0 z-30` on prod and works, but the page sometimes arrives pre-scrolled ~40px after add-student or assign, hiding the group label beneath it. `ScrollToTop.tsx` — which sets `scrollRestoration = "manual"` document-wide and forces `scrollTo(0, 0)` twice — is the July mitigation, and it is now known to have **masked** the symptom rather than fixed it. Several replacements were built and none shipped. Read *Roster scroll* in the Aug 20 current-state section before changing anything here, and before trusting any scroll measurement taken while that forced scroll is active.
 
 Players are grouped by completion — **Done / In progress / Not started / Nothing assigned** — and within each group sorted by **most recent activity, descending** (Aug 1 2026).
 
@@ -1337,6 +1453,16 @@ Round one left five of them arrow-only, on the grounds that their labels are scr
 ### Tap feedback
 
 `hover:bg-reps-card` on the assign flow's category, exercise and My-exercises rows caused a grey flash. ⚠️ **On iOS the `:hover` state STICKS after a tap**, so the row lit grey and *stayed* lit while the next screen loaded — which read as a glitch, not a response. Replaced with the treatment the roster rows already used: `active:scale-[0.99]` plus a transparent tap highlight, keeping the border hover for desktop. On My exercises only the link half scales; that row is split with a menu beside it, and scaling the whole thing would pull the two visibly apart.
+
+### ⚠️ `ScrollToTop` — a mitigation that masks its own subject
+
+`src/app/instructor/students/ScrollToTop.tsx` renders nothing and exists for one effect: set `history.scrollRestoration = "manual"`, then `window.scrollTo(0, 0)` in a layout effect and again in a `requestAnimationFrame`. Added Jul 25 (`c287ad4`, `9c62f1c`), hardened Aug 17 (`e248aa0`) — whose own commit message says the reported symptom **was not reproduced**.
+
+⚠️ **The forced scroll makes the roster unmeasurable.** Its own `scrollTo` fires a `scroll` event that any listener attached later in the same effect still receives, so instrumentation reads `y=0` a fraction of a millisecond after the honest reading. Anything sampling scroll on this page while `FORCE_SCROLL_TO_TOP` behaviour is live is reading the correction, not the page.
+
+⚠️ **`scrollRestoration = "manual"` is document-wide and never reverted**, and Next's App Router implements **no** scroll restoration of its own — audited across `app-router.js`, `app-router-instance.js` and `bfcache-state-manager.js`. So once the roster mounts, back-navigation to any scrolled page in the session returns to the top instead of where the coach was. That is a real app-wide cost, not a per-route setting.
+
+Full account, including nine ruled-out theories and the branch that holds the experiments: *Roster scroll* in the Aug 20 current-state section.
 
 ### Diagnosed, NOT fixed
 
@@ -1902,6 +2028,13 @@ Trainerize and TrueCoach figures are screenshot-confirmed.
 ## Pending / loose ends
 
 ### High priority
+- ⚠️ **OPEN, FULLY DIAGNOSED, NOT BUILT — the roster's loading skeleton is undersized, so a hard reload settles content noticeably lower.** Found Aug 20 2026. Distinct from the roster scroll investigation: different direction (down, not up), different trigger (full reload, not navigation), different mechanism (layout shift, not scroll offset). Verified independent — the 7.5px header delta measured identically under every clearance configuration tried that day, so it predates all of it.
+  - **Measured at 390px against the real compiled CSS:** header 110 → 117.5 (**+7.5**), group label ink 11 → 16 (**+5**), each player row 50 → 56.5 (**+6.5 each**).
+  - ⚠️ **The row delta COMPOUNDS**, so everything moves down and further down the list moves more: row 1 by 12.5px, row 2 by 19px, row 3 by 25.5px, row 4 by 32px.
+  - ⚠️ **And it worsens with more groups.** `loading.tsx` renders exactly **one** group label and **four** rows regardless of the real data; the real page renders one label per non-empty group with `gap-5` between them. Each extra group adds ~44px (24px label block + 20px gap) the skeleton never accounted for. A coach with Done / In progress / Not started sees roughly 88px more shift below the first group.
+  - ✅ **NOT a late-loading resource** — audited: no images, no `next/image`, no web fonts, no `@font-face`, system font stack only, both SVGs carry explicit dimensions, `.paper-grain` is not on instructor routes and `.landscape-message` is `display: none` in portrait. The "late resource" is the RSC payload itself.
+  - **Fix is straightforward — size the skeleton's rows, label and header to match the real content.** It is NOT on the `scroll-investigation` branch and wants its own pass.
+  - ⚠️ **Whether iOS pull-to-refresh adds an artifact of its own was never separated out.** The cheap test: reload without the gesture (address bar → Go, or the reload button). Same settle means it is entirely this; no settle means the gesture contributes something.
 - ⚠️ **OPEN — test-mode Stripe events silently stop updating the database, now that prod runs LIVE keys.** Found Aug 20 2026 while cleaning up test accounts: `tony@liudesign.com` read `subscription_status: active` in the database while Stripe reported that subscription **`canceled`**.
   - **Cause:** prod holds `sk_live_` and the **live** `STRIPE_WEBHOOK_SECRET`, while the **test-mode** dashboard endpoint (`we_1U61rN…`) still points at prod. A test-mode event is signed with the test endpoint's secret, which no longer verifies against prod's live secret — so it is rejected at the signature check and the write never happens.
   - ⚠️ **It fails SILENTLY from the app's side.** Nothing surfaces; the row simply goes stale. The rejection is visible only in Stripe's own delivery log.

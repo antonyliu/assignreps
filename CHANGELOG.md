@@ -383,6 +383,33 @@ Four screens — both signup steps, the empty roster, and a student with nothing
 
 ---
 
+## Signup chrome and skeleton layers (Aug 20 2026)
+
+| Feature | Why it exists |
+|---|---|
+| Step chrome shown only on genuine signup (`?new=1`) | `/instructor/signup/email` is shared by new-coach signup step 2 and returning sign-in. Returning coaches were being told they were "Setting up your account" on "Step 2 of 2" |
+| The signal is a query param, not the provider's `name` | Three entry points hit that URL and all were identical; step 1's own "Already have an account?" button does not clear `name`, and provider state does not survive a reload. A param survives it and cannot be set by the other two paths |
+| Gated in three render sites, not one | The progress bar renders in **both** branches of that screen, so a sign-in was showing "Step 2 of 2" on two consecutive screens |
+| `ScreenHeader` gained `showProgress` rather than being gated wholesale | It carries the **Reps wordmark** as well as the bar. Gating the component stripped branding from the sign-in screen entirely — that shipped and was live on prod for ~10 minutes before being caught by prod verification. Root cause was a truncated file read that cut off before the logo. The bar is conditional; the wordmark never is |
+| Skeleton pulse moved off `<main>` onto the shapes | `sk-breathe` animates opacity, which promotes its element to its own compositing layer. On a `<main>` that put the whole page on one layer and tore it down at every RSC swap |
+| What pulses is now a stated rule | A shape standing in for absent content pulses; a rule or bar rendered at the colour the real element uses does not, so it hands over invisibly instead of flashing |
+
+---
+
+## Roster scroll — investigated all day, not solved (Aug 20 2026)
+
+Parked on the `scroll-investigation` branch. **Nothing from it shipped**; prod's roster behaves as it did on Aug 19.
+
+| Finding | Why it matters |
+|---|---|
+| July's forced `scrollTo(0, 0)` was masking its own subject | Its `scrollTo` fires a `scroll` event that instrumentation attached later still receives, so every "looks healthy" reading was the app's own correction firing 0.3ms after the honest one. A month of readings meant nothing |
+| The honest reading says the roster arrives at ~40px | Which is exactly the band where the group label is fully hidden and the first card starts being clipped |
+| Nine theories ruled out against evidence | Empty label, thin header clearance, skeleton layer teardown, a scroll-nudge repaint trick, viewport settle timing, CSS scroll anchoring, stale scroll restoration, Next's focus management, and an IntersectionObserver header replacement |
+| Scroll restoration is half real, and unshipped | `"auto"` **causes** a reload-button jump — Safari reapplies a remembered offset after first paint, which is why URL-Go is clean and the reload button is not. `"manual"` was the proposed fix and was never confirmed. ⚠️ A session summary recorded this backwards and as shipped; both halves were wrong |
+| The open question needs different tools, not a tenth theory | Forward navigation still lands pre-scrolled and nothing in app code or documented browser behaviour explains it. Needs Safari's Timeline and Layers panels on a device — console logging structurally cannot see compositing or paint |
+
+---
+
 ## Not shipped — recorded so the history is honest
 
 | Killed / deferred | Why |
@@ -401,4 +428,9 @@ Four screens — both signup steps, the empty roster, and a student with nothing
 | Dark landing hero | Built and reverted the same day — read as muddy and brown rather than premium |
 | Per-column tick grid on the pricing cards | Every feature belongs to both plans; a grid would be a straightforward lie, and it would undercut a free tier that is deliberately generous positioning |
 | White housed panel around the pricing feature list | Bought presence at the cost of being a third boxed object on a band that already had two |
+| IntersectionObserver-driven roster header | Built and geometrically verified — zero layout jump, correct centring, the `fixed inset-0` click-away still covering the viewport. Never tested against the real bug: no signed-in session, and the preview environment had no scrollport to trigger the observer |
+| Scroll-nudge repaint trick on the roster | A debounced 1px nudge after the visual viewport settled. Never confirmed to fire or to help — the run that ruled out settle timing had no resize at all |
+| Roster header clearance widened to 20px | Real and measured, but never observed to help; at the ~40px offset actually seen the label is gone under every value tried |
+| `overflow-anchor: none` document-wide | Inert on the platform the bug was reported on — Safari implements no scroll anchoring at all |
+| Roster skeleton resized to match real content | Fully diagnosed the same day and left unbuilt — the fix for a separate reload-settles-low bug, which wants its own pass |
 | §2 testimonial from RJ | Removed pending his sign-off — the quote was a reconstruction, and two claims about him were unverified. Markup saved to `docs/deferred/` |
