@@ -4,6 +4,7 @@ import { LogoMini } from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import { Check } from "lucide-react";
 import ScrollToTop from "./ScrollToTop";
+import RosterHeader from "./RosterHeader";
 import InactiveGroup from "./InactiveGroup";
 import OverLimitBanner from "./OverLimitBanner";
 import { getActivityLabels } from "@/config/activityTypes";
@@ -238,21 +239,31 @@ export default async function RosterPage() {
   return (
     <main className="flex flex-col min-h-screen p-[0_1.25rem_1.75rem]">
 
-      {/* Renders nothing — resets scroll so the sticky header is never already
-          covering the first group on arrival. */}
+      {/* Renders nothing. Currently carries the scroll instrumentation and the
+          two experiment flags; its forced scrollTo is switched OFF and
+          scrollRestoration is "manual". It no longer resets scroll at all — the
+          header is no longer sticky either, so the thing its original comment
+          described (a sticky header already covering the first group on
+          arrival) is not the shape of the problem any more. */}
       <ScrollToTop />
 
-      {/* Logo row and heading row travel together as one sticky unit, so the
+      {/* Logo row and heading row travel together as one pinned unit, so the
           roster's identity and its primary action stay on screen however far
-          the list scrolls. The -mx here bleeds the block past main's gutters so
-          its background fills the screen edge to edge and rows vanish cleanly
+          the list scrolls. The -mx bleeds the block past main's gutters so its
+          background fills the screen edge to edge and rows vanish cleanly
           underneath instead of showing through at the sides — solid fill, hard
           edge, no gradient, the same call made for the student ASSIGNMENTS
-          header. It carries the page's top padding itself (main no longer has
-          any), otherwise that padding would scroll away and leave the logo
-          against the status bar. Horizontal padding lives on the rows below,
-          not here. */}
-      <div className="sticky top-0 z-30 -mx-[1.25rem] pt-4 bg-reps-bg" data-scroll-probe="header">
+          header. It carries the page's top padding itself (main has none),
+          otherwise that padding would scroll away and leave the logo against
+          the status bar. Horizontal padding lives on the rows below, not here.
+
+          ⚠️ NO LONGER `position: sticky` as of Aug 20 2026. RosterHeader keeps
+          it in normal flow and only pins it once an IntersectionObserver
+          confirms a sentinel at its flow position genuinely left the viewport —
+          observed geometry rather than a scrollY read, which tonight proved can
+          disagree with what is on screen. All the reasoning, and the traps in
+          the pinned state, are written out in RosterHeader.tsx. */}
+      <RosterHeader>
         {/* items-center keeps the left lockup and the right profile control on
             the same centerline across Chrome and Safari iOS. The control's 44px
             tap target is taller than the 23px logo, so centering — not baseline
@@ -348,7 +359,7 @@ export default async function RosterPage() {
             </Link>
           )}
         </div>
-      </div>
+      </RosterHeader>
 
       {/* ⚠️ ACCOUNT-LEVEL, so it lives on the account-level screen. Assigning is
           frozen for every student until the roster is back within the plan;
