@@ -291,49 +291,52 @@ export default async function RosterPage() {
             subtle so the button reads as an affordance, not a filled CTA competing
             with the heading. Suppressed on the empty state, where the full-width
             bottom CTA is the whole point. */}
-        {/* ⚠️ pb-[14.5px], NOT pb-5, and the odd number is load-bearing. This
-            sets the header's masking band — the run of solid background below
-            its last ink — to 20px, matching the pb-5 AssignmentTabs carries. It
-            is not 20 here because the row is items-baseline and "+ Add"'s padded
-            box hangs 5.5px BELOW the h1's text bottom. 5.5 + 14.5 = 20. Measured
-            against the real compiled CSS at 390px, not derived.
+        {/* ⚠️ pb-1.5 HERE, AND 8.5px OF MARGIN ON THE GROUPS WRAPPER
+            BELOW. That split is a decision, not an accident — do not "restore
+            consistency" by folding it back into this padding.
 
-            ⚠️ IT HAS TO BE PADDING, NOT A MARGIN ON THE LIST BELOW — the same
-            rule written out at STICKY_BAR in AssignmentTabs. A margin scrolls
-            away the moment the header pins, so it contributes nothing in exactly
-            the situation this exists for. The old 13.5px was 11.5px of padding
-            plus a 2px mt-0.5 on the groups wrapper, so only 11.5px of it ever
-            survived a scroll. That mt-0.5 is gone and folded in here.
-
-            ⚠️ IT BUYS VISUAL BODY, NOT PROTECTION — measured, and the earlier
-            version of this comment claimed otherwise:
+            Both arrangements give the same 20px ink-to-ink from the h1's text
+            bottom to the group label's ink. They behave differently the moment
+            the page is scrolled, and that is the whole point. Measured against
+            the real compiled CSS at 390px:
 
               config                      ink-to-ink   scroll to fully hide label
-              pb-1.5 + mt-0.5 (before)          13.5                        18px
-              pb-[14.5px], no mt (here)           20                        16px
-              pb-1.5 + mt-[8.5px]                 20                      24.5px
+              pb-1.5 + mt-0.5 (original)        13.5                        18px
+              pb-[14.5px], no mt                  20                        16px
+              pb-1.5 + mt-[8.5px] (HERE)          20                      24.5px
 
-            Padding sits INSIDE the header, so it makes the header taller and it
-            therefore covers marginally MORE, not less: the label went from 2px
-            below the header's bottom edge to flush against it. AssignmentTabs
-            has the same property — its cards sit 0px under the bar and start
-            being covered on the first pixel of scroll. Its 20px is body for the
-            pinned bar, not a shield for the content.
+            ⚠️ THIS DELIBERATELY BREAKS THE RULE AT STICKY_BAR IN AssignmentTabs,
+            which says clearance belongs in the bar's padding because a margin
+            scrolls away once the bar pins. That rule is right, and right for
+            what it was written about: giving a PINNED bar enough solid body to
+            mask rows passing underneath. It optimises the bar's appearance.
 
-            ⚠️ So if the goal is ever specifically to keep the label ALIVE
-            through a small offset rather than to match the tab bar, the space
-            has to go OUTSIDE the header instead — pb-1.5 with mt-[8.5px] on the
-            groups wrapper is the same 20px ink-to-ink and holds the label to
-            24.5px of scroll. It was not chosen here because it contradicts the
-            rule above and diverges from AssignmentTabs.
+            The goal here is the opposite one — keeping the group label ALIVE
+            through a small offset — and padding works against it. Padding lives
+            INSIDE the header, so it makes the header taller and cover marginally
+            MORE; the padding version left the label flush against the header's
+            bottom edge. The margin holds it 8.5px clear instead, which is what
+            buys 24.5px of scroll rather than 16px.
 
-            ⚠️ Either way this is a MITIGATION, NOT A FIX, and a narrow one: at
-            the ~40px offset actually observed the label is gone under every one
-            of these values. It only changes behaviour below about 20px.
+            ⚠️ The cost is real and accepted: once the header pins, the margin
+            has scrolled away with the list, so the pinned band is only 11.5px of
+            solid background instead of 20px, and rows pass closer under the h1
+            than they do under the tab bar's pills. Judged the better trade — a
+            vanished label is the failure that actually got reported; a slightly
+            thin pinned band is not.
 
-            ⚠️ The skeleton's matching row in loading.tsx carries the same value.
-            They have to move together or the swap gains a jump. */}
-        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[20px] pb-[14.5px]">
+            ⚠️ A MITIGATION, NOT A FIX, and a narrow one: at the ~40px offset
+            actually observed the label is gone under every one of these values.
+            It only changes behaviour below about 25px.
+
+            ⚠️ The 8.5px does NOT separate the header from OverLimitBanner when
+            that renders — the banner sits between, so the gap is its own mt-2.
+            Left alone; 8px is close enough and the banner is its own surface.
+
+            ⚠️ The skeleton's matching row in loading.tsx carries pb-1.5 and its
+            wrapper carries mt-[8.5px]. They have to move together or the swap
+            gains a jump. */}
+        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[20px] pb-1.5">
           <h1 className="text-xl font-semibold tracking-[-0.5px]">Your {labels.studentsLabel}</h1>
           {playerList.length > 0 && (
             <Link
@@ -422,9 +425,12 @@ export default async function RosterPage() {
               margin is small because the heading row's own bottom padding
               already sits above it — together they set the heading-to-first-
               group gap, so both have to stay small to keep it tight. */}
-          {/* mt-0.5 removed Aug 20 2026 — its 2px moved into the header's
-              padding above, where it survives the header pinning. */}
-          <div className="flex flex-col gap-5 mb-8" data-scroll-probe="groups">
+          {/* ⚠️ mt-[8.5px], and deliberately NOT folded into the header's
+              padding — see the long note on the heading row above. The header's
+              own 11.5px plus this is the 20px ink-to-ink, and keeping this part
+              out here is what holds the label clear of the header's bottom edge
+              instead of flush against it. */}
+          <div className="flex flex-col gap-5 mt-[8.5px] mb-8" data-scroll-probe="groups">
             {GROUP_ORDER.map((g) => {
               const group = grouped[g];
               if (group.length === 0) return null;

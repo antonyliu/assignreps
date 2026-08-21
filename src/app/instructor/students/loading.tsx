@@ -27,17 +27,17 @@ export default function Loading() {
             style={{ height: 1, background: "#2a2d36" }}
           />
         </div>
-        {/* ⚠️ Tracks the real header's pb-[14.5px]. Change one, change both, or
+        {/* ⚠️ Tracks the real header's pb-1.5. Change one, change both, or
             the skeleton stops landing where the content will. */}
-        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[20px] pb-[14.5px]">
+        <div className="flex items-baseline justify-between gap-3 px-[1.25rem] pt-[20px] pb-1.5">
           <Sk h="20px" w="140px" className="!rounded-[6px]" />
           <Sk h="26px" w="58px" className="!rounded-[8px]" />
         </div>
       </div>
 
       {/* Group label + rows, matching the grouped roster's shape. */}
-      {/* Matches the real roster, whose mt-0.5 moved into the header padding. */}
-      <div>
+      {/* Matches the real roster's mt-[8.5px] on its groups wrapper. */}
+      <div className="mt-[8.5px]">
         <Sk h="11px" w="64px" className="mb-2" />
         <div className="flex flex-col gap-1.5">
           {[0, 1, 2, 3].map((i) => (
