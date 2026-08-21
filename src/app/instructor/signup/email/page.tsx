@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
 import { useSignup } from "../provider";
@@ -25,6 +25,18 @@ export default function EmailStep() {
   const supabase = createClient();
   const router = useRouter();
   const { name, instructorType, email, setEmail } = useSignup();
+
+  // ⚠️ WHICH FLOW IS THIS. The screen is shared: new-coach signup step 2, the
+  // "Already have an account?" button on step 1, and the landing header's Sign
+  // in link all land here on the same route. Only step 1's Continue adds
+  // `?new=1`, so its presence is the one reliable signal for a genuine signup —
+  // see the long note at that push for why the provider's `name` is not.
+  //
+  // The step chrome below — the progress bar and the "Setting up your account"
+  // eyebrow — is true only for a signup. A returning coach signing in is not on
+  // step 2 of anything, so they get neither, including the ScreenHeader's
+  // sr-only "Step 2 of 2".
+  const isNewSignup = useSearchParams().get("new") === "1";
 
   // The code entry lives here as a sub-view rather than its own route: once the
   // OTP is sent we swap the email form for the code form on the same URL.
@@ -102,9 +114,9 @@ export default function EmailStep() {
   if (!sent) {
     return (
       <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-        <ScreenHeader stepNum={2} total={2} />
+        {isNewSignup && <ScreenHeader stepNum={2} total={2} />}
         {/* Same words as step 1 — the two screens are one job. */}
-        <p className={EYEBROW}>Setting up your account</p>
+        {isNewSignup && <p className={EYEBROW}>Setting up your account</p>}
         {/* ⚠️ The eyebrow above keeps its tight mb-2 — one unit with the
             headline. The reassurance that used to sit here moved DOWN to the
             field it is about; see the caption under the input. */}
@@ -224,7 +236,10 @@ export default function EmailStep() {
 
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-      <ScreenHeader stepNum={2} total={2} />
+      {/* ⚠️ Gated too, not just the email view. A sign-in was showing "Step 2
+          of 2" on BOTH screens; the code view is still step 2 for a genuine
+          signup, so it keeps the bar under the same condition. */}
+      {isNewSignup && <ScreenHeader stepNum={2} total={2} />}
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1 text-reps-ink">Enter your code</h2>
       <p className="text-[13px] text-reps-sub mb-6">
         We emailed a 6-digit code to <span className="text-reps-ink font-medium">{email}</span>.

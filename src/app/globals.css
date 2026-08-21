@@ -119,6 +119,10 @@ body {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.72; }
 }
+/* ⚠️ Belongs on the individual skeleton SHAPES, never on a page or a container.
+   Animating opacity promotes the element to its own compositing layer, so on a
+   <main> it puts the whole page on one layer and then tears that layer down
+   when the real content swaps in. See the note in src/components/Skeleton.tsx. */
 .sk-breathe { animation: reps-sk-breathe 1.8s ease-in-out infinite; }
 
 /* Celebrate screen confetti — one falling burst on full completion. */

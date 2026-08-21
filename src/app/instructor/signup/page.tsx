@@ -17,10 +17,23 @@ export default function NameStep() {
       return;
     }
     setError("");
-    // ⚠️ Straight to email — the activity picker that used to sit between them
-    // is gone. `instructor_type` is still written at signup; it now comes from
-    // SignupProvider's default rather than from a screen. See the provider.
-    router.push("/instructor/signup/email");
+    // ⚠️ `?new=1` MARKS THIS AS THE GENUINE SIGNUP PATH, and it is the only
+    // push that carries it. /instructor/signup/email serves three entry points
+    // — this one, the "Already have an account? Sign in" button below, and the
+    // landing header's Sign in link — and until this param the three were
+    // indistinguishable: same route, no query, nothing in the URL.
+    //
+    // ⚠️ NOT the provider's `name`, which was the obvious candidate and is
+    // wrong twice. The Sign in button below does not clear it, so a visitor who
+    // types a name and then realises they already have an account arrives with
+    // it set; and provider state is not persisted (see the signup-state item in
+    // CLAUDE.md), so a genuine signup who reloads the email screen loses it. A
+    // query param survives the reload and cannot be set by the other two paths.
+    //
+    // Absence means sign-in. That is the safe default: a returning coach shown
+    // signup chrome is the bug being fixed, and nothing is lost if a signup ever
+    // arrives without it.
+    router.push("/instructor/signup/email?new=1");
   }
 
   return (
@@ -56,6 +69,8 @@ export default function NameStep() {
         Already have an account?{" "}
         <button
           type="button"
+          // ⚠️ Deliberately NO ?new=1 — this is the sign-in path, and it must
+          // stay bare even though the name field above may already be filled.
           onClick={() => router.push("/instructor/signup/email")}
           className="text-reps-orange hover:text-reps-orange-hi transition-colors"
         >
