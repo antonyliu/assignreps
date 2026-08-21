@@ -224,43 +224,62 @@ const NUDGE_WINDOW_MS = 4000;
 // tier 2 was not the repair.
 const FORCE_SCROLL_TO_TOP: boolean = false;
 
-// ⚠️⚠️ EXPERIMENT, Aug 20 2026 — SET BACK TO true TO RESTORE. ⚠️⚠️
+// ⚠️⚠️ EXPERIMENT, Aug 20 2026 — set to false to hand scroll back to the
+// browser. ⚠️⚠️
 //
-// scrollRestoration goes back to the browser default, "auto". The forced
-// scrollTo stays disabled, so neither of this file's scroll RESETS runs.
+// scrollRestoration is back to "manual". FORCE_SCROLL_TO_TOP stays false, so
+// nothing in this file actively corrects scroll either. That is the point: this
+// isolates TURNING NATIVE RESTORATION OFF, without layering a fix on top of it.
 //
-// ⚠️ Tier 2's nudge is still live and is still a synthetic scroll — it just
-// cannot account for a ~40px offset, since it is +1/-1 and nets to zero. In
-// practice it should not fire at all on these runs: it is triggered by a
-// visualViewport resize, and the run that produced this hypothesis had
-// innerHeight flat at 714 with no resize occurring. If a nudge line does appear
-// in the log, read the offset around it before drawing conclusions.
+// WHY, and the evidence is a clean discriminator rather than another hunch.
+// Observed on staging with restoration on "auto":
 //
-// WHY. With "manual" the browser stops restoring on a history traversal — and
-// Next's App Router implements no restoration of its own, audited across
-// app-router.js, app-router-instance.js and bfcache-state-manager.js. So there
-// was nothing doing the job: on a traversal the document simply KEPT whatever
-// offset the previous page had. A player-detail screen scrolled ~40px hands the
-// roster exactly ~40px, and it stays there because nothing corrects it.
+//   typing the URL and hitting Go   -> clean, no jump
+//   Safari's own reload button      -> paints CORRECTLY, then visibly scrolls
+//                                      up a moment later, hiding content
 //
-// That fits every observation left standing after settle timing and scroll
-// anchoring were ruled out: the magnitude, the intermittency (it depends on
-// whether the previous screen happened to be scrolled), and why both the
-// add-player and the assign paths show it. It also explains why this was
-// invisible for a month — the forced scrollTo was papering over it.
+// Those two differ in exactly one way. "Go" creates a NEW history entry, which
+// has no remembered scroll position attached to it. The reload button reuses the
+// SAME entry, which does. Correct-then-moved is the signature of the browser
+// reapplying that remembered offset AFTER first paint — which is a thing only
+// the reload path can do.
 //
-// ⚠️ SET EXPLICITLY RATHER THAN JUST NOT SET. "auto" is the default, so
-// deleting the line would be equivalent on a fresh document — but not on one
-// that already ran the old build, and a test that fails to establish its own
-// condition returns a false negative. Those have been expensive tonight. The
-// value is read back and logged so the console says which mode is actually live.
+// ⚠️ AND THIS IS THE JULY FINDING, REDISCOVERED. Commit 9c62f1c set "manual" on
+// Jul 25 for precisely this: "the browser restored the previous offset on a
+// history traversal asynchronously and could land after the mount effect."
+// That diagnosis was right. What was wrong was pairing it with a forced
+// scrollTo(0, 0), which masked the symptom so completely that nothing could be
+// measured for a month — including, tonight, by us.
 //
-// ⚠️ EXPECT BACK-NAVIGATION TO BEHAVE DIFFERENTLY, AND DO NOT READ THAT AS THE
-// BUG. With "auto" the browser restores each page's OWN remembered offset, so
-// coming back from a player lands the coach where they were on the roster
-// rather than at the top. That is correct behaviour and the app-wide side
-// effect this flag has carried since July 25 finally lifting — not a regression.
-const RESTORE_SCROLL_MANUAL: boolean = false;
+// ⚠️ IT MAY ALSO EXPLAIN THE ORIGINAL BUG. Returning to the roster from
+// add-player or from assigning is a return to a remembered history entry too,
+// not only a reload. Same mechanism, different doorway.
+//
+// ⚠️ THE KNOWN COST, AND IT IS THE OTHER HALF OF THE SAME PROBLEM. "manual"
+// stops the browser restoring, and Next's App Router implements no restoration
+// of its own — audited across app-router.js, app-router-instance.js and
+// bfcache-state-manager.js. With the forced scrollTo also off, NOTHING restores
+// and nothing corrects. On a reload that is fine: a fresh document starts at 0
+// and stays there. On a client-side traversal it is not: the document simply
+// keeps whatever offset the previous screen had, which is the ~40px arrival
+// this file spent the night chasing.
+//
+// ⚠️ SO THE TWO SETTINGS FAIL ON DIFFERENT PATHS, and neither is simply right:
+//
+//   auto    reload button jumps (restoration lands after paint)
+//           traversal is fine (each page restores its own offset)
+//   manual  reload is clean (nothing to reapply)
+//           traversal may arrive offset (nothing restores, nothing corrects)
+//
+// If both reproduce as predicted, the answer is not one of these two values —
+// it is handling reload and traversal differently, or restoring correctly
+// rather than picking an extreme. Do not read a clean reload as the whole fix
+// without re-testing the add-player and assign paths.
+//
+// ⚠️ It is set EXPLICITLY rather than left alone, and the BUILD line reads the
+// value BACK rather than reporting what was asked for, so an assignment that did
+// not take cannot pass for one that did.
+const RESTORE_SCROLL_MANUAL: boolean = true;
 
 let mountSeq = 0;
 
