@@ -40,32 +40,57 @@ export const EYEBROW =
  * ⚠️ The text is kept for screen readers. The visual label went; the
  * information it carried should not.
  */
-export function ScreenHeader({ stepNum, total }: { stepNum: number; total: number }) {
+export function ScreenHeader({
+  stepNum,
+  total,
+  showProgress = true,
+}: {
+  stepNum: number;
+  total: number;
+  /**
+   * ⚠️ SUPPRESSES THE STEP PROGRESS ONLY — NEVER THE WORDMARK. Added Aug 20
+   * 2026 after the whole component was briefly gated out on the sign-in path,
+   * which took the Reps lockup with it and left returning coaches on a screen
+   * with no branding at all: just "Your email", 28px from the top.
+   *
+   * The distinction is the point. A returning coach signing in is not on step 2
+   * of anything, so the bar and its sr-only label are wrong for them — but they
+   * are still looking at Reps, so the wordmark is not. Gate the progress, keep
+   * the identity.
+   */
+  showProgress?: boolean;
+}) {
   return (
     /* ⚠️ Spacing widened after seeing these on device: the screens are
        top-packed inside a min-h-screen column with a large empty tail, so the
        chrome was crowding the content while the room sat unused below. */
     <div className="mb-12">
-      <div
-        className="flex gap-1.5"
-        role="progressbar"
-        aria-valuenow={stepNum}
-        aria-valuemin={1}
-        aria-valuemax={total}
-        aria-label={`Step ${stepNum} of ${total}`}
-      >
-        {Array.from({ length: total }, (_, i) => (
-          <span
-            key={i}
-            className="h-[3px] flex-1 rounded-full"
-            style={{ background: i < stepNum ? "#378add" : "#2a2d36" }}
-          />
-        ))}
-      </div>
-      <span className="sr-only">
-        Step {stepNum} of {total}
-      </span>
-      <div className="flex items-center h-7 mt-8">
+      {showProgress && (
+        <>
+          <div
+            className="flex gap-1.5"
+            role="progressbar"
+            aria-valuenow={stepNum}
+            aria-valuemin={1}
+            aria-valuemax={total}
+            aria-label={`Step ${stepNum} of ${total}`}
+          >
+            {Array.from({ length: total }, (_, i) => (
+              <span
+                key={i}
+                className="h-[3px] flex-1 rounded-full"
+                style={{ background: i < stepNum ? "#378add" : "#2a2d36" }}
+              />
+            ))}
+          </div>
+          <span className="sr-only">
+            Step {stepNum} of {total}
+          </span>
+        </>
+      )}
+      {/* ⚠️ mt-8 only when there IS a bar above to be separated from. Without
+          this the lockup would sit under 32px of margin against nothing. */}
+      <div className={`flex items-center h-7 ${showProgress ? "mt-8" : ""}`}>
         <LogoMini />
       </div>
     </div>

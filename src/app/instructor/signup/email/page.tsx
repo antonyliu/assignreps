@@ -32,10 +32,15 @@ export default function EmailStep() {
   // `?new=1`, so its presence is the one reliable signal for a genuine signup —
   // see the long note at that push for why the provider's `name` is not.
   //
-  // The step chrome below — the progress bar and the "Setting up your account"
-  // eyebrow — is true only for a signup. A returning coach signing in is not on
-  // step 2 of anything, so they get neither, including the ScreenHeader's
-  // sr-only "Step 2 of 2".
+  // The STEP chrome — the progress bar, its sr-only "Step 2 of 2", and the
+  // "Setting up your account" eyebrow — is true only for a signup. A returning
+  // coach signing in is not on step 2 of anything, so they get none of it.
+  //
+  // ⚠️ THE WORDMARK IS NOT STEP CHROME AND RENDERS EITHER WAY. It lives inside
+  // ScreenHeader, so an earlier version of this that gated the whole component
+  // shipped a sign-in screen with no Reps branding at all. ScreenHeader now
+  // takes `showProgress` for exactly this; do not go back to `{isNewSignup &&
+  // <ScreenHeader …>}`.
   const isNewSignup = useSearchParams().get("new") === "1";
 
   // The code entry lives here as a sub-view rather than its own route: once the
@@ -114,7 +119,7 @@ export default function EmailStep() {
   if (!sent) {
     return (
       <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
-        {isNewSignup && <ScreenHeader stepNum={2} total={2} />}
+        <ScreenHeader stepNum={2} total={2} showProgress={isNewSignup} />
         {/* Same words as step 1 — the two screens are one job. */}
         {isNewSignup && <p className={EYEBROW}>Setting up your account</p>}
         {/* ⚠️ The eyebrow above keeps its tight mb-2 — one unit with the
@@ -238,8 +243,9 @@ export default function EmailStep() {
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
       {/* ⚠️ Gated too, not just the email view. A sign-in was showing "Step 2
           of 2" on BOTH screens; the code view is still step 2 for a genuine
-          signup, so it keeps the bar under the same condition. */}
-      {isNewSignup && <ScreenHeader stepNum={2} total={2} />}
+          signup, so it keeps the bar under the same condition. The WORDMARK
+          renders either way — see showProgress in SignupUI. */}
+      <ScreenHeader stepNum={2} total={2} showProgress={isNewSignup} />
       <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-1 text-reps-ink">Enter your code</h2>
       <p className="text-[13px] text-reps-sub mb-6">
         We emailed a 6-digit code to <span className="text-reps-ink font-medium">{email}</span>.
