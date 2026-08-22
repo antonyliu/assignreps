@@ -42,6 +42,12 @@ export default async function AssignCustomCountPage({
       playerId={id}
       playerName={player.name}
       categorySlug="mine"
+      // ⚠️ THIS SCREEN SHARES CountScreen with the preset flow, so it inherits
+      // that screen's header — including the back label. categorySlug is
+      // "mine", so the back link already resolves to /assign/mine; this names
+      // that destination. It is NOT a category title here, which is why the
+      // prop is passed literally rather than looked up in CATEGORIES.
+      categoryTitle="My exercises"
       exerciseName={ex.name}
       defaultTarget={ex.default_amount}
       unit={unit}

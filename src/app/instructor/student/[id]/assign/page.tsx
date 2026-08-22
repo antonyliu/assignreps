@@ -38,28 +38,46 @@ export default async function AssignCategoriesPage({
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      {/* Two controls, opposite corners — replacing the single labelled back
-          row ("Assign to {name}") that used to sit on the left.
+      {/* Two controls, opposite corners.
 
-          The chevron steps back exactly ONE screen in the stack, which is what
-          the labelled row did; only its label is gone, so it is now bare.
-          Cancel abandons the WHOLE assign flow and lands on the ROSTER, not on
-          this student's detail screen — that is deliberate, not an oversight:
-          a coach cancelling out of assigning is done with the task, and the
-          roster is where every task starts.
+          LEFT names its DESTINATION — the previous screen's title — rather than
+          saying a generic "Back". It steps back exactly one screen, as always.
 
-          ⚠️ Both keep the app's 44px floor. The chevron is a 44x44 box rather
-          than a 44-tall row, since it no longer has a label to give it width.
-          -ml-4/-mr-4 against matching padding puts each control optically on
-          its content edge while its target reaches toward the screen edge. */}
+          ⚠️ THIS IS A DIFFERENT RULE FROM THE ONE THE OTHER ASSIGN ROUTES USE,
+          and the two must not be "reconciled" by guesswork. `assign/custom` and
+          `assign/mine` label their back link with the CURRENT screen's title
+          ("My exercises" on the My-exercises screen) — a habit CLAUDE.md records
+          as deliberate. These three name where the link GOES. Both read fine in
+          place; what would be wrong is assuming one file tells you the rule.
+
+          RIGHT, Cancel, abandons the WHOLE flow and lands on the ROSTER, not on
+          this student's detail screen — deliberate, not an oversight. A coach
+          cancelling out of assigning is done with the task, and the arrow
+          already covers backing up one step.
+
+          ⚠️ THIS IS THE ONLY ONE OF THE THREE CARRYING REAL USER TEXT, so it is
+          the only one that truncates. A coach types the name; the other two
+          labels are fixed strings from our own code and cannot run long.
+          max-w-[180px] fits roughly 24 characters, so every realistic name —
+          "Landon Platt", the longest on RJ's actual roster, is 12 — renders in
+          full, and only genuinely extreme input ellipsises. ⚠️ The cap is what
+          protects the layout, not `truncate` on its own: without a max-width
+          there is nothing for the ellipsis to trigger against and a long name
+          would run at Cancel. Measured at the 350px content width: the label
+          ends at 199px against Cancel's box at 286px, ~87px of slack.
+
+          ⚠️ Both keep the app's 44px floor. -ml-4/-mr-4 against matching padding
+          puts each control optically on its content edge while its target
+          reaches toward the screen edge. */}
       <div className="flex items-center justify-between mb-6">
         <Link
           href={`/instructor/student/${id}`}
           aria-label="Back"
-          className="-ml-4 flex h-11 w-11 shrink-0 items-center rounded-full pl-4 text-reps-sub hover:text-reps-ink transition-colors"
+          className="group -ml-4 flex h-11 shrink-0 items-center gap-2 rounded-full pl-4 pr-3 transition-colors"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
-          <span className="text-lg leading-none">←</span>
+          <span className="text-lg leading-none text-reps-sub group-hover:text-reps-ink transition-colors">←</span>
+          <span className="max-w-[180px] truncate text-[14px] font-medium text-reps-ink">{player.name}</span>
         </Link>
         <Link
           href="/instructor/students"

@@ -42,6 +42,7 @@ export default async function AssignCountPage({
       playerId={id}
       playerName={player.name}
       categorySlug={category}
+      categoryTitle={cat.title}
       exerciseName={ex.name}
       defaultTarget={ex.default}
       unit={ex.unit ?? cat.unit}
