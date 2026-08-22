@@ -410,6 +410,25 @@ Parked on the `scroll-investigation` branch. **Nothing from it shipped**; prod's
 
 ---
 
+## Assign-flow header, a measured contrast sweep, and a hover guard (Aug 21 2026)
+
+Four commits, `1930a7c` → `49d26ea`, all on prod. Staging-verified one at a time, then promoted as a pure fast-forward.
+
+| Feature | Why it exists |
+|---|---|
+| Assign-flow header split into two corners | The single labelled back row served one job on three screens where a coach needs two: step back, or leave. Cancel exits the whole flow to the **roster** — not to the student's detail screen, since a coach cancelling out of assigning is done with the task, and the arrow already covers backing up one step |
+| "Assigning to {name}" subtitle under each title | The header no longer says who the work is for, so the screen has to. Same treatment as the "Joined …" line under a student's name on their detail screen. On the category picker it **replaced** the "Choose a category" hint rather than joining it |
+| Back links labelled with their destination | A bare chevron shipped first and named nothing. The label now says where the link goes — the player's name, "Categories", the category title — which is a *different* rule from the one `assign/custom` and `assign/mine` use, where the label is the current screen's title. Both read fine in place; the comments now say so, so neither is mistaken for the shared convention |
+| Player-name label truncates, the two fixed labels don't | It is the only one of the three carrying user-entered text. `max-w-[180px]` fits ~24 characters, so every realistic name renders in full — "Landon Platt", the longest on RJ's roster, is 12. ⚠️ The max-width is what protects the layout, not `truncate` alone: with no cap there is nothing for the ellipsis to trigger against |
+| Three measured AA contrast failures fixed | The add-student SMS consent line (3.11:1 → 4.99:1), `PrivacyFooter`'s surrounding line (2.35:1 → 4.99:1), and the two overflow-menu ⋮ triggers (2.44:1 → 3.56:1). ⚠️ The ⋮ are icon-only buttons, so they are UI components at 3:1 rather than text at 4.5:1 — and they failed even that lower bar |
+| Assign-flow header hovers guarded by `@media (hover: hover)` | Tailwind is configured without `hoverOnlyWhenSupported`, so a bare `hover:` compiles to a plain `:hover` — and iOS Safari applies `:hover` on tap and holds it, leaving the arrow and Cancel lit white at rest. Guarding keeps desktop hover instead of discarding it, which is what the July fix for this flow's list rows had to do |
+
+⚠️ **Nothing in this group has been seen on a device.** Every commit is compile- and deploy-verified only. The two worth a real look are the 180px truncation, whose cap is arithmetic rather than measured, and the hover guard, which nobody has yet watched work on real iOS Safari.
+
+⚠️ **The legal pages needed nothing.** `/privacy` and `/terms` were already fixed on Aug 17; the sweep only re-confirmed it. `#378add` and `#888` still appear in those files **in comments only**, recording the values that were replaced — a grep finds them and they are not live.
+
+---
+
 ## Not shipped — recorded so the history is honest
 
 | Killed / deferred | Why |
@@ -434,3 +453,7 @@ Parked on the `scroll-investigation` branch. **Nothing from it shipped**; prod's
 | `overflow-anchor: none` document-wide | Inert on the platform the bug was reported on — Safari implements no scroll anchoring at all |
 | Roster skeleton resized to match real content | Fully diagnosed the same day and left unbuilt — the fix for a separate reload-settles-low bug, which wants its own pass |
 | §2 testimonial from RJ | Removed pending his sign-off — the quote was a reconstruction, and two claims about him were unverified. Markup saved to `docs/deferred/` |
+| Placeholder colour split resolved (Aug 21 2026) | **Measured 2.60:1 — a real AA failure, left open.** `#5a5f72` on the field background, across 9 declarations in 5 components, while the app's *other* placeholder value `#8a8fa8` passes at 5.16:1. Fixing it means picking one value everywhere and re-checking placeholder-vs-typed-text separation, which is a design consolidation rather than a contrast bug fix |
+| `ATTEMPTS` label recoloured (Aug 21 2026) | **Measured 3.73:1 at 17px — a real AA failure, left open.** 17px is under the 18.66px-and-bold large-text threshold, so it needs 4.5. But the colour is `--reps-green-muted`, and *"one green hue, no exceptions"* is a locked product decision; moving it moves every attempts bar fill. ⚠️ The 76px stepper number in the **same** colour passes, because it genuinely is large text — one token, two verdicts |
+| Edit-modal selected pill recoloured (Aug 21 2026) | **Measured 4.04:1 — a real AA failure, left open.** `text-reps-orange` on `bg-reps-orange/10` fails only over `--reps-card`, i.e. inside `AssignmentMenu`'s edit-amount modal; on the page background the same pill is 4.98:1 and passes. Fixing it means touching the brand blue, which is locked |
+| `hoverOnlyWhenSupported` applied globally (Aug 21 2026) | **The sticky-hover guard shipped on the assign-flow header only.** Seven other unguarded hovers remain on those same screens, and app-wide there are 23 `hover:text-reps-ink` and 21 `hover:bg-reps-raised` with the same exposure. The one-line fix in `tailwind.config.ts` would guard all 15 rules at once, but it changes touch behaviour on every screen and wants its own device pass |

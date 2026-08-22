@@ -1,13 +1,44 @@
 # Reps — CLAUDE.md
-*Last updated: Aug 20 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+*Last updated: Aug 21 2026 · See `CHANGELOG.md` for shipped-feature history. Prod commit and environment sync are not tracked here — they drifted three times in two days. Run `git branch -r -v`.*
+
+---
+
+## 📍 Current state — Aug 21 2026
+
+**Read this first. It supersedes every dated section below**, including *Current state — Aug 20*, which is kept as history and is stale wherever the two disagree.
+
+**Git:** `origin/main` (prod) = `origin/staging` = **`49d26ea`**. `origin/scroll-investigation` (`dcdf0f2`) still holds work that is deliberately NOT shipped — see *Roster scroll* in the Aug 20 section.
+⚠️ Re-run `git branch -r -v` rather than trusting these SHAs. This line has gone stale within a day, twice.
+
+### Shipped to prod today
+
+Four commits, `1930a7c` → `49d26ea`, each verified on staging on its own before the set was promoted to prod as a pure fast-forward. All UI and CSS — no schema, migration, billing, env var or API route was touched.
+
+**1. The assign-flow header, rebuilt over three commits.** On the category picker, the exercise list and the count screen: a labelled back link on the left naming its DESTINATION, and **Cancel** on the right exiting the whole flow to the **roster**. Each screen gained an **"Assigning to {name}"** subtitle; on the picker that REPLACED the "Choose a category" hint. See *Signup: one screen, three entry points* for the unrelated but similarly-shaped chrome work.
+
+⚠️ **The back label rule here is NOT the app's only one.** These three name where the link goes; `assign/custom` and `assign/mine` label theirs with the CURRENT screen's title. Both are fine in place — what is wrong is reading one file and assuming it states the rule for all six.
+
+⚠️ **Only the player-name label truncates** (`max-w-[180px] truncate`), because it is the only one of the three carrying user-entered text. The max-width is the part that protects the layout; `truncate` alone has nothing to trigger against.
+
+⚠️ **`CountScreen` is shared by a FOURTH screen**, `assign/mine/[exerciseId]`, which therefore inherited all of this. A commit message claimed that route was untouched; that was wrong, and it was only caught when a new required prop broke its build. CLAUDE.md does record the sharing — read it before assuming a change to that component reaches three screens.
+
+**2. Three measured AA contrast failures fixed** — see *Contrast sweep — Aug 21 2026* for the ratios, the blast radius of each shared token, and ⚠️ **the three genuine failures deliberately left open**.
+
+**3. Sticky-hover guard on the header's two hover rules.** `[@media(hover:hover)]:` on the arrow's `group-hover` and Cancel's `hover`, so touch devices never apply a hover colour that iOS Safari would then hold. Desktop is unchanged.
+
+⚠️ **SCOPED, NOT GLOBAL.** Tailwind here has no `future.hoverOnlyWhenSupported`, so every other `hover:` in the app compiles to a bare `:hover` — 15 of them, zero media guards. Seven remain on these same screens. The one-line global fix exists and is deliberately not taken; it changes touch behaviour everywhere and wants its own device pass.
+
+### ⚠️ NONE OF TODAY'S WORK HAS BEEN SEEN ON A DEVICE
+
+Every one of the four commits is compile-verified and deploy-verified only, and all four are now on prod, which is the build RJ's roster runs on. The two worth a real look are the **180px truncation**, whose cap is arithmetic rather than measured against rendered text, and the **hover guard**, which nobody has watched work on real iOS Safari — the platform the symptom was reported from.
 
 ---
 
 ## 📍 Current state — Aug 20 2026
 
-**Read this first. It supersedes every dated section below**, including *Current state — Aug 17*, which is kept as history and is stale wherever the two disagree.
+**Superseded by the Aug 21 section above.** Kept as history; stale wherever the two disagree.
 
-**Git:** `origin/main` (prod) = `origin/staging` = **`69e97cd`**. A third branch, **`origin/scroll-investigation` (`dcdf0f2`)**, holds work that is deliberately NOT shipped — see *Roster scroll* below.
+**Git:** ⚠️ **The SHAs in this line are HISTORICAL and were already stale when written** — it records `origin/main` (prod) = `origin/staging` = **`69e97cd`**, which two later Aug 20 commits (`90e839a`, `0efecef`) had already moved past, and prod is now `49d26ea`. `origin/scroll-investigation` (`dcdf0f2`) is the one value here still current — it holds work that is deliberately NOT shipped, see *Roster scroll* below.
 ⚠️ Re-run `git branch -r -v` rather than trusting these SHAs.
 
 ### Shipped to prod today, verified live
