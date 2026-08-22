@@ -234,7 +234,20 @@ function ConsentInfo({ isParent, children }: { isParent: boolean; children: Reac
     // Owns the row's top margin so the text-to-field gap matches the 8px the
     // label above the field uses. The paragraph itself carries none.
     <div ref={wrapRef} className="relative mt-2">
-      <p className="flex items-center gap-1.5 text-[13px] text-[#5a5f72]">
+      {/* ⚠️ #7a8090 (4.99:1 on the page background), NOT the #5a5f72 this was.
+          That value measured 3.11:1 here and FAILED AA for 13px body text —
+          recorded as a known defect since Aug 18 and fixed in the Aug 21
+          contrast sweep. This is real instruction ("they'll get a text"), not
+          decoration, so it has to be readable.
+
+          ⚠️ #5a5f72 is the PLACEHOLDER token and is still correct there; only
+          its use as body text was wrong. Do not "restore consistency" by
+          putting it back — the same value passing as a placeholder hint and
+          failing as a sentence is exactly why the two split apart.
+
+          Matches the signup email screen's caption, which already uses
+          #7a8090 for the same job for the same reason. */}
+      <p className="flex items-center gap-1.5 text-[13px] text-[#7a8090]">
         <span>{children}</span>
         <button
           type="button"

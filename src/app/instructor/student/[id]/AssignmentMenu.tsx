@@ -198,9 +198,15 @@ export default function AssignmentMenu({
           (top-full = directly below it), matching the header dropdown — not
           the full-height card column. */}
       <div className="relative">
+        {/* ⚠️ #6b7085, NOT the #52576a this was. As an ICON-ONLY control this
+            is a UI component under WCAG 1.4.11 and needs 3:1, and #52576a
+            measured 2.44:1 on the card and 2.75:1 on the page background —
+            failing even that lower bar. #6b7085 clears it at 3.56:1 / 4.02:1.
+            Deliberately NOT raised to body-text brightness: the glyph should
+            still support the row rather than compete with it. */}
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          className="flex items-center py-2 pl-0 pr-2.5 text-[#52576a] hover:text-reps-ink transition-colors"
+          className="flex items-center py-2 pl-0 pr-2.5 text-[#6b7085] hover:text-reps-ink transition-colors"
           aria-label="Assignment options"
           aria-haspopup="menu"
           aria-expanded={menuOpen}

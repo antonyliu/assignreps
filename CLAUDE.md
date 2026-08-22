@@ -368,7 +368,7 @@ Tony is stepping away to focus on other work for an unknown stretch. This sectio
 - "What we collect" list is stale — missing student notes (`logs.note`) and billing/subscription fields
 - Player-delete cascade (removing a student permanently deletes all their assignments and logs) is not disclosed anywhere public
 - Minors section is thin — flagged as needing real, careful attention before strangers arrive, not a quick copy patch
-- AA contrast: 9 of 17 text elements fail (`#378add` at 3.36:1, `#888888` at 3.31:1) — the fix is already known and proven on `/faq` (`#2a6fb5` / `#1a1a1a`), just not applied here yet
+- ~~AA contrast: 9 of 17 text elements fail (`#378add` at 3.36:1, `#888888` at 3.31:1)~~ — ✅ **RESOLVED Aug 17 2026**, and re-verified by measurement Aug 21. Both pages now carry the `/faq` set (`#1a1a1a` 16.26:1, `#2a6fb5` 4.86:1, `#333` 11.80:1, `#6b6b6b` 4.98:1). ⚠️ `#378add` and `#888` still appear in those files **inside comments only**, documenting the old failing values — a grep will find them and they are not live. See *Legal pages — Aug 6 audit*.
 - "Last updated" date intentionally left at July 17 — bump it once, when the remaining items above are also done, not before
 
 **Terms** — not touched in this audit cycle beyond what privacy fixes implied. Cancellation language ("can be cancelled anytime") is vague rather than false, and is deliberately being left as-is until self-serve cancellation is real, at which point it becomes true without editing.
@@ -890,6 +890,44 @@ Only the **note field** has been moved (Aug 1 2026), and deliberately only that 
 
 ---
 
+## Contrast sweep — Aug 21 2026
+
+Every muted/secondary text colour and every link colour in the app, measured against the background it is actually painted on. Ratios computed, not eyeballed; the calculator was validated first by reproducing eight ratios this file already states (3.36, 4.86, 6.17, 2.60, 3.11, 4.99, 3.59, 2.35) — all eight matched exactly.
+
+⚠️ **THE LEGAL/MARKETING HALF WAS ALREADY DONE AND THIS SWEEP ONLY CONFIRMED IT.** `/privacy`, `/terms` and `/faq` carry the passing set (`#1a1a1a`, `#2a6fb5`, `#333`, `#6b6b6b`) and have since Aug 17. ⚠️ **`#378add` and `#888` still appear in all three files, in COMMENTS ONLY**, recording the values that were replaced — a grep hits them and they are not live. The stale "9 of 17 fail" line in the Aug 6 pause section refers to a state that no longer exists.
+
+**Everything that actually failed was in the DARK APP UI.**
+
+### Fixed
+
+| Where | Was | Now | Threshold |
+|---|---|---|---|
+| Add-student SMS consent helper line, 13px | `#5a5f72` **3.11:1** | `#7a8090` **4.99:1** | 4.5 (body) |
+| `PrivacyFooter`'s surrounding line, 11px | `reps-dim/50` → `#494d5c` **2.35:1** | `#7a8090` **4.99:1** | 4.5 (body) |
+| `AssignmentMenu` + `CustomExerciseMenu` ⋮ triggers | `#52576a` **2.44:1** card / **2.75:1** page | `#6b7085` **3.56:1** / **4.02:1** | 3.0 (UI) |
+
+⚠️ **The ⋮ triggers are `MoreVertical` ICON-ONLY buttons**, so they are UI components under WCAG 1.4.11 at 3:1, not text at 4.5:1 — and `#52576a` failed even that lower bar. ⚠️ Their real background is the assignment card's **`#161a20`**, not `--reps-card`; measuring against the page background alone understates the problem.
+
+**Screens affected by each change** — these are shared, so the blast radius is wider than the screen the fix was found on:
+
+- `#7a8090` helper line → **add-student only** (one element, both Player and Parent tabs).
+- `#7a8090` footer line → **four surfaces**: student home (assignment-list *and* paused branches), `/student/login`, `/parent/[token]`.
+- `#6b7085` ⋮ → **every assignment card** on the coach's player detail screen, and **every row** on the My-exercises screen.
+
+### ⚠️ Measured as FAILING and deliberately NOT changed — each needs its own decision
+
+Three real failures were left alone because fixing them means moving a locked token or resolving a documented design split, not correcting an oversight. **None is a false alarm; all three are genuine.**
+
+| Failure | Ratio | Why it was not touched here |
+|---|---|---|
+| **Placeholder text** `#5a5f72` on `#1c1f26` | **2.60:1** | The documented two-value split — 9 declarations, 5 components, and the app's *other* placeholder value `#8a8fa8` passes at 5.16:1. Resolving it means picking ONE value everywhere and re-checking placeholder-vs-typed-text separation. Already flagged in *Colour system* as needing its own pass. |
+| **`ATTEMPTS` label** `#247a4f`, 17px semibold | **3.73:1** | 17px is under the 18.66px-and-bold large-text threshold, so it needs 4.5. ⚠️ But this is `--reps-green-muted`, and *"one green hue, no exceptions"* is a **locked product decision**; moving it also moves every attempts bar fill. ⚠️ The 76px stepper NUMBER in the same colour **passes** at 3.73 because it genuinely is large text — same token, two verdicts. |
+| **Selected pill** `text-reps-orange` on `bg-reps-orange/10` | **4.04:1** *inside the edit modal* | On the page background the same pill computes **4.98:1 and passes**; it only fails over `--reps-card`, i.e. in `AssignmentMenu`'s edit-amount modal. Fixing it means touching the brand blue, which this file records as locked twice. |
+
+⚠️ **`disabled:text-[#555]` and the disabled `#3d4252` signup/add-student buttons were checked and are EXEMPT**, not passes — WCAG 1.4.3 explicitly excludes inactive controls. Do not "fix" them; `#555` in particular is a deliberate choice so an inactive `−` still reads in bright sunlight.
+
+⚠️ **Never seen on a device.** All five edits are colour-only and compile-verified; none has been looked at on a phone.
+
 ## Deactivation (Active / Inactive students)
 
 Built Aug 17 2026. A **reversible pause** on one student, driven by `players.deactivated_at` and nothing else. Closes the downgrade loophole that made it item 1: a Pro coach could add 30 students, cancel, and keep all 30 active on Free forever.
@@ -1143,7 +1181,7 @@ One segment per step, filled up to and including the current one, so the last st
 
 Step 2's reassurance moved from under the headline to a caption under the email input, matching the job "They'll get a text when you assign work." does under the phone field on add-student — same 13px, same `mt-2`.
 
-⚠️ **NOT the same colour, deliberately.** That caption is `#5a5f72`, recorded in this file as a pre-existing **AA failure at 3.11:1**. Copying it exactly would have carried a known defect onto a new screen, so this uses **`#7a8090` (4.99:1)**. If the placeholder/helper sweep ever lands, the two should meet at a passing value — this one should not move down.
+⚠️ **NOT the same colour, deliberately.** That caption is `#5a5f72`, recorded in this file as a pre-existing **AA failure at 3.11:1**. Copying it exactly would have carried a known defect onto a new screen, so this uses **`#7a8090` (4.99:1)**. ✅ **The HELPER half of that sweep landed Aug 21 2026** and the two now meet at `#7a8090`, exactly as predicted. ⚠️ The **placeholder** half is still open — see *Colour system*.
 
 ⚠️ The consent notice on the same screen went `#8a8fa8` (6.17:1) → **`#7a8090` (4.99:1)** to recede. It is the one line on that screen that must stay readable; the next step down, `#6f7587`, is 4.29:1 and **fails**. Do not take it further.
 
@@ -1223,10 +1261,11 @@ Both measured, both because a **link** is not the decorative label the pattern w
 
 | | Original line | The link |
 |---|---|---|
-| Colour | `text-reps-dim/50` → `#494d5c`, **2.35:1** | `text-reps-sub` `#8a8fa8`, **6.17:1** |
+| Colour | *originally* `text-reps-dim/50` → `#494d5c`, **2.35:1** | `text-reps-sub` `#8a8fa8`, **6.17:1** |
 | Target | none — 11px text is ~13px tall | `inline-flex min-h-[44px]` |
 
-- The surrounding line keeps `dim/50`. Only the link moved: 2.35:1 is fine for a label nobody has to find, and not fine for the one thing on the screen a person is meant to tap.
+- ✅ **The surrounding line no longer keeps `dim/50` — it moved to `#7a8090` (4.99:1) on Aug 21 2026.** The original argument was that 2.35:1 is "fine for a label nobody has to find"; that does not hold, because on the parent view this line carries the **"Read-only view"** prefix, which states what the screen *is*. That is information, not decoration.
+- ⚠️ **The hierarchy the split existed for SURVIVES**: the line still sits quieter than the link inside it, **4.99:1 against 6.17:1**, and both now clear 4.5. ⚠️ No alpha of `reps-dim` could achieve this — `/80` is still only **4.31:1** — so opacity had to give way to a solid value.
 - ⚠️ **The 44px floor applies here** — this stopped being decorative text the moment it became the only route to the policy. A ~13px target is the exact dead zone that made seven back links need several taps. A negative margin cancels the added height, so the line looks identical to the one the parent view already shipped.
 
 ⚠️ **Never seen on a device.** The specific thing to check is whether `mt-auto` pins the footer where expected on the student home with a LONG assignment list versus a short one — nothing else in that `<main>` grows, which is what the placement relies on.
@@ -2410,9 +2449,11 @@ Replaced with the border-triangle technique: a **7px triangle in the border colo
 
 It moved from the removed disclosure to the **icon**, which is still inside the add-player `<form>`. A bare `<button>` defaults to `type="submit"`, so tapping the icon would add the student. Nothing about the markup makes that visible.
 
-### ⚠️ The helper line above it still fails AA
+### ✅ The helper line above it PASSES AA (fixed Aug 21 2026)
 
-*"They'll get a text when you assign work."* is `#5a5f72` at **3.11:1**. **Pre-existing, not introduced here, deliberately left alone.** Worth a future sweep: `#5a5f72` is the documented placeholder token and may be doing body-text duty elsewhere.
+*"They'll get a text when you assign work."* was `#5a5f72` at **3.11:1** — a real failure for 13px body text, carried since Aug 18. Now **`#7a8090` at 4.99:1**, the same value the signup email screen already uses for the same job.
+
+⚠️ **`#5a5f72` itself was NOT retired — it is still the placeholder token and still correct there.** Only its use as a *sentence* was wrong. The same value passing as a field hint and failing as body text is exactly why the two uses had to separate; do not "restore consistency" by putting it back.
 
 ### Not done
 

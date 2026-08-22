@@ -10,9 +10,10 @@ import Link from "next/link";
  * whose data the policy actually describes.
  *
  * ⚠️ NOT a new pattern. The parent view already shipped this exact treatment —
- * 11px, text-reps-dim/50, `mt-auto pt-8 text-center` — as "Read-only view ·
- * Reps". This lifts it into one place so the four call sites cannot drift, and
- * adds a link to it.
+ * 11px, `mt-auto pt-8 text-center` — as "Read-only view · Reps". This lifts it
+ * into one place so the four call sites cannot drift, and adds a link to it.
+ * ⚠️ The COLOUR is no longer that line's original text-reps-dim/50; see the
+ * note at the paragraph below.
  *
  * ⚠️ Links to the MINORS ANCHOR, not the top of /privacy. That page is
  * addressed to coaches for five sections before reaching the one written for
@@ -33,7 +34,19 @@ export default function PrivacyFooter({
 }) {
   return (
     <div className="mt-auto pt-8 text-center">
-      <p className="text-[11px] text-reps-dim/50">
+      {/* ⚠️ #7a8090 (4.99:1), NOT the text-reps-dim/50 this shipped with.
+          That resolved to #494d5c at 2.35:1 and FAILED AA. The comment here
+          used to defend it as "fine for a decorative label" — but this line
+          carries the parent view's "Read-only view" prefix, which states what
+          the screen IS. That is information, not decoration. Fixed in the
+          Aug 21 contrast sweep.
+
+          ⚠️ THE HIERARCHY THE OLD VALUE EXISTED FOR IS PRESERVED. The point
+          was that the line sits quieter than the link inside it, and it still
+          does: #7a8090 at 4.99:1 against the link's #8a8fa8 at 6.17:1. Both
+          now clear 4.5. No alpha of reps-dim could do this — /80 is still only
+          4.31:1, so opacity had to give way to a solid value. */}
+      <p className="text-[11px] text-[#7a8090]">
         {prefix ? `${prefix} · ` : ""}
         {/* ⚠️ The LINK is text-reps-sub at full opacity, NOT the dim/50 the line
             around it uses. Measured on the app background: dim/50 resolves to
