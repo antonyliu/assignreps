@@ -37,28 +37,40 @@ export default async function AssignExerciseListPage({
   return (
     <main className="flex flex-col min-h-screen p-[1.75rem_1.25rem]">
 
-      {/* The whole row is one back control — arrow AND label inside the Link,
-          44px tall. These labels are nominally screen titles ("Shooting",
-          "My exercises"), which is why they were left un-tappable at first, but
-          in daily use they read as "go back" and get tapped as such. Matching
-          the player detail header rather than keeping a second pattern.
+      {/* Two controls, opposite corners — replacing the single labelled back
+          row ("Assign to {name}") that used to sit on the left.
 
-          -ml-4/pl-4 puts the glyph optically on the content edge while the
-          target reaches toward the screen edge; the arrow keeps its muted tone
-          and the label its ink, so nothing changes visually. */}
-      <div className="flex items-center mb-6">
+          The chevron steps back exactly ONE screen in the stack, which is what
+          the labelled row did; only its label is gone, so it is now bare.
+          Cancel abandons the WHOLE assign flow and lands on the ROSTER, not on
+          this student's detail screen — that is deliberate, not an oversight:
+          a coach cancelling out of assigning is done with the task, and the
+          roster is where every task starts.
+
+          ⚠️ Both keep the app's 44px floor. The chevron is a 44x44 box rather
+          than a 44-tall row, since it no longer has a label to give it width.
+          -ml-4/-mr-4 against matching padding puts each control optically on
+          its content edge while its target reaches toward the screen edge. */}
+      <div className="flex items-center justify-between mb-6">
         <Link
           href={`/instructor/student/${id}/assign`}
           aria-label="Back"
-          className="group -ml-4 flex h-11 shrink-0 items-center gap-2 rounded-full pl-4 pr-3 transition-colors"
+          className="-ml-4 flex h-11 w-11 shrink-0 items-center rounded-full pl-4 text-reps-sub hover:text-reps-ink transition-colors"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
-          <span className="text-lg leading-none text-reps-sub group-hover:text-reps-ink transition-colors">←</span>
-          <span className="text-[14px] font-medium text-reps-ink">{cat.title}</span>
+          <span className="text-lg leading-none">←</span>
+        </Link>
+        <Link
+          href="/instructor/students"
+          className="-mr-4 flex h-11 shrink-0 items-center rounded-full px-4 text-[14px] font-medium text-reps-sub hover:text-reps-ink transition-colors"
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          Cancel
         </Link>
       </div>
 
-      <h2 className="text-2xl font-semibold tracking-[-0.5px] mb-6">{cat.title}</h2>
+      <h2 className="text-2xl font-semibold tracking-[-0.5px]">{cat.title}</h2>
+      <p className="text-[12px] text-reps-sub mt-0.5 mb-6">Assigning to {player.name}</p>
 
       <div className="flex flex-col gap-2">
         {cat.exercises.map((ex) => (
