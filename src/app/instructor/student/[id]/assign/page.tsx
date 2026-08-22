@@ -66,6 +66,23 @@ export default async function AssignCategoriesPage({
           would run at Cancel. Measured at the 350px content width: the label
           ends at 199px against Cancel's box at 286px, ~87px of slack.
 
+
+          ⚠️ THE TWO HOVER RULES ARE GUARDED BY @media (hover: hover), AND THAT
+          GUARD IS THE WHOLE POINT. Tailwind 3.4 compiles a bare `hover:` to a
+          plain `:hover` with no media query (verified: zero `@media (hover` in
+          the built CSS, 15 bare `:hover` rules). On iOS Safari `:hover` is
+          applied on TAP and LINGERS until you tap something else — so the arrow
+          and Cancel would stay lit white at rest after being touched. This is
+          the same defect CLAUDE.md records for the assign-flow list rows, which
+          were fixed by dropping `hover:bg-` entirely.
+
+          ⚠️ Desktop behaviour is deliberately UNCHANGED — a real pointer still
+          matches (hover: hover) and still gets the lift to ink.
+
+          ⚠️ The BACK LABEL is not part of this. It is unconditionally
+          text-reps-ink with no hover rule at all, so white IS its resting state,
+          matching assign/custom, assign/mine and add-student. It cannot linger,
+          because there is nothing to linger from.
           ⚠️ Both keep the app's 44px floor. -ml-4/-mr-4 against matching padding
           puts each control optically on its content edge while its target
           reaches toward the screen edge. */}
@@ -76,12 +93,12 @@ export default async function AssignCategoriesPage({
           className="group -ml-4 flex h-11 shrink-0 items-center gap-2 rounded-full pl-4 pr-3 transition-colors"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
-          <span className="text-lg leading-none text-reps-sub group-hover:text-reps-ink transition-colors">←</span>
+          <span className="text-lg leading-none text-reps-sub [@media(hover:hover)]:group-hover:text-reps-ink transition-colors">←</span>
           <span className="max-w-[180px] truncate text-[14px] font-medium text-reps-ink">{player.name}</span>
         </Link>
         <Link
           href="/instructor/students"
-          className="-mr-4 flex h-11 shrink-0 items-center rounded-full px-4 text-[14px] font-medium text-reps-sub hover:text-reps-ink transition-colors"
+          className="-mr-4 flex h-11 shrink-0 items-center rounded-full px-4 text-[14px] font-medium text-reps-sub [@media(hover:hover)]:hover:text-reps-ink transition-colors"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
           Cancel
